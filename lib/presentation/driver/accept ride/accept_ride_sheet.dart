@@ -145,7 +145,12 @@ extension _AcceptRideSheet on _AcceptRideState {
     if (_stage != ActiveRideStage.onTrip ||
         _onTripRadarState != _OnTripRadarState.secured ||
         offer == null) {
-      return const SizedBox.shrink();
+      // Fix job 5 (v0.18.33, owner Q7 + 2026-11-05): a live trip queued
+      // behind this one, or a booked ride whose time to drive is near.
+      return NextTripCard(
+        key: const ValueKey<String>('next-trip'),
+        currentTripId: widget.tripId,
+      );
     }
     return Padding(
       padding: const EdgeInsets.only(top: 12),

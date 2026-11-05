@@ -6781,6 +6781,33 @@ class AppLocalizationsSv extends AppLocalizations {
       'Din position är för gammal – slå på platstjänster';
 
   @override
+  String nextBookedRideAt(String time) {
+    return 'Nästa: bokad resa kl. $time';
+  }
+
+  @override
+  String get nextBookedRideHint =>
+      'Efter den här resan, kör till upphämtningen';
+
+  @override
+  String nextTripAfterThis(String rider) {
+    return 'Nästa: $rider · efter den här resan';
+  }
+
+  @override
+  String get nextTripPopupTitle => 'Din nästa resa';
+
+  @override
+  String nextTripPopupLive(String rider, String pickup) {
+    return '$rider väntar vid $pickup. Kör dit nu.';
+  }
+
+  @override
+  String nextTripPopupBooked(String time, String pickup) {
+    return 'Bokad resa kl. $time · $pickup. Kör till upphämtningen nu.';
+  }
+
+  @override
   String get docInsuranceLetter => 'Försäkringsbrev';
 
   @override

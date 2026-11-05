@@ -6887,6 +6887,33 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre position est trop ancienne – activez la localisation';
 
   @override
+  String nextBookedRideAt(String time) {
+    return 'Suivante : course réservée à $time';
+  }
+
+  @override
+  String get nextBookedRideHint =>
+      'Après cette course, allez à la prise en charge';
+
+  @override
+  String nextTripAfterThis(String rider) {
+    return 'Suivante : $rider · après cette course';
+  }
+
+  @override
+  String get nextTripPopupTitle => 'Votre prochaine course';
+
+  @override
+  String nextTripPopupLive(String rider, String pickup) {
+    return '$rider vous attend à $pickup. Allez-y maintenant.';
+  }
+
+  @override
+  String nextTripPopupBooked(String time, String pickup) {
+    return 'Course réservée à $time · $pickup. Allez à la prise en charge maintenant.';
+  }
+
+  @override
   String get docInsuranceLetter => 'Attestation d’assurance';
 
   @override

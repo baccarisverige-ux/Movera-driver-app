@@ -333,5 +333,11 @@
   "livePinSoon": "Movera bestämmer per område om en PIN-kod krävs vid upphämtning. När den krävs ber appen om resenärens kod när du är framme.",
   "liveAnalyticsSoon": "Din resestatistik visas här när Movera räknar den på servern.",
   "offlineReasonDocumentsExpired": "Ett dokument har gått ut. Ladda upp det nya för att köra igen.",
-  "liveTripPositionStale": "Din position är för gammal – slå på platstjänster"
+  "liveTripPositionStale": "Din position är för gammal – slå på platstjänster",
+  "nextBookedRideAt": "Nästa: bokad resa kl. {time}",
+  "nextBookedRideHint": "Efter den här resan, kör till upphämtningen",
+  "nextTripAfterThis": "Nästa: {rider} · efter den här resan",
+  "nextTripPopupTitle": "Din nästa resa",
+  "nextTripPopupLive": "{rider} väntar vid {pickup}. Kör dit nu.",
+  "nextTripPopupBooked": "Bokad resa kl. {time} · {pickup}. Kör till upphämtningen nu."
 }

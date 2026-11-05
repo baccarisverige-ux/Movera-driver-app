@@ -6770,6 +6770,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your position is too old – turn on location';
 
   @override
+  String nextBookedRideAt(String time) {
+    return 'Next: booked ride at $time';
+  }
+
+  @override
+  String get nextBookedRideHint => 'After this trip, drive to the pickup';
+
+  @override
+  String nextTripAfterThis(String rider) {
+    return 'Next: $rider · after this trip';
+  }
+
+  @override
+  String get nextTripPopupTitle => 'Your next trip';
+
+  @override
+  String nextTripPopupLive(String rider, String pickup) {
+    return '$rider is waiting at $pickup. Drive there now.';
+  }
+
+  @override
+  String nextTripPopupBooked(String time, String pickup) {
+    return 'Booked ride at $time · $pickup. Drive to the pickup now.';
+  }
+
+  @override
   String get docInsuranceLetter => 'Insurance letter';
 
   @override

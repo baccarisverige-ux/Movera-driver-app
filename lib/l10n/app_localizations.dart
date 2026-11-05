@@ -11647,6 +11647,42 @@ abstract class AppLocalizations {
   /// **'Your position is too old – turn on location'**
   String get liveTripPositionStale;
 
+  /// Fix job 5 (v0.18.33, owner Q7): the trip sheet card for the booked ride the driver holds next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: booked ride at {time}'**
+  String nextBookedRideAt(String time);
+
+  /// Fix job 5: under the next booked ride card.
+  ///
+  /// In en, this message translates to:
+  /// **'After this trip, drive to the pickup'**
+  String get nextBookedRideHint;
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {rider} · after this trip'**
+  String nextTripAfterThis(String rider);
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next trip'**
+  String get nextTripPopupTitle;
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is waiting at {pickup}. Drive there now.'**
+  String nextTripPopupLive(String rider, String pickup);
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked ride at {time} · {pickup}. Drive to the pickup now.'**
+  String nextTripPopupBooked(String time, String pickup);
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:
