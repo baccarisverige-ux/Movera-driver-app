@@ -6746,10 +6746,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get g8DebtLine => 'Earlier unpaid fee (to that trip)';
 
   @override
-  String get fixJob0DebtNote =>
-      'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.';
-
-  @override
   String get g8Continue => 'Continue';
 
   @override
@@ -7014,6 +7010,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String schedBookedBadge(String time) {
     return 'Booked ride · $time';
   }
+
+  @override
+  String get previewBanner => 'Preview';
+
+  @override
+  String get previewNotSent => 'Preview – not sent';
+
+  @override
+  String get fixJob0DebtNote =>
+      'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.';
 
   @override
   String get swTripStatusDraft => 'Draft';

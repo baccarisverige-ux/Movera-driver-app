@@ -6755,10 +6755,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get g8DebtLine => 'Tidigare obetald avgift (till den resan)';
 
   @override
-  String get fixJob0DebtNote =>
-      'Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera.';
-
-  @override
   String get g8Continue => 'Fortsätt';
 
   @override
@@ -7026,6 +7022,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String schedBookedBadge(String time) {
     return 'Bokad resa · $time';
   }
+
+  @override
+  String get previewBanner => 'Förhandsvisning';
+
+  @override
+  String get previewNotSent => 'Förhandsvisning – inte skickat';
+
+  @override
+  String get fixJob0DebtNote =>
+      'Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera.';
 
   @override
   String get swTripStatusDraft => 'Utkast';

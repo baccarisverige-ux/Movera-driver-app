@@ -404,7 +404,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
               style: _value,
             ),
           ),
-        // Fix job 0 (owner A2-2, contract 0.18.39 outstandingFee.receiptText):
+        // Fix job 0 (owner A2-2, contract 0.18.29 outstandingFee.receiptText):
         // the rider's earlier unpaid fee was added by itself to this trip.
         if (debt != null)
           Padding(

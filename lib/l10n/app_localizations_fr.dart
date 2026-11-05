@@ -6869,10 +6869,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g8DebtLine => 'Anciens frais impayés (pour cette course-là)';
 
   @override
-  String get fixJob0DebtNote =>
-      'Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera.';
-
-  @override
   String get g8Continue => 'Continuer';
 
   @override
@@ -7142,6 +7138,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String schedBookedBadge(String time) {
     return 'Course réservée · $time';
   }
+
+  @override
+  String get previewBanner => 'Aperçu';
+
+  @override
+  String get previewNotSent => 'Aperçu – non envoyé';
+
+  @override
+  String get fixJob0DebtNote =>
+      'Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera.';
 
   @override
   String get swTripStatusDraft => 'Brouillon';

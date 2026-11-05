@@ -11581,12 +11581,6 @@ abstract class AppLocalizations {
   /// **'Earlier unpaid fee (to that trip)'**
   String get g8DebtLine;
 
-  /// Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip.
-  ///
-  /// In en, this message translates to:
-  /// **'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.'**
-  String get fixJob0DebtNote;
-
   /// Driver G8 (contract 0.18.10 finish).
   ///
   /// In en, this message translates to:
@@ -12030,6 +12024,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booked ride · {time}'**
   String schedBookedBadge(String time);
+
+  /// No description provided for @previewBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewBanner;
+
+  /// No description provided for @previewNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview – not sent'**
+  String get previewNotSent;
+
+  /// Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.'**
+  String get fixJob0DebtNote;
 
   /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
   ///

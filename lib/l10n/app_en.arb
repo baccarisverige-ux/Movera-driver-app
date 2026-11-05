@@ -4140,8 +4140,6 @@
   "@g8DriverEnded": {"description": "Driver G8 (contract 0.18.10 finish)."},
   "g8DebtLine": "Earlier unpaid fee (to that trip)",
   "@g8DebtLine": {"description": "Driver G8 (contract 0.18.10 finish)."},
-  "fixJob0DebtNote": "The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.",
-  "@fixJob0DebtNote": {"description": "Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip."},
   "g8Continue": "Continue",
   "@g8Continue": {"description": "Driver G8 (contract 0.18.10 finish)."},
   "liveDrivingLogsSoon": "Your online hours and rest times will show here once Movera counts them on the server. No example figures are shown.",
@@ -4307,6 +4305,10 @@
       }
     }
   },
+  "previewBanner": "Preview",
+  "previewNotSent": "Preview – not sent",
+  "fixJob0DebtNote": "The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.",
+  "@fixJob0DebtNote": {"description": "Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip."},
   "swTripStatusDraft": "Draft",
   "@swTripStatusDraft": {"description": "Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py)."},
   "swTripStatusQuoted": "Quoted",
