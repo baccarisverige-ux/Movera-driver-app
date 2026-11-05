@@ -35,7 +35,17 @@ class TripBottomBar extends StatelessWidget {
   static const _muted = Color(0xFF7D898F);
 
   @override
-  Widget build(BuildContext context) => SizedBox(
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _header(),
+      // v0.18.37 §61: "Going offline after this trip" + Undo, full width
+      // under the header so the header text is never cut.
+      const GoingOfflineBanner(),
+    ],
+  );
+
+  Widget _header() => SizedBox(
     height: 76,
     child: Row(
       children: [
@@ -82,8 +92,6 @@ class TripBottomBar extends StatelessWidget {
             ),
           ),
         ),
-        // v0.18.37 §61: "Going offline after this trip" + Undo.
-        const GoingOfflineBanner(),
         if (bookedTime case final time?)
           Padding(
             padding: const EdgeInsets.only(right: 4),

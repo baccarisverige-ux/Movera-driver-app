@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:movera/constants/appcolors.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/offline_after_trips.dart';
 
-/// Contract v0.18.37 §61 (go offline after trips): on the trip sheet,
-/// "Going offline after this trip" with Undo while the server holds the
-/// plan (`Driver.offlineAfterTrip`). Nothing while it does not.
+/// Contract v0.18.37 §61 (go offline after trips): under the trip sheet's
+/// header, full width, "Going offline after this trip" with Undo while the
+/// server holds the plan (`Driver.offlineAfterTrip`). Nothing while it does
+/// not. Screenshot review 2026-11-05: never beside the header (it cut the
+/// header text at 390 px).
 class GoingOfflineBanner extends StatelessWidget {
   const GoingOfflineBanner({super.key});
 
@@ -20,39 +23,37 @@ class GoingOfflineBanner extends StatelessWidget {
     builder: (context, pending, _) {
       if (!pending) return const SizedBox.shrink();
       return Padding(
-        padding: const EdgeInsets.only(right: 4),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Container(
           key: const ValueKey('trip-bar-going-offline'),
-          constraints: const BoxConstraints(maxWidth: 170),
-          padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 0, 4, 0),
           decoration: BoxDecoration(
             color: _amberBg,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Flexible(
+              const Icon(
+                Icons.power_settings_new_rounded,
+                size: 18,
+                color: _amber,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
                 child: Text(
                   tr.goingOfflineAfterTrip,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: _amber,
-                    fontSize: 11,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              TextButton(
+              UndoButton(
                 key: const ValueKey('trip-bar-going-offline-undo'),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(44, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  foregroundColor: _amber,
-                ),
-                onPressed: () => unawaited(_undo(context)),
-                child: Text(tr.goingOfflineUndo),
+                onPressed: () =>
+                    unawaited(_undo(context, OfflineAfterTrips.undoAction)),
               ),
             ],
           ),
@@ -60,20 +61,44 @@ class GoingOfflineBanner extends StatelessWidget {
       );
     },
   );
-
-  static Future<void> _undo(BuildContext context) async {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    final failed = await OfflineAfterTrips.undoAction?.call();
-    if (failed != null) {
-      messenger?.showSnackBar(SnackBar(content: Text(failed)));
-    }
-  }
 }
 
-/// Trip settings row: "Go offline after this trip" (live build, on a trip).
-/// He keeps the trip; the server stops new offers at once.
+/// Undo of "Going offline after this trip": a real button (accent colour,
+/// at least 48 × 48 px to tap).
+class UndoButton extends StatelessWidget {
+  const UndoButton({super.key, required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => TextButton(
+    style: TextButton.styleFrom(
+      foregroundColor: AppColor.primary,
+      minimumSize: const Size(48, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+    ),
+    onPressed: onPressed,
+    child: Text(tr.goingOfflineUndo),
+  );
+}
+
+Future<void> _undo(
+  BuildContext context,
+  Future<String?> Function()? run,
+) async {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final failed = await run?.call();
+  if (failed != null) messenger?.showSnackBar(SnackBar(content: Text(failed)));
+}
+
+/// Trip settings row: "Go offline after this trip" (live build, on a trip),
+/// in the same white card and text style as the other rows. He keeps the
+/// trip; the server stops new offers at once.
 class GoOfflineAfterTripRow extends StatelessWidget {
   const GoOfflineAfterTripRow({super.key});
+
+  static const _ink = Color(0xFF252E3A);
+  static const _line = Color(0xFFE6E8EA);
 
   @override
   Widget build(BuildContext context) {
@@ -81,20 +106,57 @@ class GoOfflineAfterTripRow extends StatelessWidget {
     if (live == null || !live.onTrip) return const SizedBox.shrink();
     return ValueListenableBuilder<bool>(
       valueListenable: OfflineAfterTrips.pending,
-      builder: (context, pending, _) => ListTile(
-        key: const ValueKey('trip-settings-go-offline'),
-        leading: const Icon(Icons.power_settings_new_rounded),
-        title: Text(pending ? tr.goingOfflineAfterTrip : tr.goOfflineAfterTrip),
-        trailing: pending ? Text(tr.goingOfflineUndo) : null,
-        onTap: () async {
-          final messenger = ScaffoldMessenger.maybeOf(context);
-          final failed = pending
-              ? await live.undoGoOffline()
-              : await live.goOffline();
-          if (failed != null) {
-            messenger?.showSnackBar(SnackBar(content: Text(failed)));
-          }
-        },
+      builder: (context, pending, _) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _line),
+        ),
+        child: InkWell(
+          key: const ValueKey('trip-settings-go-offline'),
+          borderRadius: BorderRadius.circular(18),
+          onTap: pending
+              ? null
+              : () => unawaited(_undo(context, live.goOffline)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F5F6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.power_settings_new_rounded,
+                    size: 18,
+                    color: _ink,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    pending ? tr.goingOfflineAfterTrip : tr.goOfflineAfterTrip,
+                    key: const ValueKey('trip-settings-go-offline-title'),
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (pending)
+                  UndoButton(
+                    key: const ValueKey('trip-settings-go-offline-undo'),
+                    onPressed: () =>
+                        unawaited(_undo(context, live.undoGoOffline)),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
