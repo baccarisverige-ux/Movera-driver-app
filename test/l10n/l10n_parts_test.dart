@@ -64,13 +64,16 @@ void main() {
     }
   });
 
-  test('the split kept every message (2706 en entries, 2066 fr / sv; +job 9 airport_queue)', () {
-    const counts = {'en': 2706, 'fr': 2066, 'sv': 2066};
-    for (final lang in _langs) {
-      final arb =
-          jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
-              as Map<String, dynamic>;
-      expect(arb.length, counts[lang], reason: lang);
-    }
-  });
+  test(
+    'the split kept every message (2706 en entries, 2066 fr / sv; +job 9 airport_queue)',
+    () {
+      const counts = {'en': 2706, 'fr': 2066, 'sv': 2066};
+      for (final lang in _langs) {
+        final arb =
+            jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
+                as Map<String, dynamic>;
+        expect(arb.length, counts[lang], reason: lang);
+      }
+    },
+  );
 }
