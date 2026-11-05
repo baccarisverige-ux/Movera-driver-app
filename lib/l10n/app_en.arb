@@ -287,6 +287,36 @@
   "@contactChangeTooMany": {
     "description": "429 change_too_many on phone/e-mail change."
   },
+  "airportQueueTitle": "Airport queue",
+  "airportQueuePlace": "You are number {place} in line",
+  "@airportQueuePlace": {
+    "placeholders": {
+      "place": {
+        "type": "Object"
+      }
+    }
+  },
+  "airportQueueAheadWaiting": "{ahead} drivers ahead · waiting {minutes} min",
+  "@airportQueueAheadWaiting": {
+    "placeholders": {
+      "ahead": {
+        "type": "Object"
+      },
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "airportQueueHow": "Airport trips go first to the first driver in line. Stay inside the waiting area to keep your place.",
+  "airportQueueLeft": "You left the airport queue",
+  "tipAirportQueuePlace": "Airport queue: you are number {place}",
+  "@tipAirportQueuePlace": {
+    "placeholders": {
+      "place": {
+        "type": "Object"
+      }
+    }
+  },
   "@@locale": "en",
   "phoneVibratesWhenRequestArrives": "The phone vibrates when a request arrives.",
   "phone": "Phone",

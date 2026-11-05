@@ -1048,6 +1048,42 @@ abstract class AppLocalizations {
   /// **'Too many changes — try again in an hour'**
   String get contactChangeTooMany;
 
+  /// No description provided for @airportQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport queue'**
+  String get airportQueueTitle;
+
+  /// No description provided for @airportQueuePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'You are number {place} in line'**
+  String airportQueuePlace(Object place);
+
+  /// No description provided for @airportQueueAheadWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{ahead} drivers ahead · waiting {minutes} min'**
+  String airportQueueAheadWaiting(Object ahead, Object minutes);
+
+  /// No description provided for @airportQueueHow.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport trips go first to the first driver in line. Stay inside the waiting area to keep your place.'**
+  String get airportQueueHow;
+
+  /// No description provided for @airportQueueLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the airport queue'**
+  String get airportQueueLeft;
+
+  /// No description provided for @tipAirportQueuePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport queue: you are number {place}'**
+  String tipAirportQueuePlace(Object place);
+
   /// No description provided for @phoneVibratesWhenRequestArrives.
   ///
   /// In en, this message translates to:
