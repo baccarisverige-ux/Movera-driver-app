@@ -11971,7 +11971,17 @@ abstract class AppLocalizations {
   /// **'Remove vehicle'**
   String get vehRemoveVehicle;
 
+<<<<<<< HEAD
   /// No description provided for @vehCouldNotRemoveDraft.
+=======
+  /// v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).
+  ///
+  /// In en, this message translates to:
+  /// **'Time to drive to pickup · {name}'**
+  String leaveNowTimeToDriveName(String name);
+
+  /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
+>>>>>>> origin/main
   ///
   /// In en, this message translates to:
   /// **'Could not remove local draft. Retry.'**

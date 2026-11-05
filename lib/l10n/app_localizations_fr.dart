@@ -7033,8 +7033,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de charger les brouillons de véhicule — Réessayer';
 
   @override
+<<<<<<< HEAD
   String get vehLocalDraftsNotVerified =>
       'Brouillons de véhicule locaux — non activés ni vérifiés';
+=======
+  String leaveNowTimeToDriveName(String name) {
+    return 'C\'est l\'heure d\'aller à la prise en charge · $name';
+  }
+
+  @override
+  String get swTripStatusDraft => 'Brouillon';
+>>>>>>> origin/main
 
   @override
   String get vehTripsOnly => 'Courses uniquement';

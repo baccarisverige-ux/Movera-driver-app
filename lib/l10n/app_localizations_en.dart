@@ -6913,8 +6913,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not load local vehicle drafts — Retry';
 
   @override
+<<<<<<< HEAD
   String get vehLocalDraftsNotVerified =>
       'Local vehicle drafts — not activated or verified';
+=======
+  String leaveNowTimeToDriveName(String name) {
+    return 'Time to drive to pickup · $name';
+  }
+
+  @override
+  String get swTripStatusDraft => 'Draft';
+>>>>>>> origin/main
 
   @override
   String get vehTripsOnly => 'Trips only';

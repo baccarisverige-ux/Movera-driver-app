@@ -172,7 +172,11 @@ void main() {
         'expectedVersion': 9,
         'changeId': 'rc_1',
       });
+<<<<<<< HEAD
       expect(requests.single.headers['X-Contract-Version'], '0.18.33');
+=======
+      expect(requests.single.headers['X-Contract-Version'], '0.18.32');
+>>>>>>> origin/main
       expect(trips.versionOf('t1'), 10);
     });
 

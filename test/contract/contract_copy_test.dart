@@ -42,11 +42,20 @@ void main() {
     }
   });
 
+<<<<<<< HEAD
   test('the copy is contract v0.18.33', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
       contains('"version": "0.18.33"'),
     );
     expect(TripTransitions.contractVersion, '0.18.33');
+=======
+  test('the copy is contract v0.18.32', () {
+    expect(
+      File('contracts/contract.json').readAsStringSync(),
+      contains('"version": "0.18.32"'),
+    );
+    expect(TripTransitions.contractVersion, '0.18.32');
+>>>>>>> origin/main
   });
 }

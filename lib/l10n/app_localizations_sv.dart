@@ -6925,8 +6925,17 @@ class AppLocalizationsSv extends AppLocalizations {
       'Det gick inte att läsa in fordonsutkasten – Försök igen';
 
   @override
+<<<<<<< HEAD
   String get vehLocalDraftsNotVerified =>
       'Lokala fordonsutkast – inte aktiverade eller verifierade';
+=======
+  String leaveNowTimeToDriveName(String name) {
+    return 'Dags att köra till upphämtningen · $name';
+  }
+
+  @override
+  String get swTripStatusDraft => 'Utkast';
+>>>>>>> origin/main
 
   @override
   String get vehTripsOnly => 'Endast resor';
