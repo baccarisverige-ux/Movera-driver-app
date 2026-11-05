@@ -368,6 +368,8 @@ extension _HomeMapTopIsland on _DriverHomeState {
             ),
             // G4-F6: "Peak hours start at" the real start of an event.
             liveEvents: DriverEvents.instance.visible(),
+            // Fix job 9 (§60): his real place in an airport queue.
+            airportQueuePlace: AirportQueue.instance.place,
           );
     return signals.tips();
   }

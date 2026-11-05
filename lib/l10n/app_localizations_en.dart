@@ -546,6 +546,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactChangeTooMany => 'Too many changes — try again in an hour';
 
   @override
+  String get airportQueueTitle => 'Airport queue';
+
+  @override
+  String airportQueuePlace(Object place) {
+    return 'You are number $place in line';
+  }
+
+  @override
+  String airportQueueAheadWaiting(Object ahead, Object minutes) {
+    return '$ahead drivers ahead · waiting $minutes min';
+  }
+
+  @override
+  String get airportQueueHow =>
+      'Airport trips go first to the first driver in line. Stay inside the waiting area to keep your place.';
+
+  @override
+  String get airportQueueLeft => 'You left the airport queue';
+
+  @override
+  String tipAirportQueuePlace(Object place) {
+    return 'Airport queue: you are number $place';
+  }
+
+  @override
   String get phoneVibratesWhenRequestArrives =>
       'The phone vibrates when a request arrives.';
 
@@ -3868,6 +3893,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get swPayoutStatusPendingApproval => 'Waiting for approval';
+
+  @override
+  String get goOfflineAfterTrip => 'Go offline after this trip';
+
+  @override
+  String get goingOfflineAfterTrip => 'Going offline after this trip';
+
+  @override
+  String get goingOfflineUndo => 'Undo';
+
+  @override
+  String get offlineReasonAfterTrip => 'You went offline after your trip';
 
   @override
   String islandRadarOffers(int count) {

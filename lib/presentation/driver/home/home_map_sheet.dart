@@ -1000,6 +1000,13 @@ extension _HomeMapSheet on _DriverHomeState {
                       padding: EdgeInsets.only(top: ResSize.h * 12),
                       child: InAirportQueue(),
                     ),
+                  // Fix job 9 (§60): the real airport queue place (live
+                  // builds); shown only while he is in a queue.
+                  if (!driverDemoFeatures && LiveDriverServices.active)
+                    Padding(
+                      padding: EdgeInsets.only(top: ResSize.h * 12),
+                      child: const AirportQueueCard(),
+                    ),
                 ],
               ),
             ),

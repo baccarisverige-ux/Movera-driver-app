@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/settings/navigation_app.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/presentation/driver/accept%20ride/going_offline_banner.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -161,6 +162,9 @@ class _TripSettingsState extends State<TripSettings> {
               ),
             ),
           ]),
+          // v0.18.37 §61: Go offline after this trip (on a trip only).
+          const SizedBox(height: 12),
+          const GoOfflineAfterTripRow(),
         ],
       ),
     );

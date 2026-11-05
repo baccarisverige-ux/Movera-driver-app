@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/presentation/driver/accept%20ride/going_offline_banner.dart';
 
 /// The trip sheet's header: what to do next and where, plus Ride
 /// preferences. Waiting clocks belong exclusively to the island.
@@ -34,7 +35,17 @@ class TripBottomBar extends StatelessWidget {
   static const _muted = Color(0xFF7D898F);
 
   @override
-  Widget build(BuildContext context) => SizedBox(
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _header(),
+      // v0.18.37 §61: "Going offline after this trip" + Undo, full width
+      // under the header so the header text is never cut.
+      const GoingOfflineBanner(),
+    ],
+  );
+
+  Widget _header() => SizedBox(
     height: 76,
     child: Row(
       children: [
