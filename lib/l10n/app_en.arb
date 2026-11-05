@@ -1822,6 +1822,10 @@
   },
   "accessibilitySavedOnPhone": "These preferences are saved on this phone.",
   "hearingComingSoon": "Telling riders about your hearing is coming soon.",
+  "fixJob0DebtNote": "The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.",
+  "@fixJob0DebtNote": {
+    "description": "Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip."
+  },
   "n1Stop": "1 stop",
   "notNow": "Not now",
   "scheduled": "Scheduled",
@@ -2739,6 +2743,10 @@
   "suspendedShortBody": "Your account is paused. Contact support.",
   "previewBanner": "Preview",
   "previewNotSent": "Preview – not sent",
+  "swPayoutStatusPendingApproval": "Waiting for approval",
+  "@swPayoutStatusPendingApproval": {
+    "description": "Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py)."
+  },
   "islandRadarOffers": "{count, plural, =1{1 offer · radar} other{{count} offers · radar}}",
   "@islandRadarOffers": {
     "placeholders": {

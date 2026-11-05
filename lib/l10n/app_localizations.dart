@@ -4374,6 +4374,12 @@ abstract class AppLocalizations {
   /// **'Telling riders about your hearing is coming soon.'**
   String get hearingComingSoon;
 
+  /// Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.'**
+  String get fixJob0DebtNote;
+
   /// No description provided for @n1Stop.
   ///
   /// In en, this message translates to:
@@ -6759,6 +6765,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview – not sent'**
   String get previewNotSent;
+
+  /// Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get swPayoutStatusPendingApproval;
 
   /// No description provided for @islandRadarOffers.
   ///

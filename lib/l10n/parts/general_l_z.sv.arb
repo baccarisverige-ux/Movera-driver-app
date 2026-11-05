@@ -395,5 +395,6 @@
   "navigationAppSaveFailed": "Navigationsapp inte sparad. Försök igen.",
   "suspendedShortBody": "Ditt konto är pausat. Kontakta support.",
   "previewBanner": "Förhandsvisning",
-  "previewNotSent": "Förhandsvisning – inte skickat"
+  "previewNotSent": "Förhandsvisning – inte skickat",
+  "swPayoutStatusPendingApproval": "Väntar på godkännande"
 }

@@ -297,5 +297,6 @@
   "g8Continue": "Continuer",
   "g8StarLabel": "{stars} étoile(s) sur 5",
   "accessibilitySavedOnPhone": "Ces préférences sont enregistrées sur ce téléphone.",
-  "hearingComingSoon": "Informer les passagers de votre audition arrive bientôt."
+  "hearingComingSoon": "Informer les passagers de votre audition arrive bientôt.",
+  "fixJob0DebtNote": "Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera."
 }

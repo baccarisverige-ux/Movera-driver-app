@@ -915,5 +915,9 @@
   },
   "suspendedShortBody": "Your account is paused. Contact support.",
   "previewBanner": "Preview",
-  "previewNotSent": "Preview – not sent"
+  "previewNotSent": "Preview – not sent",
+  "swPayoutStatusPendingApproval": "Waiting for approval",
+  "@swPayoutStatusPendingApproval": {
+    "description": "Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py)."
+  }
 }
