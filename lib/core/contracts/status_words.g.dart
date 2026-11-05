@@ -42,7 +42,7 @@ const statusWordFamilies = <String, List<String>>{
     'partially_refunded',
   ],
   'feeStatus': ['paid', 'owed', 'waived'],
-  'payoutStatus': ['pending', 'paid'],
+  'payoutStatus': ['pending', 'pending_approval', 'paid'],
   'documentStatus': [
     'needed',
     'in_review',
@@ -168,6 +168,8 @@ String? statusWord(AppLocalizations l, String family, String code) {
       switch (code) {
         case 'pending':
           return l.swPayoutStatusPending;
+        case 'pending_approval':
+          return l.swPayoutStatusPendingApproval;
         case 'paid':
           return l.swPayoutStatusPaid;
       }

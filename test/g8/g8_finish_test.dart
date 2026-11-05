@@ -212,6 +212,17 @@ void main() {
         '−${Money(minorUnits: 1795, currency: 'SEK').formatted}',
       );
       expect(find.byKey(const ValueKey('ride-completed-debt')), findsOneWidget);
+      // Fix job 0 (owner A2-2, contract 0.18.29): the line is explained in words.
+      expect(
+        find.byKey(const ValueKey('ride-completed-debt-note')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Your share'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('ride-completed-line-pickup_pay')),

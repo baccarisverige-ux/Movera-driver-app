@@ -6201,198 +6201,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Kan inte köras – åkeriägaren behöver slutföra bilens dokument';
 
   @override
-  String get swTripStatusDraft => 'Utkast';
-
-  @override
-  String get swTripStatusQuoted => 'Offererad';
-
-  @override
-  String get swTripStatusRequested => 'Begärd';
-
-  @override
-  String get swTripStatusSearching => 'Söker';
-
-  @override
-  String get swTripStatusOffered => 'Erbjuden';
-
-  @override
-  String get swTripStatusAccepted => 'Accepterad';
-
-  @override
-  String get swTripStatusDriverToPickup => 'Förare till upphämtning';
-
-  @override
-  String get swTripStatusArrived => 'Framme';
-
-  @override
-  String get swTripStatusRiderOnboard => 'Resenären ombord';
-
-  @override
-  String get swTripStatusInTrip => 'På resa';
-
-  @override
-  String get swTripStatusApproachingDropoff => 'Närmar sig avlämning';
-
-  @override
-  String get swTripStatusCompleted => 'Slutförd';
-
-  @override
-  String get swTripStatusCancelledByRider => 'Avbokad av resenär';
-
-  @override
-  String get swTripStatusCancelledByDriver => 'Avbokad av förare';
-
-  @override
-  String get swTripStatusCancelledByAdmin => 'Avbokad av admin';
-
-  @override
-  String get swTripStatusCancelledBySystem => 'Avbokad av systemet';
-
-  @override
-  String get swTripStatusNoShow => 'Utebliven';
-
-  @override
-  String get swTripStatusExpired => 'Utgången';
-
-  @override
-  String get swTripStatusFailed => 'Misslyckad';
-
-  @override
-  String get swDriverAccountStatusPending => 'Väntande';
-
-  @override
-  String get swDriverAccountStatusActive => 'Aktiv';
-
-  @override
-  String get swDriverAccountStatusOnHold => 'Väntar på granskning';
-
-  @override
-  String get swDriverAccountStatusSuspended => 'Avstängd';
-
-  @override
-  String get swDriverOnlineStatusOffline => 'Offline';
-
-  @override
-  String get swDriverOnlineStatusGoingOnline => 'Går online';
-
-  @override
-  String get swDriverOnlineStatusOnline => 'Online';
-
-  @override
-  String get swDriverOnlineStatusOnTrip => 'På resa';
-
-  @override
-  String get swDriverOnlineStatusSuspended => 'Avstängd';
-
-  @override
-  String get swPaymentStatusPending => 'Väntande';
-
-  @override
-  String get swPaymentStatusAuthorized => 'Auktoriserad';
-
-  @override
-  String get swPaymentStatusCaptured => 'Debiterad';
-
-  @override
-  String get swPaymentStatusFailed => 'Misslyckad';
-
-  @override
-  String get swPaymentStatusRefunded => 'Återbetald';
-
-  @override
-  String get swPaymentStatusPartiallyRefunded => 'Delvis återbetald';
-
-  @override
-  String get swFeeStatusPaid => 'Betald';
-
-  @override
-  String get swFeeStatusOwed => 'Obetald';
-
-  @override
-  String get swFeeStatusWaived => 'Efterskänkt';
-
-  @override
-  String get swPayoutStatusPending => 'Väntande';
-
-  @override
-  String get swPayoutStatusPaid => 'Utbetald';
-
-  @override
-  String get swDocumentStatusNeeded => 'Krävs';
-
-  @override
-  String get swDocumentStatusInReview => 'Granskas';
-
-  @override
-  String get swDocumentStatusApproved => 'Godkänt';
-
-  @override
-  String get swDocumentStatusRejected => 'Avslaget';
-
-  @override
-  String get swDocumentStatusExpired => 'Utgånget';
-
-  @override
-  String get swDocumentStatusExpiring => 'Går ut snart';
-
-  @override
-  String get swDocumentStatusMissing => 'Saknas';
-
-  @override
-  String get swDocumentStatusWaitingForMovera => 'Väntar på Movera';
-
-  @override
-  String get swTicketStatusOpen => 'Öppet';
-
-  @override
-  String get swTicketStatusPending => 'Väntande';
-
-  @override
-  String get swTicketStatusResolved => 'Löst';
-
-  @override
-  String get swTicketStatusClosed => 'Stängt';
-
-  @override
-  String get swVehicleReviewStatusInReview => 'Granskas';
-
-  @override
-  String get swVehicleReviewStatusApproved => 'Godkänt';
-
-  @override
-  String get swVehicleReviewStatusRejected => 'Avslaget';
-
-  @override
-  String get swOfferStatusOpen => 'Öppet';
-
-  @override
-  String get swOfferStatusClaimed => 'Taget';
-
-  @override
-  String get swOfferStatusClaimedElsewhere => 'Taget av annan förare';
-
-  @override
-  String get swOfferStatusDeclined => 'Avböjt';
-
-  @override
-  String get swOfferStatusExpired => 'Utgånget';
-
-  @override
-  String get swOfferStatusWithdrawn => 'Tillbakadraget';
-
-  @override
-  String get swRatingStatusNotRequested => 'Inte begärt';
-
-  @override
-  String get swRatingStatusPending => 'Väntande';
-
-  @override
-  String get swRatingStatusSubmitted => 'Lämnat';
-
-  @override
-  String get swRatingStatusSkipped => 'Överhoppat';
-
-  @override
   String get docFleetOwnerOnly =>
       'Bara åkeriägaren kan ladda upp eller öppna bilens dokument.';
 
@@ -7222,7 +7030,206 @@ class AppLocalizationsSv extends AppLocalizations {
   String get previewNotSent => 'Förhandsvisning – inte skickat';
 
   @override
+  String get fixJob0DebtNote =>
+      'Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera.';
+
+  @override
   String leaveNowTimeToDriveName(String name) {
     return 'Dags att köra till upphämtningen · $name';
   }
+
+  @override
+  String get swTripStatusDraft => 'Utkast';
+
+  @override
+  String get swTripStatusQuoted => 'Offererad';
+
+  @override
+  String get swTripStatusRequested => 'Begärd';
+
+  @override
+  String get swTripStatusSearching => 'Söker';
+
+  @override
+  String get swTripStatusOffered => 'Erbjuden';
+
+  @override
+  String get swTripStatusAccepted => 'Accepterad';
+
+  @override
+  String get swTripStatusDriverToPickup => 'Förare till upphämtning';
+
+  @override
+  String get swTripStatusArrived => 'Framme';
+
+  @override
+  String get swTripStatusRiderOnboard => 'Resenären ombord';
+
+  @override
+  String get swTripStatusInTrip => 'På resa';
+
+  @override
+  String get swTripStatusApproachingDropoff => 'Närmar sig avlämning';
+
+  @override
+  String get swTripStatusCompleted => 'Slutförd';
+
+  @override
+  String get swTripStatusCancelledByRider => 'Avbokad av resenär';
+
+  @override
+  String get swTripStatusCancelledByDriver => 'Avbokad av förare';
+
+  @override
+  String get swTripStatusCancelledByAdmin => 'Avbokad av admin';
+
+  @override
+  String get swTripStatusCancelledBySystem => 'Avbokad av systemet';
+
+  @override
+  String get swTripStatusNoShow => 'Utebliven';
+
+  @override
+  String get swTripStatusExpired => 'Utgången';
+
+  @override
+  String get swTripStatusFailed => 'Misslyckad';
+
+  @override
+  String get swDriverAccountStatusPending => 'Väntande';
+
+  @override
+  String get swDriverAccountStatusActive => 'Aktiv';
+
+  @override
+  String get swDriverAccountStatusOnHold => 'Väntar på granskning';
+
+  @override
+  String get swDriverAccountStatusSuspended => 'Avstängd';
+
+  @override
+  String get swDriverOnlineStatusOffline => 'Offline';
+
+  @override
+  String get swDriverOnlineStatusGoingOnline => 'Går online';
+
+  @override
+  String get swDriverOnlineStatusOnline => 'Online';
+
+  @override
+  String get swDriverOnlineStatusOnTrip => 'På resa';
+
+  @override
+  String get swDriverOnlineStatusSuspended => 'Avstängd';
+
+  @override
+  String get swPaymentStatusPending => 'Väntande';
+
+  @override
+  String get swPaymentStatusAuthorized => 'Auktoriserad';
+
+  @override
+  String get swPaymentStatusCaptured => 'Debiterad';
+
+  @override
+  String get swPaymentStatusFailed => 'Misslyckad';
+
+  @override
+  String get swPaymentStatusRefunded => 'Återbetald';
+
+  @override
+  String get swPaymentStatusPartiallyRefunded => 'Delvis återbetald';
+
+  @override
+  String get swFeeStatusPaid => 'Betald';
+
+  @override
+  String get swFeeStatusOwed => 'Obetald';
+
+  @override
+  String get swFeeStatusWaived => 'Efterskänkt';
+
+  @override
+  String get swPayoutStatusPending => 'Väntande';
+
+  @override
+  String get swPayoutStatusPendingApproval => 'Väntar på godkännande';
+
+  @override
+  String get swPayoutStatusPaid => 'Utbetald';
+
+  @override
+  String get swDocumentStatusNeeded => 'Krävs';
+
+  @override
+  String get swDocumentStatusInReview => 'Granskas';
+
+  @override
+  String get swDocumentStatusApproved => 'Godkänt';
+
+  @override
+  String get swDocumentStatusRejected => 'Avslaget';
+
+  @override
+  String get swDocumentStatusExpired => 'Utgånget';
+
+  @override
+  String get swDocumentStatusExpiring => 'Går ut snart';
+
+  @override
+  String get swDocumentStatusMissing => 'Saknas';
+
+  @override
+  String get swDocumentStatusWaitingForMovera => 'Väntar på Movera';
+
+  @override
+  String get swTicketStatusOpen => 'Öppet';
+
+  @override
+  String get swTicketStatusPending => 'Väntande';
+
+  @override
+  String get swTicketStatusResolved => 'Löst';
+
+  @override
+  String get swTicketStatusClosed => 'Stängt';
+
+  @override
+  String get swVehicleReviewStatusInReview => 'Granskas';
+
+  @override
+  String get swVehicleReviewStatusApproved => 'Godkänt';
+
+  @override
+  String get swVehicleReviewStatusRejected => 'Avslaget';
+
+  @override
+  String get swOfferStatusOpen => 'Öppet';
+
+  @override
+  String get swOfferStatusClaimed => 'Taget';
+
+  @override
+  String get swOfferStatusClaimedElsewhere => 'Taget av annan förare';
+
+  @override
+  String get swOfferStatusDeclined => 'Avböjt';
+
+  @override
+  String get swOfferStatusExpired => 'Utgånget';
+
+  @override
+  String get swOfferStatusWithdrawn => 'Tillbakadraget';
+
+  @override
+  String get swRatingStatusNotRequested => 'Inte begärt';
+
+  @override
+  String get swRatingStatusPending => 'Väntande';
+
+  @override
+  String get swRatingStatusSubmitted => 'Lämnat';
+
+  @override
+  String get swRatingStatusSkipped => 'Överhoppat';
 }

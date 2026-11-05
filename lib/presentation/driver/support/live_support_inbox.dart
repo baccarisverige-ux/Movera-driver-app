@@ -4,6 +4,7 @@ import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/content/content_card.dart';
 import 'package:movera/core/support/server_support_tickets.dart';
+import 'package:movera/core/support/ticket_error_text.dart';
 
 /// The live build's Support (contract v0.9.0, owner 2026-10-27): the driver
 /// writes to Movera, Admin › Support answers, and the answer shows here.
@@ -471,10 +472,10 @@ class _WriteSheetState extends State<_WriteSheet> {
                       text: _message.text,
                     );
                     if (mounted) Navigator.of(this.context).pop(true);
-                  } catch (_) {
+                  } catch (error) {
                     setState(() {
                       _sending = false;
-                      _error = tr.supportSendFailed;
+                      _error = ticketErrorText(error, tr);
                     });
                   }
                 },
