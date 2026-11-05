@@ -803,18 +803,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'You’re on the waiting list. We’ll let you know when sign-in opens for your number.';
 
   @override
-  String get authTestNumbersTitle => 'Test numbers (test build only)';
-
-  @override
-  String get authTestNumbersButton => 'Test numbers';
-
-  @override
-  String get authTestNumbersAskAdmin => 'Ask an admin for the test numbers';
-
-  @override
-  String get authTestStatusNew => 'Test · no account yet';
-
-  @override
   String get authNeedHelp => 'Need help?';
 
   @override

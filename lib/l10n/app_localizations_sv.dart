@@ -806,18 +806,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.';
 
   @override
-  String get authTestNumbersTitle => 'Testnummer (endast testversion)';
-
-  @override
-  String get authTestNumbersButton => 'Testnummer';
-
-  @override
-  String get authTestNumbersAskAdmin => 'Be en admin om testnumren';
-
-  @override
-  String get authTestStatusNew => 'Test · inget konto än';
-
-  @override
   String get authNeedHelp => 'Behöver du hjälp?';
 
   @override

@@ -69,9 +69,7 @@ void main() {
       'keyboard', (tester) async {
     _phone(tester);
     await tester.pumpWidget(
-      MaterialApp(
-        home: DriverSignIn(controller: _auth(), showTestAccounts: false),
-      ),
+      MaterialApp(home: DriverSignIn(controller: _auth())),
     );
     await tester.pump(const Duration(seconds: 6));
 

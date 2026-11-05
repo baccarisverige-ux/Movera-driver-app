@@ -1462,30 +1462,6 @@ abstract class AppLocalizations {
   /// **'You’re on the waiting list. We’ll let you know when sign-in opens for your number.'**
   String get authWaitlistSaved;
 
-  /// No description provided for @authTestNumbersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Test numbers (test build only)'**
-  String get authTestNumbersTitle;
-
-  /// No description provided for @authTestNumbersButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Test numbers'**
-  String get authTestNumbersButton;
-
-  /// No description provided for @authTestNumbersAskAdmin.
-  ///
-  /// In en, this message translates to:
-  /// **'Ask an admin for the test numbers'**
-  String get authTestNumbersAskAdmin;
-
-  /// No description provided for @authTestStatusNew.
-  ///
-  /// In en, this message translates to:
-  /// **'Test · no account yet'**
-  String get authTestStatusNew;
-
   /// No description provided for @authNeedHelp.
   ///
   /// In en, this message translates to:
