@@ -1,0 +1,290 @@
+{
+  "wallet": "Wallet",
+  "yourDriverStatusIsCurrentlySuspended": "Your driver status is currently suspended, so new trip requests cannot be accepted and Radar cannot be started.",
+  "contactSupport": "Contact support",
+  "rating": "Rating",
+  "yourDriverHasArrivedAtPickup": "Your driver has arrived at the pickup point.",
+  "yourCurrentTripContinuesNextTrip": "Your current trip continues. The next trip goes back to dispatch for another driver.",
+  "yourAnswerIsSavedToThis": "Your answer is saved to this trip.",
+  "yourAnswersAreSavedToThis": "Your answers are saved to this trip.",
+  "yourDialerOpensWith112Movera": "Your dialer opens with 112. Movera never calls for you.",
+  "yourCurrentTripContinues": "Your current trip continues.",
+  "yourFare": "Your fare",
+  "yourTrip": "Your trip",
+  "contactRider": "Contact rider",
+  "yourCurrentTripContinuesReasonRequired": "Your current trip continues · reason required",
+  "ratingNotSentDemo": "Rating not sent (demo)",
+  "yourEarnings": "Your earnings",
+  "yourMoveraActivity": "Your Movera activity",
+  "profile": "Profile",
+  "contactCouldNotBeSavedRetry": "Contact could not be saved. Retry.",
+  "payoutDateIsNotAvailable": "Payout date is not available",
+  "payoutAccount": "Payout account",
+  "ratingRiderTripsTrips": "{rating} · {riderTrips} trips",
+  "@ratingRiderTripsTrips": {
+    "placeholders": {
+      "rating": {
+        "type": "Object"
+      },
+      "riderTrips": {
+        "type": "Object"
+      }
+    }
+  },
+  "prefStandardEveryday": "Standard • Everyday ride",
+  "prefExtraComfort": "Extra comfort • Plush",
+  "prefLuxuryPremium": "Luxury • Premium service",
+  "prefFasterPickup": "Faster pickup • Priority",
+  "prefSixSeat": "6 seat • Spacious",
+  "prefLowEmissions": "Low emissions • Eco",
+  "prefPetFriendly": "Pet friendly • Carrier OK",
+  "prefChildSeat": "Child seat • Kids safe",
+  "prefCategoriesSaved": "{count, plural, =1{1 ride category saved} other{{count} ride categories saved}}",
+  "@prefCategoriesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prefActiveOfTotal": "{active} of {total} active",
+  "@prefActiveOfTotal": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "prefChooseRideOptions": "Choose your ride options",
+  "prefSelectRideTypes": "Select the ride types you'd like available for your trips",
+  "prefMoveraSetsFromCar": "Movera sets these from your car. Switch off any you don’t want.",
+  "prefSave": "Save preferences",
+  "anaPreview": "Analytics preview",
+  "anaSample3Rides": "Sample: 3 rides completed",
+  "anaSampleLastTrip": "Sample last trip",
+  "anaSamplePerformance": "Sample performance",
+  "anaCancel": "Cancel",
+  "anaSamePeriodHome": "Same period as the home sheet",
+  "anaSampleAcceptance": "Sample · {rate} of offers accepted",
+  "@anaSampleAcceptance": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "anaSampleCancellation": "Sample · {rate} of accepted trips",
+  "@anaSampleCancellation": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "anaSampleStrongestArea": "Sample strongest area",
+  "bankAddHolderName": "Add the account holder’s name.",
+  "bankCheckIban": "Check the IBAN format and check digits against your bank statement.",
+  "bankBicFormat": "BIC / SWIFT has 8 or 11 letters and digits.",
+  "bankCheckClearing": "Check the clearing number: 4 digits, or 5 starting with 8 for Swedbank.",
+  "bankAccountDigits": "The account number has 6 to 10 digits.",
+  "bankPreviewNotSaved": "Preview only — account not saved.",
+  "bankAccount": "Bank account",
+  "bankHolder": "Holder",
+  "bank": "Bank",
+  "bankUseIban": "Use the IBAN on your bank statement. Foreign IBANs show a country code; no bank connection is verified.",
+  "bankFoundFromClearing": "The bank is found from the clearing number.",
+  "bankDemoNotSaved": "Demo: account not saved or sent to a bank",
+  "bankPreviewAccountDetails": "Preview account details",
+  "bankLocalPreviewOnly": "Local preview only. No bank is connected, nothing is verified, and no payout is scheduled.",
+  "bankCheckInPreview": "You can check account details in the preview form. Details are discarded when you leave the form; no payout account is connected.",
+  "ratingAndRides": "{rating} ★ · {count, plural, =1{1 ride} other{{count} rides}}",
+  "@ratingAndRides": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "anaSampleTripRoute": "Central Station → Södermalm",
+  "bankAccountSection": "ACCOUNT",
+  "@bankAccountSection": {
+    "description": "Section header above the bank account fields."
+  },
+  "acctDetailsTitle": "Your details",
+  "acctDetailsIntro": "Movera checks these before you can drive. Fill them in once.",
+  "acctFirstName": "First name",
+  "acctLastName": "Last name",
+  "acctDateOfBirth": "Date of birth",
+  "acctPickDate": "Pick a date",
+  "acctEmail": "E-mail",
+  "acctCountry": "Country",
+  "acctCity": "City",
+  "acctChooseCity": "Choose your city",
+  "acctLanguage": "Language",
+  "acctAccountType": "Account type",
+  "acctComingSoon": "Coming soon",
+  "acctCountrySweden": "Sweden",
+  "acctCountryFrance": "France",
+  "acctCountryTunisia": "Tunisia",
+  "acctTypeDriverTitle": "Driver",
+  "acctTypeDriverBody": "I drive for a fleet",
+  "acctTypeFleetTitle": "Fleet",
+  "acctTypeFleetBody": "I run a company with cars and drivers",
+  "acctCompanyName": "Company name",
+  "acctOrgNumberSe": "Organisation number",
+  "acctOrgNumberFr": "SIREN",
+  "acctCompanyAddress": "Company address",
+  "acctJoinNow": "Join your fleet now",
+  "acctJoinNowBody": "Your fleet owner shares a Movera code with you. You can also do this later from Profile › My fleet.",
+  "acctFleetCode": "Fleet code",
+  "acctOwnerName": "Owner’s full name",
+  "acctOwnerEmail": "Owner’s e-mail",
+  "acctRequired": "Required",
+  "acctUnderAge": "You must be at least {age} to drive with Movera.",
+  "@acctUnderAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "acctInvalidDate": "Enter a valid date.",
+  "acctInvalidEmail": "Enter a valid e-mail.",
+  "acctCountryNotOpen": "Movera is not open in this country yet.",
+  "acctInvalidCity": "Choose a city of your country.",
+  "acctTermsRequired": "Accept the terms to continue.",
+  "acctCompanyRequired": "Fill in your company’s details.",
+  "acctDetailsLocked": "Your details are already approved. Contact support to change them.",
+  "acctCouldNotSend": "Couldn’t send your details. Try again.",
+  "acctTooManyTriesHour": "Too many tries. Wait about an hour and try again.",
+  "acctChangedReload": "Your account changed meanwhile. Pull to refresh and try again.",
+  "acctCouldNotLoad": "Couldn’t load your account.",
+  "acctTryAgain": "Something went wrong. Try again.",
+  "acctDetailsHead": "Your ",
+  "acctDetailsAccent": "details",
+  "acctDetailsEditIntro": "Movera is checking your account. You can still change these until it is approved.",
+  "acctPhone": "Phone number",
+  "acctTapToChange": "Tap to change",
+  "acctChooseCountry": "Choose your country",
+  "acctChooseCountryBody": "Where you will drive.",
+  "acctChooseLanguage": "Choose your language",
+  "acctChooseLanguageBody": "The app’s language. You can change it later.",
+  "acctCityStockholmHint": "Stockholm, Södertälje and the whole county",
+  "acctCityParisHint": "Paris and the Île-de-France region",
+  "acctFromProvider": "from {provider}",
+  "@acctFromProvider": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "acctOrgNumberSeRule": "Enter the 10 digits of your organisation number.",
+  "acctOrgNumberFrRule": "Enter a SIREN (9 digits) or a SIRET (14 digits).",
+  "acctCompanyAddressHint": "Street, postcode, town",
+  "acctOwnerEmailHint": "name@company.com",
+  "acctJoinNowShort": "Your fleet owner shares a Movera code with you.",
+  "acctLeaveSignUpQ": "Leave the sign-up?",
+  "acctLeaveSignUpBody": "You will be signed out and back at the first step. What you typed stays on this phone until you sign in again.",
+  "acctSaveDetails": "Save details",
+  "acctDetailsSaved": "Your details are saved. Movera checks them.",
+  "ratingTagOnTime": "On time",
+  "ratingTagPolite": "Polite",
+  "ratingTagClearPickup": "Clear pickup",
+  "ratingCommentOptional": "Comment (optional)",
+  "ratingCouldNotSend": "The rating could not be sent.",
+  "anaYourPerformance": "Your performance · last 30 days",
+  "anaAcceptanceDetail": "{rate} of offers accepted",
+  "@anaAcceptanceDetail": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "anaCancellationDetail": "{rate} of accepted trips",
+  "@anaCancellationDetail": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "anaNotEnoughData": "Not enough data yet",
+  "walletThisWeek": "This week",
+  "walletLiveBalanceNote": "Earned this week, as Movera counts it.",
+  "walletLiveNoPayouts": "No payouts yet.",
+  "walletLiveUnavailable": "Could not load your earnings. Try again later.",
+  "walletPayoutPaid": "Paid",
+  "walletPayoutPending": "Waiting",
+  "contactChangePhone": "Change phone number",
+  "@contactChangePhone": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactChangeEmail": "Change e-mail",
+  "@contactChangeEmail": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactNewPhone": "New phone number",
+  "@contactNewPhone": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactNewEmail": "New e-mail",
+  "@contactNewEmail": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactSendCode": "Send code",
+  "@contactSendCode": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactCodeSentPhone": "We sent a code to the new number.",
+  "@contactCodeSentPhone": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactCodeSentEmail": "We send a code to the new e-mail.",
+  "@contactCodeSentEmail": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactCode": "Code",
+  "@contactCode": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactSave": "Save",
+  "@contactSave": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactPhoneSaved": "Phone number changed",
+  "@contactPhoneSaved": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactEmailSaved": "E-mail changed",
+  "@contactEmailSaved": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactPhoneTaken": "This number is already used by another account",
+  "@contactPhoneTaken": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactEmailTaken": "This e-mail is already used by another account",
+  "@contactEmailTaken": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactChangeFailed": "Could not change it. Try again.",
+  "@contactChangeFailed": {
+    "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."
+  },
+  "contactReauthRequired": "Sign in again first, then change your number/e-mail",
+  "contactChangeTooMany": "Too many changes — try again in an hour",
+  "@contactReauthRequired": {
+    "description": "403 reauth_required on phone/e-mail change."
+  },
+  "@contactChangeTooMany": {
+    "description": "429 change_too_many on phone/e-mail change."
+  }
+}

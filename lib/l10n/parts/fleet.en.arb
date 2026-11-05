@@ -1,0 +1,219 @@
+{
+  "fleetJoinTitle": "Join your fleet",
+  "fleetJoinBody": "Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.",
+  "fleetJoin": "Join",
+  "fleetJoined": "You’re in {name}.",
+  "@fleetJoined": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetJoinMismatch": "The code, the owner’s name and e-mail don’t match a fleet. Check them with your fleet owner.",
+  "fleetAlreadyIn": "You’re already in a fleet. Leave it first.",
+  "fleetAccountHasOwn": "A fleet account has its own fleet.",
+  "fleetOnTrip": "Finish the trip first.",
+  "fleetOwnerCannotLeave": "The owner can’t leave the fleet.",
+  "fleetNotInOne": "You’re not in a fleet.",
+  "fleetOwnerOnly": "Only the fleet owner can do that.",
+  "fleetYourCompany": "Your company",
+  "fleetYourFleet": "Your fleet",
+  "fleetCode": "Fleet code",
+  "fleetCodeHint": "Share it with your drivers together with your name and e-mail.",
+  "fleetCodeWaiting": "Waiting for Movera’s approval",
+  "fleetCodeShareText": "Join {name} on Movera Driver. Code: {code}. Owner: {owner}, {email}.",
+  "@fleetCodeShareText": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "code": {
+        "type": "Object"
+      },
+      "owner": {
+        "type": "Object"
+      },
+      "email": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetShare": "Share",
+  "fleetCopy": "Copy",
+  "fleetCodeCopied": "Code copied",
+  "fleetDrivers": "Drivers",
+  "fleetNoDrivers": "No drivers yet. Share your code.",
+  "fleetRemove": "Remove",
+  "fleetRemoveDriverQ": "Remove {name} from your fleet?",
+  "@fleetRemoveDriverQ": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetCars": "Cars",
+  "fleetNoCars": "No cars yet.",
+  "fleetNoCarsMember": "Your fleet has no approved car yet.",
+  "fleetAddCar": "Add car",
+  "fleetChooseCar": "Choose this car",
+  "fleetYourCar": "Your car",
+  "fleetInUse": "In use by another driver",
+  "fleetPickedBy": "Picked by {name}",
+  "@fleetPickedBy": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetLeave": "Leave fleet",
+  "fleetLeaveQ": "Leave {name}? You can join another fleet with a new code.",
+  "@fleetLeaveQ": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetCouldNotLoad": "Couldn’t load your fleet.",
+  "fleetStatusPending": "Waiting for approval",
+  "fleetStatusBlocked": "Blocked",
+  "fleetVehicleInUse": "Another driver is driving this car right now.",
+  "fleetVehicleNotApproved": "This car isn’t approved yet.",
+  "fleetVehicleNotYours": "This car isn’t your fleet’s.",
+  "fleetPlateTaken": "A car with this plate is already registered.",
+  "fleetCarAdded": "Car added. Movera checks it.",
+  "fleetCouldNotAddCar": "Couldn’t add the car. Try again.",
+  "fleetCouldNotPick": "Couldn’t choose the car. Try again.",
+  "fleetColour": "Colour",
+  "fleetPlate": "Plate",
+  "fleetSeats": "Seats",
+  "fleetCarTypes": "Car types",
+  "fleetMemberCount": "{count, plural, =1{1 driver} other{{count} drivers}}",
+  "@fleetMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetCarCount": "{count, plural, =1{1 car} other{{count} cars}}",
+  "@fleetCarCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetOrgNumber": "Org. no. {number}",
+  "@fleetOrgNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetOnline": "Online",
+  "fleetOffline": "Offline",
+  "fleetCarSeatsCount": "{count, plural, =1{1 seat} other{{count} seats}}",
+  "@fleetCarSeatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetJoinLink": "Join a fleet",
+  "fleetVehiclesAwait": "Your fleet adds its cars; you pick the one you drive here.",
+  "fleetRequestPending": "You already asked a fleet. Wait for its answer or cancel that request.",
+  "fleetInvitePending": "That number already has an open invitation.",
+  "fleetOwnPhone": "That is your own number.",
+  "fleetInvalidPhone": "Enter the number in international form, e.g. +46 70 123 45 67.",
+  "fleetNotApprovedYet": "Movera has not approved your fleet yet. You can invite drivers after that.",
+  "fleetInvitationExpired": "This invitation has expired.",
+  "fleetInvitationGone": "This invitation is no longer open.",
+  "fleetADriver": "A driver",
+  "fleetRequestBodyOwner": "Wants to join your fleet with your code.",
+  "fleetInviteWaitsSignUp": "Invited. Waiting for this number to sign up in Movera Driver.",
+  "fleetInviteWaitsAnswer": "Invited. Waiting for the driver’s answer.",
+  "fleetInviteBodyDriver": "Invites you to its fleet. Accept to drive its cars; Movera then checks your documents.",
+  "fleetRequestWaitsOwner": "Your request is sent. The fleet owner accepts it in the app.",
+  "fleetInviteNew": "Answer",
+  "fleetInviteExpires": "Valid until {date}",
+  "@fleetInviteExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetAccept": "Accept",
+  "fleetDecline": "Decline",
+  "fleetCancelling": "Cancelling…",
+  "fleetPendingInvitations": "{count, plural, =1{1 invitation waiting for your answer} other{{count} invitations waiting for your answer}}",
+  "@fleetPendingInvitations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetInviteDriver": "Invite driver",
+  "fleetInviteDriverBody": "The driver’s phone number, the one he signs in with. He accepts in his app; a number without an account gets an SMS with the app link.",
+  "fleetInviteDriverHint": "The invitation is valid for 7 days.",
+  "fleetSendInvite": "Send invitation",
+  "fleetAskToJoin": "Ask to join",
+  "fleetAskToJoinHint": "The fleet owner accepts your request in his app.",
+  "fleetCancelInviteQ": "Take back this invitation?",
+  "fleetDeclineInviteQ": "Decline {name}?",
+  "@fleetDeclineInviteQ": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetCancelInvite": "Take back",
+  "fleetDriverJoined": "{name} is now in your fleet.",
+  "@fleetDriverJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetInviteSent": "Invitation sent to {who}.",
+  "@fleetInviteSent": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetRequests": "Requests to join",
+  "fleetInvitationCount": "{count, plural, =1{1 pending} other{{count} pending}}",
+  "@fleetInvitationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetInvites": "Invitations",
+  "fleetNoInvites": "No open invitation. Invite a driver by phone number, or share your code.",
+  "fleetYourRequest": "Your request",
+  "fleetRequestSent": "Request sent to {name}. The owner answers in the app.",
+  "@fleetRequestSent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetNoApprovedCarOwnerHere": "Add a car below or finish its documents. Drivers can go online once a car is approved.",
+  "@fleetNoApprovedCarOwnerHere": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  }
+}
