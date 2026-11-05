@@ -356,9 +356,13 @@ extension _HomeScheduled on _DriverHomeState {
       ..ride = null
       ..lateSince = null;
     ScheduledRideStore.reminder.value = null;
-    IslandMessages.show(HomeIslandNotices.leaveNow(ride.pickupTime));
+    IslandMessages.show(
+      HomeIslandNotices.leaveNow(ride.pickupTime, riderName: ride.riderName),
+    );
     _noteRideAlert(
-      () => tr.leaveNowForPickupTimePickup(ride.pickupTime),
+      () => ride.riderName.isEmpty
+          ? tr.leaveNowForPickupTimePickup(ride.pickupTime)
+          : tr.leaveNowTimeToDriveName(ride.riderName),
       ride.pickupAddress,
       leaveNow: true,
     );

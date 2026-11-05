@@ -192,7 +192,17 @@ void main() {
         await _frames(tester, const Duration(seconds: 9));
         expect(find.byType(AcceptRide), findsNothing);
         expect(ScheduledRideStore.upcoming, contains(demoReservationRequest));
-        expect(_saidTitles, isNot(contains('Leave now for 07:40 pickup')));
+        expect(
+          _saidTitles,
+          isNot(
+            anyElement(
+              anyOf(
+                equals('Leave now for 07:40 pickup'),
+                startsWith('Time to drive to pickup · '),
+              ),
+            ),
+          ),
+        );
 
         navigator.pop();
         await _frames(tester, const Duration(seconds: 2));
@@ -201,7 +211,15 @@ void main() {
           tester.widget<AcceptRide>(find.byType(AcceptRide)).pickupAddress,
           'Gamla vägen, Stockholm',
         );
-        expect(_saidTitles, contains('Leave now for 07:40 pickup'));
+        expect(
+          _saidTitles,
+          anyElement(
+            anyOf(
+              equals('Leave now for 07:40 pickup'),
+              startsWith('Time to drive to pickup · '),
+            ),
+          ),
+        );
         expect(
           ScheduledRideStore.upcoming,
           isNot(contains(demoReservationRequest)),

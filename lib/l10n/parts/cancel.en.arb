@@ -1,0 +1,266 @@
+{
+  "cancelNextTripQuestion": "Cancel the next trip?",
+  "cancelThisTripQuestion": "Cancel this trip?",
+  "cancelNextTrip": "Cancel next trip",
+  "cancelTrip": "Cancel trip",
+  "cancel": "Cancel",
+  "noShow": "No-show",
+  "noShowCanBeApplied": "No-show can be applied",
+  "noAnswer": "No answer",
+  "noCompletedRidesInThisPeriod": "No completed rides in this period.",
+  "noCashTripsInThisPeriod": "No cash trips in this period.",
+  "noPayoutBalanceUntilPaymentService": "No payout balance until a payment service is connected.",
+  "noAutomaticPayout": "No automatic payout",
+  "noPayoutsYetLocalPreviewCannot": "No payouts yet. Local preview cannot invent earnings.",
+  "noPayoutAccountConnected": "No payout account connected",
+  "cancelReasonRiderNoShow": "Rider did not arrive",
+  "@cancelReasonRiderNoShow": {
+    "description": "Cancel reason rider_no_show."
+  },
+  "cancelReasonRiderNoShowDetail": "The no-show time has passed and the rider is not here",
+  "@cancelReasonRiderNoShowDetail": {
+    "description": "Cancel reason rider_no_show, the line under it."
+  },
+  "cancelReasonRiderRequestedCancel": "Rider asked to cancel",
+  "@cancelReasonRiderRequestedCancel": {
+    "description": "Cancel reason rider_requested_cancel."
+  },
+  "cancelReasonRiderRequestedCancelDetail": "The rider doesn’t want to continue",
+  "@cancelReasonRiderRequestedCancelDetail": {
+    "description": "Cancel reason rider_requested_cancel, the line under it."
+  },
+  "cancelReasonRiderNotAtPickup": "Rider not at pickup",
+  "@cancelReasonRiderNotAtPickup": {
+    "description": "Cancel reason rider_not_at_pickup."
+  },
+  "cancelReasonRiderNotAtPickupDetail": "You arrived but couldn’t find the rider",
+  "@cancelReasonRiderNotAtPickupDetail": {
+    "description": "Cancel reason rider_not_at_pickup, the line under it."
+  },
+  "cancelReasonUnsafePickup": "Pickup unsafe",
+  "@cancelReasonUnsafePickup": {
+    "description": "Cancel reason unsafe_pickup."
+  },
+  "cancelReasonUnsafePickupDetail": "You can’t stop there safely",
+  "@cancelReasonUnsafePickupDetail": {
+    "description": "Cancel reason unsafe_pickup, the line under it."
+  },
+  "cancelReasonVehicleIssueBeforeStart": "Vehicle problem",
+  "@cancelReasonVehicleIssueBeforeStart": {
+    "description": "Cancel reason vehicle_issue_before_start."
+  },
+  "cancelReasonVehicleIssueBeforeStartDetail": "Your car can’t make the trip",
+  "@cancelReasonVehicleIssueBeforeStartDetail": {
+    "description": "Cancel reason vehicle_issue_before_start, the line under it."
+  },
+  "cancelReasonDriverEmergencyBeforeStart": "Personal emergency",
+  "@cancelReasonDriverEmergencyBeforeStart": {
+    "description": "Cancel reason driver_emergency_before_start."
+  },
+  "cancelReasonDriverEmergencyBeforeStartDetail": "Something urgent came up",
+  "@cancelReasonDriverEmergencyBeforeStartDetail": {
+    "description": "Cancel reason driver_emergency_before_start, the line under it."
+  },
+  "cancelReasonOtherBeforeStart": "Other reason",
+  "@cancelReasonOtherBeforeStart": {
+    "description": "Cancel reason other_before_start."
+  },
+  "cancelReasonOtherBeforeStartDetail": "Something else stops this pickup",
+  "@cancelReasonOtherBeforeStartDetail": {
+    "description": "Cancel reason other_before_start, the line under it."
+  },
+  "cancelReasonRiderRequestedEarlyEnd": "Rider asked to end the trip",
+  "@cancelReasonRiderRequestedEarlyEnd": {
+    "description": "Cancel reason rider_requested_early_end."
+  },
+  "cancelReasonRiderRequestedEarlyEndDetail": "The rider wants to leave before the destination",
+  "@cancelReasonRiderRequestedEarlyEndDetail": {
+    "description": "Cancel reason rider_requested_early_end, the line under it."
+  },
+  "cancelReasonSafetyConcernOnTrip": "Safety concern",
+  "@cancelReasonSafetyConcernOnTrip": {
+    "description": "Cancel reason safety_concern_on_trip."
+  },
+  "cancelReasonSafetyConcernOnTripDetail": "Continuing the trip may be unsafe",
+  "@cancelReasonSafetyConcernOnTripDetail": {
+    "description": "Cancel reason safety_concern_on_trip, the line under it."
+  },
+  "cancelReasonVehicleIssueOnTrip": "Vehicle problem",
+  "@cancelReasonVehicleIssueOnTrip": {
+    "description": "Cancel reason vehicle_issue_on_trip."
+  },
+  "cancelReasonVehicleIssueOnTripDetail": "A vehicle issue makes it unsafe to continue",
+  "@cancelReasonVehicleIssueOnTripDetail": {
+    "description": "Cancel reason vehicle_issue_on_trip, the line under it."
+  },
+  "cancelReasonAccidentOrRoadEmergency": "Accident or road emergency",
+  "@cancelReasonAccidentOrRoadEmergency": {
+    "description": "Cancel reason accident_or_road_emergency."
+  },
+  "cancelReasonAccidentOrRoadEmergencyDetail": "An incident or emergency prevents continuing",
+  "@cancelReasonAccidentOrRoadEmergencyDetail": {
+    "description": "Cancel reason accident_or_road_emergency, the line under it."
+  },
+  "cancelReasonRiderBehavior": "Rider behavior",
+  "@cancelReasonRiderBehavior": {
+    "description": "Cancel reason rider_behavior."
+  },
+  "cancelReasonRiderBehaviorDetail": "The rider’s behavior requires the trip to end",
+  "@cancelReasonRiderBehaviorDetail": {
+    "description": "Cancel reason rider_behavior, the line under it."
+  },
+  "cancelReasonTripOrDestinationIssue": "Trip or destination issue",
+  "@cancelReasonTripOrDestinationIssue": {
+    "description": "Cancel reason trip_or_destination_issue."
+  },
+  "cancelReasonTripOrDestinationIssueDetail": "A trip detail or destination problem prevents continuing",
+  "@cancelReasonTripOrDestinationIssueDetail": {
+    "description": "Cancel reason trip_or_destination_issue, the line under it."
+  },
+  "cancelReasonOtherOnTrip": "Other reason",
+  "@cancelReasonOtherOnTrip": {
+    "description": "Cancel reason other_on_trip."
+  },
+  "cancelReasonOtherOnTripDetail": "Another issue requires the trip to end early",
+  "@cancelReasonOtherOnTripDetail": {
+    "description": "Cancel reason other_on_trip, the line under it."
+  },
+  "cancelReasonScheduledCannotMakeTime": "I can no longer make the pickup time",
+  "@cancelReasonScheduledCannotMakeTime": {
+    "description": "Cancel reason scheduled_cannot_make_time."
+  },
+  "cancelReasonScheduledVehicleIssue": "Vehicle issue",
+  "@cancelReasonScheduledVehicleIssue": {
+    "description": "Cancel reason scheduled_vehicle_issue."
+  },
+  "cancelReasonScheduledPersonalEmergency": "Personal emergency",
+  "@cancelReasonScheduledPersonalEmergency": {
+    "description": "Cancel reason scheduled_personal_emergency."
+  },
+  "cancelReasonScheduledPickupTooFar": "Pickup is too far from me",
+  "@cancelReasonScheduledPickupTooFar": {
+    "description": "Cancel reason scheduled_pickup_too_far."
+  },
+  "cancelReasonScheduledTripDetails": "Trip details no longer work for me",
+  "@cancelReasonScheduledTripDetails": {
+    "description": "Cancel reason scheduled_trip_details."
+  },
+  "cancelReasonScheduledOther": "Other reason",
+  "@cancelReasonScheduledOther": {
+    "description": "Cancel reason scheduled_other."
+  },
+  "cancelReasonNextTripCurrentRunningLate": "Current trip is taking longer",
+  "@cancelReasonNextTripCurrentRunningLate": {
+    "description": "Cancel reason next_trip_current_running_late."
+  },
+  "cancelReasonNextTripCurrentRunningLateDetail": "You can’t reach the next pickup in time",
+  "@cancelReasonNextTripCurrentRunningLateDetail": {
+    "description": "Cancel reason next_trip_current_running_late, the line under it."
+  },
+  "cancelReasonNextTripPickupTooFar": "Too far from the pickup",
+  "@cancelReasonNextTripPickupTooFar": {
+    "description": "Cancel reason next_trip_pickup_too_far."
+  },
+  "cancelReasonNextTripPickupTooFarDetail": "The next pickup is further than expected",
+  "@cancelReasonNextTripPickupTooFarDetail": {
+    "description": "Cancel reason next_trip_pickup_too_far, the line under it."
+  },
+  "cancelReasonNextTripRiderRequested": "Rider asked me to cancel",
+  "@cancelReasonNextTripRiderRequested": {
+    "description": "Cancel reason next_trip_rider_requested."
+  },
+  "cancelReasonNextTripRiderRequestedDetail": "The next rider doesn’t want the trip",
+  "@cancelReasonNextTripRiderRequestedDetail": {
+    "description": "Cancel reason next_trip_rider_requested, the line under it."
+  },
+  "cancelReasonNextTripVehicleIssue": "Problem with the car",
+  "@cancelReasonNextTripVehicleIssue": {
+    "description": "Cancel reason next_trip_vehicle_issue."
+  },
+  "cancelReasonNextTripVehicleIssueDetail": "Your car can’t make the next trip",
+  "@cancelReasonNextTripVehicleIssueDetail": {
+    "description": "Cancel reason next_trip_vehicle_issue, the line under it."
+  },
+  "cancelReasonNextTripDriverEmergency": "Personal emergency",
+  "@cancelReasonNextTripDriverEmergency": {
+    "description": "Cancel reason next_trip_driver_emergency."
+  },
+  "cancelReasonNextTripDriverEmergencyDetail": "Something urgent came up",
+  "@cancelReasonNextTripDriverEmergencyDetail": {
+    "description": "Cancel reason next_trip_driver_emergency, the line under it."
+  },
+  "cancelReasonNextTripOther": "Other reason",
+  "@cancelReasonNextTripOther": {
+    "description": "Cancel reason next_trip_other."
+  },
+  "cancelReasonNextTripOtherDetail": "Something else stops the next trip",
+  "@cancelReasonNextTripOtherDetail": {
+    "description": "Cancel reason next_trip_other, the line under it."
+  },
+  "cancelReasonPickupIncorrect": "Pickup point is incorrect",
+  "@cancelReasonPickupIncorrect": {
+    "description": "Cancel reason pickup_incorrect."
+  },
+  "cancelReasonWrongRideOption": "I chose the wrong ride option",
+  "@cancelReasonWrongRideOption": {
+    "description": "Cancel reason wrong_ride_option."
+  },
+  "cancelReasonRequestedByMistake": "I requested the ride by mistake",
+  "@cancelReasonRequestedByMistake": {
+    "description": "Cancel reason requested_by_mistake."
+  },
+  "cancelReasonWaitTooLong": "The wait is taking too long",
+  "@cancelReasonWaitTooLong": {
+    "description": "Cancel reason wait_too_long."
+  },
+  "cancelReasonDestinationChange": "Destination needs to be changed",
+  "@cancelReasonDestinationChange": {
+    "description": "Cancel reason destination_change."
+  },
+  "cancelReasonDriverNotSuitable": "Driver/ride details are not suitable",
+  "@cancelReasonDriverNotSuitable": {
+    "description": "Cancel reason driver_not_suitable."
+  },
+  "cancelReasonPlansChanged": "Plans changed",
+  "@cancelReasonPlansChanged": {
+    "description": "Cancel reason plans_changed."
+  },
+  "cancelReasonSomethingElse": "Something else",
+  "@cancelReasonSomethingElse": {
+    "description": "Cancel reason something_else."
+  },
+  "noNotificationsYet": "No notifications yet",
+  "cancelRateTitle": "Cancelation Rate",
+  "cancelRateKeepLow": "Keep your cancel rate low to keep full access to trips",
+  "cancelRateEveryCancelCounts": "Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.",
+  "cancelRateHowCalculated": "How your cancelation is calculated",
+  "cancelRateHowBody": "Your cancellation rate is calculated based on the number of trips you cancel compared to the total trips you confirm. We use your last 100 confirmed trip requests to determine this percentage.",
+  "cancelRateWhyMatters": "Why cancelation rate matters",
+  "cancelRateWhyBody": "A high cancellation rate affects the reliability of our service and can impact your ability to get ride requests. Maintaining a low cancellation rate helps ensure better service for all users.",
+  "noShowConfirmYouGet": "Mark as no-show? You get {amount}",
+  "@noShowConfirmYouGet": {
+    "description": "Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.noShowConfirm (G5 Q6): waiting.noShowDriverShare.",
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "noShowConfirmNoFee": "Mark as no-show? No fee",
+  "@noShowConfirmNoFee": {
+    "description": "Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.noShowConfirmNoFee (G5 Q6)."
+  },
+  "cancelAfterArrivedNote": "Cancelling after the driver has arrived and the free waiting is over counts as a no-show",
+  "@cancelAfterArrivedNote": {
+    "description": "Contract v0.18.7 pickupWaiting.terms.texts.cancelAfterArrived (G5 Q2): shown when terms.cancelAfterArrivedIsNoShow."
+  },
+  "noShowFromTime": "Can be applied from {time} if the rider has not arrived.",
+  "@noShowFromTime": {
+    "description": "G5 checker round 2: the no-show moment from the server (waiting.noShowAt), local clock time.",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  }
+}

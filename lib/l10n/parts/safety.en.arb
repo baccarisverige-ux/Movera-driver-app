@@ -1,0 +1,77 @@
+{
+  "safetyToolkit": "Safety toolkit",
+  "safetyAlertKeptOnPhoneDemo": "Demo: alert kept on this phone only. No one at Movera was notified.",
+  "safetyAlertNotSentLive": "Not sent: Movera cannot receive ride-check alerts yet. In danger, call 112.",
+  "safety": "Safety",
+  "safetyContactEmergencyQ": "Contact emergency services?",
+  "safetyUse112Only": "Use 112 only when you or someone else needs immediate help.",
+  "safetySos": "SOS",
+  "safetySosHint": "Calls 112 and alerts Movera",
+  "safetySosQ": "Send SOS?",
+  "safetySosBody": "Movera's safety team is alerted with your position, and your phone opens 112.",
+  "safetySosSend": "Send SOS",
+  "safetySosSent": "SOS sent",
+  "safetySosSentNoDialer": "SOS sent. Could not open the dialer: dial 112 on your phone.",
+  "safetySosNotSent": "SOS could not reach Movera. Call 112.",
+  "safetySosNoTrip": "SOS to Movera works during a trip. Call 112.",
+  "safetyDialerOpened": "Emergency dialer opened — confirm the call on your device.",
+  "safetyDialerAskedBrowser": "Your browser was asked to call 112. If no call starts, dial 112 on your phone.",
+  "safetyAudioUnavailable": "Audio recording is unavailable in this demo.",
+  "safetyTripSharingUnavailable": "Trip sharing is unavailable in this demo.",
+  "safetyPreferences": "Safety preferences",
+  "safetyRideCheckOnOthersPreview": "Ride check is on. The others are preview only.",
+  "safetyUnavailableWithoutVerification": "Unavailable without account verification",
+  "safetyAutoTripSharing": "Automatic trip sharing",
+  "safetyUnavailableWithoutSharing": "Unavailable without a sharing service",
+  "safetyOnSetByMovera": "On · set by Movera for every trip",
+  "safetyOn": "On",
+  "safetyRideCheckExplained": "On for every trip. Asks \"Is everything OK?\" after a long stop, a drop-off far from the destination, a big detour or a very hard stop.",
+  "safetyTools": "Safety tools",
+  "safetyQuickTools": "Quick tools designed to protect you during every ride.",
+  "safetyContact112": "Contact 112",
+  "safetyShareTripHint": "Show someone where you are",
+  "safetyShareTrip": "Share trip",
+  "safetyRideCheckOnPreviewOnly": "Ride check on · the others are preview only",
+  "rrMatchingTrip": "Matching trip",
+  "rrConfirmingRealTime": "Confirming this request in real time…",
+  "rrCouldNotMatch": "Could not match trip. Try again.",
+  "rrConnectionInterrupted": "Connection interrupted. You can retry this request.",
+  "rrAssignedOpening": "You’re assigned to this request. Opening trip…",
+  "rrAnotherMatchedFirst": "Another driver matched this trip first.",
+  "rrNoLongerOnRadar": "This trip is no longer on Radar.",
+  "rrTripsTowardPickup": "Trips toward your {time} pickup",
+  "@rrTripsTowardPickup": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rrLive": "Live",
+  "rrFreshNew": "{count} new",
+  "@rrFreshNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rrNew": "New",
+  "rrDestinationRoute": "Destination route",
+  "rrTripsToward": "Trips toward {place}",
+  "@rrTripsToward": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "rrScanningNearby": "Scanning nearby",
+  "rrNewTripsAppear": "New trips will appear here when the radar finds requests around you.",
+  "safetyCall112": "Call 112",
+  "@safetyCall112": {
+    "description": "Contract v0.18.5 safety.onlyDuringTrip (G14)."
+  },
+  "safetyAudioComingSoon": "Audio recording is coming soon.",
+  "safetyTripSharingComingSoon": "Trip sharing is coming soon."
+}
