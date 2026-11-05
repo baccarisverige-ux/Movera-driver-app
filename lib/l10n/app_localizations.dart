@@ -6772,6 +6772,30 @@ abstract class AppLocalizations {
   /// **'Waiting for approval'**
   String get swPayoutStatusPendingApproval;
 
+  /// v0.18.37 §61: trip settings row; he goes offline when his trips end.
+  ///
+  /// In en, this message translates to:
+  /// **'Go offline after this trip'**
+  String get goOfflineAfterTrip;
+
+  /// v0.18.37 §61: trip sheet banner while the server holds Driver.offlineAfterTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Going offline after this trip'**
+  String get goingOfflineAfterTrip;
+
+  /// v0.18.37 §61: undo of going offline after the trip.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get goingOfflineUndo;
+
+  /// v0.18.37 §61: contract.json driverHome.setOffline.reasons.after_trip.
+  ///
+  /// In en, this message translates to:
+  /// **'You went offline after your trip'**
+  String get offlineReasonAfterTrip;
+
   /// No description provided for @islandRadarOffers.
   ///
   /// In en, this message translates to:

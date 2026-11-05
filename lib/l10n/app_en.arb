@@ -2747,6 +2747,22 @@
   "@swPayoutStatusPendingApproval": {
     "description": "Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py)."
   },
+  "goOfflineAfterTrip": "Go offline after this trip",
+  "@goOfflineAfterTrip": {
+    "description": "v0.18.37 §61: trip settings row; he goes offline when his trips end."
+  },
+  "goingOfflineAfterTrip": "Going offline after this trip",
+  "@goingOfflineAfterTrip": {
+    "description": "v0.18.37 §61: trip sheet banner while the server holds Driver.offlineAfterTrip."
+  },
+  "goingOfflineUndo": "Undo",
+  "@goingOfflineUndo": {
+    "description": "v0.18.37 §61: undo of going offline after the trip."
+  },
+  "offlineReasonAfterTrip": "You went offline after your trip",
+  "@offlineReasonAfterTrip": {
+    "description": "v0.18.37 §61: contract.json driverHome.setOffline.reasons.after_trip."
+  },
   "islandRadarOffers": "{count, plural, =1{1 offer · radar} other{{count} offers · radar}}",
   "@islandRadarOffers": {
     "placeholders": {

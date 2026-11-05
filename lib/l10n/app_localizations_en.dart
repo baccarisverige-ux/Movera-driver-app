@@ -3849,6 +3849,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swPayoutStatusPendingApproval => 'Waiting for approval';
 
   @override
+  String get goOfflineAfterTrip => 'Go offline after this trip';
+
+  @override
+  String get goingOfflineAfterTrip => 'Going offline after this trip';
+
+  @override
+  String get goingOfflineUndo => 'Undo';
+
+  @override
+  String get offlineReasonAfterTrip => 'You went offline after your trip';
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

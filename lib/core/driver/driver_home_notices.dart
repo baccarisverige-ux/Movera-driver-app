@@ -89,6 +89,10 @@ enum DriverOfflineReason {
   /// document past its end date; no offer until a new one is approved).
   documentsExpired,
 
+  /// v0.18.37 §61 `after_trip`: he tapped Go offline during a trip; his
+  /// last trip ended.
+  afterTrip,
+
   /// v0.18.6 `admin`, or the server set him offline without saying why.
   movera;
 
@@ -100,6 +104,7 @@ enum DriverOfflineReason {
     'fleet_removed' => fleetRemoved,
     'account_status' => accountStatus,
     'documents_expired' => documentsExpired,
+    'after_trip' => afterTrip,
     'admin' => movera,
     _ => null,
   };

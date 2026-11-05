@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/presentation/driver/accept%20ride/going_offline_banner.dart';
 
 /// The trip sheet's header: what to do next and where, plus Ride
 /// preferences. Waiting clocks belong exclusively to the island.
@@ -81,6 +82,8 @@ class TripBottomBar extends StatelessWidget {
             ),
           ),
         ),
+        // v0.18.37 §61: "Going offline after this trip" + Undo.
+        const GoingOfflineBanner(),
         if (bookedTime case final time?)
           Padding(
             padding: const EdgeInsets.only(right: 4),

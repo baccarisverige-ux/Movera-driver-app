@@ -3916,6 +3916,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swPayoutStatusPendingApproval => 'En attente d’approbation';
 
   @override
+  String get goOfflineAfterTrip => 'Passer hors ligne après cette course';
+
+  @override
+  String get goingOfflineAfterTrip => 'Hors ligne après cette course';
+
+  @override
+  String get goingOfflineUndo => 'Annuler';
+
+  @override
+  String get offlineReasonAfterTrip =>
+      'Vous êtes passé hors ligne après votre course';
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
