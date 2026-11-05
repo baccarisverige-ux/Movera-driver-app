@@ -64,7 +64,7 @@ void main() {
     }
   });
 
-  test('the split kept every message (2683 en entries, 2051 fr / sv)', () {
+  test('the split kept every message (2697 en entries, 2060 fr / sv)', () {
     const counts = {'en': 2697, 'fr': 2060, 'sv': 2060};
     for (final lang in _langs) {
       final arb =
