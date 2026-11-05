@@ -4432,5 +4432,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "previewBanner": "Preview",
+  "previewNotSent": "Preview – not sent"
 }
