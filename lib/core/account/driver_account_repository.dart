@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
+import 'package:movera/core/live/offline_after_trips.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/onboarding/document_upload.dart';
@@ -95,6 +96,8 @@ class DriverAccountRepository {
     if (status == 'online' || status == 'on_trip') {
       DriverAreaWatch.instance.observe(json);
     }
+    // v0.18.37 §61: "Going offline after this trip" comes back after a restart.
+    OfflineAfterTrips.observe(json);
     return DriverAccount.fromJson(json);
   }
 
