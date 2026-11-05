@@ -4,17 +4,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_error_message.dart';
-import 'package:movera/core/auth/auth_repository.dart';
-import 'package:movera/core/auth/build_test_numbers.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/auth/phone_country_default.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
-import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/session/driver_composition_guard.dart';
-import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
@@ -32,24 +27,10 @@ import 'package:movera/widgets/single_route_entry.dart';
 /// drivers, the consent tick and Continue, then Apple and Google (round
 /// 4b). The rider app's sign-in with "Driver" under the wordmark.
 class DriverSignIn extends StatefulWidget {
-  const DriverSignIn({
-    super.key,
-    this.controller,
-    this.showTestAccounts,
-    this.buildTestNumbers,
-  });
+  const DriverSignIn({super.key, this.controller});
 
   /// Null: the app root's controller ([DriverRuntimeScope.auth]).
   final AuthController? controller;
-
-  /// Owner 2026-10-29, decision 6 ("Only in test builds"): the test
-  /// numbers with their account status under the form. Null: a build with
-  /// a server (`MOVERA_API_BASE_URL`) that is not a store build
-  /// (`MOVERA_PRODUCTION`).
-  final bool? showTestAccounts;
-
-  /// Test numbers given at build time; null reads MOVERA_TEST_NUMBERS.
-  final List<String>? buildTestNumbers;
 
   @override
   State<DriverSignIn> createState() => _DriverSignInState();
@@ -88,17 +69,6 @@ class _DriverSignInState extends State<DriverSignIn>
   bool _waitlistBusy = false;
   bool _waitlistSaved = false;
 
-  /// Owner decision 6: the test numbers (test builds only).
-  List<TestAccount> _testAccounts = const [];
-  bool _testAccountsAsked = false;
-  // v0.18.18 (owner 2026-11-03 "Close it now"): the list needs an admin, so
-  // a test build keeps the button and says where to get the numbers.
-  bool _testNumbersButton = false;
-
-  /// Owner 2026-11-02 (PR #443): the test numbers sit behind one button;
-  /// closed, the picture with the skyline and "Need help?" stay visible.
-  bool _testListOpen = false;
-
   /// Round 4b: which provider button is working, and which ones the
   /// server or this platform said are not ready ("Coming soon").
   String? _providerBusy;
@@ -118,10 +88,6 @@ class _DriverSignInState extends State<DriverSignIn>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_testAccountsAsked) {
-      _testAccountsAsked = true;
-      _loadTestAccounts();
-    }
     if (!_storyStarted) {
       _storyStarted = true;
       if (MediaQuery.of(context).disableAnimations) {
@@ -186,46 +152,6 @@ class _DriverSignInState extends State<DriverSignIn>
         _waitlistSaved = false;
       });
     }
-  }
-
-  Future<void> _loadTestAccounts() async {
-    final auth = _auth;
-    // A test build that talks to a server (not a store build, not the demo).
-    final testBuild =
-        !driverProductionRequested &&
-        DriverRuntimeConfig.current.apiBaseUrl.isNotEmpty;
-    if (driverProductionRequested ||
-        !(widget.showTestAccounts ?? testBuild) ||
-        auth == null) {
-      return;
-    }
-    if (mounted) setState(() => _testNumbersButton = true);
-    try {
-      final accounts = await auth.testAccounts();
-      if (accounts.isNotEmpty) {
-        if (mounted) setState(() => _testAccounts = accounts);
-        return;
-      }
-    } catch (_) {
-      // Signed out the server answers 401 (admin only since v0.18.18).
-    }
-    // Owner 2026-11-03: the numbers this test build was given (no status,
-    // no names); none -> the open button shows tr.authTestNumbersAskAdmin.
-    final numbers = widget.buildTestNumbers ?? parseTestNumbers();
-    if (mounted && numbers.isNotEmpty) {
-      setState(
-        () => _testAccounts = [
-          for (final phone in numbers) TestAccount(phone: phone, status: ''),
-        ],
-      );
-    }
-  }
-
-  void _useTestNumber(String e164) {
-    final digits = e164.replaceAll('+', '');
-    final country = PhoneCountries.ofInternational(digits) ?? _country;
-    setState(() => _country = country);
-    _phone.text = digits.substring(country.dial.length);
   }
 
   Future<void> _joinWaitlist() async {
@@ -532,40 +458,8 @@ class _DriverSignInState extends State<DriverSignIn>
             ),
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: !_testNumbersButton
-                ? const NeedHelpLink()
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const NeedHelpLink(),
-                      TextButton(
-                        key: const ValueKey('auth-test-numbers-button'),
-                        onPressed: () =>
-                            setState(() => _testListOpen = !_testListOpen),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AuthColors.muted,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        child: Text(
-                          tr.authTestNumbersButton,
-                          style: AuthText.small(),
-                        ),
-                      ),
-                    ],
-                  ),
+            child: const NeedHelpLink(),
           ),
-          if (_testNumbersButton && _testListOpen)
-            _testAccounts.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      tr.authTestNumbersAskAdmin,
-                      key: const ValueKey('auth-test-numbers-ask-admin'),
-                      textAlign: TextAlign.center,
-                      style: AuthText.small().copyWith(color: AuthColors.muted),
-                    ),
-                  )
-                : _testAccountList(),
         ],
       ),
     );
@@ -605,55 +499,6 @@ class _DriverSignInState extends State<DriverSignIn>
                 )
               : Text(tr.authJoinWaitlist),
         ),
-      ),
-    );
-  }
-
-  Widget _testAccountList() {
-    return Padding(
-      key: const ValueKey('auth-test-accounts'),
-      padding: const EdgeInsets.only(top: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final account in _testAccounts)
-            InkWell(
-              key: ValueKey('auth-test-${account.phone}'),
-              onTap: () => _useTestNumber(account.phone),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        [
-                          displayPhoneNumber(account.phone),
-                          if (account.name != null) account.name!,
-                        ].join(' · '),
-                        style: AuthText.small().copyWith(color: AuthColors.ink),
-                      ),
-                    ),
-                    if (account.status.isNotEmpty)
-                      Text(
-                        account.status == 'test'
-                            ? tr.authTestStatusNew
-                            : statusWord(
-                                    tr,
-                                    'driverAccountStatus',
-                                    account.status,
-                                  ) ??
-                                  account.status,
-                        style: AuthText.small().copyWith(
-                          color: account.status == 'active'
-                              ? AuthColors.green
-                              : AuthColors.muted,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
