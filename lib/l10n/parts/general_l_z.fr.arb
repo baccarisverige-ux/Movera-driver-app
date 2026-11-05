@@ -395,5 +395,6 @@
   "navigationAppSaveFailed": "Appli de navigation non enregistrée. Réessayez.",
   "suspendedShortBody": "Votre compte est en pause. Contactez le support.",
   "previewBanner": "Aperçu",
-  "previewNotSent": "Aperçu – non envoyé"
+  "previewNotSent": "Aperçu – non envoyé",
+  "swPayoutStatusPendingApproval": "En attente d’approbation"
 }

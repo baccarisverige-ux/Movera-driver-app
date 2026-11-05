@@ -297,5 +297,6 @@
   "g8Continue": "Fortsätt",
   "g8StarLabel": "{stars} av 5 stjärnor",
   "accessibilitySavedOnPhone": "De här inställningarna sparas på den här telefonen.",
-  "hearingComingSoon": "Att berätta för resenärer om din hörsel kommer snart."
+  "hearingComingSoon": "Att berätta för resenärer om din hörsel kommer snart.",
+  "fixJob0DebtNote": "Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera."
 }

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2569,6 +2568,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Informer les passagers de votre audition arrive bientôt.';
 
   @override
+  String get fixJob0DebtNote =>
+      'Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera.';
+
+  @override
   String get n1Stop => '1 arrêt';
 
   @override
@@ -3908,6 +3911,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get previewNotSent => 'Aperçu – non envoyé';
+
+  @override
+  String get swPayoutStatusPendingApproval => 'En attente d’approbation';
 
   @override
   String islandRadarOffers(int count) {
