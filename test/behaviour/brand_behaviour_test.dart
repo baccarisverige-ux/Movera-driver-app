@@ -70,7 +70,6 @@ void main() {
         controller: AuthController(
           repository: AuthRepository(api: api, tokens: store),
         ),
-        showTestAccounts: false,
       ),
     );
     await tester.pump(const Duration(seconds: 6));

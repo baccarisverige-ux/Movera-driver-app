@@ -99,7 +99,6 @@ void main() {
         MaterialApp(
           home: DriverSignIn(
             controller: _controller(_Server((_) => _json(404, {}))),
-            showTestAccounts: false,
           ),
         ),
       );
