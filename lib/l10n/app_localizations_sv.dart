@@ -7214,4 +7214,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String schedBookedBadge(String time) {
     return 'Bokad resa · $time';
   }
+
+  @override
+  String get previewBanner => 'Förhandsvisning';
+
+  @override
+  String get previewNotSent => 'Förhandsvisning – inte skickat';
 }

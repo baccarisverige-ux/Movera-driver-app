@@ -2047,5 +2047,7 @@
   "schedLeaveIn": "Starta om {minutes} min",
   "schedLeaveNowTitle": "Starta nu mot upphämtningen",
   "schedLeaveArrive": "Var framme {early} min före kl. {time}.",
-  "schedBookedBadge": "Bokad resa · {time}"
+  "schedBookedBadge": "Bokad resa · {time}",
+  "previewBanner": "Förhandsvisning",
+  "previewNotSent": "Förhandsvisning – inte skickat"
 }

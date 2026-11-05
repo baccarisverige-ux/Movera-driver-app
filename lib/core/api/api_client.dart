@@ -9,6 +9,7 @@ import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/preview/preview_mode.dart';
 
 /// JSON calls to the Movera API with the contract's headers
 /// (`contract.json#headers`): `Authorization: Bearer`, `X-Api-Version`,
@@ -29,7 +30,9 @@ class ApiClient {
     String Function()? requestId,
     String Function()? idempotencyKey,
     Duration timeout = requestTimeout,
-  }) : _client = client,
+    PreviewMode? preview,
+  }) : _preview = preview ?? PreviewMode.current,
+       _client = client,
        _base = baseUri,
        _tokens = tokens,
        _onSessionExpired = onSessionExpired,
@@ -49,6 +52,9 @@ class ApiClient {
 
   static const refreshPath = '/api/v1/auth/refresh';
 
+  /// Contract v0.18.25 `previewSession`: in an admin preview no write
+  /// leaves the app.
+  final PreviewMode _preview;
   final http.Client _client;
   final Uri _base;
   final TokenStore _tokens;
@@ -182,6 +188,18 @@ class ApiClient {
     http.BaseRequest Function(Uri uri)? build,
     Duration? timeout,
   }) async {
+    if (_preview.active) {
+      if (method != 'GET') {
+        PreviewMode.blocked.value++;
+        throw ApiError(
+          code: 'forbidden',
+          reason: PreviewMode.blockedReason,
+          statusCode: 403,
+          message: PreviewMode.notSentText(PreviewMode.deviceLanguage),
+        );
+      }
+      path = _preview.withDraft(path);
+    }
     final requestId = _requestId();
     final uri = uriFor(path);
     try {
