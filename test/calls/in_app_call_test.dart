@@ -10,7 +10,6 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/calls/call_engine.dart';
 import 'package:movera/core/calls/trip_call_session.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/live/live_trip_calls.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/l10n/app_localizations.dart';
@@ -87,7 +86,15 @@ class FakeApi implements CallApi {
   }
 
   @override
-  Future<void> answer(String callId) async => sent.add('answer:$callId');
+  Future<Map<String, dynamic>> answer(String callId) async {
+    sent.add('answer:$callId');
+    return {
+      'callId': callId,
+      'state': 'answered',
+      'ice': {'servers': [], 'ttlSeconds': 900},
+    };
+  }
+
   @override
   Future<void> end(String callId, String reason) async =>
       sent.add('end:$callId:$reason');

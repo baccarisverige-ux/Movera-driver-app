@@ -1534,6 +1534,72 @@ abstract class AppLocalizations {
   /// **'Too many wrong codes today. Try again later.'**
   String get authErrLockedToday;
 
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Call failed'**
+  String get callFailed;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Calling…'**
+  String get callCalling;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get callConnecting;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'In call'**
+  String get callConnected;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'The rider is calling'**
+  String get callIncomingFromRider;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get callAnswer;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get callDecline;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get callEnd;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get callMute;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get callSpeaker;
+
+  /// v0.18.38 §62 in-app call screen (fix job 8).
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get callEnded;
+
   /// No description provided for @cancelNextTripQuestion.
   ///
   /// In en, this message translates to:

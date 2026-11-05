@@ -405,6 +405,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       case DriverRealtimeKind.paymentUpdated:
       case DriverRealtimeKind.ratingUpdated:
       case DriverRealtimeKind.message:
+      // v0.18.38 §62: in-app calls are handled by LiveTripCalls.
+      case DriverRealtimeKind.callRinging:
+      case DriverRealtimeKind.callAnswered:
+      case DriverRealtimeKind.callSignal:
+      case DriverRealtimeKind.callEnded:
+      case DriverRealtimeKind.callMissed:
         return;
     }
   }

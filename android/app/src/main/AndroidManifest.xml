@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Ride check "Record audio": the recording stays on this phone. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- v0.18.38 §62 (fix job 8): in-app calls (WebRTC audio, speaker switch). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:label="Movera Driver"

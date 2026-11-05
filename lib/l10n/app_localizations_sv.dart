@@ -839,6 +839,39 @@ class AppLocalizationsSv extends AppLocalizations {
       'För många fel koder i dag. Försök igen senare.';
 
   @override
+  String get callFailed => 'Samtalet misslyckades';
+
+  @override
+  String get callCalling => 'Ringer…';
+
+  @override
+  String get callConnecting => 'Ansluter…';
+
+  @override
+  String get callConnected => 'I samtal';
+
+  @override
+  String get callIncomingFromRider => 'Resenären ringer';
+
+  @override
+  String get callAnswer => 'Svara';
+
+  @override
+  String get callDecline => 'Avvisa';
+
+  @override
+  String get callEnd => 'Avsluta';
+
+  @override
+  String get callMute => 'Ljud av';
+
+  @override
+  String get callSpeaker => 'Högtalare';
+
+  @override
+  String get callEnded => 'Samtalet avslutat';
+
+  @override
   String get cancelNextTripQuestion => 'Avboka nästa resa?';
 
   @override
