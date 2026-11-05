@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Integer minor-units money (D6, contract v0.3 `Money`). SEK uses öre, TND
 /// millimes. Never store display strings; format locally.
 ///
@@ -107,7 +109,21 @@ class Money {
   /// put in use with the zone's settings. SEK (the home zone) until a
   /// config arrives. Every "no currency known" fallback uses this, so a
   /// France driver never sees "kr".
-  static String zoneCurrency = 'SEK';
+  static String get zoneCurrency => _zone.value ?? 'SEK';
+  static set zoneCurrency(String currency) => _zone.value = currency;
+
+  /// P26: the zone currency as it arrives, null until a zone config (or a
+  /// test) sets it. Screens built before the config listen to it, so a
+  /// Paris driver's island turns to € when the config lands.
+  static final ValueNotifier<String?> _zone = ValueNotifier<String?>(null);
+  static ValueListenable<String?> get zoneCurrencyChanges => _zone;
+
+  /// Whether a zone config has set [zoneCurrency] yet.
+  static bool get zoneKnown => _zone.value != null;
+
+  /// Back to "no zone known yet", as on a fresh launch.
+  @visibleForTesting
+  static void forgetZone() => _zone.value = null;
 
   /// The zone currency's symbol: `kr`, `€` or `DT`.
   static String get zoneSymbol => symbols[zoneCurrency] ?? zoneCurrency;
