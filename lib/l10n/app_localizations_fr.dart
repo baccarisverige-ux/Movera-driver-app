@@ -7150,6 +7150,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera.';
 
   @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'C\'est l\'heure d\'aller à la prise en charge · $name';
+  }
+
+  @override
   String get swTripStatusDraft => 'Brouillon';
 
   @override

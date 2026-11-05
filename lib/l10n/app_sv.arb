@@ -1987,6 +1987,7 @@
   "previewBanner": "Förhandsvisning",
   "previewNotSent": "Förhandsvisning – inte skickat",
   "fixJob0DebtNote": "Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera.",
+  "leaveNowTimeToDriveName": "Dags att köra till upphämtningen · {name}",
   "swTripStatusDraft": "Utkast",
   "swTripStatusQuoted": "Offererad",
   "swTripStatusRequested": "Begärd",

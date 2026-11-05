@@ -7022,6 +7022,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.';
 
   @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'Time to drive to pickup · $name';
+  }
+
+  @override
   String get swTripStatusDraft => 'Draft';
 
   @override

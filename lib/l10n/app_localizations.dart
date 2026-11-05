@@ -12043,6 +12043,12 @@ abstract class AppLocalizations {
   /// **'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.'**
   String get fixJob0DebtNote;
 
+  /// v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).
+  ///
+  /// In en, this message translates to:
+  /// **'Time to drive to pickup · {name}'**
+  String leaveNowTimeToDriveName(String name);
+
   /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
   ///
   /// In en, this message translates to:

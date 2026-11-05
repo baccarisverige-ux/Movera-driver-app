@@ -27,7 +27,12 @@ class ServerReservation {
     this.previousAt,
     this.leaveAt,
     this.driveSeconds,
+    this.riderFirstName = '',
   });
+
+  /// v0.18.32 (contract.json#bookedRideSeen.leaveNowName): the rider's
+  /// first name on his own accepted rides, for the leave-now popup.
+  final String riderFirstName;
 
   /// Owner 2026-11-03 leave on time (v0.18.19): when to start towards the
   /// pickup, from the server's live road-route ETA; null until known.
@@ -117,6 +122,9 @@ class ServerReservation {
       popup: json['popup'] == true,
       changeAskUntil: ask is Map ? DateTime.tryParse('${ask['until']}') : null,
       previousAt: ask is Map ? DateTime.tryParse('${ask['previousAt']}') : null,
+      riderFirstName: json['riderFirstName'] is String
+          ? (json['riderFirstName'] as String).trim()
+          : '',
     );
   }
 
@@ -145,6 +153,7 @@ class ServerReservation {
       dropoff: dropoff,
       id: tripId,
       scheduledAt: scheduledAt.toLocal(),
+      riderName: riderFirstName,
     );
   }
 }

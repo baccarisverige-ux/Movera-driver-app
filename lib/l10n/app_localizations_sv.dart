@@ -7034,6 +7034,11 @@ class AppLocalizationsSv extends AppLocalizations {
       'Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera.';
 
   @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'Dags att köra till upphämtningen · $name';
+  }
+
+  @override
   String get swTripStatusDraft => 'Utkast';
 
   @override

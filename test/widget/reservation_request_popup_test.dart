@@ -957,7 +957,7 @@ void main() {
         tester.widget<AcceptRide>(find.byType(AcceptRide)).matchedVia,
         'Scheduled ride',
       );
-      expect(_said, contains('Leave now for ${ride.pickupTime} pickup'));
+      expect(_said, anyElement(startsWith('Time to drive to pickup · ')));
       await _end(tester, dispatch);
     });
   });
