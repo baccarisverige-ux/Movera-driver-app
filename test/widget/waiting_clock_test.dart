@@ -34,9 +34,9 @@ void main() {
     // the app has no airport rule of its own since contract v0.18.7).
     WaitingTerms.active = const WaitingTerms(
       freeMinutes: 15,
-      perMinute: Money(minorUnits: 1226),
+      perMinute: Money(minorUnits: 1226, currency: 'SEK'),
       noShowAfterMinutes: 20,
-      noShowFee: Money(minorUnits: 6500),
+      noShowFee: Money(minorUnits: 6500, currency: 'SEK'),
     );
     addTearDown(() => WaitingTerms.active = WaitingRules.current.base);
     await tester.pumpWidget(

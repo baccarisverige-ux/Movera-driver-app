@@ -188,7 +188,7 @@ void main() {
           c,
           riderName: 'Nils',
           wasOnTrip: true,
-          fee: const Money(minorUnits: 4000),
+          fee: const Money(minorUnits: 4000, currency: 'SEK'),
         ),
         'Taken by Movera': (c) => showTripOutcomeSheet(
           c,

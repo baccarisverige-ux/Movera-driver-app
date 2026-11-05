@@ -152,7 +152,7 @@ class _HeldRoads implements RouteRepository {
 RideOffer _trip(String id) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: Money(minorUnits: 8810),
+  fare: Money(minorUnits: 8810, currency: 'SEK'),
   rating: '4.92',
   riderName: 'Sara',
   pickupMinutes: 2,

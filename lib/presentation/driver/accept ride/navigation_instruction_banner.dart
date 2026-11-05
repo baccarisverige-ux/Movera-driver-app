@@ -606,7 +606,7 @@ class NavigationCuePainter extends CustomPainter {
 
   static String zoneTollUnit() {
     final currency = LiveDriverServices.instance?.config.current?.currency;
-    return Money.symbols[currency] ?? Money.symbols['SEK']!;
+    return Money.symbols[currency] ?? Money.zoneSymbol;
   }
 
   final Color color;

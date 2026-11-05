@@ -83,7 +83,7 @@ class _Dispatch implements DispatchRepository {
 final _toward = RideOffer(
   id: 'toward',
   category: 'Comfort',
-  fare: Money(minorUnits: 8810),
+  fare: Money(minorUnits: 8810, currency: 'SEK'),
   rating: '4.92',
   riderName: 'Sara',
   pickupMinutes: 2,
@@ -102,7 +102,7 @@ final _toward = RideOffer(
 final _away = RideOffer(
   id: 'away',
   category: 'Comfort',
-  fare: Money(minorUnits: 8810),
+  fare: Money(minorUnits: 8810, currency: 'SEK'),
   rating: '4.92',
   riderName: 'Sara',
   pickupMinutes: 1,
@@ -121,7 +121,7 @@ final _away = RideOffer(
 final _assign = RideOffer(
   id: 'assign',
   category: 'Comfort',
-  fare: Money(minorUnits: 8810),
+  fare: Money(minorUnits: 8810, currency: 'SEK'),
   rating: '4.92',
   riderName: 'Karim',
   pickupMinutes: 2,

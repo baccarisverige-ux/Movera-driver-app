@@ -1,3 +1,4 @@
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
@@ -716,9 +717,9 @@ class _WaitingClockState extends State<WaitingClock>
   }
 }
 
-/// "10:05" in the phone's time (24 h in every app language).
+/// "10:05" on the zone's clock (Job 3 / L18), 24 h in every language.
 String _clockTime(DateTime at) {
-  final local = at.toLocal();
+  final local = zoneWallTime(at);
   String two(int v) => v.toString().padLeft(2, '0');
   return '${two(local.hour)}:${two(local.minute)}';
 }

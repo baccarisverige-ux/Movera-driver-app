@@ -114,7 +114,7 @@ void main() {
       AcceptRide(
         fare: '152,40 kr',
         paidByCash: true,
-        driverBonus: Money.ore(4000),
+        driverBonus: Money(minorUnits: 4000, currency: 'SEK'),
         riderName: 'Karin',
         category: 'Comfort',
         locationRepository: location,
@@ -134,7 +134,7 @@ void main() {
         fare: '152,40 kr',
         cashToCollect: '120 kr',
         paidByCash: true,
-        driverBonus: Money.ore(4000),
+        driverBonus: Money(minorUnits: 4000, currency: 'SEK'),
         riderName: 'Karin',
         category: 'Comfort',
         locationRepository: location,

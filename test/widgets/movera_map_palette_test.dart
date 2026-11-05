@@ -45,7 +45,7 @@ void main() {
 
   test('drawn maps use the Home palette, route line and pins', () {
     final preview = _painter(
-      'lib/presentation/driver/scheduled rides/scheduled_rides.dart',
+      'lib/presentation/driver/scheduled rides/scheduled_rides_cards.dart',
       '_RoutePreviewPainter',
     );
     final area = _painter(

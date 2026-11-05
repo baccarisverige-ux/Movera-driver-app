@@ -22,7 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 RideOffer _offer(String id) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: Money(minorUnits: 10000),
+  fare: Money(minorUnits: 10000, currency: 'SEK'),
   rating: '4.9',
   pickupMinutes: 2,
   pickupKm: 1,

@@ -322,9 +322,9 @@ Map<String, String> _shownLabels() {
     for (final label in ['far_pickup', 'scheduled', 'airport', 'event'])
       'waiting $label': WaitingTerms(
         freeMinutes: 1,
-        perMinute: Money(minorUnits: 1),
+        perMinute: Money(minorUnits: 1, currency: 'SEK'),
         noShowAfterMinutes: 1,
-        noShowFee: Money(minorUnits: 1),
+        noShowFee: Money(minorUnits: 1, currency: 'SEK'),
         ruleLabels: [label],
       ).rule,
   };

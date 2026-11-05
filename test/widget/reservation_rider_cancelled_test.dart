@@ -17,7 +17,10 @@ void main() {
     expect(ScheduledRideStore.upcoming.any((r) => r.id == ride.id), isTrue);
 
     expect(
-      ScheduledRideStore.riderCancelled(ride.id, fee: Money.sek(105)),
+      ScheduledRideStore.riderCancelled(
+        ride.id,
+        fee: Money.units(105, currency: 'SEK'),
+      ),
       isTrue,
     );
     expect(ScheduledRideStore.upcoming.any((r) => r.id == ride.id), isFalse);
