@@ -127,10 +127,13 @@ void main() {
     });
 
     test('added to a fare label in the same form', () {
-      const fee = Money(minorUnits: 1839);
+      const fee = Money(minorUnits: 1839, currency: 'SEK');
       expect(WaitingTerms.addFee('100,00 kr', fee), '118,39 kr');
       expect(
-        WaitingTerms.addFee('104,80 kr', const Money(minorUnits: 0)),
+        WaitingTerms.addFee(
+          '104,80 kr',
+          const Money(minorUnits: 0, currency: 'SEK'),
+        ),
         '104,80 kr',
       );
       // Not readable as SEK: left as it is, never a wrong total.
@@ -216,8 +219,8 @@ void main() {
         final bonusOnly = RideOffer(
           id: 'b',
           category: 'Movera',
-          fare: const Money(minorUnits: 10000),
-          driverBonus: const Money(minorUnits: 2000),
+          fare: const Money(minorUnits: 10000, currency: 'SEK'),
+          driverBonus: const Money(minorUnits: 2000, currency: 'SEK'),
           rating: '4.9',
           pickupMinutes: 2,
           pickupKm: 1,

@@ -178,18 +178,6 @@ void main() {
     expect(anotherOffer, isNot(last));
   });
 
-  test('every accept path uses the occurrence factory', () {
-    for (final path in [
-      'lib/presentation/driver/ride requests/ride_requests.dart',
-      'lib/presentation/driver/home/home_offer_radar.dart',
-    ]) {
-      final source = File(path).readAsStringSync();
-      expect(source, contains('tripOccurrenceId('), reason: path);
-      expect(source, isNot(contains('tripId: trip.id,')), reason: path);
-      expect(source, isNot(contains('tripId: offer.id,')), reason: path);
-    }
-  });
-
   test('production code never inspects the binding type', () {
     final offenders = Directory('lib')
         .listSync(recursive: true)

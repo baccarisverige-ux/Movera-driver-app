@@ -89,7 +89,7 @@ void main() {
     expect(airport.paidByCash, isTrue);
     final offer = RideOffer.reservation(airport);
     expect(offer.payment, 'Cash');
-    expect(offer.fare, const Money(minorUnits: 24840));
+    expect(offer.fare, const Money(minorUnits: 24840, currency: 'SEK'));
     expect(offer.fareLabel, '248,40 kr');
     expect(offer.cashToCollectLabel, '300,00 kr');
     // A card reservation has none.

@@ -866,14 +866,6 @@ void main() {
               as List;
       expect(targets, containsAll(['accept_invitation', 'decline_invitation']));
     });
-
-    test('D5.3: Add car has no ride-type choice and sends none', () {
-      final source = File(
-        'lib/presentation/driver/account/add_car_screen.dart',
-      ).readAsStringSync();
-      expect(source, isNot(contains('FilterChip(')));
-      expect(source, contains('categoryIds: const []'));
-    });
   });
 
   group('G3 after a reload Go online sends a fresh position', () {

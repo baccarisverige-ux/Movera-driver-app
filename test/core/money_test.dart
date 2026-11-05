@@ -4,19 +4,19 @@ import 'package:movera/core/money/money.dart';
 
 void main() {
   test('SEK formats with comma decimals and grouped thousands', () {
-    expect(Money.sek(104.80).formatted, '104,80 kr');
-    expect(Money.ore(299480).formatted, '2 994,80 kr');
-    expect(Money.sek(-325.40).formatted, '−325,40 kr');
+    expect(Money.units(104.80, currency: 'SEK').formatted, '104,80 kr');
+    expect(Money(minorUnits: 299480, currency: 'SEK').formatted, '2 994,80 kr');
+    expect(Money.units(-325.40, currency: 'SEK').formatted, '−325,40 kr');
   });
 
   test('earnings net is gross minus commission plus tips', () {
     final week = EarningsPeriod(
       periodId: 'test',
       label: 'Test',
-      gross: Money.sek(1724.15),
-      commission: Money.sek(325.40),
-      tips: Money.sek(84.00),
-      adjustments: Money.ore(0),
+      gross: Money.units(1724.15, currency: 'SEK'),
+      commission: Money.units(325.40, currency: 'SEK'),
+      tips: Money.units(84.00, currency: 'SEK'),
+      adjustments: Money(minorUnits: 0, currency: 'SEK'),
     );
 
     expect(week.net.ore, 148275);

@@ -259,6 +259,30 @@ void main() {
       await back(tester);
     });
 
+    // B16 (2026-11-04): replaces the source-reading D5.3 guard
+    // (archived in Rules/archive/old-tests/Movera-driver-app/).
+    testWidgets('D5.3: Add car offers no ride-type choice and sends none', (
+      tester,
+    ) async {
+      routes['POST $path'] = (_) => json(201, car('v9'));
+      await host(tester, AddCarScreen(account: session()));
+      expect(find.byType(FilterChip), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => '${w.key}'.contains('car-type-')),
+        findsNothing,
+      );
+      await fill(tester);
+      expect(find.byType(FilterChip), findsNothing);
+      final save = find.byKey(const ValueKey('car-save'));
+      await tester.ensureVisible(save);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      final sent = seen.where((r) => r.method == 'POST' && r.url.path == path);
+      expect(sent, hasLength(1));
+      final body = jsonDecode(sent.single.body) as Map<String, dynamic>;
+      expect(body['categoryIds'], isEmpty);
+    });
+
     testWidgets('Save tapped three times sends one car; error is shown', (
       tester,
     ) async {

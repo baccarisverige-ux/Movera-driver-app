@@ -29,7 +29,7 @@ import '../../integration_test/headless_map_platform.dart';
 RideOffer _assign({String? reservationTime}) => RideOffer(
   id: 'assign',
   category: 'Comfort',
-  fare: const Money(minorUnits: 8810),
+  fare: const Money(minorUnits: 8810, currency: 'SEK'),
   rating: '4.92',
   riderName: 'Karim',
   pickupMinutes: 2,

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
@@ -66,7 +67,11 @@ abstract final class OfferWire {
     final rating = json['riderRating'];
     final scheduled = json['scheduledAt'];
     final at = scheduled is String
-        ? DateTime.tryParse(scheduled)?.toLocal()
+        ? (switch (DateTime.tryParse(scheduled)) {
+            // Job 3 / L18: the badge reads the zone's clock.
+            final DateTime instant => zoneWallTime(instant),
+            null => null,
+          })
         : null;
     String two(int n) => n.toString().padLeft(2, '0');
     return RideOffer(

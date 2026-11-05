@@ -1,3 +1,4 @@
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -144,6 +145,7 @@ class PersistedActiveRide {
     this.destinationPoint,
     this.scheduledPickupAt,
     this.scheduledRideId,
+    this.bookedTime,
     this.pickupKm,
     this.bags = 0,
     this.rideCheckFired = const <String>[],
@@ -209,6 +211,16 @@ class PersistedActiveRide {
   /// (`reservations.lateEta`). Null for every other trip.
   final DateTime? scheduledPickupAt;
   final String? scheduledRideId;
+
+  /// Job 3 / L13: the "Booked ride" badge time (zone clock, "HH:mm") of a
+  /// booked ride, whatever way it was accepted; kept across a restore.
+  final String? bookedTime;
+
+  /// The badge time to show: [bookedTime], or for an older save the
+  /// pickup instant on the zone's clock.
+  String? get badgeTime =>
+      bookedTime ??
+      (scheduledPickupAt == null ? null : zoneClock(scheduledPickupAt!));
 
   /// driver-u56: how far the pickup was at accept, so a restored trip keeps
   /// the waiting terms it was accepted under (Q20). Null when not known.
@@ -286,6 +298,7 @@ class PersistedActiveRide {
       destinationPoint: destinationPoint,
       scheduledPickupAt: scheduledPickupAt,
       scheduledRideId: scheduledRideId,
+      bookedTime: bookedTime,
       pickupKm: pickupKm,
       bags: bags,
       rideCheckFired: rideCheckFired,
@@ -344,6 +357,7 @@ class PersistedActiveRide {
     if (scheduledPickupAt != null)
       'scheduledPickupAt': scheduledPickupAt!.toUtc().toIso8601String(),
     if (scheduledRideId != null) 'scheduledRideId': scheduledRideId,
+    if (bookedTime != null) 'bookedTime': bookedTime,
     if (pickupKm != null) 'pickupKm': pickupKm,
     if (bags > 0) 'bags': bags,
     if (rideCheckFired.isNotEmpty) 'rideCheckFired': rideCheckFired,
@@ -520,6 +534,9 @@ class PersistedActiveRide {
       )?.toLocal(),
       scheduledRideId: json['scheduledRideId'] is String
           ? json['scheduledRideId'] as String
+          : null,
+      bookedTime: json['bookedTime'] is String
+          ? json['bookedTime'] as String
           : null,
       // Optional preview data: a bad value is dropped, not trusted.
       pickupKm: pickupKm is num && pickupKm.isFinite && pickupKm >= 0

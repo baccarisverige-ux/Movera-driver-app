@@ -66,7 +66,7 @@ class DemoDestinationTrips {
         'Sofia',
         tr.demoNearPlace(destinationLabel ?? tr.demoYourDestination),
         _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)),
-        Money.ore(24800),
+        Money(minorUnits: 24800, currency: 'SEK'),
         follows: true,
       ),
       trip(
@@ -74,7 +74,7 @@ class DemoDestinationTrips {
         'Adam',
         tr.demoOnYourWayPercent(35),
         _offset(way1, way1Bearing + 90, corridor * 0.4),
-        Money.ore(16450),
+        Money(minorUnits: 16450, currency: 'SEK'),
         follows: true,
       ),
       trip(
@@ -82,7 +82,7 @@ class DemoDestinationTrips {
         'Ella',
         tr.demoOnYourWayPercent(60),
         _offset(way2, way2Bearing - 90, corridor * 0.5),
-        Money.ore(19830),
+        Money(minorUnits: 19830, currency: 'SEK'),
         follows: true,
       ),
       trip(
@@ -90,7 +90,7 @@ class DemoDestinationTrips {
         'Karl',
         tr.demoAwayFromRoute,
         _offset(mid, midBearing + 90, corridor * 3),
-        Money.ore(15200),
+        Money(minorUnits: 15200, currency: 'SEK'),
         follows: false,
       ),
       trip(
@@ -98,7 +98,7 @@ class DemoDestinationTrips {
         'Noor',
         tr.demoBehindYou,
         _offset(driver, _bearing(destination, driver), corridor * 1.5),
-        Money.ore(12140),
+        Money(minorUnits: 12140, currency: 'SEK'),
         follows: false,
       ),
     ];
