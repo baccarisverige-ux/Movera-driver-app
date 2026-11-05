@@ -33,10 +33,7 @@ void main() {
       {'code': 'not_found', 'message': 'x', 'reason': 'no_fleet'},
     ),
     '/api/v1/driver/fleet/invitations': (200, {'items': <Object>[]}),
-    '/api/v1/driver/reminders': (
-      200,
-      {'items': <Object>[], 'blocksOnline': 0},
-    ),
+    '/api/v1/driver/reminders': (200, {'items': <Object>[], 'blocksOnline': 0}),
     '/api/v1/driver/vehicles': (200, {'items': <Object>[], 'nextCursor': null}),
     '/api/v1/notifications': (200, {'items': <Object>[], 'nextCursor': null}),
   };
