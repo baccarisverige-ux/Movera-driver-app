@@ -189,28 +189,34 @@ class WaitingRules {
     // trip with its own `terms`; nothing here is a price the driver is ever
     // shown on its own. Without server terms the amounts are zero and
     // [WaitingTerms.pricesKnown] is false.
-    this.base = const WaitingTerms(
-      freeMinutes: 5,
-      perMinute: Money(minorUnits: 0),
-      noShowAfterMinutes: 5,
-      noShowFee: Money(minorUnits: 0),
-      driverShareWaitPercent: 100,
-      driverShareNoShowPercent: 80,
-      pricesKnown: false,
-    ),
+    WaitingTerms? base,
     // Contract v0.18.8 (driver group 6): far pickup, airport, event and
     // scheduled rules are the server's; it picks them at arrive and sends
     // the numbers on the trip (`waiting`, `terms`). The app keeps only the
     // served far-pickup distance, for the rule's label "over {km} km".
     this.farPickupKm = 5,
     this.categories = const {},
-  });
+  }) : _base = base;
+
+  /// contract.json#configDefaults with zero amounts in the zone's currency,
+  /// made when asked (Job 3 / L12: never a SEK default).
+  static WaitingTerms _defaultTerms() => WaitingTerms(
+    freeMinutes: 5,
+    perMinute: Money.zone(0),
+    noShowAfterMinutes: 5,
+    noShowFee: Money.zone(0),
+    driverShareWaitPercent: 100,
+    driverShareNoShowPercent: 80,
+    pricesKnown: false,
+  );
+
+  final WaitingTerms? _base;
+  WaitingTerms get base => _base ?? _defaultTerms();
 
   /// The rules in use (the zone's served config).
   static WaitingRules current = const WaitingRules();
 
   /// The zone's terms when no extra rule applies.
-  final WaitingTerms base;
 
   /// `waiting.farPickup.km` of the served config: only for the label.
   final double farPickupKm;

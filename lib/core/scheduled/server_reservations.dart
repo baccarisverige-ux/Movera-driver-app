@@ -1,3 +1,4 @@
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -119,11 +120,8 @@ class ServerReservation {
     );
   }
 
-  /// "07:40" on this phone's clock.
-  static String clockOf(DateTime at) {
-    final local = at.toLocal();
-    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
-  }
+  /// "07:40" on the zone's clock, never the phone's (Job 3 / L18).
+  static String clockOf(DateTime at) => zoneClock(at);
 
   /// The Scheduled rides list's card for this ride. [dayWord] names the
   /// pickup day ("Today", "Tomorrow", or the date) in the app language.

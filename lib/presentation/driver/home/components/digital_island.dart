@@ -377,10 +377,11 @@ class _SweepPainter extends CustomPainter {
 /// "Updating" face: the four dots of the hidden total ripple while the
 /// last trip's money is still coming in.
 class DigitalUpdatingFace extends StatefulWidget {
-  const DigitalUpdatingFace({super.key, this.unit = 'kr'});
+  const DigitalUpdatingFace({super.key, this.unit});
 
   /// The money's symbol, e.g. `kr` or `€` ([DigitalIslandParts.unitOf]).
-  final String unit;
+  /// Null: the zone's currency (Job 3 / L12).
+  final String? unit;
 
   @override
   State<DigitalUpdatingFace> createState() => _DigitalUpdatingFaceState();
@@ -432,7 +433,7 @@ class _DigitalUpdatingFaceState extends State<DigitalUpdatingFace>
               for (var i = 0; i < 4; i++) _dot(i),
               const SizedBox(width: 6),
               Text(
-                widget.unit,
+                widget.unit ?? Money.zoneSymbol,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 17,
@@ -781,7 +782,7 @@ class DigitalIslandParts {
 
   /// The symbol a money label ends with (`kr`, `€`, `DT`), so the island
   /// shows the trip's currency (audit B7: a France driver saw kr). Without
-  /// one: today's total's symbol, else kr.
+  /// one: today's total's symbol, else the zone's (Job 3 / L12).
   static String unitOf(String? label) {
     for (final candidate in [label, TodayEarnings.label.value]) {
       final text = candidate?.trim() ?? '';
@@ -791,15 +792,15 @@ class DigitalIslandParts {
         }
       }
     }
-    return Money.symbols['SEK']!;
+    return Money.zoneSymbol;
   }
 
   /// The hidden total, "•••• kr" (or "•••• €").
-  static Widget hiddenFace({String unit = 'kr'}) => Center(
+  static Widget hiddenFace({String? unit}) => Center(
     key: const ValueKey<String>('island-hidden'),
     child: _fit(
       Text(
-        '•••• $unit',
+        '•••• ${unit ?? Money.zoneSymbol}',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 17,

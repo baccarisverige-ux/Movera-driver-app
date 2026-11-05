@@ -35,11 +35,15 @@ import '../../integration_test/headless_map_platform.dart';
 // collect.
 
 /// A trip with a long drive to its pickup: it has pickup pay.
-RideOffer _far({String id = 'far', bool cash = false}) => RideOffer(
+RideOffer _far({
+  String id = 'far',
+  bool cash = false,
+  String rating = '4.92',
+}) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: const Money(minorUnits: 12000),
-  rating: '4.92',
+  fare: const Money(minorUnits: 12000, currency: 'SEK'),
+  rating: rating,
   riderName: 'Sara',
   pickupMinutes: 8,
   pickupKm: 3.5,
@@ -130,30 +134,32 @@ void main() {
 
   test('the accepted terms carry the pickup pay', () {
     final quote = PickupPayQuote(
-      pay: Money.ore(380),
+      pay: Money(minorUnits: 380, currency: 'SEK'),
       leg: const PickupLeg(km: 1.6, minutes: 4),
     );
     // The terms start from the driver's pay (RideOffer.driverPay): 128,40
     // kr fare → 96,30 kr share, plus the pickup pay.
-    final share = WaybillPayment.shareOf(Money.ore(12840));
-    expect(share, Money.ore(9630));
+    final share = WaybillPayment.shareOf(
+      Money(minorUnits: 12840, currency: 'SEK'),
+    );
+    expect(share, Money(minorUnits: 9630, currency: 'SEK'));
     final card = quote.termsOf(fare: share.formatted);
     expect(card.fare, '100,10 kr');
-    expect(card.driverBonus, Money.ore(380));
+    expect(card.driverBonus, Money(minorUnits: 380, currency: 'SEK'));
     expect(card.cashToCollect, isNull);
     // A cash trip: the rider's cash (their fare without Movera's bonus,
     // RideOffer.riderCash) is kept as given, never worked out from the
     // driver's pay; the pickup pay is Movera's.
     final cash = quote.termsOf(
       fare: share.formatted,
-      driverBonus: Money.ore(4000),
+      driverBonus: Money(minorUnits: 4000, currency: 'SEK'),
       cashToCollect: '88,40 kr',
     );
     expect(cash.fare, '100,10 kr');
-    expect(cash.driverBonus, Money.ore(4380));
+    expect(cash.driverBonus, Money(minorUnits: 4380, currency: 'SEK'));
     expect(cash.cashToCollect, '88,40 kr');
     final none = PickupPayQuote(
-      pay: Money.ore(0),
+      pay: Money(minorUnits: 0, currency: 'SEK'),
       leg: const PickupLeg(km: 0.5, minutes: 1),
     ).termsOf(fare: share.formatted);
     expect(none.fare, '96,30 kr');
@@ -161,7 +167,10 @@ void main() {
     expect(none.cashToCollect, isNull);
 
     // The driver gets all of the pickup pay on top of the share.
-    expect(Money.parseSekLabel(card.fare)! - share, Money.ore(380));
+    expect(
+      Money.parseSekLabel(card.fare)! - share,
+      Money(minorUnits: 380, currency: 'SEK'),
+    );
   });
 
   test('a secured next trip saved with the live ride keeps its pickup pay', () {
@@ -176,11 +185,11 @@ void main() {
       pickupLng: 18.06,
       dropoffLat: 59.34,
       dropoffLng: 18.07,
-      pickupPay: Money.ore(380),
+      pickupPay: Money(minorUnits: 380, currency: 'SEK'),
     );
     expect(
       PersistedQueuedTrip.fromJson(next.toJson())!.pickupPay,
-      Money.ore(380),
+      Money(minorUnits: 380, currency: 'SEK'),
     );
   });
 
@@ -203,7 +212,9 @@ void main() {
     // The card: the driver's share of the 120 kr fare plus the pickup pay;
     // the fare itself is nowhere on the list.
     final total =
-        (WaybillPayment.shareOf(Money.ore(12000)) + _radarPay()).formatted;
+        (WaybillPayment.shareOf(Money(minorUnits: 12000, currency: 'SEK')) +
+                _radarPay())
+            .formatted;
     expect(find.text(total), findsWidgets);
     expect(find.text('120,00 kr'), findsNothing);
     final match = find.byKey(const ValueKey<String>('radar-match-far'));
@@ -261,7 +272,9 @@ void main() {
     final card = find.byKey(const ValueKey<String>('radar-offer-card-far'));
     expect(card, findsOneWidget);
     final total =
-        (WaybillPayment.shareOf(Money.ore(12000)) + _radarPay()).formatted;
+        (WaybillPayment.shareOf(Money(minorUnits: 12000, currency: 'SEK')) +
+                _radarPay())
+            .formatted;
     expect(
       find.descendant(of: card, matching: find.text(total)),
       findsOneWidget,
@@ -277,6 +290,96 @@ void main() {
     final trip = _trip(tester);
     expect(trip.fare, total);
     expect(trip.driverBonus, _radarPay());
+    tester.takeException();
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  // B16 (2026-11-04): these two replace the source-reading guards "every
+  // accept path uses the occurrence factory" and "no 4.9 fallback is left
+  // in the offer code" (archived in Rules/archive/old-tests/
+  // Movera-driver-app/), by accepting through both paths.
+  testWidgets('Radar list: the won trip has its own occurrence id and no '
+      'made-up rider rating', (tester) async {
+    _headless();
+    final offer = _far(rating: '');
+    final dispatch = _Dispatch([offer]);
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: RideRequests(dispatchRepository: dispatch)),
+      ),
+    );
+    await tester.pump();
+    final match = find.byKey(const ValueKey<String>('radar-match-far'));
+    await tester.ensureVisible(match);
+    await tester.tap(match);
+    await tester.pump();
+    dispatch.claims.single.complete(ClaimResult.success(offer));
+    await _frames(tester, const Duration(seconds: 2));
+    final trip = _trip(tester);
+    expect(trip.offerId, 'far');
+    expect(trip.tripId, isNot('far'));
+    expect(trip.tripId, matches(RegExp(r'^far-\d+$')));
+    expect(trip.riderRating, isNull);
+    expect(find.text('4.9'), findsNothing);
+    tester.takeException();
+    await tester.pumpWidget(const SizedBox());
+    await _frames(tester, const Duration(seconds: 1));
+    tester.takeException();
+  });
+
+  testWidgets('Home Radar card: the won trip has its own occurrence id and '
+      'no made-up rider rating', (tester) async {
+    _headless();
+    final offer = _far(rating: '');
+    final dispatch = _Dispatch([offer]);
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      LayoutViewport(
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          splitScreenMode: true,
+          useInheritedMediaQuery: true,
+          builder: (_, __) => MaterialApp(
+            home: DriverHome(
+              sessionController: DriverSessionController(),
+              dispatchRepository: dispatch,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+    tester
+        .widget<GestureDetector>(
+          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+        )
+        .onTap!
+        .call();
+    await _frames(
+      tester,
+      DriverOfferRules.current.exclusiveAcceptTime +
+          const Duration(milliseconds: 5000),
+    );
+    expect(
+      find.byKey(const ValueKey<String>('radar-offer-card-far')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey<String>('radar-match-far')));
+    await tester.pump();
+    dispatch.claims.single.complete(ClaimResult.success(offer));
+    await _frames(tester, const Duration(seconds: 2));
+    final trip = _trip(tester);
+    expect(trip.offerId, 'far');
+    expect(trip.tripId, isNot('far'));
+    expect(trip.tripId, matches(RegExp(r'^far-\d+$')));
+    expect(trip.riderRating, isNull);
+    expect(find.text('4.9'), findsNothing);
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
   });
@@ -339,11 +442,14 @@ void main() {
     final next = WaybillStore.next;
     expect(next, isNotNull);
     expect(next!.fare, '100,10 kr');
-    expect(next.driverBonus, WaybillRecord.bonusLabel(Money.ore(380)));
+    expect(
+      next.driverBonus,
+      WaybillRecord.bonusLabel(Money(minorUnits: 380, currency: 'SEK')),
+    );
     // The pay without the pickup pay is the share of the demo fare.
     expect(
-      Money.parseSekLabel(next.fare)! - Money.ore(380),
-      WaybillPayment.shareOf(Money.ore(12840)),
+      Money.parseSekLabel(next.fare)! - Money(minorUnits: 380, currency: 'SEK'),
+      WaybillPayment.shareOf(Money(minorUnits: 12840, currency: 'SEK')),
     );
     expect(tester.takeException(), isNull);
   });

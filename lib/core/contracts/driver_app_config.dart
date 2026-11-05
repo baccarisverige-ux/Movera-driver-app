@@ -201,6 +201,8 @@ class DriverAppConfig {
   /// Puts this zone's rules in use where the app reads them.
   void apply() {
     WaitingRules.current = waiting;
+    // Job 3 / L12: amounts with no currency of their own are in the zone's.
+    Money.zoneCurrency = currency;
     // Q46: the zone's number of missed Exclusive offers before offline;
     // the offer timers, card, reasons and Exclusive while driving.
     final offers = parts.offers;

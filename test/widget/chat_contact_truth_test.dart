@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,32 +77,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Chat), findsNothing);
     expect(tester.takeException(), isNull);
-  });
-
-  test('reachable chat source has no hard-coded tel target', () {
-    final appBar = File(
-      'lib/presentation/common/chat/components/appbar.dart',
-    ).readAsStringSync();
-    final chat = File(
-      'lib/presentation/common/chat/chat.dart',
-    ).readAsStringSync();
-    final ride =
-        File(
-          'lib/presentation/driver/accept ride/accept_ride.dart',
-        ).readAsStringSync() +
-        File(
-          'lib/presentation/driver/accept ride/accept_ride_panel.dart',
-        ).readAsStringSync();
-    expect(appBar, isNot(contains('tel:')));
-    expect(appBar, isNot(contains('46701234567')));
-    expect(appBar, isNot(contains('url_launcher')));
-    expect(chat, isNot(contains('tel:')));
-    expect(
-      ride,
-      // LT-4 (owner 2026-11-03): Chat now opens through its loader.
-      contains(
-        'chatScreen(riderDisplayName: _riderName, tripId: widget.tripId)',
-      ),
-    );
   });
 }

@@ -23,7 +23,7 @@ import '../../integration_test/headless_map_platform.dart';
 RideOffer _offer(String id, double km) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: const Money(minorUnits: 10000),
+  fare: const Money(minorUnits: 10000, currency: 'SEK'),
   rating: '4.9',
   pickupMinutes: 2,
   pickupKm: km,

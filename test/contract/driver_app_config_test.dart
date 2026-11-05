@@ -345,7 +345,10 @@ void main() {
       );
       expect(config.country, 'SE');
       expect(config.missedExclusiveBeforeOffline, 10);
-      expect(config.driverBonusLimits.defaultLimit, Money(minorUnits: 20000));
+      expect(
+        config.driverBonusLimits.defaultLimit,
+        Money(minorUnits: 20000, currency: 'SEK'),
+      );
       expect(config.waiting.base.freeMinutes, 5);
       expect(
         config.waiting.termsFor(category: 'comfort').noShowAfterMinutes,
