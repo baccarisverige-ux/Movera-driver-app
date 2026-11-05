@@ -121,8 +121,10 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    final bar = find.byType(SnackBar);
-    expect(bar, findsOneWidget);
+    expect(find.byType(SnackBar), findsOneWidget);
+    final bar = find
+        .descendant(of: find.byType(SnackBar), matching: find.byType(Material))
+        .first;
     final done = find.byKey(const ValueKey<String>('ride-completed-done'));
     expect(
       tester.getRect(bar).bottom,
