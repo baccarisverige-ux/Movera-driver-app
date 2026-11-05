@@ -6766,6 +6766,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nextBookedRideHint => 'After this trip, drive to the pickup';
 
   @override
+  String nextTripAfterThis(String rider) {
+    return 'Next: $rider · after this trip';
+  }
+
+  @override
+  String get nextTripPopupTitle => 'Your next trip';
+
+  @override
+  String nextTripPopupLive(String rider, String pickup) {
+    return '$rider is waiting at $pickup. Drive there now.';
+  }
+
+  @override
+  String nextTripPopupBooked(String time, String pickup) {
+    return 'Booked ride at $time · $pickup. Drive to the pickup now.';
+  }
+
+  @override
   String get docInsuranceLetter => 'Insurance letter';
 
   @override

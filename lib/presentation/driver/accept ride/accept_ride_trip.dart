@@ -1030,7 +1030,29 @@ extension _AcceptRideTrip on _AcceptRideState {
       return;
     }
     _waybills.completeCurrent();
-    final nextRide = queuedNext ? _nextRideFor(offer) : null;
+    Widget? nextRide = queuedNext ? _nextRideFor(offer) : null;
+    // Fix job 5 (owner 2026-11-05): the next trip — a live one he accepted
+    // during this trip, or a booked ride whose time to drive is near — opens
+    // on screen after this one, with an information popup (OK only).
+    if (nextRide == null) {
+      final opened = await openNextTripAfter(widget.tripId);
+      if (!mounted) return;
+      if (opened != null) {
+        nextRide = NextTripPopupHost(
+          next: opened.next,
+          child: AcceptRide.fromPersisted(
+            opened.ride,
+            locationRepository: widget.locationRepository,
+            routeRepository: widget.routeRepository,
+            waybillRepository: _waybills,
+            sessionController: widget.sessionController,
+            activeRideRepository: widget.activeRideRepository,
+            dispatchRepository: widget.dispatchRepository,
+          ),
+        );
+      }
+    }
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       BottomToTopTransition(
         DriverRideCompleted(

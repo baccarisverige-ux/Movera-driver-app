@@ -890,5 +890,42 @@
   "nextBookedRideHint": "After this trip, drive to the pickup",
   "@nextBookedRideHint": {
     "description": "Fix job 5: under the next booked ride card."
+  },
+  "nextTripAfterThis": "Next: {rider} · after this trip",
+  "@nextTripAfterThis": {
+    "description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.",
+    "placeholders": {
+      "rider": {
+        "type": "String"
+      }
+    }
+  },
+  "nextTripPopupTitle": "Your next trip",
+  "@nextTripPopupTitle": {
+    "description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete."
+  },
+  "nextTripPopupLive": "{rider} is waiting at {pickup}. Drive there now.",
+  "@nextTripPopupLive": {
+    "description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.",
+    "placeholders": {
+      "rider": {
+        "type": "String"
+      },
+      "pickup": {
+        "type": "String"
+      }
+    }
+  },
+  "nextTripPopupBooked": "Booked ride at {time} · {pickup}. Drive to the pickup now.",
+  "@nextTripPopupBooked": {
+    "description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "pickup": {
+        "type": "String"
+      }
+    }
   }
 }

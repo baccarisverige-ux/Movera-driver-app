@@ -187,6 +187,17 @@ class LiveTripCommands {
     return known == null ? null : Map<String, dynamic>.unmodifiable(known);
   }
 
+  /// Fix job 5 (contract v0.18.33): the live trip this driver accepted while
+  /// on [tripId], queued behind it (`nextAfterTripId`), or null.
+  Map<String, dynamic>? queuedAfter(String tripId) {
+    for (final trip in _trips.values) {
+      if (trip['nextAfterTripId'] == tripId && trip['status'] == 'accepted') {
+        return Map<String, dynamic>.unmodifiable(trip);
+      }
+    }
+    return null;
+  }
+
   /// Folds a projection in: kept when it is not older than the one known.
   void observe(Map<String, dynamic> projection) {
     final id = projection['tripId'];

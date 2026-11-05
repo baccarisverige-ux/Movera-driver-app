@@ -11641,6 +11641,30 @@ abstract class AppLocalizations {
   /// **'After this trip, drive to the pickup'**
   String get nextBookedRideHint;
 
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {rider} · after this trip'**
+  String nextTripAfterThis(String rider);
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next trip'**
+  String get nextTripPopupTitle;
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is waiting at {pickup}. Drive there now.'**
+  String nextTripPopupLive(String rider, String pickup);
+
+  /// Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked ride at {time} · {pickup}. Drive to the pickup now.'**
+  String nextTripPopupBooked(String time, String pickup);
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:
