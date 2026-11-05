@@ -412,5 +412,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "leaveNowTimeToDriveName": "Time to drive to pickup · {name}",
+  "@leaveNowTimeToDriveName": {"description": "v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).", "placeholders": {"name": {"type": "String"}}}
 }

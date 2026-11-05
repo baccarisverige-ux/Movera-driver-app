@@ -1382,6 +1382,7 @@
   "schedLeaveNowTitle": "Starta nu mot upphämtningen",
   "schedLeaveArrive": "Var framme {early} min före kl. {time}.",
   "schedBookedBadge": "Bokad resa · {time}",
+  "leaveNowTimeToDriveName": "Dags att köra till upphämtningen · {name}",
   "safetyToolkit": "Säkerhetsverktyg",
   "safetyAlertKeptOnPhoneDemo": "Demo: larmet sparas bara på den här telefonen. Ingen på Movera har larmats.",
   "safetyAlertNotSentLive": "Inte skickat: Movera kan inte ta emot larm från resekontrollen än. Vid fara, ring 112.",

@@ -8404,6 +8404,12 @@ abstract class AppLocalizations {
   /// **'Booked ride · {time}'**
   String schedBookedBadge(String time);
 
+  /// v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).
+  ///
+  /// In en, this message translates to:
+  /// **'Time to drive to pickup · {name}'**
+  String leaveNowTimeToDriveName(String name);
+
   /// No description provided for @safetyToolkit.
   ///
   /// In en, this message translates to:

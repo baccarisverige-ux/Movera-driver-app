@@ -4893,6 +4893,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'Time to drive to pickup · $name';
+  }
+
+  @override
   String get safetyToolkit => 'Safety toolkit';
 
   @override

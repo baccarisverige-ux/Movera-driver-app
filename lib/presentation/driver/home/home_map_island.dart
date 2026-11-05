@@ -15,9 +15,7 @@ extension _HomeMapIsland on _DriverHomeState {
   Widget _islandFaceView() {
     switch (_islandFace) {
       case _IslandFace.hidden:
-        return DigitalIslandParts.hiddenFace(
-          unit: DigitalIslandParts.unitOf(_waybills.last?.fare),
-        );
+        return DigitalIslandParts.hiddenFace(label: _waybills.last?.fare);
       case _IslandFace.lastTrip:
         if (_lastTripSettling) {
           return DigitalUpdatingFace(

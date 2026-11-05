@@ -1,5 +1,6 @@
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -782,35 +783,55 @@ class DigitalIslandParts {
 
   /// The symbol a money label ends with (`kr`, `€`, `DT`), so the island
   /// shows the trip's currency (audit B7: a France driver saw kr). Without
-  /// one: today's total's symbol, else the zone's (Job 3 / L12).
+  /// one: the zone's once its config arrived, else today's total's symbol
+  /// (Job 3 / L12). P26: a today's total made before the zone config (still
+  /// "kr") never wins over the zone; with nothing known it is empty, never
+  /// a guessed "kr".
   static String unitOf(String? label) {
-    for (final candidate in [label, TodayEarnings.label.value]) {
-      final text = candidate?.trim() ?? '';
-      for (final entry in Money.symbols.entries) {
-        if (text.endsWith(entry.value) || text.endsWith(entry.key)) {
-          return entry.value;
-        }
-      }
-    }
-    return Money.zoneSymbol;
+    final own = _symbolOf(label);
+    if (own != null) return own;
+    if (Money.zoneKnown) return Money.zoneSymbol;
+    return _symbolOf(TodayEarnings.label.value) ?? '';
   }
 
-  /// The hidden total, "•••• kr" (or "•••• €").
-  static Widget hiddenFace({String? unit}) => Center(
-    key: const ValueKey<String>('island-hidden'),
-    child: _fit(
-      Text(
-        '•••• ${unit ?? Money.zoneSymbol}',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.5,
-          shadows: DigitalIslandShell.glow,
+  static String? _symbolOf(String? label) {
+    final text = label?.trim() ?? '';
+    for (final entry in Money.symbols.entries) {
+      if (text.endsWith(entry.value) || text.endsWith(entry.key)) {
+        return entry.value;
+      }
+    }
+    return null;
+  }
+
+  /// The hidden total, "•••• kr" (or "•••• €"): [unit], else the symbol of
+  /// [label] (the last trip's fare) or the zone's. P26: it rebuilds when
+  /// the zone currency or today's total arrives later.
+  static Widget hiddenFace({String? unit, String? label}) =>
+      ValueListenableBuilder<String?>(
+        key: const ValueKey<String>('island-hidden'),
+        valueListenable: Money.zoneCurrencyChanges,
+        builder: (context, _, _) => ValueListenableBuilder<String?>(
+          valueListenable: TodayEarnings.label,
+          builder: (context, _, _) {
+            final shown = unit ?? unitOf(label);
+            return Center(
+              child: _fit(
+                Text(
+                  shown.isEmpty ? '••••' : '•••• $shown',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                    shadows: DigitalIslandShell.glow,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
-      ),
-    ),
-  );
+      );
 
   /// A small label over an amount, e.g. "TODAY" / "183.25 kr".
   static Widget amountFace(String key, String label, String value) => Column(

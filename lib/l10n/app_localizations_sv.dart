@@ -4893,6 +4893,11 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'Dags att köra till upphämtningen · $name';
+  }
+
+  @override
   String get safetyToolkit => 'Säkerhetsverktyg';
 
   @override
