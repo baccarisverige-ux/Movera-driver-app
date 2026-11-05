@@ -1,0 +1,614 @@
+{
+  "islandRadarOffers": "{count, plural, =1{1 offer · radar} other{{count} offers · radar}}",
+  "@islandRadarOffers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "islandOnline": "Radar online",
+  "@islandOnline": {
+    "description": "Admin text key island.online (Content › Driver app texts)."
+  },
+  "islandOffline": "Radar offline",
+  "@islandOffline": {
+    "description": "Admin text key island.offline (Content › Driver app texts)."
+  },
+  "islandRiderCancelled": "Rider cancelled",
+  "@islandRiderCancelled": {
+    "description": "Admin text key island.riderCancelled (Content › Driver app texts)."
+  },
+  "islandRiderEndedTrip": "Rider ended trip",
+  "@islandRiderEndedTrip": {
+    "description": "Admin text key island.riderEndedTrip (Content › Driver app texts)."
+  },
+  "islandTripRemoved": "Trip removed by Movera",
+  "@islandTripRemoved": {
+    "description": "Admin text key island.tripRemoved (Content › Driver app texts)."
+  },
+  "islandCancelFee": "+{amount}",
+  "@islandCancelFee": {
+    "description": "Admin text key island.cancelFee (Content › Driver app texts).",
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandCancelNoFee": "no fee",
+  "@islandCancelNoFee": {
+    "description": "Admin text key island.cancelNoFee (Content › Driver app texts)."
+  },
+  "islandReservationCancelled": "{time} cancelled",
+  "@islandReservationCancelled": {
+    "description": "Admin text key island.reservationCancelled (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandMatching": "Matching…",
+  "@islandMatching": {
+    "description": "Admin text key island.matching (Content › Driver app texts)."
+  },
+  "islandMatched": "Trip matched",
+  "@islandMatched": {
+    "description": "Admin text key island.matched (Content › Driver app texts)."
+  },
+  "islandTakenByOther": "Taken by another driver",
+  "@islandTakenByOther": {
+    "description": "Admin text key island.takenByOther (Content › Driver app texts)."
+  },
+  "islandTripUnavailable": "Trip unavailable",
+  "@islandTripUnavailable": {
+    "description": "Admin text key island.tripUnavailable (Content › Driver app texts)."
+  },
+  "islandNoConnection": "No connection",
+  "@islandNoConnection": {
+    "description": "Admin text key island.noConnection (Content › Driver app texts)."
+  },
+  "islandContactSupport": "Contact support",
+  "@islandContactSupport": {
+    "description": "Admin text key island.contactSupport (Content › Driver app texts)."
+  },
+  "islandAccountOnHold": "Account on hold · Contact support",
+  "@islandAccountOnHold": {
+    "description": "Admin text key island.accountOnHold (Content › Driver app texts)."
+  },
+  "islandAccountNotActive": "Account not active · Finish sign-up",
+  "@islandAccountNotActive": {
+    "description": "Admin text key island.accountNotActive (Content › Driver app texts)."
+  },
+  "islandNewReservation": "New reservation",
+  "@islandNewReservation": {
+    "description": "Admin text key island.newReservation (Content › Driver app texts)."
+  },
+  "islandExclusiveRide": "Exclusive ride",
+  "@islandExclusiveRide": {
+    "description": "Admin text key island.exclusiveRide (Content › Driver app texts)."
+  },
+  "islandExclusiveReservation": "Exclusive reservation",
+  "@islandExclusiveReservation": {
+    "description": "Admin text key island.exclusiveReservation (Content › Driver app texts)."
+  },
+  "islandReservationAccepted": "Reservation accepted",
+  "@islandReservationAccepted": {
+    "description": "Admin text key island.reservationAccepted (Content › Driver app texts)."
+  },
+  "islandReservationAcceptedAt": "Accepted · pickup {time}",
+  "@islandReservationAcceptedAt": {
+    "description": "Admin text key island.reservationAcceptedAt (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandNoLongerAvailable": "No longer available",
+  "@islandNoLongerAvailable": {
+    "description": "Admin text key island.noLongerAvailable (Content › Driver app texts)."
+  },
+  "islandAssignedByMovera": "Assigned by Movera",
+  "@islandAssignedByMovera": {
+    "description": "Admin text key island.assignedByMovera (Content › Driver app texts)."
+  },
+  "islandAssignmentAccepted": "Scheduled ride accepted",
+  "@islandAssignmentAccepted": {
+    "description": "Admin text key island.assignmentAccepted (Content › Driver app texts)."
+  },
+  "islandAssignmentNotAccepted": "Assignment not accepted",
+  "@islandAssignmentNotAccepted": {
+    "description": "Admin text key island.assignmentNotAccepted (Content › Driver app texts)."
+  },
+  "islandPickupIn": "{time} pickup in {left}",
+  "@islandPickupIn": {
+    "description": "Admin text key island.pickupIn (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      },
+      "left": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandGoOnlineFor": "Go online for {time} pickup",
+  "@islandGoOnlineFor": {
+    "description": "Admin text key island.goOnlineFor (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandLeaveNow": "Leave now for {time} pickup",
+  "@islandLeaveNow": {
+    "description": "Admin text key island.leaveNow (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandHeadToPickup": "Head to your {time} pickup",
+  "@islandHeadToPickup": {
+    "description": "Admin text key island.headToPickup (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandGivenToBackup": "Given to backup driver",
+  "@islandGivenToBackup": {
+    "description": "Admin text key island.givenToBackup (Content › Driver app texts)."
+  },
+  "islandLateReassigned": "Given to another driver: {minutes} min late",
+  "@islandLateReassigned": {
+    "description": "Admin text key island.lateReassigned (Content › Driver app texts). The ETA showed the driver would reach the scheduled pickup too late, so the ride went to another driver.",
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandCashOn": "Cash rides on",
+  "@islandCashOn": {
+    "description": "Admin text key island.cashOn (Content › Driver app texts)."
+  },
+  "islandCashOff": "Cash rides off",
+  "@islandCashOff": {
+    "description": "Admin text key island.cashOff (Content › Driver app texts)."
+  },
+  "islandOfflineMissed": "Offline: {count} offers missed",
+  "@islandOfflineMissed": {
+    "description": "Admin text key island.offlineMissed (Content › Driver app texts).",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandDrivingLeft": "{minutes} min left to drive",
+  "@islandDrivingLeft": {
+    "description": "Admin text key island.drivingLeft (Content › Driver app texts).",
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandRestUntil": "Rest until {time}",
+  "@islandRestUntil": {
+    "description": "Admin text key island.restUntil (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandRestOver": "Rest over",
+  "@islandRestOver": {
+    "description": "Admin text key island.restOver (Content › Driver app texts)."
+  },
+  "islandDocumentExpires": "{document} expires {when}",
+  "@islandDocumentExpires": {
+    "description": "Admin text key island.documentExpires (Content › Driver app texts).",
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "when": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandDocumentExpired": "{document} expired",
+  "@islandDocumentExpired": {
+    "description": "Admin text key island.documentExpired (Content › Driver app texts).",
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandDocumentInReview": "New document in review",
+  "@islandDocumentInReview": {
+    "description": "Admin text key island.documentInReview (Content › Driver app texts)."
+  },
+  "islandDocumentApproved": "Document approved",
+  "@islandDocumentApproved": {
+    "description": "Admin text key island.documentApproved (Content › Driver app texts)."
+  },
+  "islandHighDemand": "High demand · {area}",
+  "@islandHighDemand": {
+    "description": "Admin text key island.highDemand (Content › Driver app texts).",
+    "placeholders": {
+      "area": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandScheduledPaused": "Scheduled rides paused",
+  "@islandScheduledPaused": {
+    "description": "Admin text key island.scheduledPaused (Content › Driver app texts)."
+  },
+  "islandSavedTripOpen": "Saved trip open",
+  "@islandSavedTripOpen": {
+    "description": "Admin text key island.savedTripOpen (Content › Driver app texts)."
+  },
+  "islandNewerTripKept": "Newer trip kept",
+  "@islandNewerTripKept": {
+    "description": "Admin text key island.newerTripKept (Content › Driver app texts)."
+  },
+  "islandRecordSetAside": "Trip record set aside",
+  "@islandRecordSetAside": {
+    "description": "Admin text key island.recordSetAside (Content › Driver app texts)."
+  },
+  "islandRecoveryFailed": "Recovery failed",
+  "@islandRecoveryFailed": {
+    "description": "Admin text key island.recoveryFailed (Content › Driver app texts)."
+  },
+  "islandTripNotClosed": "Trip not closed",
+  "@islandTripNotClosed": {
+    "description": "Admin text key island.tripNotClosed (Content › Driver app texts)."
+  },
+  "islandCloseSavedTrip": "Close saved trip",
+  "@islandCloseSavedTrip": {
+    "description": "Admin text key island.closeSavedTrip (Content › Driver app texts)."
+  },
+  "islandSeeEarnings": "Tap to see earnings",
+  "@islandSeeEarnings": {
+    "description": "Admin text key island.seeEarnings (Content › Driver app texts)."
+  },
+  "islandDestinationsUsed": "Today's destinations used",
+  "@islandDestinationsUsed": {
+    "description": "Admin text key island.destinationsUsed (Content › Driver app texts)."
+  },
+  "islandDestinationOff": "Destination mode is off here",
+  "@islandDestinationOff": {
+    "description": "Admin text key island.destinationOff (Content › Driver app texts)."
+  },
+  "islandDestinationEnded": "Destination mode ended",
+  "@islandDestinationEnded": {
+    "description": "Admin text key island.destinationEnded (Content › Driver app texts)."
+  },
+  "mapUnavailable": "Map unavailable. Check your connection, then reopen Movera.",
+  "orbMatch": "MATCH",
+  "orbWait": "WAIT",
+  "orbOff": "OFF",
+  "orbOn": "ON",
+  "orbNew": "NEW",
+  "orbLive": "LIVE",
+  "orbPaused": "PAUSED",
+  "orbStarting": "STARTING",
+  "navArrived": "ARRIVED",
+  "navNear": "NEAR",
+  "navNow": "NOW",
+  "navArrive": "Arrive",
+  "navHeadOut": "Head out",
+  "navKeepLeft": "Keep left",
+  "navKeepRight": "Keep right",
+  "navTunnelAhead": "Tunnel ahead",
+  "navTollRoadAhead": "Toll road ahead",
+  "navContinueStraight": "Continue straight",
+  "navContinue": "Continue",
+  "navRoundabout": "Roundabout",
+  "navRoundaboutExit": "Roundabout, exit {exit}",
+  "@navRoundaboutExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navRoundaboutUTurn": "Roundabout, U-turn",
+  "navRoundaboutUTurnExit": "Roundabout, U-turn · exit {exit}",
+  "@navRoundaboutUTurnExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navSignedExit": "Exit {exit}",
+  "@navSignedExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navSignedExitTowards": "Exit {exit} · {place}",
+  "@navSignedExitTowards": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "navExitLeft": "Exit left",
+  "navExitRight": "Exit right",
+  "navTakeExit": "Take the exit",
+  "navRampOnto": "Take the ramp onto",
+  "navRampLeft": "Take the ramp on the left",
+  "navRampRight": "Take the ramp on the right",
+  "navRamp": "Take the ramp",
+  "navMergeLeft": "Merge left",
+  "navMergeRight": "Merge right",
+  "navMerge": "Merge",
+  "navForkLeft": "At the fork, go left",
+  "navForkRight": "At the fork, go right",
+  "navContinueAtFork": "Continue at the fork",
+  "navTurnLeft": "Turn left",
+  "navTurnRight": "Turn right",
+  "navEndOfRoad": "End of the road",
+  "navUTurn": "U-turn",
+  "navSharpLeft": "Turn sharp left",
+  "navSharpRight": "Turn sharp right",
+  "navSlightLeft": "Turn slight left",
+  "navSlightRight": "Turn slight right",
+  "navDistanceNow": "now",
+  "navMeters": "{meters} m",
+  "@navMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "navKilometers": "{km} km",
+  "@navKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "navDecimalMark": ".",
+  "navInDistance": "in {distance}",
+  "@navInDistance": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navActionIn": "{action} in {distance}",
+  "@navActionIn": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navActionNow": "{action} now",
+  "@navActionNow": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "navActionFor": "{action} {distance}",
+  "@navActionFor": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navOnto": "{action} onto {road}",
+  "@navOnto": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "road": {
+        "type": "String"
+      }
+    }
+  },
+  "navArriveAtDestination": "Arrive at destination",
+  "navHeadOutOn": "Head out on {road}",
+  "@navHeadOutOn": {
+    "placeholders": {
+      "road": {
+        "type": "String"
+      }
+    }
+  },
+  "navContinueOn": "Continue on {road}",
+  "@navContinueOn": {
+    "placeholders": {
+      "road": {
+        "type": "String"
+      }
+    }
+  },
+  "navRoundaboutContinue": "At the roundabout, continue",
+  "navRoundaboutTakeExit": "At roundabout, take exit {exit}",
+  "@navRoundaboutTakeExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navExitOnLeft": "Take the exit on the left",
+  "navExitOnRight": "Take the exit on the right",
+  "navEndTurnLeft": "Turn left at the end of the road",
+  "navEndTurnRight": "Turn right at the end of the road",
+  "navAtEndOfRoad": "At the end of the road",
+  "navMakeUTurn": "Make a U-turn",
+  "navUseLeftLanes": "{count, plural, =1{Use the left lane} other{Use the {count} left lanes}}",
+  "@navUseLeftLanes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navUseRightLanes": "{count, plural, =1{Use the right lane} other{Use the {count} right lanes}}",
+  "@navUseRightLanes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navUseMiddleLanes": "{count, plural, =1{Use the middle lane} other{Use the {count} middle lanes}}",
+  "@navUseMiddleLanes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navTowards": "towards {place}",
+  "@navTowards": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "navToDestination": "To destination",
+  "navExitSemantics": "{cue}, exit {exit}",
+  "@navExitSemantics": {
+    "placeholders": {
+      "cue": {
+        "type": "String"
+      },
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navPickupAhead": "Pickup ahead",
+  "navDropOffAhead": "Drop-off ahead",
+  "navPointAhead": "{point} ahead",
+  "@navPointAhead": {
+    "placeholders": {
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "navToPickup": "Navigate to pickup",
+  "navToPoint": "Navigate to {point}",
+  "@navToPoint": {
+    "placeholders": {
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "navDropOffLower": "drop-off",
+  "navWaitingForRider": "Waiting for rider",
+  "navRouteUpdating": "Route updating…",
+  "navRouteRecalculating": "Recalculating route…",
+  "navRouteUnavailableRetry": "Route unavailable — retry",
+  "navRouteUnavailableLocation": "Route unavailable — check location",
+  "destChooseOneAddress": "Choose one address",
+  "destTripsInYourDirection": "Trips in your direction",
+  "destMoveraPrioritizes": "Movera will prioritize requests that keep you moving toward this address.",
+  "destAddAddress": "Add destination address",
+  "destSuggestedAddresses": "Suggested addresses",
+  "destResults": "Results",
+  "destNoAddressFound": "No address found",
+  "destTryAnother": "Try another street, place, or area.",
+  "destFastestRoute": "Fastest route to your destination",
+  "destOnlyTripsYourWay": "You'll only get trips heading your way, so every ride takes you closer to {place}.",
+  "@destOnlyTripsYourWay": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "destArriveBy": "Arrive by {time}",
+  "@destArriveBy": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "destConfirm": "Confirm destination",
+  "queueAirportPreview": "Airport queue preview",
+  "queueSample10Ahead": "Sample: 10 drivers ahead",
+  "queueViewSampleDetails": "view sample details",
+  "queueClose": "Close queue position",
+  "queueMyPosition": "My Queue position",
+  "queueMediumWait": "Medium Wait",
+  "queueSampleRank": "Sample Rank",
+  "queueUnavailablePreview": "Queue unavailable — preview",
+  "queueRanks": "Ranks",
+  "mapCameraUnavailable": "Map camera unavailable — tap recenter to retry",
+  "mapOfArea": "Map of {area}",
+  "@mapOfArea": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "destResultsFound": "{count, plural, =1{1 found} other{{count} found}}",
+  "@destResultsFound": {
+    "description": "How many places match the destination search.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueEstimatedWait": "About 15–30 min wait",
+  "@queueEstimatedWait": {
+    "description": "Estimated wait in the queue position preview."
+  },
+  "queueDriversAhead": "Drivers ahead",
+  "@queueDriversAhead": {
+    "description": "Label above the sample count of drivers ahead in the queue."
+  },
+  "mapYourCar": "Your car",
+  "@mapYourCar": {
+    "description": "Map: the name of the driver's own car marker."
+  },
+  "destRecentAddresses": "Your recent destinations",
+  "destSearchUnavailable": "Address search is not available",
+  "destSearchTryAgain": "Check your connection and try again.",
+  "destSearchStart": "Search for an address",
+  "destSearchStartBody": "Type a street, a place or a city. Your last 5 destinations show here."
+}

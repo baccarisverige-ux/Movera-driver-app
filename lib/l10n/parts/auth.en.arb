@@ -1,0 +1,203 @@
+{
+  "phoneVibratesWhenRequestArrives": "The phone vibrates when a request arrives.",
+  "phone": "Phone",
+  "phoneVerification": "Phone verification",
+  "signInUnavailableInPreview": "Sign in unavailable in preview",
+  "signIn": "Sign in",
+  "signUp": "Sign up",
+  "signInWithPhone": "Sign in with phone number",
+  "phoneSignInUnavailableDemo": "Phone sign-in is unavailable in this demo. No verification code is sent.",
+  "phoneNumber": "Phone number",
+  "phoneSignInNeedsService": "Phone sign-in requires the account service.",
+  "signInOr": "or",
+  "@signInOr": {
+    "description": "Divider word between the sign-in options."
+  },
+  "authDriverWord": "Driver",
+  "@authDriverWord": {
+    "description": "Under the Movera wordmark on the sign-in screens: this is the driver app."
+  },
+  "authBrandTagline": "Moving to a new era.",
+  "authEnterPhone": "Enter your phone number",
+  "authTextFourDigitCode": "We'll text you a 4-digit code.",
+  "authInvalidMobileNumber": "Enter a valid mobile number.",
+  "authConsentLabel": "I accept the terms and the privacy policy",
+  "@authConsentLabel": {
+    "description": "Owner G1-B5 / B6 (screen reader)."
+  },
+  "authConsentPrefix": "By continuing you accept the ",
+  "@authConsentPrefix": {
+    "description": "Owner G1-B5 (same words as the rider app)."
+  },
+  "authConsentTerms": "terms",
+  "@authConsentTerms": {
+    "description": "Owner G1-B5."
+  },
+  "authAnd": " and ",
+  "@authAnd": {
+    "description": "Owner G1-B5."
+  },
+  "authConsentPrivacy": "privacy policy",
+  "@authConsentPrivacy": {
+    "description": "Owner G1-B5."
+  },
+  "authConsentTickFirst": "Tick the box to agree before you continue.",
+  "authContinue": "Continue",
+  "authStepOf": "Step {step} of {total}",
+  "@authStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "authChangeLanguage": "Change language",
+  "authChooseCountry": "Choose your country",
+  "authSearchCountry": "Search country or code",
+  "authNoCountryFound": "No country matches your search.",
+  "authPhoneCountryCode": "Country code: {country}, {dial}",
+  "@authPhoneCountryCode": {
+    "placeholders": {
+      "country": {
+        "type": "Object"
+      },
+      "dial": {
+        "type": "Object"
+      }
+    }
+  },
+  "authChangeCountryCode": "Change country",
+  "authEnterYourCodeHead": "Enter your ",
+  "authEnterYourCodeAccent": "code",
+  "authCodeSentToPhone": "We've sent a code to your phone.",
+  "authSentTo": "Sent to ",
+  "authNewCodeSent": "New code sent.",
+  "authReenterPhone": "Go back and enter your phone number again.",
+  "authRequestNewCode": "Go back and request a new code.",
+  "authNeverAskCode": "Movera will never call or text you asking for this code.",
+  "authVerify": "Verify",
+  "authResendCodeIn": "Resend code in ",
+  "authResendCode": "Resend code",
+  "authErrOffline": "No connection. Check your internet and try again.",
+  "authErrTooManyWait": "Too many tries. Wait a moment and try again.",
+  "authErrTooManyIn": "Too many tries. Try again in {wait}.",
+  "@authErrTooManyIn": {
+    "placeholders": {
+      "wait": {
+        "type": "Object"
+      }
+    }
+  },
+  "authRetrySeconds": "{count, plural, =1{1 second} other{{count} seconds}}",
+  "@authRetrySeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrServer": "Movera is having trouble right now. Try again in a moment.",
+  "authErrWrongCode": "That code isn't right. Check it and try again.",
+  "authCodeExpired": "This code has expired. Tap Resend code for a new one.",
+  "authErrSendCode": "Couldn't send the code. Try again.",
+  "authErrCheckCode": "Couldn't check the code. Try again.",
+  "authSignInRestricted": "This number isn’t open for sign-in yet. Join the waiting list and we’ll let you know.",
+  "@authSignInRestricted": {
+    "description": "Owner G1-B4 (same as the rider app's signInRestricted)."
+  },
+  "authProviderComingSoon": "Sign-in with Apple and Google is coming soon. Use your phone number.",
+  "authErrProvider": "Couldn’t sign in that way. Try again, or use your phone number.",
+  "authLinkExpired": "That sign-in took too long. Start again with Apple or Google, or use your phone number.",
+  "authContinueWith": "Continue with {provider}",
+  "@authContinueWith": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authOr": "or",
+  "authProviderPhoneOnce": "Confirm your phone number once to finish signing in with {provider}. We’ll text you a 4-digit code.",
+  "@authProviderPhoneOnce": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authUsePhoneInstead": "Sign in with my phone number only",
+  "authStartingServer": "Starting the server…",
+  "@authStartingServer": {
+    "description": "Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server."
+  },
+  "authErrTooManyWrongCodes": "Too many wrong tries – tap {button}",
+  "@authErrTooManyWrongCodes": {
+    "description": "Owner decision 3: after 5 wrong codes. {button} is the resend button label.",
+    "placeholders": {
+      "button": {
+        "type": "String"
+      }
+    }
+  },
+  "authRetryMinutes": "{count, plural, =1{1 min} other{{count} min}}",
+  "@authRetryMinutes": {
+    "description": "Owner decision 4: a sign-in wait of a minute or more, rounded up.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authJoinWaitlist": "Join the waiting list",
+  "authWaitlistSaved": "You’re on the waiting list. We’ll let you know when sign-in opens for your number.",
+  "authTestNumbersTitle": "Test numbers (test build only)",
+  "authTestNumbersButton": "Test numbers",
+  "authTestNumbersAskAdmin": "Ask an admin for the test numbers",
+  "authTestStatusNew": "Test · no account yet",
+  "authNeedHelp": "Need help?",
+  "authHelpComingSoon": "Contact details coming soon",
+  "authHelpEmail": "E-mail",
+  "authHelpPhone": "Phone",
+  "authHelpCompany": "Company",
+  "authHelpClose": "Close",
+  "authSignedOutExpired": "You were signed out – please sign in again",
+  "@authSignedOutExpired": {
+    "description": "Contract v0.18.5 auth.signedOut (G1-D3)."
+  },
+  "authSignedOutRevoked": "You were signed out – please sign in again",
+  "@authSignedOutRevoked": {
+    "description": "Contract v0.18.5 auth.signedOut (G1-D3)."
+  },
+  "authSignedOutDetailExpired": "You have not used the app for 30 days.",
+  "@authSignedOutDetailExpired": {
+    "description": "Contract v0.18.5 auth.signedOut (G1-D3)."
+  },
+  "authSignedOutDetailRevoked": "Movera ended your session.",
+  "@authSignedOutDetailRevoked": {
+    "description": "Contract v0.18.5 auth.signedOut (G1-D3)."
+  },
+  "authPhoneFieldLabel": "Mobile number ({dial})",
+  "@authPhoneFieldLabel": {
+    "description": "Owner G1-B6 screen-reader label.",
+    "placeholders": {
+      "dial": {
+        "type": "String"
+      }
+    }
+  },
+  "authCodeFieldLabel": "4-digit code from the SMS",
+  "@authCodeFieldLabel": {
+    "description": "Owner G1-B6 screen-reader label."
+  },
+  "authSignedOutElsewhere": "Signed in on another phone",
+  "@authSignedOutElsewhere": {
+    "description": "Contract v0.18.14 sign-in (authSignedOutElsewhere)."
+  },
+  "authErrLockedToday": "Too many wrong codes today. Try again later.",
+  "@authErrLockedToday": {
+    "description": "Contract v0.18.14 sign-in (authErrLockedToday)."
+  }
+}

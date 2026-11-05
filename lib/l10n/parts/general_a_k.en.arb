@@ -1,0 +1,858 @@
+{
+  "appTitle": "Movera Driver",
+  "hideReservationRequest": "Hide reservation request",
+  "findingTrips": "Finding trips",
+  "inbox": "Inbox",
+  "destinationSet": "Destination Set",
+  "destination": "Destination",
+  "driverStatus": "DRIVER STATUS",
+  "accountAccessPaused": "Account access paused",
+  "gotIt": "Got it",
+  "arrive": "Arrive",
+  "backToRequest": "Back to request",
+  "dropOff": "Drop-off",
+  "destinationModeUntilUntil": "Destination mode until {until}",
+  "@destinationModeUntilUntil": {
+    "placeholders": {
+      "until": {
+        "type": "Object"
+      }
+    }
+  },
+  "couldNotOpenUpdatePleaseTry": "Could not open the update. Please try again.",
+  "goOfflineQuestion": "Go offline?",
+  "goOffline": "Go offline",
+  "findingYourLocation": "Finding your location",
+  "documentExpired": "Document expired",
+  "headToYourPickupTimePickup": "Head to your {pickupTime} pickup now: {pickupAddress}.",
+  "@headToYourPickupTimePickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      },
+      "pickupAddress": {
+        "type": "Object"
+      }
+    }
+  },
+  "headToYourPickupTimePickup2": "Head to your {pickupTime} pickup",
+  "@headToYourPickupTimePickup2": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "goOnlineNowForYourPickup": "Go online now for your {pickupTime} pickup.",
+  "@goOnlineNowForYourPickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "goOnlineForPickupTimePickup": "Go online for {pickupTime} pickup",
+  "@goOnlineForPickupTimePickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "acceptance": "Acceptance",
+  "cancellation": "Cancellation",
+  "drivingTime": "Driving time",
+  "countsWhileRadarIsOnAfter": "Counts while Radar is on. After {workHours} h you rest {restHours} h before going online again. A {restHours} h break starts it from zero.",
+  "@countsWhileRadarIsOnAfter": {
+    "placeholders": {
+      "workHours": {
+        "type": "Object"
+      },
+      "restHours": {
+        "type": "Object"
+      }
+    }
+  },
+  "closeSheet": "Close sheet",
+  "closeTrip": "Close trip",
+  "closeUnreadableTrip": "Close unreadable trip",
+  "finishOrCloseSavedTripBefore": "Finish or close the saved trip before going online.",
+  "account": "Account",
+  "connecting": "Connecting",
+  "currentTrip": "Current trip",
+  "couldNotSaveRiderCancellationRetry": "Could not save rider cancellation. Retry.",
+  "couldNotFinishSavingThisTrip": "Could not finish saving this trip. Retry completion; the receipt will not duplicate.",
+  "alongYourDestination": "Along your destination",
+  "endThisTripEarlyQuestion": "End this trip early?",
+  "endTripEarly": "End trip early",
+  "keepTrip": "Keep trip",
+  "couldNotSaveCancellationRetry": "Could not save cancellation. Retry.",
+  "firstTripEndedStartingNextOne": "First trip ended · starting the next one",
+  "arrival": "Arrival",
+  "arriving": "Arriving",
+  "demoValue": "Demo: {value}",
+  "@demoValue": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "addressUnavailable": "Address unavailable",
+  "doesnTCount": "Doesn’t count",
+  "headingToStopNumber": "Heading to stop {number}",
+  "@headingToStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "droppingOffRiderName": "Dropping off {riderName}",
+  "@droppingOffRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "driveToStopNumber": "Drive to stop {number}",
+  "@driveToStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "dropOffRiderName": "Drop off {riderName}",
+  "@dropOffRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "enRoute": "En route",
+  "includedWaitThenPaid": "Included wait · then paid",
+  "actionCouldNotBeCompletedPlease": "The action could not be completed. Please retry.",
+  "confirmThisTripActionQuestion": "Confirm this trip action?",
+  "confirm": "Confirm",
+  "finishSoSoonQuestion": "Finish so soon?",
+  "backToRide": "Back to ride",
+  "finishTrip": "Finish trip",
+  "isEverythingOkQuestion": "Is everything OK?",
+  "iMOk": "I'm OK",
+  "done": "Done",
+  "couldNotOpenDialerDial112": "Could not open the dialer. Dial 112 manually.",
+  "ifSomeoneIsHurtOrIn": "If someone is hurt or in danger, call emergency services.",
+  "audioStoppedWhenAppLeft": "stopped when Movera left the screen",
+  "audioSavedTime": "Audio saved · {time}",
+  "@audioSavedTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "allowMicrophoneFirst": "allow the microphone first",
+  "couldNotRecordTryAgain": "could not record, try again",
+  "bodyYourNextTripStartsNow": "{body} Your next trip starts now.",
+  "@bodyYourNextTripStartsNow": {
+    "placeholders": {
+      "body": {
+        "type": "Object"
+      }
+    }
+  },
+  "goToNextTrip": "Go to next trip",
+  "headingToPickup": "Heading to pickup",
+  "afterThisDropOff": "After this drop-off",
+  "availableAfterYourCurrentDropOff": "Available after your current drop-off",
+  "deny": "Deny",
+  "demoOffers": "Demo offers",
+  "demoOffersLiveLocationUnavailableStale": "Demo offers — live location unavailable/stale",
+  "googleMapsIsUnavailable": "Google Maps is unavailable.",
+  "currentWaybill": "Current waybill",
+  "currentTripWaybill": "Current trip waybill",
+  "activeTripCancelledByRider": "Active trip cancelled by rider",
+  "keepControlOfVehicleAndStop": "Keep control of the vehicle and stop safely before continuing.",
+  "iHaveStoppedSafely": "I have stopped safely",
+  "collectAmountInCash": "Collect {amount} in cash",
+  "@collectAmountInCash": {
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "collect": "Collect",
+  "inCash": "in cash",
+  "dropOffTripMinutesMinTrip": "Drop-off · {tripMinutes} min trip",
+  "@dropOffTripMinutesMinTrip": {
+    "placeholders": {
+      "tripMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "everyMinuteIsPaid": "Every minute is paid",
+  "includedTime": "Included time",
+  "addedFromFirstSecondAtThis": "Added from the first second at this stop.",
+  "addedToFareWhenThisTrip": "Added to the fare when this trip is completed.",
+  "canBeAppliedAfterNoShow": "Can be applied after {noShowAfterMinutes} min if the rider has not arrived.",
+  "@canBeAppliedAfterNoShow": {
+    "placeholders": {
+      "noShowAfterMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "amountsCanChangeWithTaxesAnd": "Amounts can change with taxes and fees.",
+  "close": "Close",
+  "includedMinutes": "Included minutes",
+  "eachMinuteAfterIncludedTimeIs": "Each minute after the included time is added when the trip ends.",
+  "justNow": "Just now",
+  "completed": "Completed",
+  "fare": "Fare",
+  "from": "From",
+  "driver": "Driver",
+  "inApp": "In the app",
+  "basePriceService": "Base price · {service}",
+  "@basePriceService": {
+    "placeholders": {
+      "service": {
+        "type": "Object"
+      }
+    }
+  },
+  "feature": "Feature",
+  "clear": "Clear",
+  "back": "Back",
+  "earningsPreview": "Earnings preview",
+  "demoRider": "Demo rider",
+  "dropOffLocation": "Drop off location",
+  "answerAnswer": "Answer: {answer}",
+  "@answerAnswer": {
+    "placeholders": {
+      "answer": {
+        "type": "Object"
+      }
+    }
+  },
+  "audioSavedOnlyOnThisPhone": "Audio saved only on this phone · {time}",
+  "@audioSavedOnlyOnThisPhone": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "cancelledByRider": "Cancelled by rider",
+  "cancelledByDriver": "Cancelled by driver",
+  "cancelledBySupport": "Cancelled by support",
+  "cancelledByMovera": "Cancelled by Movera",
+  "couldNotLoadRideHistory": "Could not load ride history.",
+  "earningsHistory": "Earnings & history",
+  "allRides": "All rides",
+  "earningsBreakdown": "Earnings breakdown",
+  "fareFareFormattedCashCashCollected": "Earnings {fareFormatted} · Cash {cashCollectedFormatted}",
+  "@fareFareFormattedCashCashCollected": {
+    "placeholders": {
+      "fareFormatted": {
+        "type": "Object"
+      },
+      "cashCollectedFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "driver2": "DRIVER",
+  "accountVehicleAndDocuments": "Account, vehicle and documents",
+  "earningsAndWeeklyPayouts": "Earnings and weekly payouts",
+  "completedAndPreviousRides": "Completed and previous rides",
+  "chooseCategoriesYouWantToReceive": "Choose categories you want to receive",
+  "bonusesAndCampaignOffers": "Bonuses and campaign offers",
+  "drivingLogs": "Driving logs",
+  "hoursOnlineAndRestRules": "Hours online and rest rules",
+  "appAndDriverSettings": "App and driver settings",
+  "active": "Active",
+  "changesNotSavedRetry": "Changes not saved — Retry",
+  "couldNotLoadSavedPreferencesRetry": "Could not load saved preferences — Retry",
+  "generalVolume": "General volume",
+  "alwaysPlayTripRequests": "Always play trip requests",
+  "accessibility": "Accessibility",
+  "hearing": "Hearing",
+  "demoPreviewNoInformationIsShared": "Demo preview — no information is shared with riders.",
+  "closePreview": "Close preview",
+  "flashForRequests": "Flash for requests",
+  "appSettings": "App settings",
+  "darkMode": "Dark mode",
+  "emergencyContacts": "Emergency contacts",
+  "dialerIsUnavailable": "Dialer is unavailable.",
+  "addTrustedContact": "Add trusted contact",
+  "couldNotLoadTrustedContactsRetry": "Could not load trusted contacts — Retry",
+  "enterName": "Enter a name",
+  "enterValidPhoneNumber": "Enter a valid phone number",
+  "closeOffer": "Close offer",
+  "demoModeNoAccount": "Demo mode — no account",
+  "gpsRestored": "GPS restored",
+  "arrivingSoon": "Arriving soon",
+  "arrivingInEtaMinTimeTime2": "Arriving in {eta} min · {time}:{time2}",
+  "@arrivingInEtaMinTimeTime2": {
+    "placeholders": {
+      "eta": {
+        "type": "Object"
+      },
+      "time": {
+        "type": "Object"
+      },
+      "time2": {
+        "type": "Object"
+      }
+    }
+  },
+  "assignedByMovera": "Assigned by Movera",
+  "hideRequest": "Hide request",
+  "createAccount": "Create account",
+  "enterValidPhoneForCode": "Enter a valid phone number where we will send a verification code",
+  "fullName": "Full name",
+  "emailAddress": "Email address",
+  "byContinuingIAgreeTo": " By continuing, I agree to the ",
+  "andWord": " and ",
+  "codeDeliveryUnavailableDemo": "Code delivery is unavailable in this demo",
+  "accountVerificationNeedsService": " Account verification requires the account service.",
+  "didNotGetCode": "Didn’t get the code?",
+  "continueWithPhone": "Continue with phone",
+  "continueWithApple": "Continue with apple",
+  "continueWithGoogle": "Continue with Google",
+  "dontHaveAccount": "Don't have an account?",
+  "enterValidPhoneWeWillSend": "Enter a valid phone number where we will send",
+  "insurance": "Insurance",
+  "inDaysCount": "{count, plural, =1{in 1 day} other{in {count} days}}",
+  "@inDaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "approveDemo": "Approve (demo)",
+  "documents": "Documents",
+  "goodToKnow": "Good to know",
+  "chooseBestReason": "Choose the reason that best matches.",
+  "category": "Category",
+  "enterSubject": "Enter a subject",
+  "enterMessage": "Enter a message",
+  "addVehicle": "Add vehicle",
+  "demoDriverIdentityUnavailable": "Demo driver — identity unavailable",
+  "analytics": "Analytics",
+  "earnings": "Earnings",
+  "acceptanceRate": "Acceptance rate",
+  "cancellationRate": "Cancellation rate",
+  "countrySweden": "Sweden",
+  "international": "International",
+  "country": "Country",
+  "clearing": "Clearing",
+  "checkDetails": "Check details",
+  "hoursAgo": "{hours} h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{days} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "filterAll": "All",
+  "filterDemand": "Demand",
+  "emEmergencyServices112": "Emergency services — 112",
+  "emEmergency": "Emergency",
+  "emAlreadyInContacts": "This number is already in your contacts.",
+  "emFamily": "Family",
+  "earnTypeTab": "Type",
+  "earnMoveraDemo": "Movera demo",
+  "completedTripsLower": "completed trips",
+  "canceledTrips": "Canceled trips",
+  "acceptedOffersLower": "accepted offers",
+  "declinedOrMissed": "declined or missed",
+  "chooseVehicleColor": "Choose vehicle color",
+  "closeColorPicker": "Close color picker",
+  "dismiss": "Dismiss",
+  "demoDataBadge": "DEMO DATA",
+  "drivingInHeader": "DRIVING IN",
+  "demandBusy": "Busy",
+  "demandSteady": "Steady",
+  "demandQuiet": "Quiet",
+  "aroundStockholm": "Around Stockholm",
+  "allowLocation": "Allow",
+  "@allowLocation": {
+    "description": "Snackbar action: show the system location prompt again (driver-r5-51)."
+  },
+  "categoryComfort": "Comfort",
+  "@categoryComfort": {
+    "description": "Ride category name (built-in Comfort)."
+  },
+  "categoryPriority": "Priority",
+  "@categoryPriority": {
+    "description": "Ride category name (built-in Priority)."
+  },
+  "categoryElectric": "Electric",
+  "@categoryElectric": {
+    "description": "Ride category name (built-in Electric)."
+  },
+  "categoryBoosterSeat": "Booster Seat",
+  "@categoryBoosterSeat": {
+    "description": "Ride category name (built-in Booster Seat)."
+  },
+  "demoPickupNearYou": "Pickup near you",
+  "@demoPickupNearYou": {
+    "description": "Destination mode demo trip: its pickup."
+  },
+  "demoNearPlace": "Near {place}",
+  "@demoNearPlace": {
+    "description": "Destination mode demo trip: ends near the destination.",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "demoYourDestination": "your destination",
+  "@demoYourDestination": {
+    "description": "Destination mode demo trip: the destination when it has no name."
+  },
+  "demoOnYourWayPercent": "On your way · {percent} %",
+  "@demoOnYourWayPercent": {
+    "description": "Destination mode demo trip: ends this far along the route.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "demoAwayFromRoute": "Away from your route",
+  "@demoAwayFromRoute": {
+    "description": "Destination mode demo trip: far off the route."
+  },
+  "demoBehindYou": "Behind you",
+  "@demoBehindYou": {
+    "description": "Destination mode demo trip: behind the driver."
+  },
+  "docsNotApprovedCar": "This car can't be driven until its documents are approved. Missing: {names}",
+  "@docsNotApprovedCar": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "docsNotApprovedAccount": "Your account can't be used until these documents are approved: {names}",
+  "@docsNotApprovedAccount": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "gateSignOut": "Sign out",
+  "gateTryAgain": "Try again",
+  "infoHowToBook": "How to book your info session",
+  "infoHowToBookShort": "How to book",
+  "infoNoContent": "Movera will contact you to book a time. You don't need to do anything else now.",
+  "infoHeld": "Movera has marked your info session as held.",
+  "infoOpenLink": "Open the booking page",
+  "infoRequiredBeforeOnline": "The info session is needed before you can go online.",
+  "fuelPetrol": "Petrol",
+  "fuelDiesel": "Diesel",
+  "fuelHybrid": "Hybrid",
+  "fuelElectric": "Electric",
+  "backgroundLocationTitle": "Movera is online",
+  "@backgroundLocationTitle": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "backgroundLocationBody": "Your position is sent so you get trips",
+  "@backgroundLocationBody": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "batterySaverWarning": "Battery saver is on. Movera may stop sending your position – turn it off to get trips.",
+  "@batterySaverWarning": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "eventRunning": "Happening now",
+  "@eventRunning": {
+    "description": "Contract v0.18.6 dispatchTools.events.texts.running (G4-F6)."
+  },
+  "eventStarts": "Starts {time}",
+  "@eventStarts": {
+    "description": "Contract v0.18.6 dispatchTools.events.texts.upcoming (G4-F6).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "eventPickupNote": "Pickup",
+  "@eventPickupNote": {
+    "description": "Contract v0.18.6 dispatchTools.events.texts.pickupNote (G4-F6)."
+  },
+  "feeKindNoShow": "No-show fee {amount}",
+  "@feeKindNoShow": {
+    "description": "Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.riderNoShowFee (G5 Q2/Q6): cancellation.feeKind no_show.",
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "feeKindCancel": "Cancellation fee {amount}",
+  "@feeKindCancel": {
+    "description": "Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.riderFee (G5 Q2/Q6): cancellation.feeKind cancel.",
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "etaArrivesIn": "Arrives in {min} min · {distance}",
+  "@etaArrivesIn": {
+    "description": "Contract v0.18.7 pickupWaiting.eta.texts.arrivesIn (G5 Q4): the server's ETA to the pickup.",
+    "placeholders": {
+      "min": {
+        "type": "Object"
+      },
+      "distance": {
+        "type": "Object"
+      }
+    }
+  },
+  "etaToDropoff": "There in {min} min · {distance}",
+  "@etaToDropoff": {
+    "description": "Contract v0.18.7 pickupWaiting.eta.texts.toDropoff (G5 Q4): the server's ETA to the drop-off.",
+    "placeholders": {
+      "min": {
+        "type": "Object"
+      },
+      "distance": {
+        "type": "Object"
+      }
+    }
+  },
+  "distanceKm": "{value} km",
+  "@distanceKm": {
+    "description": "Contract v0.18.7 pickupWaiting.eta.distanceDisplay: kilometres with one decimal (the decimal mark is navDecimalMark).",
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "distanceM": "{value} m",
+  "@distanceM": {
+    "description": "Contract v0.18.7 pickupWaiting.eta.distanceDisplay: metres in 100 m / 10 m steps.",
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "etaLastKnown": "Last known: {eta}",
+  "@etaLastKnown": {
+    "description": "G5 checker M2: TripEta.source stale (no driver position for 2 min); the last ETA the server kept.",
+    "placeholders": {
+      "eta": {
+        "type": "Object"
+      }
+    }
+  },
+  "feeKindNoShowShort": "No-show fee",
+  "@feeKindNoShowShort": {
+    "description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."
+  },
+  "feeKindCancelShort": "Cancellation fee",
+  "@feeKindCancelShort": {
+    "description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."
+  },
+  "g6RuleFarPickup": "Pickup over {km} km away",
+  "@g6RuleFarPickup": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting).",
+    "placeholders": {
+      "km": {
+        "type": "Object"
+      }
+    }
+  },
+  "g6RuleAirport": "Airport pickup",
+  "@g6RuleAirport": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6RuleScheduled": "Booked ride",
+  "@g6RuleScheduled": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6RuleEvent": "Event pickup",
+  "@g6RuleEvent": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6PinAsk": "Ask the rider for the 4-digit code",
+  "@g6PinAsk": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6PinWrong": "Wrong code. {left} tries left",
+  "@g6PinWrong": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting).",
+    "placeholders": {
+      "left": {
+        "type": "Object"
+      }
+    }
+  },
+  "g6PinLocked": "Too many tries. Try again in {min} min",
+  "@g6PinLocked": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting).",
+    "placeholders": {
+      "min": {
+        "type": "Object"
+      }
+    }
+  },
+  "g6PinTitle": "Rider’s code",
+  "@g6PinTitle": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6PinConfirm": "Confirm and start",
+  "@g6PinConfirm": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6PinFourDigits": "Enter 4 digits",
+  "@g6PinFourDigits": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6PinNeeded": "This trip needs the rider’s code before it starts",
+  "@g6PinNeeded": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6AlertPaid": "Paid waiting has started",
+  "@g6AlertPaid": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6AlertNoShow": "You can now mark a no-show",
+  "@g6AlertNoShow": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting)."
+  },
+  "g6StopFreeWait": "Free wait at this stop: {min} min",
+  "@g6StopFreeWait": {
+    "description": "Driver G6 (contract 0.18.8 arrivedWaiting).",
+    "placeholders": {
+      "min": {
+        "type": "Object"
+      }
+    }
+  },
+  "g6PinBlocked": "Too many wrong codes. Call Movera support",
+  "@g6PinBlocked": {
+    "description": "Driver G6 round 1 (contract 0.18.8)."
+  },
+  "g6PinNotNow": "Enter the code once you have arrived at the pickup",
+  "@g6PinNotNow": {
+    "description": "Driver G6 round 1 (contract 0.18.8)."
+  },
+  "g7RouteAsk": "The rider wants to change the route",
+  "@g7RouteAsk": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteEarnings": "New earnings {earnings} ({difference})",
+  "@g7RouteEarnings": {
+    "description": "Driver G7 (contract 0.18.9 onTrip).",
+    "placeholders": {
+      "earnings": {
+        "type": "String"
+      },
+      "difference": {
+        "type": "String"
+      }
+    }
+  },
+  "g7RouteAccept": "Accept",
+  "@g7RouteAccept": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteRefuse": "Refuse",
+  "@g7RouteRefuse": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteChanged": "The route was changed by the rider.",
+  "@g7RouteChanged": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7StopPrice": "Waiting at a stop: {perMin}/min",
+  "@g7StopPrice": {
+    "description": "Driver G7 (contract 0.18.9 onTrip).",
+    "placeholders": {
+      "perMin": {
+        "type": "String"
+      }
+    }
+  },
+  "g7StopFree": "{min} min free at each stop, then {perMin}/min",
+  "@g7StopFree": {
+    "description": "Driver G7 (contract 0.18.9 onTrip).",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "perMin": {
+        "type": "String"
+      }
+    }
+  },
+  "g7MaxStops": "You can add at most {max} stops.",
+  "@g7MaxStops": {
+    "description": "Driver G7 (contract 0.18.9 onTrip).",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "g7RouteSecondsLeft": "{seconds} s left to answer",
+  "@g7RouteSecondsLeft": {
+    "description": "Driver G7 (contract 0.18.9 onTrip).",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "g7RouteNewDestination": "New destination",
+  "@g7RouteNewDestination": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteStops": "Stops: {count} (max {max})",
+  "@g7RouteStops": {
+    "description": "Driver G7 (contract 0.18.9 onTrip).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "g7RouteAcceptedIsland": "New route accepted",
+  "@g7RouteAcceptedIsland": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteRefusedIsland": "Route change refused. Continue to the first destination",
+  "@g7RouteRefusedIsland": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteExpiredIsland": "No answer in time. The route stays the same",
+  "@g7RouteExpiredIsland": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g7RouteWithdrawnIsland": "The rider withdrew the route change",
+  "@g7RouteWithdrawnIsland": {
+    "description": "Driver G7 (contract 0.18.9 onTrip)."
+  },
+  "g8LineTrip": "Trip",
+  "@g8LineTrip": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8LinePickupPay": "Pickup",
+  "@g8LinePickupPay": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8LineBonus": "Bonus",
+  "@g8LineBonus": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8LineTip": "Tip",
+  "@g8LineTip": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8LineAdjustment": "Changed by Movera",
+  "@g8LineAdjustment": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8YourShare": "Your share",
+  "@g8YourShare": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8TipGot": "Tip from the rider: {amount}",
+  "@g8TipGot": {
+    "description": "Driver G8 (contract 0.18.10 finish).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "g8TipCash": "The rider gives you a {amount} tip in cash.",
+  "@g8TipCash": {
+    "description": "Driver G8 (contract 0.18.10 finish).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "g8RiderEndedCollect": "The rider ended the trip. Collect {amount}.",
+  "@g8RiderEndedCollect": {
+    "description": "Driver G8 (contract 0.18.10 finish).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "g8PricedForDriven": "The price is for the distance driven.",
+  "@g8PricedForDriven": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8BookedPriceStands": "The booked price applies.",
+  "@g8BookedPriceStands": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8EndedEarly": "Ended early",
+  "@g8EndedEarly": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8RiderEnded": "The rider ended the trip early.",
+  "@g8RiderEnded": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8DriverEnded": "The driver ended the trip before the destination.",
+  "@g8DriverEnded": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8DebtLine": "Earlier unpaid fee (to that trip)",
+  "@g8DebtLine": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8Continue": "Continue",
+  "@g8Continue": {
+    "description": "Driver G8 (contract 0.18.10 finish)."
+  },
+  "g8StarLabel": "{stars} of 5 stars",
+  "@g8StarLabel": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "accessibilitySavedOnPhone": "These preferences are saved on this phone.",
+  "hearingComingSoon": "Telling riders about your hearing is coming soon.",
+  "fixJob0DebtNote": "The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.",
+  "@fixJob0DebtNote": {
+    "description": "Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip."
+  }
+}
