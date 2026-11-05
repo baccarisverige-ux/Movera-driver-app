@@ -261,7 +261,9 @@ class _NotificationRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  notice.opensFleet
+                  notice.isTripWarning
+                      ? Icons.warning_amber_rounded
+                      : notice.opensFleet
                       ? Icons.groups_outlined
                       : notice.opensDocuments
                       ? Icons.description_outlined
