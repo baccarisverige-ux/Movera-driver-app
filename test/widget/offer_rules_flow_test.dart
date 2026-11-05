@@ -76,7 +76,7 @@ class _Dispatch implements DispatchRepository {
 RideOffer _trip(String id, {String payment = 'Card'}) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: Money(minorUnits: 8810),
+  fare: Money(minorUnits: 8810, currency: 'SEK'),
   rating: '4.92',
   pickupMinutes: 3,
   pickupKm: 0.9,

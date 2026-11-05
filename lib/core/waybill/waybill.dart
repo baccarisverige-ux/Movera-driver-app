@@ -503,14 +503,15 @@ class WaybillPayment {
   String? get bonus => _bonusOre > 0 ? _format(_bonusOre) : null;
 
   /// [label] as money: a whole label in any currency ("1 234,50 kr",
-  /// "126.75 kr", "12,950 DT"), else the first amount in it, in kronor.
+  /// "126.75 kr", "12,950 DT"), else the first amount in it, in the zone's
+  /// currency (Job 3 / L12; a two-decimal amount).
   static Money? _money(String label) {
     final money = Money.parseLabel(label);
     if (money != null) return money;
     final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(label);
     if (match == null) return null;
     final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
-    return value == null ? null : Money.ore((value * 100).round());
+    return value == null ? null : Money.zone((value * 100).round());
   }
 
   String _format(int ore) {

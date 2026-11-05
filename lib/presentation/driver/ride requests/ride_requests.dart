@@ -521,6 +521,9 @@ class _RideRequestsState extends State<RideRequests> {
         pickupPosition: trip.pickupPosition,
         dropoffPosition: trip.dropoffPosition,
         pickupKm: trip.pickupKm,
+        // Job 3 / L13: a booked ride taken from the Radar list keeps its
+        // "Booked ride" badge on the trip.
+        bookedTime: trip.reservationTime ?? rider.badgeTime,
         destinationModeActive: widget.destinationModeActive,
         destinationAddress: widget.destinationAddress,
         destinationPosition: widget.destinationPosition,

@@ -9,9 +9,9 @@ import 'package:movera/presentation/driver/accept ride/waiting_time_sheet.dart';
 /// the no-show time, on a phone-sized screen.
 const _terms = WaitingTerms(
   freeMinutes: 5,
-  perMinute: Money(minorUnits: 1226),
+  perMinute: Money(minorUnits: 1226, currency: 'SEK'),
   noShowAfterMinutes: 5,
-  noShowFee: Money(minorUnits: 6500),
+  noShowFee: Money(minorUnits: 6500, currency: 'SEK'),
   driverShareNoShowPercent: 80,
 );
 
@@ -47,7 +47,7 @@ void main() {
     await _open(
       tester,
       const Size(390, 844),
-      share: const Money(minorUnits: 5200),
+      share: const Money(minorUnits: 5200, currency: 'SEK'),
     );
     await tester.scrollUntilVisible(
       find.text('52,00 kr'),
@@ -77,7 +77,11 @@ void main() {
         'without scrolling (${size.width.toInt()}×${size.height.toInt()})', (
       tester,
     ) async {
-      await _open(tester, size, share: const Money(minorUnits: 5200));
+      await _open(
+        tester,
+        size,
+        share: const Money(minorUnits: 5200, currency: 'SEK'),
+      );
       final noShow = find.byKey(const ValueKey('waiting-no-show-cancel'));
       expect(noShow, findsOneWidget);
       final button = tester.getRect(noShow);
