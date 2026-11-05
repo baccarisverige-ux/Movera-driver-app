@@ -24,6 +24,7 @@ String offlineReasonText(DriverSetOfflineNotice notice) {
     DriverOfflineReason.fleetRemoved => tr.offlineReasonFleetRemoved,
     DriverOfflineReason.accountStatus => tr.offlineReasonAccountStatus,
     DriverOfflineReason.documentsExpired => tr.offlineReasonDocumentsExpired,
+    DriverOfflineReason.afterTrip => tr.offlineReasonAfterTrip,
     DriverOfflineReason.movera => tr.offlineReasonMovera,
   };
   return note.isEmpty ? text : '$text\n$note';
