@@ -136,26 +136,18 @@ void main() {
     },
   );
 
-  test('D-12: only the Pages demo build passes the free-arrival define', () {
+  test('D-12: no Pages build passes the free-arrival define', () {
+    // Owner Demo Q2 (2026-11-04, "Remove now"): the Pages demo at the site
+    // root is gone; only the live build under /live/ is published, and it
+    // keeps the real 100 m check.
     final pages = File('.github/workflows/deploy-pages.yml').readAsStringSync();
     final builds = pages
         .split('\n')
         .where((line) => line.contains('flutter build web'))
         .toList();
-    // The demo at the site root takes the define; the live build under
-    // /live/ (the test week's server) keeps the real 100 m check.
-    final demo = builds.singleWhere(
-      (line) => line.contains('--base-href "/Movera-driver-app/"'),
-    );
-    expect(demo, contains('--dart-define=MOVERA_DEMO_ARRIVAL=true'));
-    for (final other in builds.where((line) => line != demo)) {
-      expect(other, isNot(contains('MOVERA_DEMO_ARRIVAL')));
-    }
-    expect(
-      pages.split('MOVERA_DEMO_ARRIVAL').length,
-      2,
-      reason: 'the define appears once, on the demo build',
-    );
+    expect(builds, hasLength(1));
+    expect(builds.single, contains('--base-href "/Movera-driver-app/live/"'));
+    expect(pages, isNot(contains('MOVERA_DEMO_ARRIVAL')));
     final ci = File('.github/workflows/drider-ci.yml').readAsStringSync();
     expect(ci, isNot(contains('MOVERA_DEMO_ARRIVAL=true')));
   });
