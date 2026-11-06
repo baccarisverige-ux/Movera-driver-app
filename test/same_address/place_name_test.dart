@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 
-/// Same-address fix (contract v0.18.42 §67, contract.json#sameAddress.label):
+/// Same-address fix (contract v0.18.44 §67, contract.json#sameAddress.label):
 /// the trip's address is the label the rider chose ("Solna Centrum, …"), and
 /// the driver's offer card and trip screens show that text as it comes, never
 /// a street address looked up again. Driver app: no code change, this test
