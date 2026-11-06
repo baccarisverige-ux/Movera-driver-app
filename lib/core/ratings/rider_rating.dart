@@ -61,7 +61,7 @@ class RiderRatingSender {
       'stars': stars,
       if (tags.isNotEmpty) 'tags': tags,
       if (note.isNotEmpty) 'comment': note,
-      // Fix job 10 (v0.18.40 §64): only when ticked (at <= atStars stars).
+      // Fix job 10 (v0.18.43 §64): only when ticked (at <= atStars stars).
       if (dontMatchAgain) 'dontMatchAgain': true,
     };
   }

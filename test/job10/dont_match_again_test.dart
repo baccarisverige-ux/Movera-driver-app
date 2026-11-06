@@ -13,7 +13,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/ride completed/ride_completed.dart';
 
-/// Fix job 10 (contract v0.18.40 §64, owner G16 Q16-4; G15 "Never told",
+/// Fix job 10 (contract v0.18.43 §64, owner G16 Q16-4; G15 "Never told",
 /// "No, only Support"): at 1 star the driver can tick "Don't match me with
 /// this rider again"; it goes with the rating as dontMatchAgain. Nothing
 /// else changes on screen and there is no undo in the app.

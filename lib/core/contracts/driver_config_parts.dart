@@ -23,7 +23,7 @@ class DriverConfigParts {
     this.dontMatchAgain,
   });
 
-  /// Fix job 10 (v0.18.40 §64): the 1-star "don't match again" tick.
+  /// Fix job 10 (v0.18.43 §64): the 1-star "don't match again" tick.
   final DontMatchAgain? dontMatchAgain;
 
   /// Contract v0.18.9 (G7): max stops and the route change switches.

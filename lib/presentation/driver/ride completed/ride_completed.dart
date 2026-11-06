@@ -64,7 +64,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
 
   double _rating = 0;
 
-  /// Fix job 10 (v0.18.40 §64): "Don't match me with this rider again".
+  /// Fix job 10 (v0.18.43 §64): "Don't match me with this rider again".
   bool _dontMatch = false;
   final Set<String> _tags = <String>{};
   final TextEditingController _comment = TextEditingController();
@@ -646,7 +646,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           tr.rateRider(rider),
           style: const TextStyle(color: _muted, fontSize: 14),
         ),
-        // Fix job 10 (v0.18.40 §64, owner "Never told"): only at a low rating.
+        // Fix job 10 (v0.18.43 §64, owner "Never told"): only at a low rating.
         if (DontMatchAgain.current.offeredAt(_rating.round()))
           CheckboxListTile(
             key: const ValueKey<String>('dont-match-again'),
