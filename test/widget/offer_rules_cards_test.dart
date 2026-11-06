@@ -291,7 +291,12 @@ void main() {
         find.text('Keep your cancel rate low to keep full access to trips'),
         findsOneWidget,
       );
-      expect(find.textContaining('Doesn’t count'), findsOneWidget);
+      // L-c (owner 2026-11-06 "Remove it (Safe)"): every give-back counts.
+      expect(
+        find.text('Every cancel counts, whatever the reason.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Doesn’t count'), findsNothing);
       expect(find.textContaining('30'), findsNothing);
     });
 

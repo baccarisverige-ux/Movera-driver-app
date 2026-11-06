@@ -70,7 +70,7 @@
   "noNotificationsYet": "Aucune notification pour l’instant",
   "cancelRateTitle": "Taux d’annulation",
   "cancelRateKeepLow": "Gardez un taux d’annulation bas pour garder un accès complet aux courses",
-  "cancelRateEveryCancelCounts": "Chaque annulation compte, sauf les motifs marqués « Ne compte pas », comme un passager absent ou un problème de sécurité.",
+  "cancelRateEveryCancelCounts": "Chaque annulation compte, quel que soit le motif.",
   "cancelRateHowCalculated": "Comment votre taux d’annulation est calculé",
   "cancelRateHowBody": "Votre taux d’annulation compare le nombre de courses que vous annulez au total des courses que vous confirmez. Nous utilisons vos 100 dernières demandes confirmées pour ce pourcentage.",
   "cancelRateWhyMatters": "Pourquoi le taux d’annulation compte",

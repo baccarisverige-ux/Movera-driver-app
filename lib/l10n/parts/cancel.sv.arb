@@ -70,7 +70,7 @@
   "noNotificationsYet": "Inga aviseringar än",
   "cancelRateTitle": "Avbokningsgrad",
   "cancelRateKeepLow": "Håll avbokningsgraden låg för att behålla full tillgång till resor",
-  "cancelRateEveryCancelCounts": "Varje avbokning räknas, utom skäl som är märkta ”Räknas inte”, till exempel en resenär som inte dyker upp eller ett säkerhetsproblem.",
+  "cancelRateEveryCancelCounts": "Varje avbokning räknas, oavsett skäl.",
   "cancelRateHowCalculated": "Så beräknas din avbokningsgrad",
   "cancelRateHowBody": "Din avbokningsgrad jämför antalet resor du avbokar med alla resor du bekräftar. Vi använder dina senaste 100 bekräftade förfrågningar för procentsatsen.",
   "cancelRateWhyMatters": "Varför avbokningsgraden spelar roll",
