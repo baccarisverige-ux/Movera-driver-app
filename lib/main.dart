@@ -36,6 +36,7 @@ import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/reservations_refresh.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -159,6 +160,7 @@ class _MoveraAppState extends State<MoveraApp> {
 
   /// G4-E6: tells the web push whether offer pushes may vibrate.
   VoidCallback? _offerAlertsToPush;
+  ReservationsRefresh? _reservationsRefresh;
 
   /// Live builds: tells [LiveDriverServices] when the app is back on screen.
   AppLifecycleListener? _lifecycle;
@@ -278,12 +280,24 @@ class _MoveraAppState extends State<MoveraApp> {
       offerAlertsToPush();
       // The offline card's "Turn on" notifications registers push too.
       DevicePhoneChecks.notificationsAllowed = () => unawaited(push.signedIn());
-      live.afterSignedIn = () => unawaited(
-        push.signedIn().then((_) {
-          final launch = pushPlatform.takeLaunchOpen();
-          if (launch != null) _openPush(launch);
-        }),
+      // L-a Q7 "Live push" (contract v0.18.45 §68): the booked rides are
+      // read at sign-in, on each stream reconnect and on each
+      // driver_reservations_changed, at most once every 2 s.
+      final reservationsRefresh = _reservationsRefresh = ReservationsRefresh(
+        read: () => ScheduledRideStore.syncFromServer(live.reservations),
       );
+      live.onReservationsStale = reservationsRefresh.request;
+      live.afterSignedIn = () {
+        // No demo or earlier driver's rides survive a sign-in.
+        ScheduledRideStore.clearRides();
+        reservationsRefresh.request();
+        unawaited(
+          push.signedIn().then((_) {
+            final launch = pushPlatform.takeLaunchOpen();
+            if (launch != null) _openPush(launch);
+          }),
+        );
+      };
       live.attach(_session);
       // Contract v0.18.5 `legal` (G1-B2): the country's terms and privacy
       // policy (no token) on start and each time the app comes back.
@@ -338,6 +352,7 @@ class _MoveraAppState extends State<MoveraApp> {
   @override
   void dispose() {
     DriverLanguage.current.removeListener(_languageChanged);
+    _reservationsRefresh?.dispose();
     final offerAlerts = _offerAlertsToPush;
     if (offerAlerts != null) {
       OfferAlertSettings.vibrate.removeListener(offerAlerts);

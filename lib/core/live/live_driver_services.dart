@@ -115,8 +115,14 @@ class LiveDriverServices {
       onContentPublished: () => unawaited(content.refresh()),
       onZonesPublished: () => unawaited(zones.refresh()),
       onEventsPublished: () => unawaited(events.refresh()),
+      onReservationsChanged: () => onReservationsStale?.call(),
     );
   }
+
+  /// Set by the app root (L-a Q7, contract v0.18.45 §68): the booked rides
+  /// must be read again (a `driver_reservations_changed` hint, or the
+  /// settings stream opened again).
+  void Function()? onReservationsStale;
 
   /// Set by the app root in a live build; null in the demo.
   static LiveDriverServices? instance;
