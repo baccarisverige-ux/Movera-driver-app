@@ -241,6 +241,7 @@
   "authCodeFieldLabel": "Code à 4 chiffres reçu par SMS",
   "authSignedOutElsewhere": "Connecté sur un autre téléphone",
   "authErrLockedToday": "Trop de codes erronés aujourd’hui. Réessayez plus tard.",
+  "dontMatchRiderAgain": "Ne plus me proposer ce client",
   "callFailed": "L'appel a échoué",
   "callCalling": "Appel en cours…",
   "callConnecting": "Connexion…",

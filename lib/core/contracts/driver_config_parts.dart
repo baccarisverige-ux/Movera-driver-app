@@ -4,6 +4,7 @@ import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/core/ratings/dont_match_again.dart';
 
 /// The parts of a published DriverAppConfig the app puts in use besides the
 /// waiting, destination, next-trip, reservation and auto-offline rules
@@ -19,7 +20,11 @@ class DriverConfigParts {
     this.noticesOff,
     this.cancelFees,
     this.onTrip,
+    this.dontMatchAgain,
   });
+
+  /// Fix job 10 (v0.18.43 §64): the 1-star "don't match again" tick.
+  final DontMatchAgain? dontMatchAgain;
 
   /// Contract v0.18.9 (G7): max stops and the route change switches.
   final OnTripConfig? onTrip;
@@ -48,11 +53,15 @@ class DriverConfigParts {
       onTrip: json['booking'] is Map || json['routeChange'] is Map
           ? OnTripConfig.fromJson(json)
           : null,
+      dontMatchAgain: json['dontMatchAgain'] is Map
+          ? DontMatchAgain.fromJson(json['dontMatchAgain'])
+          : null,
     );
   }
 
   /// Puts the parts in use (only those the document has).
   void apply() {
+    if (dontMatchAgain case final value?) DontMatchAgain.current = value;
     if (pickupPay case final value?) PickupPayConfig.current = value;
     if (rideCheck case final value?) RideCheckAdminConfig.current = value;
     if (texts case final value?) DriverAppTexts.overrides = value;

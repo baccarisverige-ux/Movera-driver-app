@@ -45,6 +45,7 @@ class RiderRatingSender {
     required int stars,
     List<String> tags = const <String>[],
     String? comment,
+    bool dontMatchAgain = false,
   }) {
     if (stars < 1 || stars > 5) throw ArgumentError.value(stars, 'stars');
     if (tags.any((tag) => !RiderRatingTags.aboutRider.contains(tag)) ||
@@ -60,6 +61,8 @@ class RiderRatingSender {
       'stars': stars,
       if (tags.isNotEmpty) 'tags': tags,
       if (note.isNotEmpty) 'comment': note,
+      // Fix job 10 (v0.18.43 §64): only when ticked (at <= atStars stars).
+      if (dontMatchAgain) 'dontMatchAgain': true,
     };
   }
 
@@ -68,8 +71,14 @@ class RiderRatingSender {
     required int stars,
     List<String> tags = const <String>[],
     String? comment,
+    bool dontMatchAgain = false,
   }) async {
-    final payload = body(stars: stars, tags: tags, comment: comment);
+    final payload = body(
+      stars: stars,
+      tags: tags,
+      comment: comment,
+      dontMatchAgain: dontMatchAgain,
+    );
     final api = _api;
     if (api == null || tripId.trim().isEmpty) return RiderRatingOutcome.demo;
     try {

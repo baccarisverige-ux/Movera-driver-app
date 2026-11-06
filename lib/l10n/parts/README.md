@@ -11,7 +11,7 @@ commit the result. CI (`python3 tool/l10n_parts.py --check`) and
 `test/l10n/l10n_parts_test.dart` fail when an ARB differs from its parts.
 
 Areas: account, airport_queue (fix job 9), app (`@@locale` only), auth, cancel, fleet, general_a_k,
-general_l_z (texts shared by many screens, by first letter), navigation,
+blocked_pairs (fix job 10), general_l_z (texts shared by many screens, by first letter), navigation,
 reservations, safety, support, trip, vehicle. A file over ~800 lines gets a
 new area. A new area is a new `<area>.en.arb`, `<area>.fr.arb` and
 `<area>.sv.arb` with the same keys.
