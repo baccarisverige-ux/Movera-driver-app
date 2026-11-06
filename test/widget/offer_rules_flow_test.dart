@@ -444,7 +444,8 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('Q21: reasons that don\'t count say so', (tester) async {
+    // L-c (owner 2026-11-06 "Remove it (Safe)") replaces Q21's "Doesn't count".
+    testWidgets('L-c: no reason says "Doesn\'t count"', (tester) async {
       await pumpTrip(tester, const AcceptRide());
       await tester.pump(const Duration(milliseconds: 700));
       await tester.tap(find.byTooltip('Trip route and options').hitTestable());
@@ -457,10 +458,8 @@ void main() {
         find.byKey(const ValueKey<String>('trip-cancellation-reasons-sheet')),
         findsOneWidget,
       );
-      expect(
-        find.text('You can’t stop there safely · Doesn’t count'),
-        findsOneWidget,
-      );
+      expect(find.text('You can’t stop there safely'), findsOneWidget);
+      expect(find.textContaining('Doesn’t count'), findsNothing);
       expect(find.text('The rider doesn’t want to continue'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

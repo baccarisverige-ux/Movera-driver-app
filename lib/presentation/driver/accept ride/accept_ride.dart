@@ -377,7 +377,6 @@ class _TripCancellationReason {
     required this.title,
     required this.subtitle,
     required this.icon,
-    this.counts = true,
   });
 
   final String code;
@@ -385,13 +384,9 @@ class _TripCancellationReason {
   final String subtitle;
   final MoveraMark icon;
 
-  /// False: "Doesn't count" in the cancel rate (Q21).
-  final bool counts;
-
-  /// The line under the title; a reason that doesn't count says so.
-  String get detail => counts
-      ? subtitle
-      : [if (subtitle.isNotEmpty) subtitle, tr.doesnTCount].join(' · ');
+  /// The line under the title. L-c (owner 2026-11-06): every give-back
+  /// counts, so no reason says "Doesn't count".
+  String get detail => subtitle;
 }
 
 class _AcceptRideState extends State<AcceptRide>
@@ -428,7 +423,6 @@ class _AcceptRideState extends State<AcceptRide>
         title: reason.title,
         subtitle: reason.subtitle,
         icon: _reasonIcons[reason.code] ?? MoveraMark.more,
-        counts: reason.counts,
       );
 
   static List<_TripCancellationReason> get _preTripCancellationReasons => [
