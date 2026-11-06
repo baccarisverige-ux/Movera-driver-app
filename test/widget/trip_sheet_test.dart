@@ -181,11 +181,9 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Current trip is taking longer'), findsOneWidget);
-      // Same reason flags: the car problem doesn't count, the others do.
-      expect(
-        find.text('Your car can’t make the next trip · Doesn’t count'),
-        findsOneWidget,
-      );
+      // L-c (owner 2026-11-06): no reason says "Doesn't count" any more.
+      expect(find.text('Your car can’t make the next trip'), findsOneWidget);
+      expect(find.textContaining('Doesn’t count'), findsNothing);
       await tester.tap(
         find.byKey(
           const ValueKey('trip-cancel-reason-next_trip_current_running_late'),

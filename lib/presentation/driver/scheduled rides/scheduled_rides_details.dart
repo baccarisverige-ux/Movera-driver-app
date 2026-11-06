@@ -721,12 +721,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       ScheduledRideStore.lastGiveBackReason = reason.code;
-      _popScheduledRoute(
-        context,
-        reason.counts
-            ? _ScheduledRideAction.cancelled
-            : _ScheduledRideAction.cancelledNotCounted,
-      );
+      // L-c (owner 2026-11-06): every give-back counts.
+      _popScheduledRoute(context, _ScheduledRideAction.cancelled);
     }
   }
 }
