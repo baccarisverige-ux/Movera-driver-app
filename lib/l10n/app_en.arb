@@ -515,6 +515,10 @@
   "@authErrLockedToday": {
     "description": "Contract v0.18.14 sign-in (authErrLockedToday)."
   },
+  "dontMatchRiderAgain": "Don't match me with this rider again",
+  "@dontMatchRiderAgain": {
+    "description": "v0.18.43 §64 (fix job 10): tick on the rating screen at a low rating. The rider is never told."
+  },
   "callFailed": "Call failed",
   "@callFailed": {
     "description": "v0.18.38 §62 in-app call screen (fix job 8)."

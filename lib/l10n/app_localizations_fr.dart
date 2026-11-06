@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -866,6 +867,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrLockedToday =>
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
+
+  @override
+  String get dontMatchRiderAgain => 'Ne plus me proposer ce client';
 
   @override
   String get callFailed => 'L\'appel a échoué';
