@@ -193,6 +193,9 @@ class LiveTripChat {
 
   static const _base = '/api/v1/trips';
 
+  /// v0.18.38 §62: the same client for the in-app calls (trip_call.dart).
+  ApiClient get api => _api;
+
   /// Messages read per history call (the contract's most).
   static const pageLimit = 200;
 

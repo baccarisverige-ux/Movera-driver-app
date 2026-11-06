@@ -1,0 +1,8 @@
+{
+  "airportQueueTitle": "File de l'aéroport",
+  "airportQueuePlace": "Vous êtes numéro {place} dans la file",
+  "airportQueueAheadWaiting": "{ahead} chauffeurs devant vous · attente {minutes} min",
+  "airportQueueHow": "Les courses de l'aéroport vont d'abord au premier chauffeur de la file. Restez dans la zone d'attente pour garder votre place.",
+  "airportQueueLeft": "Vous avez quitté la file de l'aéroport",
+  "tipAirportQueuePlace": "File de l'aéroport : vous êtes numéro {place}"
+}

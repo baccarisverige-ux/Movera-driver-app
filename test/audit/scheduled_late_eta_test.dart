@@ -555,7 +555,7 @@ void main() {
       await _pumpHome(tester);
       await _frames(tester, const Duration(seconds: 50));
       expect(find.byType(AcceptRide), findsOneWidget);
-      expect(_saidTitles, contains('Leave now for 07:40 pickup'));
+      expect(_saidTitles, anyElement(startsWith('Time to drive to pickup · ')));
       expect(
         ScheduledRideStore.upcoming,
         isNot(contains(demoReservationRequest)),

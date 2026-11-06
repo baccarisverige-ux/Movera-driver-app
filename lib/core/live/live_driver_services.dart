@@ -18,8 +18,10 @@ import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
+import 'package:movera/core/live/live_trip_calls.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/live/offline_after_trips.dart';
 import 'package:movera/core/live/page_visibility.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -70,6 +72,8 @@ class LiveDriverServices {
           : null,
     );
     chat = LiveTripChat(api: api);
+    // v0.18.38 §62 (fix job 8): in-app calls with the rider.
+    calls = LiveTripCalls(api: api);
     trips = LiveTripCommands(
       api: api,
       lastFix: () => reporter.lastFix,
@@ -136,6 +140,9 @@ class LiveDriverServices {
   /// The trip's chat with the rider (messages and unread count per trip).
   late final LiveTripChat chat;
 
+  /// v0.18.38 §62: the in-app call with the trip's rider.
+  late final LiveTripCalls calls;
+
   /// Addresses for points the offer came without (owner N11).
   late final LiveAddressLookup places;
 
@@ -181,6 +188,7 @@ class LiveDriverServices {
     renewSession: _api.renewAccess,
     trips: trips,
     chat: chat,
+    calls: calls,
   );
 
   /// Contract `autoOffline`: the offer event's `driverOffline: true`
@@ -340,8 +348,17 @@ class LivePresence {
   /// What the server last said (online or on a trip).
   bool serverOnline = false;
 
+  /// v0.18.37 §61: the session is on a trip (Go offline = after it).
+  bool get onTrip => _session?.status == DriverOnlineStatus.onTrip;
+
+  /// v0.18.37 §61: Undo of "Going offline after this trip" (online while
+  /// on the trip keeps him on it and clears the plan).
+  Future<String?> undoGoOffline() =>
+      _serial(() => OfflineAfterTrips.request(_api, offline: false));
+
   void attach(DriverSessionController session) {
     detach();
+    OfflineAfterTrips.undoAction = undoGoOffline;
     _session = session..addListener(_onSession);
   }
 
@@ -361,6 +378,7 @@ class LivePresence {
       case DriverOnlineStatus.online:
         if (serverOnline) _startOnline();
       case DriverOnlineStatus.offline || DriverOnlineStatus.suspended:
+        OfflineAfterTrips.pending.value = false;
         // Offline after a trip, on hold, the driving limit…: the server
         // hears it too. Home's own switch already asked ([goOffline]).
         if (_wantOnline) unawaited(goOffline());
@@ -529,6 +547,11 @@ class LivePresence {
   /// Goes offline on the server; the feed and location stop at once.
   /// Null when done; else what to tell the driver.
   Future<String?> goOffline() {
+    // v0.18.37 §61: on a trip, Go offline = offline after all his trips;
+    // the trip and its location go on, the server stops his offers.
+    if (_session?.status == DriverOnlineStatus.onTrip) {
+      return _serial(() => OfflineAfterTrips.request(_api, offline: true));
+    }
     _wantOnline = false;
     _onlineVersion = null;
     DriverAreaWatch.instance.reset();

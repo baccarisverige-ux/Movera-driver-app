@@ -1,0 +1,106 @@
+name: Drider iOS preflight
+
+# CI cost cut (owner 2026-11-06): the macOS job is billed 10x and was 77 % of
+# every driver pull request push. It now runs only when the PR is ready:
+#   - label `ready-to-merge` on the pull request (adding it starts the run;
+#     every later push while the label is on runs it again);
+#   - a manual run (Actions > Drider iOS preflight > Run workflow);
+#   - nightly on main, only if main got a commit in the last 25 hours.
+# It never runs on drafts or on docs-only changes.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
+    branches:
+      - main
+      - 'audit/phase-*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  schedule:
+    - cron: '23 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Adding some other label does not cancel a running preflight: that event
+  # gets its own group and its job is skipped.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ (github.event.action == 'labeled' && github.event.label.name != 'ready-to-merge') && github.event.label.name || 'run' }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.6
+
+jobs:
+  should-run:
+    name: Decide if the iOS preflight runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft != true &&
+       contains(github.event.pull_request.labels.*.name, 'ready-to-merge') &&
+       (github.event.action != 'labeled' || github.event.label.name == 'ready-to-merge'))
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'schedule'
+        with:
+          fetch-depth: 1
+      - id: decide
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = schedule ] && \
+             [ -z "$(git log -1 --since='25 hours ago' --format=%H)" ]; then
+            echo "main has no new commit in 25 hours: nightly iOS preflight skipped."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  ios-release-preflight:
+    name: iOS release compile preflight
+    # macos-14 images are retired on 2026-11-02 and fail during scheduled brownouts before that
+    # (actions/runner-images#13518); macos-15 is the supported image.
+    needs: [should-run]
+    if: needs.should-run.outputs.run == 'true'
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout Drider
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Compile iOS release without codesign
+        run: flutter build ios --release --no-codesign
+
+      - name: Missing maps key fails an iOS release candidate
+        run: |
+          set +e
+          MOVERA_REQUIRE_MAPS_KEY=true \
+            flutter build ios --release --no-codesign > /tmp/movera-ios-maps.txt 2>&1
+          code=$?
+          set -e
+          cat /tmp/movera-ios-maps.txt
+          if [ "$code" -eq 0 ]; then
+            echo "iOS release must fail when GOOGLE_MAPS_API_KEY is required and absent."
+            exit 1
+          fi
+          grep -q "Native release requires GOOGLE_MAPS_API_KEY" /tmp/movera-ios-maps.txt

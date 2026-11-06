@@ -671,6 +671,17 @@ class ServerNotification {
       kind == 'fleet_membership' ||
       deepLink == 'movera-driver://fleet';
 
+  /// FIX JOB 4 (contract v0.18.35 §59): a warning about the driver's trip —
+  /// "You are not driving towards the rider" (`heading_not_to_rider`, every
+  /// minute while not heading to the pickup), a booked ride given to another
+  /// driver because he would be too late (`reservation_taken_back`, counts as
+  /// a cancel, no fee), or the older `trip_taken_back`. The texts are the
+  /// server's (sv / fr / en); the bell list shows them with a warning icon.
+  bool get isTripWarning =>
+      kind == 'heading_not_to_rider' ||
+      kind == 'reservation_taken_back' ||
+      kind == 'trip_taken_back';
+
   /// Contract v0.18.3 `reviewNotices` (R6): the document of a
   /// `document_approved` / `document_rejected` notice, from its deep link
   /// `movera-driver://documents/{type}[?vehicleId=]`; null otherwise.

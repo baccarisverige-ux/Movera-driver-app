@@ -1,10 +1,13 @@
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/ratings/dont_match_again.dart';
 import 'package:movera/core/ratings/rider_rating.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -60,6 +63,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   static const Color _starOn = Color(0xFFF2A12E);
 
   double _rating = 0;
+
+  /// Fix job 10 (v0.18.43 §64): "Don't match me with this rider again".
+  bool _dontMatch = false;
   final Set<String> _tags = <String>{};
   final TextEditingController _comment = TextEditingController();
   late final RiderRatingSender _ratings =
@@ -101,6 +107,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             if (_tags.contains(tag)) tag,
         ],
         comment: _comment.text,
+        dontMatchAgain:
+            _dontMatch && DontMatchAgain.current.offeredAt(_rating.round()),
       );
       if (!mounted) return;
       if (outcome == RiderRatingOutcome.failed) {
@@ -307,6 +315,57 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                 ),
               ),
             ),
+            // v0.18.38 §62 (fix job 8, owner G15): the rider can be called
+            // in the app for a while after the drop-off (the server keeps
+            // the window, default 60 min; outside it the answer is "Call
+            // failed").
+            if (record != null && LiveDriverServices.instance != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                child: SizedBox(
+                  height: 48,
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey<String>('ride-completed-call'),
+                    onPressed: () => callRider(
+                      context,
+                      tripId: record.tripId,
+                      riderName: record.riderName,
+                      // Above the Call rider and Done buttons, never over them.
+                      snackBar: (text) => SnackBar(
+                        content: Text(text),
+                        behavior: SnackBarBehavior.floating,
+                        margin: EdgeInsets.fromLTRB(
+                          24,
+                          0,
+                          24,
+                          MediaQuery.paddingOf(context).bottom +
+                              16 +
+                              56 +
+                              10 +
+                              48 +
+                              12,
+                        ),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _ink,
+                      side: const BorderSide(color: _ink, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.call),
+                    label: Text(
+                      tr.callRider,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             Padding(
               padding: EdgeInsets.fromLTRB(
                 24,
@@ -402,6 +461,17 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
               '−${debt.formatted}',
               key: const ValueKey<String>('ride-completed-debt'),
               style: _value,
+            ),
+          ),
+        // Fix job 0 (owner A2-2, contract 0.18.29 outstandingFee.receiptText):
+        // the rider's earlier unpaid fee was added by itself to this trip.
+        if (debt != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              tr.fixJob0DebtNote,
+              key: const ValueKey<String>('ride-completed-debt-note'),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF6F7B82)),
             ),
           ),
         _row(
@@ -555,7 +625,13 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                 : _starIcon(AppAssets.solarStar, _star),
           ),
           onRatingUpdate: (rating) {
-            setState(() => _rating = rating);
+            setState(() {
+              _rating = rating;
+              // More stars than the tick allows clear it (fix job 10).
+              if (!DontMatchAgain.current.offeredAt(rating.round())) {
+                _dontMatch = false;
+              }
+            });
             // Only the demo says the rating is not sent; live sends it on Done.
             if (_ratingNoticeShown || _ratings.live) return;
             _ratingNoticeShown = true;
@@ -570,6 +646,19 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           tr.rateRider(rider),
           style: const TextStyle(color: _muted, fontSize: 14),
         ),
+        // Fix job 10 (v0.18.43 §64, owner "Never told"): only at a low rating.
+        if (DontMatchAgain.current.offeredAt(_rating.round()))
+          CheckboxListTile(
+            key: const ValueKey<String>('dont-match-again'),
+            value: _dontMatch,
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              tr.dontMatchRiderAgain,
+              style: const TextStyle(color: _ink, fontSize: 14),
+            ),
+            onChanged: (value) => setState(() => _dontMatch = value ?? false),
+          ),
         // Contract v0.9.0: optional tags and comment once a star is given.
         if (_rating >= 1) ...[
           const SizedBox(height: 14),
