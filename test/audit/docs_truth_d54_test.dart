@@ -20,9 +20,11 @@ void main() {
   test('driver-3: DECISIONS.md describes the live car marker as built', () {
     final decisions = _read('docs/DECISIONS.md');
     // Whitespace-insensitive: `dart format` may wrap the expression.
-    final trip = _read(
-      'lib/presentation/driver/accept ride/accept_ride.dart',
-    ).replaceAll(RegExp(r'\s+'), ' ');
+    // The trip screen library: accept_ride.dart and its part files.
+    final trip = ['accept_ride.dart', 'accept_ride_widgets.dart']
+        .map((f) => _read('lib/presentation/driver/accept ride/$f'))
+        .join('\n')
+        .replaceAll(RegExp(r'\s+'), ' ');
     expect(trip, contains('Timer.periodic(const Duration(milliseconds: 33)'));
     expect(decisions, isNot(contains('5Hz')));
     expect(decisions, contains('33 ms'));
@@ -61,9 +63,11 @@ void main() {
     final doc = _read('docs/driver-camera-architecture.md');
     String n(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';
     // Whitespace-insensitive: `dart format` may wrap the expression.
-    final trip = _read(
-      'lib/presentation/driver/accept ride/accept_ride.dart',
-    ).replaceAll(RegExp(r'\s+'), ' ');
+    // The trip screen library: accept_ride.dart and its part files.
+    final trip = ['accept_ride.dart', 'accept_ride_widgets.dart']
+        .map((f) => _read('lib/presentation/driver/accept ride/$f'))
+        .join('\n')
+        .replaceAll(RegExp(r'\s+'), ' ');
     expect(trip, contains('DriverCameraMode.following ? .75 : .5'));
     expect(doc, contains('**75% of screen height**'));
     expect(doc, isNot(contains('72%')));
