@@ -1546,6 +1546,12 @@ abstract class AppLocalizations {
   /// **'Too many wrong codes today. Try again later.'**
   String get authErrLockedToday;
 
+  /// v0.18.40 §64 (fix job 10): tick on the rating screen at a low rating. The rider is never told.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t match me with this rider again'**
+  String get dontMatchRiderAgain;
+
   /// v0.18.38 §62 in-app call screen (fix job 8).
   ///
   /// In en, this message translates to:

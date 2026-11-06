@@ -1,0 +1,6 @@
+{
+  "dontMatchRiderAgain": "Don't match me with this rider again",
+  "@dontMatchRiderAgain": {
+    "description": "v0.18.40 §64 (fix job 10): tick on the rating screen at a low rating. The rider is never told."
+  }
+}

@@ -852,6 +852,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'För många fel koder i dag. Försök igen senare.';
 
   @override
+  String get dontMatchRiderAgain => 'Matcha mig inte med den här kunden igen';
+
+  @override
   String get callFailed => 'Samtalet misslyckades';
 
   @override

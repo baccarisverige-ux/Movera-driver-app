@@ -868,6 +868,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
 
   @override
+  String get dontMatchRiderAgain => 'Ne plus me proposer ce client';
+
+  @override
   String get callFailed => 'L\'appel a échoué';
 
   @override

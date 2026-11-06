@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/ratings/dont_match_again.dart';
 import 'package:movera/core/ratings/rider_rating.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -62,6 +63,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   static const Color _starOn = Color(0xFFF2A12E);
 
   double _rating = 0;
+
+  /// Fix job 10 (v0.18.40 §64): "Don't match me with this rider again".
+  bool _dontMatch = false;
   final Set<String> _tags = <String>{};
   final TextEditingController _comment = TextEditingController();
   late final RiderRatingSender _ratings =
@@ -103,6 +107,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             if (_tags.contains(tag)) tag,
         ],
         comment: _comment.text,
+        dontMatchAgain:
+            _dontMatch && DontMatchAgain.current.offeredAt(_rating.round()),
       );
       if (!mounted) return;
       if (outcome == RiderRatingOutcome.failed) {
@@ -619,7 +625,13 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                 : _starIcon(AppAssets.solarStar, _star),
           ),
           onRatingUpdate: (rating) {
-            setState(() => _rating = rating);
+            setState(() {
+              _rating = rating;
+              // More stars than the tick allows clear it (fix job 10).
+              if (!DontMatchAgain.current.offeredAt(rating.round())) {
+                _dontMatch = false;
+              }
+            });
             // Only the demo says the rating is not sent; live sends it on Done.
             if (_ratingNoticeShown || _ratings.live) return;
             _ratingNoticeShown = true;
@@ -634,6 +646,19 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           tr.rateRider(rider),
           style: const TextStyle(color: _muted, fontSize: 14),
         ),
+        // Fix job 10 (v0.18.40 §64, owner "Never told"): only at a low rating.
+        if (DontMatchAgain.current.offeredAt(_rating.round()))
+          CheckboxListTile(
+            key: const ValueKey<String>('dont-match-again'),
+            value: _dontMatch,
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              tr.dontMatchRiderAgain,
+              style: const TextStyle(color: _ink, fontSize: 14),
+            ),
+            onChanged: (value) => setState(() => _dontMatch = value ?? false),
+          ),
         // Contract v0.9.0: optional tags and comment once a star is given.
         if (_rating >= 1) ...[
           const SizedBox(height: 14),

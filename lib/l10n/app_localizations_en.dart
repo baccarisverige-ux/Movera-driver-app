@@ -851,6 +851,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many wrong codes today. Try again later.';
 
   @override
+  String get dontMatchRiderAgain => 'Don\'t match me with this rider again';
+
+  @override
   String get callFailed => 'Call failed';
 
   @override
