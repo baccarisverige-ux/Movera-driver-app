@@ -1304,6 +1304,18 @@ class ScheduledRideStore {
   /// Back to a fresh session: logout calls it, so the previous driver's
   /// accepted rides, late cancels and pause, reminder and backup note do
   /// not carry over to the next driver on the device (driver-u167).
+  /// L-a Q7 (owner 2026-11-06): at sign-in the list holds no ride yet; no
+  /// demo seed and no earlier driver's ride stays. The server's read
+  /// ([syncFromServer]) fills it.
+  static void clearRides() {
+    _requests.clear();
+    _accepted.clear();
+    _serverRows.clear();
+    _claims.clear();
+    keepQuestions.value = const [];
+    _changed();
+  }
+
   static void reset() {
     _requests
       ..clear()

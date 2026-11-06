@@ -1,4 +1,5 @@
 import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
+import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';

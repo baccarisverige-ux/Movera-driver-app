@@ -1228,9 +1228,11 @@ extension _AcceptRidePanel on _AcceptRideState {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircleAvatar(
+                  // L-a Q1: the rider's initials, no stock photo.
+                  InitialsAvatar(
+                    key: const ValueKey('rider-sheet-initials'),
+                    name: _riderName,
                     radius: 34,
-                    backgroundImage: AssetImage(AppAssets.profileImg),
                   ),
                   const SizedBox(height: 12),
                   Text(

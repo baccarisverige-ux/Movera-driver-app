@@ -1,3 +1,4 @@
+import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'dart:async';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -6,7 +7,6 @@ import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
-import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
@@ -39,6 +39,10 @@ class _DriverProfileState extends State<DriverProfile> {
 
   bool _liveRead = false;
 
+  /// The session listened to; dispose may not look it up again (the
+  /// tree is gone by then).
+  DriverAccountSession? _listened;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +61,7 @@ class _DriverProfileState extends State<DriverProfile> {
       _identity = _readIdentity();
       // The header follows the account; a session opened without a profile
       // read yet (a restored token) reads it now.
-      live.addListener(_accountChanged);
+      _listened = live..addListener(_accountChanged);
       if (live.account == null) {
         unawaited(
           live.refresh().then((_) => _vehicleChanged(), onError: (_) {}),
@@ -121,7 +125,7 @@ class _DriverProfileState extends State<DriverProfile> {
   @override
   void dispose() {
     LocalVehicleStore.changes.removeListener(_vehicleChanged);
-    if (_liveRead) _liveSession?.removeListener(_accountChanged);
+    _listened?.removeListener(_accountChanged);
     super.dispose();
   }
 
@@ -201,10 +205,11 @@ class _DriverProfileState extends State<DriverProfile> {
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  // L-a Q1 (owner 2026-11-06): initials, no stock photo.
+                  InitialsAvatar(
+                    key: const ValueKey('profile-header-initials'),
+                    name: _liveAccount?.fullName ?? '',
                     radius: 28,
-                    backgroundImage: AssetImage(AppAssets.profileImg),
-                    backgroundColor: Color(0xFFECECEC),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
