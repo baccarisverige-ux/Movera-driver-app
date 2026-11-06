@@ -1160,7 +1160,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Chaque annulation compte, sauf les motifs marqués « Ne compte pas », comme un passager absent ou un problème de sécurité.';
+      'Chaque annulation compte, quel que soit le motif.';
 
   @override
   String get cancelRateHowCalculated =>

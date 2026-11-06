@@ -2047,7 +2047,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancelRateEveryCancelCounts.
   ///
   /// In en, this message translates to:
-  /// **'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.'**
+  /// **'Every cancel counts, whatever the reason.'**
   String get cancelRateEveryCancelCounts;
 
   /// No description provided for @cancelRateHowCalculated.

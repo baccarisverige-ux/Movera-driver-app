@@ -796,7 +796,7 @@
   "noNotificationsYet": "No notifications yet",
   "cancelRateTitle": "Cancelation Rate",
   "cancelRateKeepLow": "Keep your cancel rate low to keep full access to trips",
-  "cancelRateEveryCancelCounts": "Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.",
+  "cancelRateEveryCancelCounts": "Every cancel counts, whatever the reason.",
   "cancelRateHowCalculated": "How your cancelation is calculated",
   "cancelRateHowBody": "Your cancellation rate is calculated based on the number of trips you cancel compared to the total trips you confirm. We use your last 100 confirmed trip requests to determine this percentage.",
   "cancelRateWhyMatters": "Why cancelation rate matters",
