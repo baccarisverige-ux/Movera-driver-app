@@ -87,7 +87,6 @@ import 'package:movera/presentation/driver/home/components/home_map_layers.dart'
 import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
-import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/info_session_screen.dart';
 import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
@@ -101,7 +100,6 @@ import 'package:geolocator/geolocator.dart'
 import 'package:movera/presentation/driver/vehicles/live_vehicles_screen.dart';
 import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
 import 'package:movera/presentation/driver/account/start_company_screen.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
@@ -849,7 +847,7 @@ class _DriverHomeState extends State<DriverHome>
   void _openActivationSupport() {
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const SupportScreen()),
+      MaterialPageRoute<void>(builder: (_) => supportScreen()),
     );
   }
 

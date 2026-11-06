@@ -1,3 +1,4 @@
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 
 /// The app's first route when a session is required
 /// (`MOVERA_AUTH_REQUIRED=true`): Sign in without tokens; with them the
@@ -118,8 +118,7 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
           return _GateError(
             onRetry: _retry,
             onSignOut: _signOut,
-            supportBuilder:
-                widget.supportBuilder ?? () => const SupportScreen(),
+            supportBuilder: widget.supportBuilder ?? () => supportScreen(),
           );
         }
         if (snapshot.connectionState != ConnectionState.done) {

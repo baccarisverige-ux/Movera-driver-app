@@ -173,4 +173,22 @@ void main() {
     ];
     expect(offenders, isEmpty);
   });
+  // B9 "Fast app start" (owner 2026-11-04).
+  testWidgets('Settings still opens, through its loader', (tester) async {
+    await open(tester, () => settingsScreen());
+    expect(screenNamed('Settings'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Documents still opens, through its loader', (tester) async {
+    await open(tester, () => driverDocumentsScreen());
+    expect(screenNamed('DriverDocuments'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Help still opens, through its loader', (tester) async {
+    await open(tester, () => supportScreen());
+    expect(screenNamed('SupportScreen'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
