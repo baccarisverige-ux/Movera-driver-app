@@ -355,8 +355,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
             ? tr.islandReservationAccepted
             : tr.schedAcceptedPickupAt(time),
       );
-    } else if (action == _ScheduledRideAction.cancelled ||
-        action == _ScheduledRideAction.cancelledNotCounted) {
+    } else if (action == _ScheduledRideAction.cancelled) {
       if (!_accepted.contains(ride)) return;
       // Checker M2: on live the server takes it back first; failed, the ride stays and the driver is told.
       if (LiveDriverServices.instance?.reservations case final live?
@@ -371,10 +370,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
           return;
         }
       }
-      final paused = ScheduledRideStore._cancelAccepted(
-        ride,
-        counts: action == _ScheduledRideAction.cancelled,
-      );
+      final paused = ScheduledRideStore._cancelAccepted(ride, counts: true);
       // Q31, N3: the pause is in Notifications and on the island.
       if (paused) {
         final until = ScheduledRideStore.pausedUntil(ScheduledRideStore._now);
@@ -1280,8 +1276,8 @@ class ScheduledRideStore {
   }
 
   /// The driver cancelled [ride], which they had accepted. A late cancel is
-  /// counted (drivers never pay), unless its reason doesn't count
-  /// ([counts], Q21); true when it paused Scheduled rides.
+  /// counted (drivers never pay); L-c: every give-back counts, whatever the
+  /// reason. True when it paused Scheduled rides.
   static bool _cancelAccepted(_ScheduledRide ride, {bool counts = true}) {
     final late = counts && isLateCancel(ride.route);
     if (!_accepted.remove(ride)) {

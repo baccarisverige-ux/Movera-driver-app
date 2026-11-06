@@ -158,7 +158,6 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                                           : FontWeight.w600,
                                     ),
                                   ),
-                                  if (!reason.counts) const _NotCountedTag(),
                                 ],
                               ),
                             ),
@@ -267,19 +266,7 @@ class _CancelConfirmationSheet extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              if (!reason.counts) ...[
-                const SizedBox(height: 12),
-                Text(
-                  tr.schedReasonDoesntCount,
-                  key: ValueKey<String>('scheduled-cancel-not-counted'),
-                  style: TextStyle(
-                    color: Color(0xFF19865C),
-                    fontSize: 12.5,
-                    height: 1.4,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ] else if (ScheduledRideStore.isLateCancel(ride)) ...[
+              if (ScheduledRideStore.isLateCancel(ride)) ...[
                 const SizedBox(height: 12),
                 _LateCancelWarning(ride: ride),
               ],
