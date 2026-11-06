@@ -416,6 +416,7 @@ class BookLaterRules {
     this.takeBackLateMin = 5,
     this.takeBackKeepIfDriveMin = 10,
     this.takeBackUntilMinBeforePickup = 15,
+    this.noDriverStopAfterMin = 15,
   });
 
   /// FIX JOB 4 (contract v0.18.35 §59, owner Q2): the server takes a held
@@ -426,6 +427,11 @@ class BookLaterRules {
   final int takeBackLateMin;
   final int takeBackKeepIfDriveMin;
   final int takeBackUntilMinBeforePickup;
+
+  /// v0.18.39 §63 (P17, owner "15 min after pickup past"): the server ends a
+  /// booked ride with no driver this many minutes after its pickup time. The
+  /// app only reads it (an open ride then leaves Scheduled rides).
+  final int noDriverStopAfterMin;
 
   final int dispatchBeforeMin;
   final double listHomeKm;
@@ -538,6 +544,9 @@ class BookLaterRules {
       takeBackUntilMinBeforePickup:
           _intIn(json['takeBackUntilMinBeforePickup'], 0, 180) ??
           seed.takeBackUntilMinBeforePickup,
+      noDriverStopAfterMin:
+          _intIn(json['noDriverStopAfterMin'], 1, 240) ??
+          seed.noDriverStopAfterMin,
     );
   }
 
@@ -572,5 +581,6 @@ class BookLaterRules {
     'takeBackLateMin': takeBackLateMin,
     'takeBackKeepIfDriveMin': takeBackKeepIfDriveMin,
     'takeBackUntilMinBeforePickup': takeBackUntilMinBeforePickup,
+    'noDriverStopAfterMin': noDriverStopAfterMin,
   };
 }
