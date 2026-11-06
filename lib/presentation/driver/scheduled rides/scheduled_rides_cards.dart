@@ -508,4 +508,4 @@ class _ScheduledRide {
   }
 }
 
-enum _ScheduledRideAction { accepted, cancelled, cancelledNotCounted }
+enum _ScheduledRideAction { accepted, cancelled }

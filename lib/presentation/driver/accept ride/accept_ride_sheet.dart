@@ -300,7 +300,7 @@ extension _AcceptRideSheet on _AcceptRideState {
   /// Drops the secured next trip; the current trip goes on. The next trip
   /// goes back to dispatch (`searching`; demo: it is dropped). It is kept in
   /// history as a driver cancel with its reason, so it counts like any other
-  /// driver cancel unless the reason doesn't count.
+  /// driver cancel (L-c: whatever the reason).
   void _cancelNextTrip(_TripCancellationReason reason) {
     final offer = _nextTripRadarOffer;
     if (!mounted ||

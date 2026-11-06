@@ -183,34 +183,43 @@ void main() {
     expect(ScheduledRideStore.block(), isNull);
   });
 
-  testWidgets('a reason that doesn\'t count says so and is not a late cancel', (
-    tester,
-  ) async {
-    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
-    await _open(tester);
-    await tester.tap(find.text('Accepted'));
-    await tester.pumpAndSettle();
-    await _openRide(tester, 'Gamla vägen, Stockholm');
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
-    await tester.pumpAndSettle();
-    // Q21: the admin list marks a car breakdown as not counting.
-    expect(find.text('Doesn’t count'), findsOneWidget);
-    await tester.tap(find.text('Vehicle issue'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Continue'));
-    await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey<String>('scheduled-cancel-not-counted')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('scheduled-late-cancel')),
-      findsNothing,
-    );
-    await _confirmCancel(tester);
-    expect(ScheduledRideStore.lateCancelsInPeriod(), 0);
-  });
+  // L-c (owner 2026-11-06 "Remove it (Safe)", replaces Q21's "Doesn't count"): no reason
+  // says "Doesn't count" any more, and every give-back counts (here: a late cancel).
+  testWidgets(
+    'L-c: a car problem give-back shows no "Doesn\'t count" and counts',
+    (tester) async {
+      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+      await _open(tester);
+      await tester.tap(find.text('Accepted'));
+      await tester.pumpAndSettle();
+      await _openRide(tester, 'Gamla vägen, Stockholm');
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Cancel reservation'),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('count'),
+        findsWidgets,
+      ); // the late-cancel line
+      expect(find.textContaining('Doesn’t count'), findsNothing);
+      await tester.tap(find.text('Vehicle issue'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey<String>('scheduled-cancel-not-counted')),
+        findsNothing,
+      );
+      expect(find.textContaining('doesn’t count against you'), findsNothing);
+      expect(
+        find.text('This is a late cancel and it counts. You never pay.'),
+        findsOneWidget,
+      );
+      await _confirmCancel(tester);
+      expect(ScheduledRideStore.lateCancelsInPeriod(), 1);
+    },
+  );
 
   testWidgets('too many late cancels pause Scheduled rides until a date', (
     tester,
