@@ -1132,7 +1132,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.';
+      'Every cancel counts, whatever the reason.';
 
   @override
   String get cancelRateHowCalculated => 'How your cancelation is calculated';

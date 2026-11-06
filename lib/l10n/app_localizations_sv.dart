@@ -1133,7 +1133,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Varje avbokning räknas, utom skäl som är märkta ”Räknas inte”, till exempel en resenär som inte dyker upp eller ett säkerhetsproblem.';
+      'Varje avbokning räknas, oavsett skäl.';
 
   @override
   String get cancelRateHowCalculated => 'Så beräknas din avbokningsgrad';
