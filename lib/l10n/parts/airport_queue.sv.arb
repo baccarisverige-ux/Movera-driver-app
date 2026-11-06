@@ -1,0 +1,8 @@
+{
+  "airportQueueTitle": "Flygplatskö",
+  "airportQueuePlace": "Du är nummer {place} i kön",
+  "airportQueueAheadWaiting": "{ahead} förare före dig · väntat {minutes} min",
+  "airportQueueHow": "Flygplatsresor går först till den som står först i kön. Stanna inom väntområdet för att behålla din plats.",
+  "airportQueueLeft": "Du lämnade flygplatskön",
+  "tipAirportQueuePlace": "Flygplatskö: du är nummer {place}"
+}

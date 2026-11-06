@@ -1,0 +1,300 @@
+{
+  "call112": "Call 112",
+  "call112OnYourPhone": "Call 112 on your phone",
+  "call112IfYouNeedHelp": "\nCall 112 if you need help now.",
+  "call112Now": "Call 112 now",
+  "callRider": "Call rider",
+  "supportApp": "SUPPORT & APP",
+  "support": "Support",
+  "callName": "Call {name}",
+  "@callName": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "supportCatTripRider": "Trip & rider",
+  "supportCatWallet": "Wallet & payments",
+  "supportCatAccount": "Account & documents",
+  "supportCatTechnical": "Technical issue",
+  "supportLocalDraftBadge": "LOCAL DRAFT",
+  "supportCouldNotRecover": "Could not recover local support. Retry.",
+  "supportCouldNotSaveConversation": "Could not save local conversation. Retry.",
+  "supportCouldNotLoadDraft": "Could not load the local draft.",
+  "supportCouldNotSaveDraft": "Could not save local draft.",
+  "supportLocalTicketDraft": "Local ticket draft",
+  "supportCouldNotSaveTicket": "Could not save local ticket. Retry.",
+  "supportSavingDraft": "Saving local draft…",
+  "supportSaveDraftDemo": "Save draft in demo",
+  "supportTicketSavedDraftNotCleared": "Ticket saved locally, but the composer draft could not be cleared.",
+  "supportDemo": "Support demo",
+  "supportDraftLocalTicket": "Draft local ticket",
+  "supportLocalPreview": "Local support preview",
+  "supportLocalDraftsNoService": "Local drafts on this device — no support service.",
+  "supportCouldNotLoadRetry": "Could not load local support — Retry",
+  "supportRecoverPreserve": "Recover local support (preserve unreadable data)",
+  "supportYourConversations": "Your conversations",
+  "supportLocalDraftSubject": "Local draft: {subject}",
+  "@supportLocalDraftSubject": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "supportWriteLocalDraft": "Write a local draft",
+  "supportSaveLocalReply": "Save local reply",
+  "helpCenter": "Help center",
+  "callUnavailableUseChat": "Calls coming soon – use the chat",
+  "chatClosedAfterTrip": "The chat is closed after the trip",
+  "chatLocalDemo": "Local demo chat · messages are not sent to the rider.",
+  "chatSendMessageHint": "Send message…",
+  "chatSaveLocally": "Save message locally",
+  "chatLocalNotSent": "Local preview · not sent",
+  "chatSend": "Send message",
+  "chatSending": "Sending…",
+  "chatNotSentTapToRetry": "Not sent · Tap to retry",
+  "chatSendFailed": "Movera could not send your message. Try again.",
+  "chatHistoryFailed": "Earlier messages could not be loaded.",
+  "chatNewMessages": "{count, plural, =1{1 new message from the rider} other{{count} new messages from the rider}}",
+  "@chatNewMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noticeNewScheduledRide": "New scheduled ride",
+  "noticeScheduledBody": "{day} {time} · {fare} · Tap to view",
+  "@noticeScheduledBody": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "fare": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeSecondsToAccept": "{seconds} s to accept",
+  "@noticeSecondsToAccept": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "noticeHighDemandIn": "High demand in {area}",
+  "@noticeHighDemandIn": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeGoOnlineNow": "Go online now",
+  "noticeDocExpires": "{title} expires {when}",
+  "@noticeDocExpires": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeUploadNewKeepDriving": "Upload a new one so you can keep driving.",
+  "noticeDocApprovedBody": "{title} approved. You can go online.",
+  "@noticeDocApprovedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeCanGoOnlineAgain": "You can go online again.",
+  "noticeTooManyLateCancels": "Too many late cancels. Back on {date}.",
+  "@noticeTooManyLateCancels": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeBonusProgressTitle": "Bonus progress",
+  "noticeBonusProgressBody": "{done} of {goal} trips this week. {left} more for {amount}.",
+  "@noticeBonusProgressBody": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noticePayoutSentTitle": "Payout sent",
+  "noticePayoutSentBody": "{amount} is on its way to your bank.",
+  "@noticePayoutSentBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "supportTicketMovera": "Movera support",
+  "supportSendFailed": "Could not send. Try again.",
+  "supportSendToMovera": "Send to Movera",
+  "supportSentToMovera": "Sent to Movera. The answer shows here.",
+  "supportWriteToMovera": "Write to Movera",
+  "supportNoTicketsYet": "No messages to Movera yet.",
+  "contentUpdateTitle": "Update the app",
+  "contentUpdateBody": "This version of Movera Driver can no longer be used. Update it to keep driving.",
+  "contentUpdateStore": "Open the store",
+  "contentUpdateStoreFailed": "The store could not be opened.",
+  "contentUpdateRecommended": "A new version of the app is ready.",
+  "contentUpdateAfterTrip": "Update the app after this trip.",
+  "contentTermsTitle": "New terms",
+  "contentTermsAccept": "I accept",
+  "contentTermsFailed": "Not saved. Check the connection and try again.",
+  "contentTermsBlockOnline": "Accept the new terms to go online.",
+  "noticeDemoEventTitle": "Stockholm evening demand",
+  "@noticeDemoEventTitle": {
+    "description": "Demo notification: an evening event."
+  },
+  "noticeDemoEventBody": "18:00–22:30 · Central Stockholm. Be online before the main departure window.",
+  "@noticeDemoEventBody": {
+    "description": "Demo notification: the event's line."
+  },
+  "noticeDemoEventIsland": "Event tonight · City",
+  "@noticeDemoEventIsland": {
+    "description": "Demo notification: the island text of the event."
+  },
+  "guideExampleLabel": "Example drawn by Movera",
+  "guideMustBeVisible": "Make sure this is visible",
+  "guideTipsTitle": "Tips for a good photo",
+  "guideUpload": "Upload",
+  "guidePickTakePhoto": "Take photo",
+  "guidePickLibrary": "Photo library",
+  "guidePickFile": "Choose file",
+  "guideCameraBlockedTitle": "Movera can't use your camera",
+  "guideCameraBlockedBody": "Camera access is off for Movera. Turn it on in Settings, or choose a file you already have.",
+  "guideOpenSettings": "Open Settings",
+  "guideUploadingSlow": "Uploading… this can take up to a minute.",
+  "guideKeptPhoto": "The upload did not finish. Your photo is kept, so you can try again.",
+  "guideTryAgain": "Try again",
+  "guideChooseAnother": "Choose another",
+  "guideExpiryNote": "This document has an end date. Movera types it when approving, and reminds you {days} days before.",
+  "@guideExpiryNote": {
+    "placeholders": {
+      "days": {
+        "type": "Object"
+      }
+    }
+  },
+  "guideCurrentStatus": "Now: {status}",
+  "@guideCurrentStatus": {
+    "placeholders": {
+      "status": {
+        "type": "Object"
+      }
+    }
+  },
+  "guideExpiresOn": "Expires {date}",
+  "@guideExpiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "guideSelectedFile": "Selected: {name}",
+  "@guideSelectedFile": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "guideLicenceBothSides": "Front and back of the licence",
+  "guideNameAndPhoto": "Your name and photo",
+  "guideValidUntil": "The valid-until date",
+  "guideLicenceCategoryB": "Category B",
+  "guideLicenceCategoryB3Years": "Category B, held for at least 3 years",
+  "guideIdWholeCard": "The whole card or the passport photo page",
+  "guidePhotoFaceFront": "Your face from the front, eyes open",
+  "guidePhotoPlainBackground": "A plain, light background",
+  "guidePhotoNoSunglasses": "No sunglasses, cap or other people",
+  "guideCardBothSides": "Front and back of the card",
+  "guideCardNumber": "The card number",
+  "guideSeRegistrationBolagsverket": "The registration certificate from Bolagsverket",
+  "guideKbisRecent": "Kbis or SIRENE notice, less than 3 months old",
+  "guideCompanyNameAndNumber": "The company name and number",
+  "guideAllPages": "Every page",
+  "guideSeTrafficPermit": "The taxi traffic permit from Transportstyrelsen",
+  "guideSeFTax": "The F-skatt certificate from Skatteverket",
+  "guideFrRib": "The company RIB with IBAN and BIC",
+  "guideSeBankAccount": "The account certificate with clearing and account number",
+  "guideAccountHolderName": "The account holder's name",
+  "guideFrVtcRegister": "The certificate of the VTC operators register",
+  "guideFrRcPro": "The RC Pro certificate for passenger transport",
+  "guideFrUrssafRecent": "The URSSAF certificate, less than 6 months old",
+  "guideFrCarteGrise": "The carte grise, front side",
+  "guideSeRegistrationFront": "The registration certificate, part 1",
+  "guidePlateVisible": "The plate number",
+  "guideOwnerName": "The owner's name",
+  "guideFrPassengerInsurance": "The passenger transport insurance certificate",
+  "guideSeInsuranceLetter": "The insurance letter for taxi traffic",
+  "guideFrStickerOnCar": "The VTC sticker on the windscreen",
+  "guideCarFront": "The whole front of the car",
+  "guideCarBack": "The whole back of the car",
+  "guideCarSide": "The whole side of the car, wheels included",
+  "guideCarInside": "The seats from the back door, clean",
+  "guidePlateReadable": "The plate can be read",
+  "guideWholeDocument": "The whole document, every corner",
+  "guideNameAndPhotoIfAny": "Your name (and photo, if it has one)",
+  "chatSupportSender": "Movera",
+  "chatNewMessagesAny": "{count, plural, =1{1 new message} other{{count} new messages}}",
+  "@chatNewMessagesAny": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "supportTopicRideDispute": "Problem with a ride",
+  "supportTopicHelp": "Help with the app",
+  "supportTopicLostItem": "Lost item",
+  "supportTopicPayment": "Payment or pay",
+  "supportTopicAccount": "Account and documents",
+  "supportTopicSafety": "Safety",
+  "supportTopicOther": "Something else",
+  "supportMovera": "Movera Support",
+  "supportAgentLine": "{name} · Movera Support",
+  "@supportAgentLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "supportReplyHint": "Write a message",
+  "supportReplySend": "Send",
+  "supportTicketClosedNote": "This conversation is solved. Open a new ticket if you need more help.",
+  "supportReplyFailed": "The message was not sent. Try again.",
+  "supportNewTicket": "New ticket",
+  "supportCommentHint": "Any comment or idea for us? (optional)",
+  "supportCommentSend": "Send comment",
+  "supportCommentThanks": "Thanks for your comment."
+}

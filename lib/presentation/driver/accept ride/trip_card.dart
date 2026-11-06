@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 
+// Fix job 5: the booked-next card, shown under the trip cards (re-exported
+// so the trip sheet can use it without growing accept_ride.dart, rule 25).
+export 'next_booked_ride_card.dart';
+
 /// One point of a [TripCard]: a small mark, a short label ("Pickup · 4 min")
 /// and the address under it.
 class TripCardPoint {

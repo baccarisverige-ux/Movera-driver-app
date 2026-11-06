@@ -413,7 +413,25 @@ class BookLaterRules {
     this.arriveEarlyMin = 10,
     this.raiseFare = true,
     this.raiseMax,
+    this.takeBackLateMin = 5,
+    this.takeBackKeepIfDriveMin = 10,
+    this.takeBackUntilMinBeforePickup = 15,
+    this.noDriverStopAfterMin = 15,
   });
+
+  /// FIX JOB 4 (contract v0.18.35 §59, owner Q2): the server takes a held
+  /// booked ride back only when the driver would be more than
+  /// [takeBackLateMin] late, is more than [takeBackKeepIfDriveMin] minutes'
+  /// drive away, and the pickup is at least [takeBackUntilMinBeforePickup]
+  /// minutes away. The app only shows the rule; the server decides.
+  final int takeBackLateMin;
+  final int takeBackKeepIfDriveMin;
+  final int takeBackUntilMinBeforePickup;
+
+  /// v0.18.39 §63 (P17, owner "15 min after pickup past"): the server ends a
+  /// booked ride with no driver this many minutes after its pickup time. The
+  /// app only reads it (an open ride then leaves Scheduled rides).
+  final int noDriverStopAfterMin;
 
   final int dispatchBeforeMin;
   final double listHomeKm;
@@ -518,6 +536,17 @@ class BookLaterRules {
           : json.containsKey('raiseMax')
           ? null
           : seed.raiseMax,
+      takeBackLateMin:
+          _intIn(json['takeBackLateMin'], 1, 60) ?? seed.takeBackLateMin,
+      takeBackKeepIfDriveMin:
+          _intIn(json['takeBackKeepIfDriveMin'], 0, 60) ??
+          seed.takeBackKeepIfDriveMin,
+      takeBackUntilMinBeforePickup:
+          _intIn(json['takeBackUntilMinBeforePickup'], 0, 180) ??
+          seed.takeBackUntilMinBeforePickup,
+      noDriverStopAfterMin:
+          _intIn(json['noDriverStopAfterMin'], 1, 240) ??
+          seed.noDriverStopAfterMin,
     );
   }
 
@@ -549,5 +578,9 @@ class BookLaterRules {
     'arriveEarlyMin': arriveEarlyMin,
     'raiseFare': raiseFare,
     'raiseMax': raiseMax,
+    'takeBackLateMin': takeBackLateMin,
+    'takeBackKeepIfDriveMin': takeBackKeepIfDriveMin,
+    'takeBackUntilMinBeforePickup': takeBackUntilMinBeforePickup,
+    'noDriverStopAfterMin': noDriverStopAfterMin,
   };
 }

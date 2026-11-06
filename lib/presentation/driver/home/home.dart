@@ -124,6 +124,8 @@ import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/home/components/route_fade.dart';
 import 'package:movera/presentation/driver/my%20queue%20position/components/in_airport_queue.dart';
+import 'package:movera/presentation/driver/airport_queue/airport_queue_card.dart';
+import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -150,6 +152,7 @@ part 'home_offer_radar_claims.dart';
 part 'home_map_sheet.dart';
 part 'home_map_destination.dart';
 part 'home_map_island.dart';
+part 'home_map_top_island.dart';
 part 'home_map_panels.dart';
 part 'home_reservation.dart';
 part 'home_scheduled.dart';
@@ -296,7 +299,7 @@ class _DriverHomeState extends State<DriverHome>
 
   /// R13-1: "Finding trips" and short messages while waiting online.
   late final IslandWaitingController _islandWaiting = IslandWaitingController(
-    tips: () => _HomeMapSheet(this)._waitingTips(),
+    tips: () => _HomeMapTopIsland(this)._waitingTips(),
   )..addListener(_islandWaitingListener);
   void _islandWaitingListener() {
     if (mounted) {
@@ -1020,7 +1023,7 @@ class _DriverHomeState extends State<DriverHome>
                           _HomeMapSheet(this)._setMapGesturesBlocked(false);
                         },
                         // Account on hold keeps its red dock face.
-                        collapsed: _HomeMapSheet(this)._inactiveDock(),
+                        collapsed: _HomeMapTopIsland(this)._inactiveDock(),
                         // The dock is the sheet's own bottom: it never moves or fades,
                         // so the sheet keeps one shape from closed to open.
                         footer: _HomeMapSheet(this)._homeDockFooter(),
@@ -1053,12 +1056,12 @@ class _DriverHomeState extends State<DriverHome>
                               absorbing: _blockMapGestures,
                               child: _HomeMapSheet(this).body(),
                             ),
-                            _HomeMapSheet(this)._homeMapDim(),
+                            _HomeMapTopIsland(this)._homeMapDim(),
                           ],
                         ),
                       ),
                       _HomeOnlineGate(this)._reasonLayer(), // over radar
-                      _HomeMapSheet(this)._homeRadarLayer(),
+                      _HomeMapTopIsland(this)._homeRadarLayer(),
                       // A reservation request: its sheet over the dock, its orb on top.
                       _HomeReservation(this)._reservationLayer(),
                       // An Exclusive offer: the same sheet, its grey orb on top.

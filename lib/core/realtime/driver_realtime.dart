@@ -27,7 +27,15 @@ enum DriverRealtimeKind {
 
   /// v0.18.7 (status item 4): the rider moved the pickup; carries the
   /// projection (`pickup` changed, version + 1) like `trip_projection`.
-  pickupMoved('pickup_moved');
+  pickupMoved('pickup_moved'),
+
+  /// v0.18.38 §62 (fix job 8): in-app calls. No projection, no version
+  /// change; `call` carries the CallView, `signal` the relayed signal.
+  callRinging('call_ringing'),
+  callAnswered('call_answered'),
+  callSignal('call_signal'),
+  callEnded('call_ended'),
+  callMissed('call_missed');
 
   const DriverRealtimeKind(this.wireName);
   final String wireName;
@@ -38,7 +46,16 @@ enum DriverRealtimeKind {
     DriverRealtimeKind.paymentUpdated,
     DriverRealtimeKind.ratingUpdated,
     DriverRealtimeKind.message,
+    // v0.18.38 §62: the call window runs 60 min after the drop-off.
+    DriverRealtimeKind.callRinging,
+    DriverRealtimeKind.callAnswered,
+    DriverRealtimeKind.callSignal,
+    DriverRealtimeKind.callEnded,
+    DriverRealtimeKind.callMissed,
   };
+
+  /// v0.18.38 §62: one of the in-app call kinds.
+  bool get isCall => wireName.startsWith('call_');
 
   bool get passesAfterTerminal => afterTerminal.contains(this);
 

@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -94,9 +95,7 @@ class _TripIslandState extends State<TripIsland> {
   }
 
   Widget _faceView() => switch (_face) {
-    _Face.hidden => DigitalIslandParts.hiddenFace(
-      unit: DigitalIslandParts.unitOf(widget.lastTripLabel),
-    ),
+    _Face.hidden => DigitalIslandParts.hiddenFace(label: widget.lastTripLabel),
     _Face.lastTrip => DigitalIslandParts.amountFace(
       'island-last-trip',
       tr.lastTrip,

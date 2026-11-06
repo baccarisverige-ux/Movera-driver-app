@@ -1,0 +1,274 @@
+{
+  "docInsuranceLetter": "Insurance letter",
+  "docTaxiDriverLicense": "Taxi driver license",
+  "docTaxiLicenseShort": "Taxi license",
+  "docRegistrationCertificate": "Registration certificate",
+  "docRegistrationShort": "Registration",
+  "docDriversLicense": "Driver's License",
+  "docVehicleVerification": "Vehicle Verification",
+  "docDriversId": "Driver's ID",
+  "docExpiredCantGoOnline": "Expired · You can’t go online",
+  "docExpiresWhenDate": "Expires {when} · {date}",
+  "@docExpiresWhenDate": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "docNewTitle": "New {title}",
+  "@docNewTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "docTakeClearPhoto": "Take a clear photo of the whole document. Movera checks it before it counts.",
+  "docSendNew": "Send new document",
+  "docDemoNoFileLeaves": "Demo: no file leaves the phone.",
+  "docSentForReview": "Sent for review",
+  "docTitleExpired": "{title} expired",
+  "@docTitleExpired": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "docNewInReviewGoOnlineWhenApproved": "Your new document is in review. You can go online when Movera approves it.",
+  "docUploadNewGoOnlineWhenApproved": "Upload a new one. You can go online when Movera approves it.",
+  "docTermsAndConditions": "Terms and Conditions",
+  "docVirtualInfoSession": "Virtual information session",
+  "docDriversLicenseLower": "Driver’s license",
+  "docProfilePhoto": "Profile photo",
+  "docCompanyRegistration": "Company registration",
+  "docCompanyRegistrationNote": "Bolagsverket or Skatteverket extract. Not needed with a Fleet Partner.",
+  "docTaxiTrafficPermit": "Taxi traffic permit",
+  "docTaxSettings": "Tax settings",
+  "docBankStatement": "Bank statement",
+  "docFrontPage": "Front page",
+  "docStockholmTrips": "Stockholm · Trips",
+  "docEarnAnywhereSweden": "Earn anywhere in Sweden",
+  "docSampleListNotice": "Sample list · Sending these documents is not available in the app yet. Nothing here was uploaded or reviewed.",
+  "docApprovedOfTotal": "{approved} of {total} approved",
+  "@docApprovedOfTotal": {
+    "placeholders": {
+      "approved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "docLeftCount": "{count} left",
+  "@docLeftCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "docPreviewNotAvailable": "Not available yet — sample page. Sending this document is not part of the app yet. No document was uploaded or reviewed.",
+  "vehCouldNotLoadDrafts": "Could not load local vehicle drafts — Retry",
+  "vehLocalDraftsNotVerified": "Local vehicle drafts — not activated or verified",
+  "vehTripsOnly": "Trips only",
+  "vehManageVehicles": "Manage vehicles",
+  "vehExploreOpportunities": "Explore vehicle opportunities",
+  "vehConnectFleetPartner": "Connect with a fleet partner or browse rental or purchase offers if you need another vehicle.",
+  "vehCouldNotSaveDraft": "Could not save local vehicle draft. Retry.",
+  "vehRequirements": "Vehicle requirements",
+  "vehRequirementsBody": "To drive with Movera, you need a vehicle that is 1990 or newer, and not salvaged.",
+  "vehEnterInformation": "Enter your vehicle information",
+  "vehPhotoCouldNotSave": "Photo could not be saved locally. Retry.",
+  "vehRemoveDraftQ": "Remove local vehicle draft?",
+  "vehRemovesNameAndPhotos": "This removes {name} and its saved document photos from this device.",
+  "@vehRemovesNameAndPhotos": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "vehKeepVehicle": "Keep vehicle",
+  "vehRemoveVehicle": "Remove vehicle",
+  "vehCouldNotRemoveDraft": "Could not remove local draft. Retry.",
+  "vehPhotosStayOnDevice": "Document photos stay on this device. No upload or verification service is connected.",
+  "vehCouldNotLoadDocuments": "Could not load local vehicle documents.",
+  "vehDraftNoLongerAvailable": "This local vehicle draft is no longer available.",
+  "vehRegistrationCertFront": "Vehicle Registration Certificate (Front Page)",
+  "vehSavedLocallyNotVerified": "Saved locally — not verified",
+  "vehRecommendedNextStep": "Recommended next step",
+  "vehTakePhotoRegistration": "Take a photo of your Vehicle Registration Certificate (Front Page)",
+  "vehDocBlueBlackWhite": "The document should be blue, black and white.",
+  "vehAllFourCorners": "All four corners are visible.",
+  "vehInsuranceLetter": "Insurance Letter",
+  "vehTakePhotoInsurance": "Take a photo of your Insurance Letter",
+  "vehInsuranceShowsTaxi": "The document shows the car’s registration number and that it is registered as a taxi.",
+  "vehInsuranceDatesVisible": "The start and end dates of the insurance are visible.",
+  "vehSavedPhotoCannotDisplay": "Saved photo cannot be displayed. Retake this document photo.",
+  "vehPhotoTooLarge": "Photo is too large to keep on this device. Retake it closer and with less detail.",
+  "vehCameraNotAvailable": "Camera is not available in this preview.",
+  "vehBeforeSavingCheck": "Before saving the local photo, check the following:",
+  "plateUnavailable": "Plate unavailable",
+  "colorRed": "Red",
+  "colorBlue": "Blue",
+  "colorGreen": "Green",
+  "colorBlack": "Black",
+  "colorWhite": "White",
+  "colorGray": "Gray",
+  "colorSilver": "Silver",
+  "colorYellow": "Yellow",
+  "colorOrange": "Orange",
+  "colorBrown": "Brown",
+  "colorPurple": "Purple",
+  "colorPink": "Pink",
+  "docYou": "You",
+  "docCompany": "Company",
+  "docCar": "Car {plate}",
+  "@docCar": {
+    "placeholders": {
+      "plate": {
+        "type": "Object"
+      }
+    }
+  },
+  "docMoveraBooks": "Movera books this with you",
+  "docTakePhoto": "Take photo",
+  "docChoosePhoto": "Choose photo",
+  "docChoosePdf": "Choose PDF",
+  "docUploading": "Uploading…",
+  "docUploaded": "Uploaded. Movera checks it.",
+  "docUploadFailed": "Couldn’t upload. Try again.",
+  "docFileTooLarge": "The file is larger than 10 MB.",
+  "docUnsupportedFile": "Send a JPEG, PNG, HEIC or PDF.",
+  "docEmptyFile": "The file is empty.",
+  "docTypeNotAccepted": "This document can’t be uploaded here.",
+  "docCouldNotLoad": "Couldn’t load your documents.",
+  "docNoneYet": "Nothing to upload yet.",
+  "docUploadNew": "Upload a new one",
+  "vehStatusBlocked": "Blocked",
+  "vehDocumentsOnDocs": "Upload the car’s documents under Documents.",
+  "docChooseHow": "How do you want to add it?",
+  "vehDocsMissingCantDrive": "Can't be driven – upload documents",
+  "docOpenGuide": "Open the guide and upload",
+  "docExpiresOnNote": "Expires {date}",
+  "@docExpiresOnNote": {
+    "placeholders": {
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "carFuel": "Fuel",
+  "carTypesFitHint": "Only the car types this car fits are shown (Movera's rules for {country}).",
+  "@carTypesFitHint": {
+    "placeholders": {
+      "country": {
+        "type": "Object"
+      }
+    }
+  },
+  "carTypesEnterFirst": "Enter the year, seats and fuel to see the car types.",
+  "carNoTypeFits": "This car fits no car type. Check the year, seats and fuel.",
+  "carRulesCouldNotLoad": "Could not load Movera's car rules.",
+  "carCategoryNotAllowed": "This car does not fit one of the chosen car types.",
+  "carPhotosTitle": "Photos of the car",
+  "carPhotosIntro": "Movera needs these 4 photos of {car} before it can be driven.",
+  "@carPhotosIntro": {
+    "placeholders": {
+      "car": {
+        "type": "Object"
+      }
+    }
+  },
+  "carPhotosDone": "Done",
+  "vehNotApprovedCantDrive": "Can't be driven – Movera has not approved this car yet",
+  "vehDocsMissingOwnerUploads": "Can't be driven – the fleet owner must finish its documents",
+  "docFleetOwnerOnly": "Only the fleet owner can upload or open car documents.",
+  "carExtraNeedsRide": "Booster Seat is an extra: also choose a ride type.",
+  "@carExtraNeedsRide": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carRulesNotMet": "This car does not meet Movera’s rules:",
+  "@carRulesNotMet": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemLine": "{category}: {problem}",
+  "@carProblemLine": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).",
+    "placeholders": {
+      "category": {
+        "type": "Object"
+      },
+      "problem": {
+        "type": "Object"
+      }
+    }
+  },
+  "carWholeCar": "The car",
+  "@carWholeCar": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemYearTooOld": "the car is too old for Movera",
+  "@carProblemYearTooOld": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemYearTooOldBase": "the car must be from {year} or later",
+  "@carProblemYearTooOldBase": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "carProblemCategoryOff": "not offered in this country",
+  "@carProblemCategoryOff": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemTooFewSeats": "too few seats",
+  "@carProblemTooFewSeats": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemFuelNotAllowed": "this fuel is not allowed",
+  "@carProblemFuelNotAllowed": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemFuelRequired": "choose the fuel",
+  "@carProblemFuelRequired": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemExtraNeedsRide": "only together with a ride type",
+  "@carProblemExtraNeedsRide": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "carProblemOther": "does not fit",
+  "@carProblemOther": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "docInvalidFileContent": "This file is not a photo or PDF",
+  "@docInvalidFileContent": {
+    "description": "Contract v0.18.5 documents.upload.contentCheck (G2-D5.2)."
+  },
+  "docExpiryTooFar": "Check the end date",
+  "@docExpiryTooFar": {
+    "description": "Contract v0.18.5 documentExpiry (G2-D5.8)."
+  },
+  "docRenewalWaiting": "New document waiting for review",
+  "@docRenewalWaiting": {
+    "description": "Contract v0.18.5 documentRenewal (G2-D1)."
+  },
+  "docRenewalRejected": "New document rejected",
+  "@docRenewalRejected": {
+    "description": "Contract v0.18.5 documentRenewal (G2-D1)."
+  },
+  "carTypesByMovera": "Movera chooses the ride types when it approves the car.",
+  "@carTypesByMovera": {
+    "description": "Contract v0.18.5 vehicleRules.categoriesByAdmin (G2-D5.3)."
+  }
+}

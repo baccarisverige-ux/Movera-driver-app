@@ -279,12 +279,17 @@ class HomeIslandNotices {
   );
 
   /// "Leave now": the scheduled ride is on screen as the active trip.
-  static IslandMessage leaveNow(String time) => IslandMessage(
-    title: driverText(DriverTexts.islandLeaveNow, {'time': time}),
-    tone: IslandTone.success,
-    priority: IslandPriority.high,
-    group: 'scheduled',
-  );
+  /// v0.18.32 (contract.json#bookedRideSeen.leaveNowName): with the
+  /// rider's first name, "Time to drive to pickup · Anna".
+  static IslandMessage leaveNow(String time, {String riderName = ''}) =>
+      IslandMessage(
+        title: riderName.isEmpty
+            ? driverText(DriverTexts.islandLeaveNow, {'time': time})
+            : tr.leaveNowTimeToDriveName(riderName),
+        tone: IslandTone.success,
+        priority: IslandPriority.high,
+        group: 'scheduled',
+      );
 
   /// "Leave now" passed and the driver is not on the way.
   static IslandMessage headToPickup(String time) => IslandMessage(

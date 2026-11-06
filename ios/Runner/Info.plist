@@ -11,7 +11,7 @@
     <key>NSAppleMusicUsageDescription</key>
     <string>Movera Driver does not use your media library. The document picker it uses can offer it, and it is used only if you choose a file from it yourself.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Movera Driver uses the microphone only when you choose to record audio during a Ride check. The recording is saved only on this phone.</string>
+    <string>Movera Driver uses the microphone for in-app calls with your rider, and when you choose to record audio during a Ride check. Calls are not recorded; a Ride check recording is saved only on this phone.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Movera Driver uses your location while the app is open to show nearby trips and navigation, and while you are online, also with the phone locked, so you keep getting trips.</string>
 	<key>UIBackgroundModes</key>

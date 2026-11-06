@@ -1,0 +1,418 @@
+{
+  "reservation": "Reservation",
+  "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
+  "@leaveNowForPickupTimePickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "reservationTime": "Reservation · {time}",
+  "@reservationTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "schedRidesHidden": "{count, plural, =1{1 ride hidden} other{{count} rides hidden}}",
+  "@schedRidesHidden": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "schedClashBody": "It clashes with your {time} pickup: not enough time to get there.",
+  "@schedClashBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedAvailableToday": "Available today",
+  "schedUpcoming": "Upcoming",
+  "schedPreviewNotBinding": "Preview — not binding. Decisions last until the app restarts.",
+  "schedNoneYet": "No scheduled rides yet. Reservations from Movera will show up here.",
+  "schedAcceptedPickupAt": "Accepted · pickup {time}",
+  "@schedAcceptedPickupAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedReservationCancelled": "Reservation cancelled",
+  "schedPlanAhead": "Plan ahead and choose your next trip",
+  "schedRequestsTab": "Requests",
+  "schedAcceptedTab": "Accepted",
+  "schedSeedTime": "{day}, {time}",
+  "@schedSeedTime": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedPickupTomorrowAt": "Pickup tomorrow at {time}",
+  "@schedPickupTomorrowAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedBackupNote": "Your {time} pickup was given to a backup driver.",
+  "@schedBackupNote": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSampleReservation": "Sample reservation",
+  "schedReservationDetails": "Reservation details",
+  "schedIllustrativeRoute": "Illustrative route — sample data",
+  "schedViewRoute": "View reservation route",
+  "schedDemoAccepted": "Demo accepted",
+  "schedAvailable": "Available",
+  "schedBeforeThisRide": "Before this ride",
+  "schedBeReadyEarly": "Be ready early",
+  "schedGoOnlineMinBefore": "Go online {minutes} min before pickup so the app can guide you in time.",
+  "@schedGoOnlineMinBefore": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "schedTripsOnTheWay": "Trips on the way",
+  "schedOnlyTripsToward": "Before pickup you only get trips that head toward it and leave time to get there.",
+  "schedStillReceiveRides": "You can still receive suitable rides before the scheduled pickup.",
+  "schedPlansChanged": "Plans changed?",
+  "schedDriversNeverPay": "{line} Drivers never pay to cancel.",
+  "@schedDriversNeverPay": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLocalPreviewCancel": "This is a local preview. Cancelling removes the sample reservation until the app restarts.",
+  "schedReservedForYou": "Reserved for you",
+  "schedKeepInAccepted": "We’ll keep this ride in your Accepted list. If you cancel, you’ll be asked for a reason before anything changes.",
+  "schedCancelReservation": "Cancel reservation",
+  "schedAcceptPrice": "Accept  •  {price}",
+  "@schedAcceptPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "schedCancelThisReservation": "Cancel this reservation?",
+  "schedReasonDoesntCount": "This reason doesn’t count against you.",
+  "schedRemovesSample": "This removes the sample reservation from this session. It does not cancel a real booking or change account access.",
+  "schedKeepReservation": "Keep reservation",
+  "schedFreeCancelHoursBefore": "Free cancel until {hours} h before pickup.",
+  "@schedFreeCancelHoursBefore": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLateCancelUnder": "Late cancel: under {hours} h to pickup.",
+  "@schedLateCancelUnder": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "schedFreeCancelUntil": "Free cancel until {time}.",
+  "@schedFreeCancelUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedRidesAreOff": "Scheduled rides are off",
+  "schedRidesOffUntil": "Scheduled rides off until {date}",
+  "@schedRidesOffUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "schedRidesPausedUntil": "Scheduled rides paused until {date}",
+  "@schedRidesPausedUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "schedOffInYourArea": "Movera paused new scheduled rides in your area. Rides you already accepted still go ahead.",
+  "schedTurnedOffByMovera": "Movera turned off Scheduled rides for your account. Contact support if you have questions.",
+  "schedLateCancelsInDays": "You had {count} late cancels in {days} days. Your accepted rides stay.",
+  "@schedLateCancelsInDays": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "schedNeverPayLateCounts": "You never pay to cancel, but this late cancel counts.",
+  "schedNeverPayUnderHours": "You never pay to cancel. Under {hours} h to pickup a cancel is late and counts toward a pause.",
+  "@schedNeverPayUnderHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLateCancelPauses": "This is a late cancel ({count} in {days} days). Scheduled rides pause until {date}.",
+  "@schedLateCancelPauses": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLateCancelCounts": "This is a late cancel and it counts. You never pay.",
+  "schedAcceptedBadge": "Accepted",
+  "remTitle": "Important reminders ({count})",
+  "@remTitle": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "remShow": "Show reminders",
+  "remHide": "Hide reminders",
+  "remBlocksOnlineLegend": "Red: you can't go online until it is fixed",
+  "remDocOfCar": "{document} · {car}",
+  "@remDocOfCar": {
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "car": {
+        "type": "Object"
+      }
+    }
+  },
+  "remDocumentNeeded": "{plural, select, yes{{document} are missing} other{{document} is missing}}",
+  "@remDocumentNeeded": {
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "remDocumentRejected": "{plural, select, yes{{document} were rejected} other{{document} was rejected}}",
+  "@remDocumentRejected": {
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "remDocumentExpired": "{plural, select, yes{{document} have expired} other{{document} has expired}}",
+  "@remDocumentExpired": {
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "remDocumentExpiring": "{plural, select, yes{{document} expire {when}} other{{document} expires {when}}}",
+  "@remDocumentExpiring": {
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "when": {
+        "type": "Object"
+      },
+      "plural": {
+        "type": "String"
+      }
+    }
+  },
+  "remDocumentInReview": "{document}: Movera is checking it",
+  "@remDocumentInReview": {
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      }
+    }
+  },
+  "remCantGoOnlineUntil": "You can't go online until Movera approves the new one.",
+  "remAccountNotActive": "Movera is checking your account",
+  "remAccountNotActiveDetail": "Everything is sent. You can go online when Movera activates your account.",
+  "remFleetNotApproved": "Movera has not approved your fleet yet",
+  "remFleetNoApprovedCar": "Your fleet has no approved car yet",
+  "remFleetNoApprovedCarOwner": "Add a car or finish its documents in My fleet. Drivers can go online once a car is approved.",
+  "remFleetNoApprovedCarMember": "You can go online when your fleet owner has an approved car for you to choose.",
+  "remNoVehicle": "Choose a car from your fleet before you go online",
+  "remUpload": "Upload",
+  "remUploadNew": "Upload new",
+  "remOpen": "Open",
+  "remCantGoOnline": "You can't go online yet: {reason}",
+  "@remCantGoOnline": {
+    "placeholders": {
+      "reason": {
+        "type": "Object"
+      }
+    }
+  },
+  "remNoFleet": "Join a fleet to drive – ask your fleet owner for the Movera code, his name and e-mail",
+  "@remNoFleet": {
+    "description": "Contract v0.18.5 reminders.texts.no_fleet (G2-D5.6)."
+  },
+  "remActionJoinFleet": "Join a fleet",
+  "@remActionJoinFleet": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "remActionStartCompany": "Start my own company",
+  "@remActionStartCompany": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "remNoVehicleNotActive": "Choose a car from your fleet",
+  "@remNoVehicleNotActive": {
+    "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "remFleetInvitation": "{fleet} invited you",
+  "@remFleetInvitation": {
+    "description": "Contract v0.18.5 reminders.kinds.fleet_invitation (G2-D5.6).",
+    "placeholders": {
+      "fleet": {
+        "type": "String"
+      }
+    }
+  },
+  "remActionAcceptInvitation": "Accept",
+  "@remActionAcceptInvitation": {
+    "description": "Contract v0.18.5 (G2-D5.6)."
+  },
+  "remActionDeclineInvitation": "Decline",
+  "@remActionDeclineInvitation": {
+    "description": "Contract v0.18.5 (G2-D5.6)."
+  },
+  "remRenewalInReview": "Your new one is being checked",
+  "@remRenewalInReview": {
+    "description": "Contract v0.18.5 reminders.renewal (G2-D1)."
+  },
+  "remRenewalRejected": "Your new one was rejected",
+  "@remRenewalRejected": {
+    "description": "Contract v0.18.5 reminders.renewal (G2-D1)."
+  },
+  "schedServerClash": "This ride is too close to another booked ride you have.",
+  "@schedServerClash": {
+    "description": "Contract v0.18.17: the server refused a booked ride that clashes with one the driver holds."
+  },
+  "schedKeepTitle": "Keep it at the new time?",
+  "schedKeepBody": "The rider changed the {oldTime} ride to {newTime}.",
+  "@schedKeepBody": {
+    "placeholders": {
+      "oldTime": {
+        "type": "String"
+      },
+      "newTime": {
+        "type": "String"
+      }
+    }
+  },
+  "schedKeepYes": "Yes, keep it",
+  "schedKeepNo": "No, give it back",
+  "schedHomeArea": "Set home area here",
+  "schedHomeAreaSaved": "Home area saved. Booked rides near it can come to you.",
+  "schedHomeAreaNoFix": "Turn on location first.",
+  "schedRideChanged": "This ride changed: pickup {time}, you get {price}. Check it and tap Accept again.",
+  "@schedRideChanged": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "schedGiveBackFailed": "Couldn't give the ride back. It is still yours. Try again.",
+  "schedKeptAt": "You kept the ride at {time}.",
+  "@schedKeptAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedGaveBack": "The ride went back to Booked rides.",
+  "schedKeepNewPrice": "New price for you: {price}",
+  "@schedKeepNewPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLeaveIn": "Start in {minutes} min",
+  "@schedLeaveIn": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLeaveNowTitle": "Start now towards the pickup",
+  "schedLeaveArrive": "Arrive {early} min before {time}.",
+  "@schedLeaveArrive": {
+    "placeholders": {
+      "early": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedBookedBadge": "Booked ride · {time}",
+  "@schedBookedBadge": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveNowTimeToDriveName": "Time to drive to pickup · {name}",
+  "@leaveNowTimeToDriveName": {"description": "v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).", "placeholders": {"name": {"type": "String"}}}
+}

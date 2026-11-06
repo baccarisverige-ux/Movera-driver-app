@@ -90,17 +90,13 @@ jobs:
               f'src="driver_map_camera.js?v={sha}"'))
           PY
 
-      # The live driver app (the test week's server) next to the demo, once
-      # the repository variable MOVERA_LIVE_API_URL names the server. Built
-      # first: the demo build below reuses build/web. Arrival keeps the real
-      # 100 m check here.
+      # Owner Demo Q2 (2026-11-04, "Remove now"): the public demo site
+      # (free-arrival demo define at the Pages root) is no longer built or
+      # published; only the live driver app at /live/ is. The old workflow is
+      # kept in the Rules repo (archive/demo/driver/.github/workflows/).
       - name: Build live Drider web
-        if: ${{ vars.MOVERA_LIVE_API_URL != '' }}
         env:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
-          # Owner 2026-11-03: the test numbers (numbers only) from the repository
-          # secret MOVERA_TEST_NUMBERS; empty -> the app says to ask an admin.
-          MOVERA_TEST_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
         run: |
           case "$LIVE_API" in https://*) ;; *) echo "::error::MOVERA_LIVE_API_URL must start with https://"; exit 1 ;; esac
           # Contract v0.16.0: crash reports name the pubspec version.
@@ -108,24 +104,23 @@ jobs:
           flutter build web --release --base-href "/Movera-driver-app/live/" \
             --dart-define=MOVERA_AUTH_REQUIRED=true \
             --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
-            --dart-define=MOVERA_APP_VERSION="$app_version" \
-            --dart-define=MOVERA_TEST_NUMBERS="$MOVERA_TEST_NUMBERS"
-          rm -rf "$RUNNER_TEMP/drider-live"
-          mv build/web "$RUNNER_TEMP/drider-live"
+            --dart-define=MOVERA_APP_VERSION="$app_version"
 
-      # The Pages site is the owner's demo: arrival works away from the
-      # demo pickup. Store and other release builds keep the 100 m check (D-12).
-      - name: Build Drider web
-        run: flutter build web --release --base-href "/Movera-driver-app/" --dart-define=MOVERA_DEMO_ARRIVAL=true
-
-      - name: Add the live build under /live/
-        if: ${{ vars.MOVERA_LIVE_API_URL != '' }}
-        run: cp -a "$RUNNER_TEMP/drider-live" build/web/live
+      # The site root (where the demo used to be) and unknown paths open the
+      # live app.
+      - name: Assemble the site
+        run: |
+          rm -rf "$RUNNER_TEMP/site"
+          mkdir -p "$RUNNER_TEMP/site"
+          cp -a build/web "$RUNNER_TEMP/site/live"
+          for page in index.html 404.html; do
+            printf '%s\n' '<!doctype html><meta http-equiv="refresh" content="0;url=/Movera-driver-app/live/"><link rel="canonical" href="/Movera-driver-app/live/"><script>location.replace("/Movera-driver-app/live/")</script>' > "$RUNNER_TEMP/site/$page"
+          done
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/web
+          path: ${{ runner.temp }}/site
 
   deploy:
     permissions:
