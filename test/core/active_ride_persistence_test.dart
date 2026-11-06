@@ -255,9 +255,13 @@ void main() async {
   test(
     'active ride map is not rebuilt from the live vehicle pose ticker',
     () async {
-      final source = File(
-        'lib/presentation/driver/accept ride/accept_ride.dart',
-      ).readAsStringSync();
+      // The trip screen library: accept_ride.dart and its part files.
+      final source = Directory('lib/presentation/driver/accept ride')
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.split('/').last.startsWith('accept_ride'))
+          .map((f) => f.readAsStringSync())
+          .join('\n');
       expect(source.contains('valueListenable: _vehicle.pose'), isFalse);
       expect(source.contains('_ThrottledVehicleMap'), isTrue);
       expect(source.contains("ValueKey<String>('active-ride-map')"), isTrue);
