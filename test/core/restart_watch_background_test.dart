@@ -23,6 +23,7 @@ void main() {
     final now = DateTime.utc(2026, 11, 6, 4, 59, 14);
     final marker = jsonEncode({
       'v': 1,
+      'app': 'driver',
       'id': 'abcd1234',
       'start': now.subtract(const Duration(minutes: 3)).millisecondsSinceEpoch,
       'beat': now.subtract(const Duration(seconds: 8)).millisecondsSinceEpoch,
@@ -111,6 +112,7 @@ void main() {
     final now = DateTime.utc(2026, 11, 7, 14);
     String marker(Duration ago, {required bool visible}) => jsonEncode({
       'v': 1,
+      'app': 'driver',
       'id': 'abcd1234',
       'start': now
           .subtract(ago + const Duration(minutes: 1))
