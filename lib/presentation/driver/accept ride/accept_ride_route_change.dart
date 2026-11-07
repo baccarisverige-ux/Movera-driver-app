@@ -96,6 +96,8 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     if (left > _stopCursor) {
       _stopCursor = left;
       _paidStopWait = false;
+      // S6 I-4: saved at once, so the next restart starts past it too.
+      unawaited(_rideLifecycle.persistNow());
     }
     _adoptServerStopArrival(live);
   }
