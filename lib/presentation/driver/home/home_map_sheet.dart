@@ -1192,6 +1192,7 @@ extension _HomeMapSheet on _DriverHomeState {
       });
     });
     _scheduleLastTripSettle();
+    _HomeMapIsland(this)._refreshLastTripTip(auto: true);
   }
 
   void _onLastTripChanged() {

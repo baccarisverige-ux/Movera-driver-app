@@ -31,6 +31,7 @@ String _marker({
   bool clean = false,
 }) => jsonEncode({
   'v': 1,
+  'app': 'driver',
   'id': 'abcd0123',
   'start': start.millisecondsSinceEpoch,
   'beat': beat.millisecondsSinceEpoch,

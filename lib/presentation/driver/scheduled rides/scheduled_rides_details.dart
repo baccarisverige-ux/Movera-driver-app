@@ -576,7 +576,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
           _PlanRow(
             icon: AppAssets.solarCalendarMinimalistic,
             title: tr.schedPlansChanged,
-            body: ride.accepted
+            // W1: the preview words are the demo's only, never live.
+            body: ride.accepted || LiveDriverServices.active
                 ? tr.schedDriversNeverPay(_freeCancelLine(ride.route))
                 : tr.schedLocalPreviewCancel,
           ),

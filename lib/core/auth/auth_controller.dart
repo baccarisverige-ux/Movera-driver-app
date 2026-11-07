@@ -107,6 +107,9 @@ class AuthController {
 
   /// Ends the session on the server and on this device.
   Future<void> signOut() async {
+    // v0.18.49 §71 (owner Q8): the server first; a refusal (a current trip,
+    // [SignOutOnTrip]) changes nothing on this phone.
+    await _auth.signOut();
     // Contract v0.18.5 `auth.signedOut.ownSignOut`: no message after the
     // driver's own Sign out.
     SignedOutNotice.clear();
@@ -117,6 +120,5 @@ class AuthController {
     providerLink = null;
     signedInPhone = null;
     onSignedOut?.call();
-    await _auth.signOut();
   }
 }
