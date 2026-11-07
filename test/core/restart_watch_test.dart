@@ -82,11 +82,18 @@ void main() {
     ]);
   });
 
-  test('clean, hidden, old or missing previous marker: no report', () {
+  // Q5 (owner 2026-11-07, "Report background too"): a hidden page that
+  // died is reported too, marked background (restart_watch_background_test).
+  test('clean, old or missing previous marker: no report', () {
     for (final previous in <String?>[
       _marker(start: start, beat: lastBeat, clean: true),
-      _marker(start: start, beat: lastBeat, visible: false),
+      _marker(start: start, beat: lastBeat, visible: false, clean: true),
       _marker(start: start, beat: now.subtract(const Duration(minutes: 11))),
+      _marker(
+        start: start,
+        beat: now.subtract(const Duration(minutes: 11)),
+        visible: false,
+      ),
       null,
       'not json',
     ]) {
@@ -95,6 +102,18 @@ void main() {
     }
 
     expect(reports, isEmpty);
+  });
+
+  test('previous session unclean and hidden at its last beat: one report '
+      'marked background', () {
+    store.value = _marker(start: start, beat: lastBeat, visible: false);
+
+    watch().start(visible: true, periodic: false);
+
+    expect(reports, [
+      'restart after background: last screen /active-ride (trip stage '
+          'driverAssigned), 3 s away, uptime 95 s',
+    ]);
   });
 
   test('the new marker is written at start and pagehide marks it clean', () {

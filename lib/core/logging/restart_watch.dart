@@ -27,9 +27,13 @@ typedef RestartReport = void Function(String message);
 /// screen (route name) and trip stage, whether the page was visible, and a
 /// `clean` flag set on `pagehide`. No name, number or coordinate is kept.
 ///
-/// On the next start, a marker that was not clean, whose page was visible
-/// at its last beat, and whose last beat is less than [recent] old means
-/// the page died while on screen: one `error` report says so. A lost WebGL
+/// On the next start, a marker that was not clean and whose last beat is
+/// less than [recent] old means the page died: one `error` report says so.
+/// Visible at its last beat, it died on screen ("unexpected restart: …").
+/// Q5 (owner 2026-11-07, "Report background too"): hidden at its last beat
+/// (the driver had switched to another app and iOS killed the page), the
+/// report says "restart after background: …" with the time away, counted
+/// from when the page was hidden (`hidden` in the marker). A lost WebGL
 /// context is reported once per session the same way.
 class RestartWatch {
   RestartWatch({
@@ -80,6 +84,7 @@ class RestartWatch {
 
   late DateTime _startedAt;
   bool _visible = true;
+  DateTime? _hiddenAt;
   bool _clean = false;
   bool _lostReported = false;
   Timer? _timer;
@@ -98,6 +103,7 @@ class RestartWatch {
   void start({required bool visible, bool periodic = true}) {
     _startedAt = _clock();
     _visible = visible;
+    _hiddenAt = visible ? null : _startedAt;
     String? previous;
     try {
       previous = store.read();
@@ -119,6 +125,7 @@ class RestartWatch {
       'screen': _screen(),
       'stage': _stage(),
       'visible': _visible,
+      'hidden': ?_hiddenAt?.millisecondsSinceEpoch,
       'clean': _clean,
     };
     try {
@@ -132,6 +139,7 @@ class RestartWatch {
   /// `visibilitychange`.
   void setVisible(bool visible) {
     _visible = visible;
+    _hiddenAt = visible ? null : (_hiddenAt ?? _clock());
     beat();
   }
 
@@ -145,6 +153,7 @@ class RestartWatch {
   void pageShow() {
     _clean = false;
     _visible = true;
+    _hiddenAt = null;
     beat();
   }
 
@@ -177,7 +186,7 @@ class RestartWatch {
   }
 
   /// The report for the marker [previous] left at [now], or null when that
-  /// session ended cleanly, was hidden, is too old or cannot be read.
+  /// session ended cleanly, is too old or cannot be read.
   static String? unexpectedRestart(
     String? previous,
     DateTime now, {
@@ -194,12 +203,21 @@ class RestartWatch {
     final beat = decoded['beat'];
     final start = decoded['start'];
     if (beat is! int || start is! int) return null;
-    if (decoded['clean'] == true || decoded['visible'] != true) return null;
+    if (decoded['clean'] == true) return null;
     final since = now.millisecondsSinceEpoch - beat;
     if (since < 0 || since >= recent.inMilliseconds) return null;
     final screen = CrashReports.cleanScreen(decoded['screen']);
     final stage = CrashReports.cleanScreen(decoded['stage']);
     final uptime = ((beat - start) / 1000).round();
+    if (decoded['visible'] != true) {
+      final hidden = decoded['hidden'];
+      final away =
+          now.millisecondsSinceEpoch -
+          (hidden is int && hidden <= beat ? hidden : beat);
+      return 'restart after background: last screen '
+          '${_describe(screen, stage)}, ${(away / 1000).round()} s away, '
+          'uptime $uptime s';
+    }
     return 'unexpected restart: last screen ${_describe(screen, stage)}, '
         '${(since / 1000).round()} s after last beat, uptime $uptime s';
   }

@@ -44,6 +44,7 @@ const _allowed = <String, Set<String>>{
     'flutter-view, flt-glass-pane',
     'webgl context lost: last screen , uptime s',
     'unexpected restart: last screen , s after last beat, uptime s',
+    'restart after background: last screen , s away, uptime s',
   },
   'CSS, never shown (lib/core/platform/safe_area_insets_web.dart)': {
     'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) '
