@@ -2446,7 +2446,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g6RuleAirport => 'Prise en charge à l’aéroport';
 
   @override
-  String get g6RuleScheduled => 'Course réservée';
+  String get g6RuleScheduled => 'Course programmée';
 
   @override
   String get g6RuleEvent => 'Prise en charge à un événement';
@@ -4976,7 +4976,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get schedServerClash =>
-      'Cette course est trop proche d\'une autre course réservée que vous avez.';
+      'Cette course est trop proche d\'une autre course programmée que vous avez.';
 
   @override
   String get schedKeepTitle => 'La garder à la nouvelle heure ?';
@@ -4997,7 +4997,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get schedHomeAreaSaved =>
-      'Zone de domicile enregistrée. Les courses réservées proches peuvent vous être proposées.';
+      'Zone de domicile enregistrée. Les courses programmées proches peuvent vous être proposées.';
 
   @override
   String get schedHomeAreaNoFix => 'Activez d\'abord la localisation.';
@@ -5017,7 +5017,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get schedGaveBack => 'La course est retournée dans Courses réservées.';
+  String get schedGaveBack =>
+      'La course est retournée dans Courses programmées.';
 
   @override
   String schedKeepNewPrice(String price) {
@@ -5039,7 +5040,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String schedBookedBadge(String time) {
-    return 'Course réservée · $time';
+    return 'Course programmée · $time';
   }
 
   @override
@@ -6971,7 +6972,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextBookedRideAt(String time) {
-    return 'Suivante : course réservée à $time';
+    return 'Suivante : course programmée à $time';
   }
 
   @override
@@ -6993,7 +6994,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextTripPopupBooked(String time, String pickup) {
-    return 'Course réservée à $time · $pickup. Allez à la prise en charge maintenant.';
+    return 'Course programmée à $time · $pickup. Allez à la prise en charge maintenant.';
   }
 
   @override
