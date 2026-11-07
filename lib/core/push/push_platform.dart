@@ -22,12 +22,15 @@ class PushOpen {
     return id == null || id.isEmpty ? null : id;
   }
 
-  static final RegExp _tripLink = RegExp(r'^movera-driver://trips/([^/?#]+)$');
+  static final RegExp _tripLink = RegExp(r'^movera-driver://trips?/([^/?#]+)$');
 
-  /// Contract v0.18.14 `onTrip.routeChange.driverPush` (kind
-  /// `route_change`, bell false): the trip of a route-change push
-  /// (`movera-driver://trips/{tripId}`), else null. Not a bell notice: the
-  /// tap brings back the trip screen, where the change is asked.
+  /// The trip of a trip push, else null. The tap brings back the trip
+  /// screen (no bell list over it):
+  /// - contract v0.18.14 `onTrip.routeChange.driverPush` (kind
+  ///   `route_change`, bell false): `movera-driver://trips/{tripId}`;
+  /// - finder A1 (2026-11-07): `onTrip.rideCheck.push` (kind `ride_check`,
+  ///   bell false) and `pickupWaiting.headingCheck.notHeadingNotice` use
+  ///   the singular `movera-driver://trip/{tripId}`.
   String? get routeChangeTripId {
     final match = _tripLink.firstMatch(deepLink?.trim() ?? '');
     final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
