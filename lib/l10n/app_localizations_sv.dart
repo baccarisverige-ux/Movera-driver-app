@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6871,6 +6870,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String nextTripPopupBooked(String time, String pickup) {
     return 'Bokad resa kl. $time · $pickup. Kör till upphämtningen nu.';
   }
+
+  @override
+  String get waitingBeforePickup => 'Före upphämtningstiden';
 
   @override
   String get docInsuranceLetter => 'Försäkringsbrev';

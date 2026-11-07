@@ -46,7 +46,13 @@ class TripLiveDetails {
       rider: TripRiderSummary.tryParse(json['rider']),
       terms: TripTerms.tryParse(json['terms']),
       eta: TripEta.tryParse(json['eta']),
-      waiting: TripWaitingNow.tryParse(json['waiting']),
+      waiting: TripWaitingNow.tryParse(
+        json['waiting'],
+        scheduledAt:
+            json['kind'] == 'scheduled' && json['scheduledAt'] is String
+            ? DateTime.tryParse(json['scheduledAt'] as String)?.toUtc()
+            : null,
+      ),
       cancellation: TripCancellationInfo.tryParse(json['cancellation']),
       pickup: TripPlace.tryParse(json['pickup']),
       rideCheck: TripRideCheck.tryParse(json['rideCheck']),
@@ -359,6 +365,7 @@ class TripEta {
 class TripWaitingNow {
   const TripWaitingNow({
     this.arrivedAt,
+    this.waitFrom,
     this.freeUntil,
     this.noShowAt,
     this.noShowFee,
@@ -369,15 +376,31 @@ class TripWaitingNow {
     this.alerts = const <String>{},
   });
 
-  static TripWaitingNow? tryParse(Object? json) {
+  /// [scheduledAt]: a booked ride's pickup time (`kind` scheduled), for the
+  /// `waitFrom` an older server leaves out (contract v0.18.51 §73).
+  static TripWaitingNow? tryParse(Object? json, {DateTime? scheduledAt}) {
     if (json is! Map) return null;
     final arrived = json['arrivedAt'];
     final seconds = json['chargedSecondsNow'];
     DateTime? at(String key) => json[key] is String
         ? DateTime.tryParse(json[key] as String)?.toUtc()
         : null;
+    final arrivedAt = arrived is String
+        ? DateTime.tryParse(arrived)?.toUtc()
+        : null;
+    // v0.18.51 §73 `waiting.waitFrom`; an older server without it: the
+    // arrival for a live ride, the later of arrival and pickup time for a
+    // booked ride.
+    final waitFrom =
+        at('waitFrom') ??
+        (arrivedAt != null &&
+                scheduledAt != null &&
+                scheduledAt.isAfter(arrivedAt)
+            ? scheduledAt
+            : arrivedAt);
     return TripWaitingNow(
-      arrivedAt: arrived is String ? DateTime.tryParse(arrived)?.toUtc() : null,
+      arrivedAt: arrivedAt,
+      waitFrom: waitFrom,
       freeUntil: at('freeUntil'),
       noShowAt: at('noShowAt'),
       noShowFee: _money(json['noShowFee']),
@@ -409,6 +432,11 @@ class TripWaitingNow {
   final Set<String> alerts;
 
   final DateTime? arrivedAt;
+
+  /// Contract v0.18.51 §73: when the free waiting starts (live: [arrivedAt];
+  /// booked: the later of [arrivedAt] and the pickup time). Before it the
+  /// waiting clock counts down to the pickup time.
+  final DateTime? waitFrom;
 
   /// The server's moments: paid waiting starts at [freeUntil]; the driver
   /// may mark a no-show from [noShowAt] (a reservation: its booked time).

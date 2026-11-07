@@ -1946,6 +1946,7 @@
   "nextTripPopupTitle": "Din nästa resa",
   "nextTripPopupLive": "{rider} väntar vid {pickup}. Kör dit nu.",
   "nextTripPopupBooked": "Bokad resa kl. {time} · {pickup}. Kör till upphämtningen nu.",
+  "waitingBeforePickup": "Före upphämtningstiden",
   "docInsuranceLetter": "Försäkringsbrev",
   "docTaxiDriverLicense": "Taxiförarlegitimation",
   "docTaxiLicenseShort": "Taxilegitimation",

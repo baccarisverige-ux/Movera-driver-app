@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/ride/waiting_rules.dart';
 
 import 'dart:async';
 
@@ -179,9 +180,22 @@ class TripIslandController extends ChangeNotifier {
       final seconds = i.paidWait
           ? (i.paidSeconds ?? i.waitingSeconds!)
           : i.waitingSeconds!;
+      // v0.18.51 §73: a booked ride reached before its pickup time counts
+      // down to it first: "−12:00" · "Before the pickup time".
+      final before = i.waitingAtStop || i.paidWait
+          ? 0
+          : WaitingTerms.active.beforeSeconds;
+      if (seconds < before) {
+        return TripIslandFace(
+          TripIslandKind.waitingTimer,
+          '\u2212${clock(before - seconds)}',
+          tr.waitingBeforePickup,
+          'waiting-timer-before-pickup',
+        );
+      }
       return TripIslandFace(
         TripIslandKind.waitingTimer,
-        clock(seconds),
+        clock(seconds - before),
         i.waitingAtStop
             ? tr.waitingAtStop
             : i.paidWait
