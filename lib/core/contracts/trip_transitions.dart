@@ -129,7 +129,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.18.50';
+  static const String contractVersion = '0.18.51';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [
@@ -262,9 +262,24 @@ abstract final class TripTransitions {
       TripStatus.accepted,
       TripStatus.driverToPickup,
     ], TripStatus.noShow),
+    // v0.18.51 §73: `accepted` split by kind; L6: a booked ride an admin
+    // reassigns goes back to the list, as Reservations › Unassign.
+    TripTransition(
+      TripCommand.reassign,
+      TripActor.admin,
+      [TripStatus.accepted],
+      TripStatus.searching,
+      when: TripKind.live,
+    ),
+    TripTransition(
+      TripCommand.reassign,
+      TripActor.admin,
+      [TripStatus.accepted],
+      TripStatus.requested,
+      when: TripKind.scheduled,
+    ),
     TripTransition(TripCommand.reassign, TripActor.admin, [
       TripStatus.offered,
-      TripStatus.accepted,
       TripStatus.driverToPickup,
       TripStatus.arrived,
     ], TripStatus.searching),
