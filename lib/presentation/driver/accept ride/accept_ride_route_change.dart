@@ -139,6 +139,9 @@ extension _AcceptRideRouteChange on _AcceptRideState {
 
   void _openServerRideCheck(TripRideCheck check) {
     if (!mounted || _rideLifecycle.terminal || _rideCheck.active) return;
+    // S6 I-1 (safety): the driver must see it, also when a menu page,
+    // the chat or the side menu covers the trip.
+    _AcceptRideTrip(this)._navigatorAtTripRoute();
     final (trigger, reason) = serverRideCheckReason(
       check,
       RideCheckAdminConfig.current,
@@ -156,6 +159,29 @@ extension _AcceptRideRouteChange on _AcceptRideState {
         serverCheckId: check.checkId,
       ),
     );
+  }
+
+  /// S6 I-1 / S8 R2: a tap on this trip's push (Ride Check, route
+  /// change, not heading to the rider) brings the trip screen back from
+  /// under what covers it and reads the trip again.
+  void _bringTripToFront() {
+    if (!mounted) return;
+    _AcceptRideTrip(this)._navigatorAtTripRoute();
+    unawaited(_AcceptRideTrip(this)._resyncTrip());
+    unawaited(_readTripAfterPush());
+  }
+
+  /// The push may be about something the stream has not brought (a lost
+  /// event on a half-open stream): the trip is read once, so a Ride Check
+  /// or a route change it carries opens now.
+  Future<void> _readTripAfterPush() async {
+    final trips = LiveDriverServices.instance?.trips;
+    if (trips == null) return;
+    final projection = await trips.refresh(widget.tripId);
+    if (!mounted || projection == null || _rideLifecycle.terminal) return;
+    _AcceptRideTrip(
+      this,
+    )._applyLive(TripLiveDetails.fromProjection(projection));
   }
 
   /// The pending change this phone has not answered yet, while time is left.

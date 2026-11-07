@@ -10,6 +10,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/location/location_freshness.dart';
 import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/ride/open_trip_screens.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 
 import 'dart:async';
@@ -752,6 +753,7 @@ class _AcceptRideState extends State<AcceptRide>
       _waitSeconds += math.max(0, elapsed);
     }
     _AcceptRideRouteChange(this)._restoreServerStops();
+    OpenTripScreens.add(widget.tripId, _bringToFront);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.sessionController?.beginTrip(widget.tripId);
@@ -849,8 +851,14 @@ class _AcceptRideState extends State<AcceptRide>
   @override
   void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
 
+  /// S6 I-1: a trip push tap brings this screen back on top.
+  late final VoidCallback _bringToFront = _AcceptRideRouteChange(
+    this,
+  )._bringTripToFront;
+
   @override
   void dispose() {
+    OpenTripScreens.remove(widget.tripId, _bringToFront);
     driverRouteObserver.unsubscribe(this);
     driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
