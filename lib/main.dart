@@ -6,6 +6,7 @@ import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
 import 'package:movera/core/logging/crash_reports.dart';
+import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 import 'package:flutter/material.dart';
@@ -203,6 +204,15 @@ class _MoveraAppState extends State<MoveraApp> {
         next: DriverLog.sink,
       );
       DriverLog.sink = reports.call;
+      // Owner 2026-11-07 ("5. Mouchard redémarrage"): proof of a page
+      // that iOS restarts from zero (live web builds only).
+      RestartWatch.instance = startRestartWatch(
+        report: (message) => reports.report(
+          message,
+          StackTrace.empty,
+          kind: CrashReports.kindError,
+        ),
+      );
     }
     _auth = AuthController(
       repository: AuthRepository(api: _api, tokens: _tokens),
