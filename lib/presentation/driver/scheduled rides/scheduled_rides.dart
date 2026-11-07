@@ -315,6 +315,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   }
 
   Future<void> _openRideDetails(_ScheduledRide ride) async {
+    final session = ScheduledRideStore._session;
     final action = await pushSingle<_ScheduledRideAction>(
       context,
       MaterialPageRoute(
@@ -329,7 +330,10 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (action == _ScheduledRideAction.accepted) {
       // W1 (2026-11-07): the server's list may have been read again while
       // the details were open (new row objects): the same booking by id.
-      ride = ScheduledRideStore._sameRequest(ride) ?? ride;
+      // Not across a session reset (another driver's list).
+      if (session == ScheduledRideStore._session) {
+        ride = ScheduledRideStore._sameRequest(ride) ?? ride;
+      }
       // The request may have been answered on Home, or replaced by a new
       // session while this details route was open. Only its current owner can act.
       if (!_requests.contains(ride)) {
@@ -1330,7 +1334,12 @@ class ScheduledRideStore {
     _changed();
   }
 
+  /// W1: counts [reset]s, so a details screen opened before one does not
+  /// act on the new session's list.
+  static int _session = 0;
+
   static void reset() {
+    _session++;
     _requests
       ..clear()
       ..addAll(_seedRequests());
