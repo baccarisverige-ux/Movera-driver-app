@@ -72,8 +72,8 @@ void main() {
     ).start(visible: true, periodic: false);
 
     expect(reports, [
-      'restart after background: last screen /active-ride (trip stage '
-          'driverToPickup), 42 s away, uptime 62 s',
+      'unexpected restart (background): last screen /active-ride (trip '
+          'stage driverToPickup), away 42 s, 40 s after last beat, uptime 62 s',
     ]);
   });
 
@@ -102,8 +102,41 @@ void main() {
       clock: () => clock,
     ).start(visible: true, periodic: false);
     expect(reports, [
-      'unexpected restart: last screen /home, 3 s after last beat, '
-          'uptime 20 s',
+      'unexpected restart (on screen): last screen /home, 3 s after last '
+          'beat, uptime 20 s',
     ]);
+  });
+
+  test('limits: on screen 10 min, background up to 2 hours (owner)', () {
+    final now = DateTime.utc(2026, 11, 7, 14);
+    String marker(Duration ago, {required bool visible}) => jsonEncode({
+      'v': 1,
+      'id': 'abcd1234',
+      'start': now
+          .subtract(ago + const Duration(minutes: 1))
+          .millisecondsSinceEpoch,
+      'beat': now.subtract(ago).millisecondsSinceEpoch,
+      'screen': '/home',
+      'visible': visible,
+      'clean': false,
+    });
+    const m11 = Duration(minutes: 11), m119 = Duration(minutes: 119);
+    const m121 = Duration(minutes: 121);
+    expect(
+      RestartWatch.unexpectedRestart(marker(m11, visible: true), now),
+      isNull,
+    );
+    expect(
+      RestartWatch.unexpectedRestart(marker(m11, visible: false), now),
+      startsWith('unexpected restart (background)'),
+    );
+    expect(
+      RestartWatch.unexpectedRestart(marker(m119, visible: false), now),
+      isNotNull,
+    );
+    expect(
+      RestartWatch.unexpectedRestart(marker(m121, visible: false), now),
+      isNull,
+    );
   });
 }

@@ -77,8 +77,8 @@ void main() {
     watch().start(visible: true, periodic: false);
 
     expect(reports, [
-      'unexpected restart: last screen /active-ride (trip stage '
-          'driverAssigned), 3 s after last beat, uptime 95 s',
+      'unexpected restart (on screen): last screen /active-ride (trip '
+          'stage driverAssigned), 3 s after last beat, uptime 95 s',
     ]);
   });
 
@@ -91,7 +91,7 @@ void main() {
       _marker(start: start, beat: now.subtract(const Duration(minutes: 11))),
       _marker(
         start: start,
-        beat: now.subtract(const Duration(minutes: 11)),
+        beat: now.subtract(const Duration(minutes: 121)),
         visible: false,
       ),
       null,
@@ -105,14 +105,14 @@ void main() {
   });
 
   test('previous session unclean and hidden at its last beat: one report '
-      'marked background', () {
+      'marked background, also after 11 min (background limit 2 h)', () {
     store.value = _marker(start: start, beat: lastBeat, visible: false);
 
     watch().start(visible: true, periodic: false);
 
     expect(reports, [
-      'restart after background: last screen /active-ride (trip stage '
-          'driverAssigned), 3 s away, uptime 95 s',
+      'unexpected restart (background): last screen /active-ride (trip '
+          'stage driverAssigned), away 3 s, 3 s after last beat, uptime 95 s',
     ]);
   });
 
@@ -191,8 +191,8 @@ void main() {
     expect(sent.single['app'], 'driver');
     expect(
       sent.single['error'],
-      'unexpected restart: last screen /active-ride, 3 s after last beat, '
-      'uptime 95 s',
+      'unexpected restart (on screen): last screen /active-ride, 3 s after '
+      'last beat, uptime 95 s',
     );
     sink.dispose();
   });

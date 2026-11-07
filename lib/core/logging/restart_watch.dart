@@ -27,14 +27,18 @@ typedef RestartReport = void Function(String message);
 /// screen (route name) and trip stage, whether the page was visible, and a
 /// `clean` flag set on `pagehide`. No name, number or coordinate is kept.
 ///
-/// On the next start, a marker that was not clean and whose last beat is
-/// less than [recent] old means the page died: one `error` report says so.
-/// Visible at its last beat, it died on screen ("unexpected restart: …").
-/// Q5 (owner 2026-11-07, "Report background too"): hidden at its last beat
-/// (the driver had switched to another app and iOS killed the page), the
-/// report says "restart after background: …" with the time away, counted
-/// from when the page was hidden (`hidden` in the marker). A lost WebGL
-/// context is reported once per session the same way.
+/// On the next start, a marker that was not clean means the page died: one
+/// `error` report says so, marked on screen or background (Q5, owner
+/// 2026-11-07, "Report background too"; same words as the rider app):
+/// * visible at its last beat, less than [recent] (10 min) ago:
+///   "unexpected restart (on screen): last screen …, N s after last beat,
+///   uptime U s";
+/// * hidden at its last beat (the driver switched to another app and iOS
+///   killed the page, no pagehide), less than [recentBackground] (2 h) ago:
+///   "unexpected restart (background): last screen …, away A s, N s after
+///   last beat, uptime U s", the time away counted from when the page was
+///   hidden (`hidden` in the marker).
+/// A lost WebGL context is reported once per session the same way.
 class RestartWatch {
   RestartWatch({
     required this.store,
@@ -43,6 +47,7 @@ class RestartWatch {
     DateTime Function()? clock,
     String? sessionId,
     this.recent = const Duration(minutes: 10),
+    this.recentBackground = const Duration(hours: 2),
   }) : _clock = clock ?? DateTime.now,
        sessionId = sessionId ?? _newId();
 
@@ -76,6 +81,9 @@ class RestartWatch {
   /// not given.
   final String? Function()? screen;
   final Duration recent;
+
+  /// The limit for a page that died hidden (owner: up to 2 hours).
+  final Duration recentBackground;
   final String sessionId;
   final DateTime Function() _clock;
 
@@ -108,7 +116,12 @@ class RestartWatch {
     try {
       previous = store.read();
     } catch (_) {}
-    final message = unexpectedRestart(previous, _startedAt, recent: recent);
+    final message = unexpectedRestart(
+      previous,
+      _startedAt,
+      recent: recent,
+      recentBackground: recentBackground,
+    );
     if (message != null) _send(message);
     beat();
     if (periodic) _timer = Timer.periodic(beatEvery, (_) => beat());
@@ -191,6 +204,7 @@ class RestartWatch {
     String? previous,
     DateTime now, {
     Duration recent = const Duration(minutes: 10),
+    Duration recentBackground = const Duration(hours: 2),
   }) {
     if (previous == null || previous.isEmpty) return null;
     Object? decoded;
@@ -204,21 +218,24 @@ class RestartWatch {
     final start = decoded['start'];
     if (beat is! int || start is! int) return null;
     if (decoded['clean'] == true) return null;
+    final visible = decoded['visible'] == true;
     final since = now.millisecondsSinceEpoch - beat;
-    if (since < 0 || since >= recent.inMilliseconds) return null;
-    final screen = CrashReports.cleanScreen(decoded['screen']);
-    final stage = CrashReports.cleanScreen(decoded['stage']);
+    final limit = visible ? recent : recentBackground;
+    if (since < 0 || since >= limit.inMilliseconds) return null;
+    final screen = _describe(
+      CrashReports.cleanScreen(decoded['screen']),
+      CrashReports.cleanScreen(decoded['stage']),
+    );
     final uptime = ((beat - start) / 1000).round();
-    if (decoded['visible'] != true) {
-      final hidden = decoded['hidden'];
-      final away =
-          now.millisecondsSinceEpoch -
-          (hidden is int && hidden <= beat ? hidden : beat);
-      return 'restart after background: last screen '
-          '${_describe(screen, stage)}, ${(away / 1000).round()} s away, '
+    final after = '${(since / 1000).round()} s after last beat';
+    if (visible) {
+      return 'unexpected restart (on screen): last screen $screen, $after, '
           'uptime $uptime s';
     }
-    return 'unexpected restart: last screen ${_describe(screen, stage)}, '
-        '${(since / 1000).round()} s after last beat, uptime $uptime s';
+    final hidden = decoded['hidden'];
+    final hiddenAt = hidden is int && hidden <= beat ? hidden : beat;
+    final away = ((now.millisecondsSinceEpoch - hiddenAt) / 1000).round();
+    return 'unexpected restart (background): last screen $screen, '
+        'away $away s, $after, uptime $uptime s';
   }
 }
