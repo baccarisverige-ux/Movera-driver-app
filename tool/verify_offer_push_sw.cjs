@@ -18,8 +18,11 @@ function scope({ visible = false, prefs = null } = {}) {
   const self = {
     registration: {
       scope: 'https://app.test/live/firebase-cloud-messaging-push-scope',
-      showNotification: (title, options) => { shown.push({ title, options }); return Promise.resolve(); },
-      getNotifications: () => Promise.resolve([]),
+      showNotification: (title, options) => { shown.push({ title, options, closed: false }); return Promise.resolve(); },
+      // Like the browser: the notices still in the tray with that tag.
+      getNotifications: ({ tag } = {}) => Promise.resolve(shown
+        .filter((n) => !n.closed && (tag === undefined || n.options.tag === tag))
+        .map((n) => ({ close: () => { n.closed = true; } }))),
     },
     clients: {
       matchAll: () => Promise.resolve(visible ? [{ url: 'https://app.test/live/#/', visibilityState: 'visible' }] : [{ url: 'https://app.test/live/#/', visibilityState: 'hidden' }]),
@@ -97,8 +100,9 @@ function offer(kind, extra = {}) {
   assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
   assert.equal(sw.shown[0].options.renotify, true);
 
-  // Run out: still shown (its own text), quiet, on the same tag, so it
-  // replaces the earlier notice of that offer instead of adding one.
+  // Run out: still shown (its own text, so iOS counts the push as shown),
+  // quiet, on the same tag, then closed at once (owner 2026-11-07): no
+  // "New trip for you" left in the tray for an offer that is gone.
   sw = scope({ prefs: { vibrate: true } });
   await sw.push(offer('exclusive', { expiresAt: new Date(Date.now() - 1000).toISOString() }));
   assert.equal(sw.shown.length, 1);
@@ -106,6 +110,12 @@ function offer(kind, extra = {}) {
   assert.equal(sw.shown[0].options.silent, true);
   assert.equal(sw.shown[0].options.vibrate, undefined);
   assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
+  assert.equal(sw.shown[0].closed, true, 'a run-out offer notice is closed at once');
+
+  // In time: it stays up (closed only when the offer runs out).
+  sw = scope({ prefs: { vibrate: true } });
+  await sw.push(offer('exclusive'));
+  assert.equal(sw.shown[0].closed, false, 'an open offer notice stays');
 
   // Run out while the app is on screen: still exactly one notice.
   sw = scope({ visible: true, prefs: { vibrate: true } });
@@ -119,6 +129,7 @@ function offer(kind, extra = {}) {
         sw = scope({ visible });
         await sw.push(offer(kind, { expiresAt: new Date(Date.now() + delta).toISOString() }));
         assert.equal(sw.shown.length, 1, `${kind} visible=${visible} delta=${delta}`);
+        assert.equal(sw.shown[0].closed, delta < 0, `${kind} visible=${visible} delta=${delta} closed`);
       }
     }
   }

@@ -16,7 +16,8 @@
 // WebKit counts a push that shows no notice as "silent" and removes the push
 // subscription after 3 of them (WebPushDaemonConstants.h maxSilentPushCount
 // = 3), after which a locked phone hears no more offers. A run-out offer is
-// shown quiet with its own text; every offer notice uses the tag
+// shown quiet with its own text and closed at once (owner 2026-11-07: it
+// counts as shown, no "New trip for you" is left); every offer notice uses the tag
 // movera-offer-<offerId> with renotify, so a later push of the same offer
 // replaces the earlier notice instead of adding one.
 'use strict';
@@ -59,9 +60,16 @@ function showOffer(d, title, body) {
     // The Vibrate setting is on unless the driver turned it off (owner 2026-10-31).
     if (loud && d.vibrate === 'true' && prefs.vibrate !== false) options.vibrate = VIBRATE_PATTERN;
     return self.registration.showNotification(title, options).then(function () {
-      return closeWhenGone(options.tag, expires);
+      return runOut ? closeNow(options.tag) : closeWhenGone(options.tag, expires);
     });
   });
+}
+
+// A run-out offer's notice is closed right after it was shown.
+function closeNow(tag) {
+  return self.registration.getNotifications({ tag: tag }).then(function (list) {
+    (list || []).forEach(function (n) { n.close(); });
+  }).catch(function () {});
 }
 
 // The offer's notice goes away when the offer runs out (best effort: only

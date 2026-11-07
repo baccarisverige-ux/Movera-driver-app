@@ -24,7 +24,7 @@ For store builds, later:
   expiresAt`). It is not a bell notice: a tap opens Home (`lib/core/push/offer_push.dart`), where the offer card shows
   while it is still open; a driver on a trip keeps his screen.
 - Web: `firebase-messaging-sw.js` shows a notice for EVERY push (Q1, owner 2026-11-07), also while the app is on
-  screen and after `expiresAt` (then quiet, with its own text). iOS WebKit removes the push subscription after 3
+  screen and after `expiresAt` (then quiet, with its own text, and closed at once). iOS WebKit removes the push subscription after 3
   pushes that show no notice (`maxSilentPushCount = 3`). Offer notices use the tag `movera-offer-<offerId>` with
   `renotify`, so a repeat replaces the earlier one.
   Exclusive and hand-sent (`sound: offer`) use the phone's notification sound and vibrate `[300, 150, 300]` when
