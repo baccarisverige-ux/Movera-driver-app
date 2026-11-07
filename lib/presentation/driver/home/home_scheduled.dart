@@ -375,13 +375,7 @@ extension _HomeScheduled on _DriverHomeState {
           _startScheduledTrip(ride);
         } else if (byHand) {
           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-            SnackBar(
-              content: Text(
-                refused == ReservationRefusal.network
-                    ? tr.islandNoConnection
-                    : liveTripErrorMessage(null),
-              ),
-            ),
+            SnackBar(content: Text(bookedStartRefusalMessage(refused))),
           );
         } else {
           _lateScheduled(ride);
