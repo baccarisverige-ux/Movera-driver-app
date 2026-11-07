@@ -10,10 +10,6 @@ import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
 
-/// The free minutes and the no-show time of the trip on screen (Q19/Q20).
-int get _graceSeconds => WaitingTerms.active.freeSeconds;
-int get _noShowSeconds => WaitingTerms.active.noShowSeconds;
-
 /// Opens the pickup-wait screen. It reads live seconds from the active trip.
 Future<void> showWaitingTimeSheet(
   BuildContext context, {
@@ -113,11 +109,16 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
   Widget build(BuildContext context) {
     final seconds = _seconds;
     final terms = widget.terms ?? WaitingTerms.active;
-    final phase = _WaitPhase.of(seconds);
+    // Supervisor finding B: the button, the phase and the cards follow the
+    // trip's own terms (anchored on the server's `waiting.noShowAt`), the
+    // same the trip screen checks a no-show tap against.
+    final graceSeconds = terms.freeSeconds;
+    final noShowSeconds = terms.noShowSeconds;
+    final phase = _WaitPhase.of(seconds, terms);
     final driverNoShow = widget.noShowDriverShare ?? terms.driverNoShowFee;
     final canNoShow =
         !widget.fullyPaid &&
-        seconds >= _noShowSeconds &&
+        seconds >= noShowSeconds &&
         widget.onNoShow != null;
     final paidSeconds = widget.fullyPaid
         ? seconds
@@ -165,7 +166,11 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   ),
                   child: Column(
                     children: [
-                      WaitingClock(seconds: seconds, diameter: 132),
+                      WaitingClock(
+                        seconds: seconds,
+                        diameter: 132,
+                        terms: terms,
+                      ),
                       const SizedBox(height: 14),
                       Text(
                         widget.fullyPaid ? tr.everyMinuteIsPaid : phase.title,
@@ -234,7 +239,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     title: tr.includedTime,
                     detail: tr.openingMinutesStayInsideFare,
                     value: '${terms.freeMinutes} min',
-                    state: seconds < _graceSeconds
+                    state: seconds < graceSeconds
                         ? _PhaseState.now
                         : _PhaseState.done,
                   ),
@@ -249,7 +254,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       ? tr.perMinuteFormattedMin(terms.perMinute.formatted)
                       : '',
                   tone: const Color(0xFF146B45),
-                  state: widget.fullyPaid || seconds >= _graceSeconds
+                  state: widget.fullyPaid || seconds >= graceSeconds
                       ? _PhaseState.now
                       : _PhaseState.later,
                 ),
@@ -263,7 +268,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     // The driver's share, not the rider's fee (G6 fix 5).
                     value: terms.pricesKnown ? driverNoShow.formatted : '',
                     tone: const Color(0xFF9E2B33),
-                    state: seconds < _noShowSeconds
+                    state: seconds < noShowSeconds
                         ? _PhaseState.later
                         : _PhaseState.now,
                   ),
@@ -575,11 +580,11 @@ class _WaitPhase {
   final String title;
   final String detail;
 
-  static _WaitPhase of(int seconds) {
-    if (seconds < _graceSeconds) {
+  static _WaitPhase of(int seconds, WaitingTerms terms) {
+    if (seconds < terms.freeSeconds) {
       return _WaitPhase(tr.includedMinutes, tr.theseFirstMinutesAreAlreadyPart);
     }
-    if (seconds < _noShowSeconds) {
+    if (seconds < terms.noShowSeconds) {
       return _WaitPhase(tr.waitTimeIsRunning, tr.eachMinuteAfterIncludedTimeIs);
     }
     return _WaitPhase(tr.noShowCanBeApplied, tr.riderIsStillNotHereNo);
@@ -595,7 +600,11 @@ class WaitingClock extends StatefulWidget {
     this.diameter = 48,
     this.onDark = false,
     this.paid = false,
+    this.terms,
   });
+
+  /// The trip's waiting terms; null: [WaitingTerms.active].
+  final WaitingTerms? terms;
 
   /// Paid from the first second (a stop wait): green "+m:ss" and the ring
   /// goes round once a minute.
@@ -645,10 +654,13 @@ class _WaitingClockState extends State<WaitingClock>
   @override
   Widget build(BuildContext context) {
     final paid = widget.paid;
+    final terms = widget.terms ?? WaitingTerms.active;
     final label = paid
         ? '+${_clockLabel(widget.seconds)}'
         : _clockLabel(widget.seconds);
-    final tone = paid ? const Color(0xFF146B45) : _waitTone(widget.seconds);
+    final tone = paid
+        ? const Color(0xFF146B45)
+        : _waitTone(widget.seconds, terms);
     final clock = AnimatedBuilder(
       animation: _hand,
       builder: (context, _) {
@@ -659,6 +671,8 @@ class _WaitingClockState extends State<WaitingClock>
             hand: _hand.value,
             tone: tone,
             minuteRing: paid,
+            grace: terms.freeSeconds,
+            noShow: terms.noShowSeconds,
           ),
           child: SizedBox(
             width: widget.diameter,
@@ -685,7 +699,9 @@ class _WaitingClockState extends State<WaitingClock>
                   key: ValueKey<String>(label),
                   style: TextStyle(
                     color:
-                        widget.onDark && !paid && widget.seconds < _graceSeconds
+                        widget.onDark &&
+                            !paid &&
+                            widget.seconds < terms.freeSeconds
                         ? Colors.white
                         : paid && widget.onDark
                         ? const Color(0xFF3DDC97)
@@ -736,8 +752,12 @@ class _ClockPainter extends CustomPainter {
     required this.hand,
     required this.tone,
     this.minuteRing = false,
+    required this.grace,
+    required this.noShow,
   });
 
+  final int grace;
+  final int noShow;
   final int seconds;
   final double hand;
   final Color tone;
@@ -755,10 +775,10 @@ class _ClockPainter extends CustomPainter {
 
     final window = minuteRing
         ? (seconds % 60) / 60
-        : seconds < _graceSeconds
-        ? seconds / _graceSeconds
-        : seconds < _noShowSeconds
-        ? (seconds - _graceSeconds) / (_noShowSeconds - _graceSeconds)
+        : seconds < grace
+        ? seconds / grace
+        : seconds < noShow
+        ? (seconds - grace) / (noShow - grace)
         : 1.0;
     final arc = Paint()
       ..style = PaintingStyle.stroke
@@ -792,14 +812,16 @@ class _ClockPainter extends CustomPainter {
       oldDelegate.seconds != seconds ||
       oldDelegate.hand != hand ||
       oldDelegate.tone != tone ||
-      oldDelegate.minuteRing != minuteRing;
+      oldDelegate.minuteRing != minuteRing ||
+      oldDelegate.grace != grace ||
+      oldDelegate.noShow != noShow;
 }
 
-Color _waitTone(int seconds) {
-  if (seconds >= _noShowSeconds) {
+Color _waitTone(int seconds, WaitingTerms terms) {
+  if (seconds >= terms.noShowSeconds) {
     return const Color(0xFF9E2B33);
   }
-  if (seconds >= _graceSeconds) {
+  if (seconds >= terms.freeSeconds) {
     return const Color(0xFF146B45);
   }
   return const Color(0xFF1C242C);
