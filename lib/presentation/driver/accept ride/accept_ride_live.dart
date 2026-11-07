@@ -9,6 +9,72 @@ part of 'accept_ride.dart';
 extension _AcceptRideLive on _AcceptRideState {
   LiveTripCommands? get _liveTrips => LiveDriverServices.instance?.trips;
 
+  /// `pickupWaiting.follow` (moved out of accept_ride_trip.dart, Rule 25).
+  /// S6 I-3 (2026-11-07): the read also moves the trip, the same way as
+  /// a stream event (arrived, on board, a cancel, a no-show, the trip
+  /// given back), not only the ETA and the waiting; 403/404 is the trip
+  /// taken from this driver, as on the stream.
+  Future<void> _followTickMoved() async {
+    if (!mounted || _rideLifecycle.terminal || _liveUpdatesPaused) return;
+    final realtime = _realtime;
+    if (realtime is ApiDriverRealtime && realtime.connected) return;
+    final trips = _liveTrips;
+    if (trips == null) return;
+    final read = await trips.follow(widget.tripId);
+    if (!mounted || _rideLifecycle.terminal) return;
+    final projection = read.trip;
+    if (projection == null) {
+      if (read.gone && !trips.isOwnEcho(widget.tripId, 'searching')) {
+        _pollMoved(TripStatus.searching, null);
+      }
+      return;
+    }
+    _AcceptRideTrip(
+      this,
+    )._applyLive(TripLiveDetails.fromProjection(projection));
+    final wire = projection['status'];
+    final status = wire is String ? TripStatusWire.tryParse(wire) : null;
+    final version = projection['version'];
+    if (status == null ||
+        trips.isOwnEcho(
+          widget.tripId,
+          wire as String,
+          version: version is num ? version.toInt() : null,
+        )) {
+      return;
+    }
+    _pollMoved(status, projection);
+  }
+
+  /// The poll saw [status]: a status ahead of the screen goes through the
+  /// projection drain like a stream event (the sequence gate is the
+  /// stream's: this read has no sequence).
+  void _pollMoved(TripStatus status, Map<String, dynamic>? projection) {
+    final ahead = switch (status) {
+      _ when status.isTerminal || status.isReleasedToDispatch => true,
+      TripStatus.arrived => _stage == ActiveRideStage.headingToPickup,
+      TripStatus.riderOnboard ||
+      TripStatus.inTrip ||
+      TripStatus.approachingDropoff => _stage != ActiveRideStage.onTrip,
+      _ => false,
+    };
+    if (!ahead || _pendingProjection != null) return;
+    final now = DateTime.now().toUtc();
+    final version = projection?['version'];
+    _pendingProjection = DriverRealtimeEvent(
+      eventId: 'poll-${widget.tripId}-${status.wireName}',
+      tripId: widget.tripId,
+      kind: DriverRealtimeKind.tripProjection,
+      sequence: 0,
+      version: version is num ? version.toInt() : 0,
+      at: now,
+      serverTime: now,
+      status: status,
+      projection: projection,
+    );
+    unawaited(_drainProjection());
+  }
+
   /// The trip screen opened on an accepted trip: on the way to the pickup.
   void _beginLiveTrip() {
     final trips = _liveTrips;
