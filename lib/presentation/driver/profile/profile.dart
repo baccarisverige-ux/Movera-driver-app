@@ -11,6 +11,7 @@ import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/presentation/driver/account/contact_change_screen.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
@@ -493,6 +494,16 @@ class _DriverProfileState extends State<DriverProfile> {
 
   Future<void> _confirmLogout(BuildContext context) async {
     if (_logoutBusy || !mounted || ModalRoute.of(context)?.isCurrent == false) {
+      return;
+    }
+    // Finder A3 (2026-11-07): the trip drawer reaches Profile. A log out
+    // mid-trip left the trip live on the server and the rider with a
+    // frozen car, so it waits until the trip has ended (no sign-out, the
+    // saved trip stays).
+    if (DriverRuntimeScope.maybeOf(context)?.session.activeTripId != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr.fleetOnTrip)));
       return;
     }
     setState(() => _logoutBusy = true);
