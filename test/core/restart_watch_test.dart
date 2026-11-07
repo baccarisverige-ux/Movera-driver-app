@@ -77,16 +77,23 @@ void main() {
     watch().start(visible: true, periodic: false);
 
     expect(reports, [
-      'unexpected restart: last screen /active-ride (trip stage '
-          'driverAssigned), 3 s after last beat, uptime 95 s',
+      'unexpected restart (on screen): last screen /active-ride (trip '
+          'stage driverAssigned), 3 s after last beat, uptime 95 s',
     ]);
   });
 
-  test('clean, hidden, old or missing previous marker: no report', () {
+  // Q5 (owner 2026-11-07, "Report background too"): a hidden page that
+  // died is reported too, marked background (restart_watch_background_test).
+  test('clean, old or missing previous marker: no report', () {
     for (final previous in <String?>[
       _marker(start: start, beat: lastBeat, clean: true),
-      _marker(start: start, beat: lastBeat, visible: false),
+      _marker(start: start, beat: lastBeat, visible: false, clean: true),
       _marker(start: start, beat: now.subtract(const Duration(minutes: 11))),
+      _marker(
+        start: start,
+        beat: now.subtract(const Duration(minutes: 121)),
+        visible: false,
+      ),
       null,
       'not json',
     ]) {
@@ -95,6 +102,18 @@ void main() {
     }
 
     expect(reports, isEmpty);
+  });
+
+  test('previous session unclean and hidden at its last beat: one report '
+      'marked background, also after 11 min (background limit 2 h)', () {
+    store.value = _marker(start: start, beat: lastBeat, visible: false);
+
+    watch().start(visible: true, periodic: false);
+
+    expect(reports, [
+      'unexpected restart (background): last screen /active-ride (trip '
+          'stage driverAssigned), away 3 s, 3 s after last beat, uptime 95 s',
+    ]);
   });
 
   test('the new marker is written at start and pagehide marks it clean', () {
@@ -172,8 +191,8 @@ void main() {
     expect(sent.single['app'], 'driver');
     expect(
       sent.single['error'],
-      'unexpected restart: last screen /active-ride, 3 s after last beat, '
-      'uptime 95 s',
+      'unexpected restart (on screen): last screen /active-ride, 3 s after '
+      'last beat, uptime 95 s',
     );
     sink.dispose();
   });
