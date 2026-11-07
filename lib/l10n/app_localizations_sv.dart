@@ -6873,6 +6873,9 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get waitingBeforePickup => 'Före upphämtningstiden';
+
+  @override
   String get docInsuranceLetter => 'Försäkringsbrev';
 
   @override

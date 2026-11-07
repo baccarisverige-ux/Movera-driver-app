@@ -6998,6 +6998,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get waitingBeforePickup => 'Avant l’heure de prise en charge';
+
+  @override
   String get docInsuranceLetter => 'Attestation d’assurance';
 
   @override

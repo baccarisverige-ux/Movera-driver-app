@@ -6861,6 +6861,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get waitingBeforePickup => 'Before the pickup time';
+
+  @override
   String get docInsuranceLetter => 'Insurance letter';
 
   @override
