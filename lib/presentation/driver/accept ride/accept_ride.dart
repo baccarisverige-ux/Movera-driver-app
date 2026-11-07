@@ -149,7 +149,7 @@ class AcceptRide extends StatefulWidget {
     this.riderName = 'Angelica',
     // G4 decision 3: no made-up rating; none shows "New".
     this.riderRating,
-    this.riderTrips = 312,
+    this.riderTrips = 0,
     this.fare = '—',
     this.paidByCash = false,
     this.cashToCollect,
@@ -326,7 +326,7 @@ class AcceptRide extends StatefulWidget {
       tripId: snapshot.tripId,
       riderName: snapshot.riderName ?? tr.riderDataUnavailable,
       riderRating: snapshot.riderRating,
-      riderTrips: snapshot.riderTrips ?? 312,
+      riderTrips: snapshot.riderTrips ?? 0,
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
       cashToCollect: snapshot.cashToCollect,
