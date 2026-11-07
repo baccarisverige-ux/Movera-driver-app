@@ -1167,6 +1167,9 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get driverEndedEarlyCollect => 'Du avslutade resan tidigare';
+
+  @override
   String get fleetJoinTitle => 'Gå med i ditt åkeri';
 
   @override

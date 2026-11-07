@@ -22,7 +22,9 @@ Future<bool> showCashCollectSheet(
   String? earlyEndNote,
   List<EarningsLine> breakdown = const [],
   bool riderEnded = false,
+  bool driverEnded = false,
 }) async {
+  final ended = riderEnded || driverEnded;
   final done = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -37,9 +39,10 @@ Future<bool> showCashCollectSheet(
       earlyEndNote: earlyEndNote,
       breakdown: breakdown,
       riderEnded: riderEnded,
+      driverEnded: driverEnded,
     ),
-    isDismissible: !riderEnded,
-    enableDrag: !riderEnded,
+    isDismissible: !ended,
+    enableDrag: !ended,
   );
   return done == true;
 }
@@ -55,6 +58,7 @@ class CashCollectSheet extends StatelessWidget {
     this.earlyEndNote,
     this.breakdown = const [],
     this.riderEnded = false,
+    this.driverEnded = false,
   }) : cash = cash ?? fare;
 
   /// The driver's own money for the trip, after Movera's commission
@@ -83,6 +87,13 @@ class CashCollectSheet extends StatelessWidget {
   /// over, so there is no "Not yet" and the button goes on to the rating.
   final bool riderEnded;
 
+  /// Finder L8 (owner 2026-11-07): the driver ended the trip with the
+  /// rider on board ("End trip early"); the server already ended it and
+  /// booked the cash, so, as for [riderEnded], there is no "Not yet".
+  final bool driverEnded;
+
+  bool get _ended => riderEnded || driverEnded;
+
   /// Share of the screen the sheet covers.
   static const double heightFactor = 0.76;
 
@@ -100,7 +111,7 @@ class CashCollectSheet extends StatelessWidget {
   /// G8 (live 2026-11-01): the button names the action, "Avsluta resan",
   /// never the category's brand name ("Avsluta Movera").
   String get _finishLabel =>
-      riderEnded ? tr.g8Continue : driverText(DriverTexts.tripFinishRide);
+      _ended ? tr.g8Continue : driverText(DriverTexts.tripFinishRide);
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +160,8 @@ class CashCollectSheet extends StatelessWidget {
                 Text(
                   riderEnded
                       ? tr.g8RiderEndedCollect(amount)
+                      : driverEnded
+                      ? tr.driverEndedEarlyCollect
                       : first.isEmpty
                       ? tr.takeCashBeforeYouFinish
                       : tr.takeCashFromFirstBeforeYou(first),
@@ -202,7 +215,7 @@ class CashCollectSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                if (!riderEnded)
+                if (!_ended)
                   TextButton(
                     key: const ValueKey<String>('cash-not-yet'),
                     onPressed: () => popOwned(context, false),

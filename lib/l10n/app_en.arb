@@ -827,6 +827,10 @@
       }
     }
   },
+  "driverEndedEarlyCollect": "You ended the trip early",
+  "@driverEndedEarlyCollect": {
+    "description": "Finder L8 (owner 2026-11-07): subtitle of the cash sheet when the driver ended the trip with the rider on board (End trip early)."
+  },
   "fleetJoinTitle": "Join your fleet",
   "fleetJoinBody": "Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.",
   "fleetJoin": "Join",

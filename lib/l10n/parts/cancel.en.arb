@@ -262,5 +262,9 @@
         "type": "Object"
       }
     }
+  },
+  "driverEndedEarlyCollect": "You ended the trip early",
+  "@driverEndedEarlyCollect": {
+    "description": "Finder L8 (owner 2026-11-07): subtitle of the cash sheet when the driver ended the trip with the rider on board (End trip early)."
   }
 }

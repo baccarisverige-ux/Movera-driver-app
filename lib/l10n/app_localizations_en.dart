@@ -1166,6 +1166,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get driverEndedEarlyCollect => 'You ended the trip early';
+
+  @override
   String get fleetJoinTitle => 'Join your fleet';
 
   @override
