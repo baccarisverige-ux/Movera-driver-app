@@ -403,7 +403,7 @@ void main() {
 
     for (final (lang, running, starts, pickup) in const [
       ('sv', 'Pågår nu', 'Börjar 18:00', 'Upphämtning'),
-      ('fr', 'En cours', 'Commence à 18:00', 'Prise en charge'),
+      ('fr', 'En cours', 'Commence à 18:00', 'Lieu de prise en charge'),
     ]) {
       testWidgets('$lang labels', (tester) async {
         DriverAppTexts.language = lang;

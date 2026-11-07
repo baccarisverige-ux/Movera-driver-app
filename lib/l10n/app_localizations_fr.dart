@@ -840,11 +840,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authSignedOutExpired =>
-      'Vous avez été déconnecté – reconnectez-vous';
+      'Vous avez été déconnecté de votre compte. Reconnectez-vous.';
 
   @override
   String get authSignedOutRevoked =>
-      'Vous avez été déconnecté – reconnectez-vous';
+      'Vous avez été déconnecté de votre compte. Reconnectez-vous.';
 
   @override
   String get authSignedOutDetailExpired =>
@@ -1179,15 +1179,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String noShowConfirmYouGet(Object amount) {
-    return 'Marquer comme client absent ? Vous recevez $amount';
+    return 'Signaler l’absence du passager ? Vous percevrez $amount.';
   }
 
   @override
-  String get noShowConfirmNoFee => 'Marquer comme client absent ? Pas de frais';
+  String get noShowConfirmNoFee =>
+      'Signaler l’absence du passager ? Aucun frais ne sera facturé.';
 
   @override
   String get cancelAfterArrivedNote =>
-      'Annuler après l’arrivée du chauffeur et la fin de l’attente gratuite compte comme un client absent';
+      'Une annulation après l’arrivée du chauffeur et la fin de l’attente gratuite est considérée comme une absence du passager.';
 
   @override
   String noShowFromTime(Object time) {
@@ -2375,7 +2376,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backgroundLocationBody =>
-      'Votre position est envoyée pour recevoir des courses';
+      'Votre position est transmise pour vous proposer des courses à proximité.';
 
   @override
   String get batterySaverWarning =>
@@ -2390,11 +2391,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get eventPickupNote => 'Prise en charge';
+  String get eventPickupNote => 'Lieu de prise en charge';
 
   @override
   String feeKindNoShow(Object amount) {
-    return 'Frais de client absent $amount';
+    return 'Frais de non-présentation du passager : $amount';
   }
 
   @override
@@ -2452,12 +2453,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String g6PinWrong(Object left) {
-    return 'Code incorrect. Encore $left essais';
+    return 'Code incorrect. Il vous reste $left tentatives.';
   }
 
   @override
   String g6PinLocked(Object min) {
-    return 'Trop d’essais. Réessayez dans $min min';
+    return 'Trop de tentatives. Réessayez dans $min min.';
   }
 
   @override
@@ -2478,7 +2479,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get g6AlertNoShow =>
-      'Vous pouvez maintenant signaler un client absent';
+      'Vous pouvez maintenant signaler l’absence du passager.';
 
   @override
   String g6StopFreeWait(Object min) {
@@ -2487,14 +2488,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get g6PinBlocked =>
-      'Trop de codes incorrects. Appelez le support Movera';
+      'Trop de tentatives avec un code erroné. Appelez l’assistance Movera';
 
   @override
   String get g6PinNotNow =>
       'Le code se saisit une fois arrivé au point de prise en charge';
 
   @override
-  String get g7RouteAsk => 'Le passager souhaite modifier l\'itinéraire';
+  String get g7RouteAsk => 'Le passager souhaite modifier l’itinéraire';
 
   @override
   String g7RouteEarnings(String earnings, String difference) {
@@ -2556,7 +2557,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g8LineTrip => 'Course';
 
   @override
-  String get g8LinePickupPay => 'Approche';
+  String get g8LinePickupPay => 'Rémunération d’approche';
 
   @override
   String get g8LineBonus => 'Bonus';
@@ -2589,7 +2590,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g8PricedForDriven => 'Le prix correspond au trajet effectué.';
 
   @override
-  String get g8BookedPriceStands => 'Le prix réservé s’applique.';
+  String get g8BookedPriceStands =>
+      'Le prix confirmé lors de la réservation reste applicable.';
 
   @override
   String get g8EndedEarly => 'Terminée plus tôt';
@@ -3724,7 +3726,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swTripStatusAccepted => 'Acceptée';
 
   @override
-  String get swTripStatusDriverToPickup => 'Chauffeur vers la prise en charge';
+  String get swTripStatusDriverToPickup =>
+      'Chauffeur en route vers le lieu de prise en charge';
 
   @override
   String get swTripStatusArrived => 'Chauffeur arrivé';
@@ -3736,7 +3739,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swTripStatusInTrip => 'En course';
 
   @override
-  String get swTripStatusApproachingDropoff => 'Approche de la dépose';
+  String get swTripStatusApproachingDropoff => 'Approche de la destination';
 
   @override
   String get swTripStatusCompleted => 'Terminée';
@@ -3748,13 +3751,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swTripStatusCancelledByDriver => 'Annulée par le chauffeur';
 
   @override
-  String get swTripStatusCancelledByAdmin => 'Annulée par un admin';
+  String get swTripStatusCancelledByAdmin => 'Annulée par un administrateur';
 
   @override
   String get swTripStatusCancelledBySystem => 'Annulée par le système';
 
   @override
-  String get swTripStatusNoShow => 'Absence';
+  String get swTripStatusNoShow => 'Absence du passager';
 
   @override
   String get swTripStatusExpired => 'Expirée';
@@ -3778,7 +3781,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swDriverOnlineStatusOffline => 'Hors ligne';
 
   @override
-  String get swDriverOnlineStatusGoingOnline => 'Mise en ligne';
+  String get swDriverOnlineStatusGoingOnline => 'Passage en ligne';
 
   @override
   String get swDriverOnlineStatusOnline => 'En ligne';
@@ -3915,11 +3918,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get locationRequired => 'Activez la localisation pour passer en ligne';
 
   @override
-  String get locationOpenSettings => 'Ouvrir les réglages';
+  String get locationOpenSettings => 'Ouvrir les paramètres';
 
   @override
   String get setOfflineLine =>
-      'Vous avez été mis hors ligne – appuyez pour repasser en ligne';
+      'Vous avez été mis hors ligne. Appuyez pour repasser en ligne.';
 
   @override
   String get outsideAreaTitle =>
@@ -4946,7 +4949,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get remActionJoinFleet => 'Rejoindre une flotte';
 
   @override
-  String get remActionStartCompany => 'Créer ma propre société';
+  String get remActionStartCompany => 'Créer ma propre entreprise';
 
   @override
   String get remNoVehicleNotActive => 'Choisissez une voiture de votre flotte';
@@ -6922,13 +6925,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineReasonAccountStatus =>
-      'Votre compte est en pause – contactez Movera';
+      'Votre compte est temporairement suspendu. Contactez Movera.';
 
   @override
   String get tripSettings => 'Paramètres du trajet';
 
   @override
-  String get pickupMovedIsland => 'Le point de départ a été déplacé';
+  String get pickupMovedIsland => 'Le lieu de prise en charge a été déplacé';
 
   @override
   String waitingChargedSoFar(Object amount) {

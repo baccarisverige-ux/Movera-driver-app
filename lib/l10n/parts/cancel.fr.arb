@@ -75,8 +75,8 @@
   "cancelRateHowBody": "Votre taux d’annulation compare le nombre de courses que vous annulez au total des courses que vous confirmez. Nous utilisons vos 100 dernières demandes confirmées pour ce pourcentage.",
   "cancelRateWhyMatters": "Pourquoi le taux d’annulation compte",
   "cancelRateWhyBody": "Un taux d’annulation élevé nuit à la fiabilité du service et peut réduire les demandes de course que vous recevez. Un taux bas garantit un meilleur service pour tous.",
-  "noShowConfirmYouGet": "Marquer comme client absent ? Vous recevez {amount}",
-  "noShowConfirmNoFee": "Marquer comme client absent ? Pas de frais",
-  "cancelAfterArrivedNote": "Annuler après l’arrivée du chauffeur et la fin de l’attente gratuite compte comme un client absent",
+  "noShowConfirmYouGet": "Signaler l’absence du passager ? Vous percevrez {amount}.",
+  "noShowConfirmNoFee": "Signaler l’absence du passager ? Aucun frais ne sera facturé.",
+  "cancelAfterArrivedNote": "Une annulation après l’arrivée du chauffeur et la fin de l’attente gratuite est considérée comme une absence du passager.",
   "noShowFromTime": "Applicable à partir de {time} si le passager ne s’est pas présenté."
 }

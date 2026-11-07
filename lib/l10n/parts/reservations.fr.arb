@@ -77,7 +77,7 @@
   "remCantGoOnline": "Vous ne pouvez pas encore passer en ligne : {reason}",
   "remNoFleet": "Rejoignez une flotte pour rouler – demandez à votre gérant le code Movera, son nom et son e-mail",
   "remActionJoinFleet": "Rejoindre une flotte",
-  "remActionStartCompany": "Créer ma propre société",
+  "remActionStartCompany": "Créer ma propre entreprise",
   "remNoVehicleNotActive": "Choisissez une voiture de votre flotte",
   "remFleetInvitation": "{fleet} vous a invité",
   "remActionAcceptInvitation": "Accepter",
