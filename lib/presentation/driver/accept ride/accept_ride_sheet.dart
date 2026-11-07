@@ -126,7 +126,7 @@ extension _AcceptRideSheet on _AcceptRideState {
         footer:
             '${categoryNameText(widget.category)} · ${_riderName.split(' ').first}',
         moreKey: const ValueKey<String>('current-trip-more'),
-        onMore: _AcceptRidePanel(this)._showTripOptions,
+        onMore: _AcceptRideTripOptions(this)._showTripOptions,
         waybillKey: const ValueKey<String>('current-waybill-shortcut'),
         onWaybill: record == null
             ? null
@@ -285,7 +285,7 @@ extension _AcceptRideSheet on _AcceptRideState {
                   if (!popOwned(sheetContext)) {
                     return;
                   }
-                  _AcceptRidePanel(
+                  _AcceptRideTripOptions(
                     this,
                   )._showCancellationReasons(nextTrip: true);
                 },

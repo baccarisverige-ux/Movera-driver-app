@@ -130,6 +130,8 @@ part 'accept_ride_trip_next.dart';
 part 'accept_ride_trip_cover.dart';
 part 'accept_ride_panel.dart';
 part 'accept_ride_panel_clean.dart';
+part 'accept_ride_offer_card.dart';
+part 'accept_ride_trip_options.dart';
 part 'accept_ride_sheet.dart';
 part 'accept_ride_late_eta.dart';
 part 'accept_ride_live.dart';
@@ -1250,7 +1252,7 @@ class _AcceptRideState extends State<AcceptRide>
                                         builder: (_) => rideHistoryScreen(),
                                       ),
                                     ),
-                                    onRoute: _AcceptRidePanel(
+                                    onRoute: _AcceptRideTripOptions(
                                       this,
                                     )._showTripOptions,
                                     onSafety: () => showSafetyToolKitSheet(
@@ -1328,7 +1330,9 @@ class _AcceptRideState extends State<AcceptRide>
                       right: 12,
                       bottom: MediaQuery.paddingOf(context).bottom + 12,
                       child: _AcceptRidePanel(this)._mapOverlay(
-                        child: _AcceptRidePanel(this)._buildIncomingRideCard(),
+                        child: _AcceptRideOfferCard(
+                          this,
+                        )._buildIncomingRideCard(),
                       ),
                     ),
                   _AcceptRideRouteChange(this)._buildRouteChangeLayer(context),
