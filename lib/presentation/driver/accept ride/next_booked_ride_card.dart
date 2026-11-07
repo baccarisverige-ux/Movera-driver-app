@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/next_trip.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
 
@@ -20,8 +22,17 @@ class NextTripCard extends StatefulWidget {
     required this.currentTripId,
     this.load,
     this.queued,
+    this.cancel,
     this.now = DateTime.now,
   });
+
+  /// Lifecycle L4 (contract v0.18.50 §72 `lifecycle0_18_50.l4`, owner
+  /// 2026-11-07 "Allow cancel"): the driver's cancel of the queued live
+  /// trip (`POST /trips/{tripId}/cancel` with a driverNextTrip reason); the
+  /// live app's by default. It goes back to dispatch, the current trip goes
+  /// on.
+  final Future<LiveTripOutcome> Function(String tripId, String reasonCode)?
+  cancel;
 
   /// The trip being driven.
   final String currentTripId;
@@ -45,6 +56,74 @@ class _NextTripCardState extends State<NextTripCard> {
       widget.load ?? LiveDriverServices.instance?.reservations.load;
   Map<String, dynamic>? Function(String)? get _queued =>
       widget.queued ?? LiveDriverServices.instance?.trips.queuedAfter;
+  Future<LiveTripOutcome> Function(String, String)? get _cancel {
+    if (widget.cancel != null) return widget.cancel;
+    final trips = LiveDriverServices.instance?.trips;
+    return trips == null
+        ? null
+        : (tripId, code) => trips.cancel(tripId, reasonCode: code);
+  }
+
+  bool _cancelling = false;
+
+  /// L4: the reasons (DriverAppConfig.cancelReasons.driverNextTrip, else
+  /// the contract list), the confirm, then the server's cancel.
+  Future<void> _cancelQueued(NextTrip next) async {
+    final cancel = _cancel;
+    if (cancel == null || _cancelling) return;
+    final reasons = CancelReasons.current.of(CancelReasonGroup.driverNextTrip);
+    final reason = await showModalBottomSheet<CancelReason>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          key: const ValueKey<String>('next-trip-card-reasons'),
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: Text(
+                tr.cancelNextTripQuestion,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(tr.yourCurrentTripContinuesNextTrip),
+            ),
+            for (final reason in reasons)
+              ListTile(
+                key: ValueKey<String>('next-trip-card-reason-${reason.code}'),
+                title: Text(reason.title),
+                subtitle: reason.subtitle.isEmpty
+                    ? null
+                    : Text(reason.subtitle),
+                onTap: () => Navigator.of(sheetContext).pop(reason),
+              ),
+            ListTile(
+              key: const ValueKey<String>('next-trip-card-keep'),
+              title: Text(tr.keepTrip),
+              onTap: () => Navigator.of(sheetContext).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (reason == null || !mounted) return;
+    setState(() => _cancelling = true);
+    final outcome = await cancel(next.tripId, reason.code);
+    if (!mounted) return;
+    setState(() {
+      _cancelling = false;
+      if (outcome.ok) _next = null;
+    });
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        key: const ValueKey<String>('next-trip-card-cancel-result'),
+        content: Text(
+          outcome.ok
+              ? tr.nextTripCancelledTitle(reason.title)
+              : outcome.message!,
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -143,6 +222,23 @@ class _NextTripCardState extends State<NextTripCard> {
                     tr.nextBookedRideHint,
                     style: const TextStyle(color: _muted, fontSize: 12),
                   ),
+                  // L4: a queued live trip can be cancelled (a booked ride
+                  // keeps its own cancel under Booked rides).
+                  if (!next.booked && _cancel != null)
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        key: const ValueKey<String>('next-trip-card-cancel'),
+                        onPressed: _cancelling
+                            ? null
+                            : () => unawaited(_cancelQueued(next)),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF9E2B33),
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: Text(tr.cancelNextTrip),
+                      ),
+                    ),
                 ],
               ),
             ),
