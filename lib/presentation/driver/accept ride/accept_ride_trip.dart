@@ -591,8 +591,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       // tap, so a live build tells it first.
       final stop = _stopCursor;
       if (LiveDriverServices.active &&
-          (!await _AcceptRideLive(this)._serverStep(
-                (trips) => trips.arriveAtStop(widget.tripId, stop),
+          (!await _whileStepBusy(
+                () => _AcceptRideLive(this)._serverStep(
+                  (trips) => trips.arriveAtStop(widget.tripId, stop),
+                ),
               ) ||
               !mounted ||
               _stage != ActiveRideStage.onTrip ||
@@ -811,7 +813,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (trips != null && preview == null) {
       _stageTransitioning = true;
       try {
-        preview = await trips.previewComplete(widget.tripId);
+        preview = await _whileStepBusy(
+          () => trips.previewComplete(widget.tripId),
+        );
       } finally {
         _stageTransitioning = false;
       }
@@ -972,11 +976,13 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.secured && offer != null;
     final next = queuedNext ? _snapshotForOffer(offer) : null;
     if (LiveDriverServices.active &&
-        (!await _AcceptRideLive(this)._serverStep(
-              (trips) => trips.complete(
-                widget.tripId,
-                preview: trips.previewOf(widget.tripId),
-                cash: widget.paidByCash,
+        (!await _whileStepBusy(
+              () => _AcceptRideLive(this)._serverStep(
+                (trips) => trips.complete(
+                  widget.tripId,
+                  preview: trips.previewOf(widget.tripId),
+                  cash: widget.paidByCash,
+                ),
               ),
             ) ||
             !mounted ||
@@ -1036,29 +1042,33 @@ extension _AcceptRideTrip on _AcceptRideState {
       return;
     }
     _waybills.completeCurrent();
-    Widget? nextRide = queuedNext ? _nextRideFor(offer) : null;
     // Fix job 5 (owner 2026-11-05): the next trip — a live one he accepted
     // during this trip, or a booked ride whose time to drive is near — opens
     // on screen after this one, with an information popup (OK only).
+    // Finder A4: the summary shows at once; the server is asked for the
+    // next trip behind it, and Done waits only if it has not answered yet.
+    final nextRide = queuedNext ? _nextRideFor(offer) : null;
+    Future<Widget?>? nextRideLater;
     if (nextRide == null) {
-      final opened = await openNextTripAfter(widget.tripId);
-      if (!mounted) return;
-      if (opened != null) {
-        nextRide = NextTripPopupHost(
-          next: opened.next,
-          child: AcceptRide.fromPersisted(
-            opened.ride,
-            locationRepository: widget.locationRepository,
-            routeRepository: widget.routeRepository,
-            waybillRepository: _waybills,
-            sessionController: widget.sessionController,
-            activeRideRepository: widget.activeRideRepository,
-            dispatchRepository: widget.dispatchRepository,
-          ),
-        );
-      }
+      final screen = widget, waybills = _waybills;
+      nextRideLater = openNextTripAfter(screen.tripId).then<Widget?>(
+        (opened) => opened == null
+            ? null
+            : NextTripPopupHost(
+                next: opened.next,
+                child: AcceptRide.fromPersisted(
+                  opened.ride,
+                  locationRepository: screen.locationRepository,
+                  routeRepository: screen.routeRepository,
+                  waybillRepository: waybills,
+                  sessionController: screen.sessionController,
+                  activeRideRepository: screen.activeRideRepository,
+                  dispatchRepository: screen.dispatchRepository,
+                ),
+              ),
+        onError: (Object _) => null,
+      );
     }
-    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       BottomToTopTransition(
         DriverRideCompleted(
@@ -1066,6 +1076,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           sessionController: widget.sessionController,
           activeRideRepository: widget.activeRideRepository,
           nextRide: nextRide,
+          nextRideLater: nextRideLater,
           paidByCash: widget.paidByCash,
         ),
       ),

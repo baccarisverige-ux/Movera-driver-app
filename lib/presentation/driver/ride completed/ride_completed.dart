@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
@@ -28,6 +30,7 @@ class DriverRideCompleted extends StatefulWidget {
     this.sessionController,
     this.activeRideRepository,
     this.nextRide,
+    this.nextRideLater,
     this.paidByCash,
     this.ratingSender,
     this.ratingAllowed = true,
@@ -37,6 +40,10 @@ class DriverRideCompleted extends StatefulWidget {
   final DriverSessionController? sessionController;
   final ActiveRideRepository? activeRideRepository;
   final Widget? nextRide;
+
+  /// Finder A4: the next trip still being looked up on the server when the
+  /// trip ended (null: none). Done waits for it only if it is still coming.
+  final Future<Widget?>? nextRideLater;
 
   /// True for a cash trip, false for one paid in the app (card, Apple Pay
   /// …); null shows a dash.
@@ -132,6 +139,24 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     // radar or the missed-offers rule takes them offline; endTrip() keeps
     // that rule's offline-after-trip and a suspension.
     widget.sessionController?.stayOnlineAfterTrip();
+    final later = widget.nextRideLater;
+    if (nextRide == null && later != null) {
+      unawaited(
+        later.then((ride) {
+          if (!mounted) return;
+          if (ModalRoute.of(context)?.isCurrent != true) {
+            setState(() => _finishing = false);
+            return;
+          }
+          _leave(navigator, ride);
+        }),
+      );
+      return;
+    }
+    _leave(navigator, nextRide);
+  }
+
+  void _leave(NavigatorState navigator, Widget? nextRide) {
     if (nextRide != null) {
       _waybills.promoteNextToCurrent();
       navigator.pushReplacement(BottomToTopTransition(nextRide));

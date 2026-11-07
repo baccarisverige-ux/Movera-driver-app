@@ -1129,35 +1129,45 @@ extension _AcceptRidePanel on _AcceptRideState {
         height: 58,
         child: FilledButton(
           key: const ValueKey<String>('active-ride-arrived-button'),
-          onPressed: () {
-            _setMapGesturesBlocked(false);
-            unawaited(_AcceptRideTrip(this)._onArrivedTap());
-          },
-          style: FilledButton.styleFrom(
-            elevation: 0,
-            backgroundColor: near
-                ? const Color(0xFF111614)
-                : const Color(0xFFEEEFF1),
-            foregroundColor: near ? Colors.white : const Color(0xFF5F6B72),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+          onPressed: _stepBusy
+              ? null
+              : () {
+                  _setMapGesturesBlocked(false);
+                  unawaited(_AcceptRideTrip(this)._onArrivedTap());
+                },
+          style: tripStepStyle(
+            FilledButton.styleFrom(
+              elevation: 0,
+              backgroundColor: near
+                  ? const Color(0xFF111614)
+                  : const Color(0xFFEEEFF1),
+              foregroundColor: near ? Colors.white : const Color(0xFF5F6B72),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
-          child: Semantics(
-            hint: near
-                ? null
-                : _stage == ActiveRideStage.onTrip
-                ? tr.moveWithin100MOfStop
-                : tr.moveWithin100MOfPickup,
-            // Contract v0.7.1 §3.8: at a middle stop the tap is the server's
-            // arrived-at-stop, from which the stop wait is paid.
-            child: Text(
-              driverText(
-                _stage == ActiveRideStage.onTrip
-                    ? DriverTexts.tripArriveAtStop
-                    : DriverTexts.tripArrived,
+          child: tripStepLabel(
+            busy: _stepBusy,
+            child: Semantics(
+              hint: near
+                  ? null
+                  : _stage == ActiveRideStage.onTrip
+                  ? tr.moveWithin100MOfStop
+                  : tr.moveWithin100MOfPickup,
+              // Contract v0.7.1 §3.8: at a middle stop the tap is the server's
+              // arrived-at-stop, from which the stop wait is paid.
+              child: Text(
+                driverText(
+                  _stage == ActiveRideStage.onTrip
+                      ? DriverTexts.tripArriveAtStop
+                      : DriverTexts.tripArrived,
+                ),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -1172,21 +1182,28 @@ extension _AcceptRidePanel on _AcceptRideState {
         height: 58,
         child: FilledButton(
           key: const ValueKey<String>('active-ride-collect-cash'),
-          onPressed: () {
-            _setMapGesturesBlocked(false);
-            unawaited(_AcceptRideTrip(this)._collectCash());
-          },
-          style: FilledButton.styleFrom(
-            elevation: 0,
-            backgroundColor: const Color(0xFF7A5200),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+          onPressed: _stepBusy
+              ? null
+              : () {
+                  _setMapGesturesBlocked(false);
+                  unawaited(_AcceptRideTrip(this)._collectCash());
+                },
+          style: tripStepStyle(
+            FilledButton.styleFrom(
+              elevation: 0,
+              backgroundColor: const Color(0xFF7A5200),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
-          child: Text(
-            driverText(DriverTexts.tripCollectCash),
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+          child: tripStepLabel(
+            busy: _stepBusy,
+            child: Text(
+              driverText(DriverTexts.tripCollectCash),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
           ),
         ),
       );

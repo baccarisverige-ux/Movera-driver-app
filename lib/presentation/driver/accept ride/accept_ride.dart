@@ -33,6 +33,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_step_busy.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/demo_trip_drive.dart';
@@ -519,6 +520,18 @@ class _AcceptRideState extends State<AcceptRide>
     initialStage: widget.initialStage,
   );
   ActiveRideStage get _stage => _rideLifecycle.stage;
+
+  /// Finder A4: the step button is disabled with a spinner while [request]
+  /// runs.
+  Future<T> _whileStepBusy<T>(Future<T> Function() request) async {
+    if (mounted) setState(() => _stepBusy = true);
+    try {
+      return await request();
+    } finally {
+      if (mounted) setState(() => _stepBusy = false);
+    }
+  }
+
   // Trip orchestration lives in an extension, which cannot call setState.
   void _rebuild(VoidCallback update) {
     setState(update);
@@ -625,6 +638,10 @@ class _AcceptRideState extends State<AcceptRide>
   Duration _projectionRetryDelay = _projectionRetryBase;
   final _externalMapAction = OwnedExternalAction();
   bool _completionInFlight = false;
+
+  /// Finder A4: a step's request (arrive, price, complete) is running; the
+  /// step button shows it ([_whileStepBusy]).
+  bool _stepBusy = false;
   bool _cancellationInFlight = false;
   bool _blockMapGestures = false;
   late final AnimationController _radarPulseController;
