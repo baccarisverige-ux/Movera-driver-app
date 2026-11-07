@@ -46,7 +46,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get yourCurrentTripContinues => 'Votre course actuelle continue.';
 
   @override
-  String get yourFare => 'Montant prévu pour le chauffeur';
+  String get yourFare => 'Votre gain prévu';
 
   @override
   String get yourTrip => 'Votre course';
@@ -1694,7 +1694,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get endThisTripEarlyQuestion =>
-      'Terminer cette course avant la destination prévue ?';
+      'Terminer cette course avant la destination prévue ?';
 
   @override
   String get endTripEarly => 'Terminer plus tôt';
@@ -1759,13 +1759,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get confirmThisTripActionQuestion =>
-      'Confirmer cette action sur la course ?';
+      'Confirmer cette action sur la course ?';
 
   @override
   String get confirm => 'Confirmer';
 
   @override
-  String get finishSoSoonQuestion => 'Vous terminez déjà la course ?';
+  String get finishSoSoonQuestion => 'Vous terminez déjà la course ?';
 
   @override
   String get backToRide => 'Retour à la course';
@@ -3050,7 +3050,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String youGetDriverShareWaitPercent(Object driverShareWaitPercent) {
-    return 'Vous percevez $driverShareWaitPercent % des frais d’attente.';
+    return 'Vous percevez $driverShareWaitPercent % des frais d’attente.';
   }
 
   @override
@@ -3059,7 +3059,7 @@ class AppLocalizationsFr extends AppLocalizations {
     Object driverShareNoShowPercent,
     Object driverNoShowFeeFormatted,
   ) {
-    return 'Vous percevez $driverShareWaitPercent % des frais d’attente et $driverShareNoShowPercent % des frais de non-présentation du passager ($driverNoShowFeeFormatted).';
+    return 'Vous percevez $driverShareWaitPercent % des frais d’attente et $driverShareNoShowPercent % des frais de non-présentation du passager ($driverNoShowFeeFormatted).';
   }
 
   @override
