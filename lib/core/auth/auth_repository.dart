@@ -1,4 +1,5 @@
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -179,16 +180,40 @@ class AuthRepository {
   /// Ends the session: `POST /api/v1/auth/sign-out` while the token is
   /// still there, then the tokens go, whatever the server answered (or
   /// did not). Without a session nothing is sent.
+  ///
+  /// v0.18.49 §71 (owner Q8, S8 R4): a driver with a current trip is
+  /// refused (409 `sign_out_on_trip`): the session stays on the server, so
+  /// it stays here too (the tokens are kept) and [SignOutOnTrip] is thrown.
+  /// Any other failure still clears this phone.
   Future<void> signOut() async {
     try {
       if (await hasSession()) await _api.post(signOutPath);
+    } on ApiError catch (error) {
+      if (error.statusCode == 409 && error.reason == SignOutOnTrip.reason) {
+        throw SignOutOnTrip(error.message);
+      }
+      DriverLog.warn('sign-out not confirmed: ${error.code}', name: 'auth');
     } catch (error) {
       DriverLog.warn(
         'sign-out not confirmed: ${error.runtimeType}',
         name: 'auth',
       );
-    } finally {
-      await _tokens.clear();
     }
+    await _tokens.clear();
   }
+}
+
+/// The server refused the sign-out: the driver has a current trip
+/// (`contract.json#auth.signOutOnTrip`). Nothing changed on the phone; the
+/// app says « Terminez d’abord la course. » (`fleetOnTrip`).
+class SignOutOnTrip implements Exception {
+  const SignOutOnTrip(this.message);
+
+  static const reason = 'sign_out_on_trip';
+
+  /// The server's words, in the driver's language.
+  final String message;
+
+  @override
+  String toString() => 'SignOutOnTrip: $message';
 }

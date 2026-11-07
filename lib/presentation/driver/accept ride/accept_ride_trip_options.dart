@@ -46,14 +46,20 @@ extension _AcceptRideTripOptions on _AcceptRideState {
                   Text(
                     // G4 decision 3: the rider's real rating only, and only
                     // while the zone shows it; else just the rides.
-                    switch (_riderRating) {
-                      final rating?
+                    // Finder A2: the rides only when the server sent a
+                    // count (0 = none sent), never a made-up one.
+                    switch ((_riderRating, widget.riderTrips > 0)) {
+                      (final rating?, true)
                           when DriverOfferRules.current.card.riderRating =>
                         tr.ratingAndRides(
                           rating.toStringAsFixed(1),
                           widget.riderTrips,
                         ),
-                      _ => tr.riderRidesOnly(widget.riderTrips),
+                      (final rating?, false)
+                          when DriverOfferRules.current.card.riderRating =>
+                        '${rating.toStringAsFixed(1)} ★',
+                      (_, true) => tr.riderRidesOnly(widget.riderTrips),
+                      _ => '',
                     },
                     style: const TextStyle(
                       color: _AcceptRideState._muted,

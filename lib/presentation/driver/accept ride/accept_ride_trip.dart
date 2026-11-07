@@ -415,9 +415,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
-  Future<void> _resyncTrip() async {
+  Future<void> _resyncTrip({bool reopen = false}) async {
     try {
-      await _realtime.reconnectAndResync(widget.tripId);
+      await _realtime.reconnectAndResync(widget.tripId, reopen: reopen);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -481,16 +481,7 @@ extension _AcceptRideTrip on _AcceptRideState {
   /// `pickupWaiting.follow`: while the event stream is down, read the
   /// trip every 10 s so the ETA, the waiting and a moved pickup still
   /// reach the screen; the stream itself replays what it missed.
-  Future<void> _followTick() async {
-    if (!mounted || _rideLifecycle.terminal || _liveUpdatesPaused) return;
-    final realtime = _realtime;
-    if (realtime is ApiDriverRealtime && realtime.connected) return;
-    final trips = _AcceptRideLive(this)._liveTrips;
-    if (trips == null) return;
-    final projection = await trips.refresh(widget.tripId);
-    if (!mounted || projection == null) return;
-    _applyLive(TripLiveDetails.fromProjection(projection));
-  }
+  Future<void> _followTick() => _AcceptRideLive(this)._followTickMoved();
 
   /// X5: the trip went back to dispatch without this driver. Navigation
   /// and offers stop, the island says so on Home, and the driver is back
