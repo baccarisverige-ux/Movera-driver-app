@@ -562,13 +562,20 @@ class _MoveraAppState extends State<MoveraApp> {
     // none possible) keeps its logout as it was and never touches the
     // token store.
     if (DriverRuntimeConfig.current.authRequired) {
-      // Offline on the server while the token is still there.
-      await _live?.presence.goOffline().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => null,
-      );
-      await _push?.signingOut();
+      // Offline on the server while the token is still there (never on a
+      // trip: that would set "offline after the trip").
+      if (_session.activeTripId == null) {
+        await _live?.presence.goOffline().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => null,
+        );
+      }
+      // v0.18.49 §71 (owner Q8, S8 R4): the server's sign-out BEFORE push
+      // or local data; refused for a current trip ([SignOutOnTrip], thrown
+      // to the caller), nothing here changes. It removes the session's
+      // push devices itself.
       await _auth.signOut();
+      await _push?.signingOut(server: false);
       _account.clear();
     }
     await PrefsActiveRideRepository.settle();
