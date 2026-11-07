@@ -86,15 +86,47 @@ function offer(kind, extra = {}) {
   assert.equal(sw.shown[0].options.silent, true);
   assert.equal(sw.shown[0].options.vibrate, undefined);
 
-  // App on screen: nothing (the offer stream shows it).
+  // Q1 (owner 2026-11-07, "Toujours afficher"): every push shows a notice,
+  // because iOS WebKit removes the push subscription after 3 pushes that show
+  // none (maxSilentPushCount = 3). App on screen: shown as usual, same tag.
   sw = scope({ visible: true, prefs: { vibrate: true } });
   await sw.push(offer('exclusive'));
-  assert.equal(sw.shown.length, 0);
+  assert.equal(sw.shown.length, 1);
+  assert.equal(sw.shown[0].title, 'New trip for you');
+  assert.equal(sw.shown[0].options.silent, false);
+  assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
+  assert.equal(sw.shown[0].options.renotify, true);
 
-  // Run out: nothing.
+  // Run out: still shown (its own text), quiet, on the same tag, so it
+  // replaces the earlier notice of that offer instead of adding one.
   sw = scope({ prefs: { vibrate: true } });
   await sw.push(offer('exclusive', { expiresAt: new Date(Date.now() - 1000).toISOString() }));
-  assert.equal(sw.shown.length, 0);
+  assert.equal(sw.shown.length, 1);
+  assert.equal(sw.shown[0].title, 'New trip for you');
+  assert.equal(sw.shown[0].options.silent, true);
+  assert.equal(sw.shown[0].options.vibrate, undefined);
+  assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
+
+  // Run out while the app is on screen: still exactly one notice.
+  sw = scope({ visible: true, prefs: { vibrate: true } });
+  await sw.push(offer('radar', { expiresAt: new Date(Date.now() - 1000).toISOString() }));
+  assert.equal(sw.shown.length, 1);
+
+  // Every kind, on screen or not, in time or run out: one notice each.
+  for (const kind of ['exclusive', 'assigned', 'radar']) {
+    for (const visible of [false, true]) {
+      for (const delta of [120000, -1000]) {
+        sw = scope({ visible });
+        await sw.push(offer(kind, { expiresAt: new Date(Date.now() + delta).toISOString() }));
+        assert.equal(sw.shown.length, 1, `${kind} visible=${visible} delta=${delta}`);
+      }
+    }
+  }
+
+  // A push with no data at all still shows a notice.
+  sw = scope();
+  await sw.push({});
+  assert.equal(sw.shown.length, 1);
 
   // Any other push is shown as before.
   sw = scope({ visible: true });

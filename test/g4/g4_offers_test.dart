@@ -421,8 +421,9 @@ void main() {
     });
 
     test('web service worker: Exclusive/hand-sent sound + vibration only '
-        'with the Vibrate setting, Radar quiet, nothing on screen or after '
-        'expiresAt (node tool/verify_offer_push_sw.cjs)', () async {
+        'with the Vibrate setting, Radar quiet; every push shows a notice, '
+        'also on screen and after expiresAt (Q1) '
+        '(node tool/verify_offer_push_sw.cjs)', () async {
       final run = await Process.run('node', ['tool/verify_offer_push_sw.cjs']);
       expect(run.exitCode, 0, reason: '${run.stdout}\n${run.stderr}');
       expect('${run.stdout}', contains('offer push service worker: ok'));
