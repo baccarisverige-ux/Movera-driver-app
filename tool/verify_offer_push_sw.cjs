@@ -145,5 +145,23 @@ function offer(kind, extra = {}) {
   assert.equal(sw.shown.length, 1);
   assert.equal(sw.shown[0].options.tag, 'ntf_2');
 
+  // A trip push (Ride Check, a trip message…) is one notice per trip: the
+  // tag comes from data.tripId first, then the legacy alias rideId
+  // (contract wire.ids.trip), so a newer push for the same trip replaces it.
+  sw = scope();
+  await sw.push({ notificationId: 'ntf_9', kind: 'ride_check', deepLink: 'movera-driver://trips/trp_1', tripId: 'trp_1', title: 'T', body: 'B' });
+  assert.equal(sw.shown[0].options.tag, 'movera-ride-trp_1', 'trip push tag from tripId');
+  assert.equal(sw.shown[0].options.renotify, true, 'a replaced trip notice alerts again');
+  sw = scope();
+  await sw.push({ notificationId: 'ntf_10', kind: 'trip_message', rideId: 'r7', title: 'T', body: 'B' });
+  assert.equal(sw.shown[0].options.tag, 'movera-ride-r7', 'legacy rideId alias');
+  sw = scope();
+  await sw.push({ notificationId: 'ntf_11', kind: 'trip_message', tripId: 'trp_2', rideId: 'r_old', title: 'T', body: 'B' });
+  assert.equal(sw.shown[0].options.tag, 'movera-ride-trp_2', 'tripId wins over rideId');
+  // An offer stays one notice per offer (its own expiry and close).
+  sw = scope();
+  await sw.push(offer('exclusive'));
+  assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
+
   console.log('offer push service worker: ok');
 })().catch((error) => { console.error(error); process.exit(1); });

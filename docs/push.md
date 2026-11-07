@@ -26,7 +26,8 @@ For store builds, later:
 - Web: `firebase-messaging-sw.js` shows a notice for EVERY push (Q1, owner 2026-11-07), also while the app is on
   screen and after `expiresAt` (then quiet, with its own text, and closed at once). iOS WebKit removes the push subscription after 3
   pushes that show no notice (`maxSilentPushCount = 3`). Offer notices use the tag `movera-offer-<offerId>` with
-  `renotify`, so a repeat replaces the earlier one.
+  `renotify`, so a repeat replaces the earlier one. Other trip pushes (Ride Check, trip messages) use the tag
+  `movera-ride-<tripId>` (then the legacy `rideId`), one notice per trip.
   Exclusive and hand-sent (`sound: offer`) use the phone's notification sound and vibrate `[300, 150, 300]` when
   `vibrate` is `"true"` AND the driver's own Vibrate setting (Settings › Accessibility) is on; the app keeps that
   setting in the Cache Storage entry `movera-push-prefs.json` (`moveraPush.setOfferPrefs`). Radar is silent.

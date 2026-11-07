@@ -94,12 +94,19 @@ self.addEventListener('push', function (event) {
     event.waitUntil(showOffer(d, title, body));
     return;
   }
-  event.waitUntil(self.registration.showNotification(title, {
+  // One notice per trip (Ride Check, trip messages…): the tag comes from
+  // data.tripId first, then rideId, its legacy alias (contract
+  // wire.ids.trip), so a newer push for the same trip replaces the older
+  // one and alerts again. Without a trip, the notice's own id.
+  var trip = d.tripId || d.rideId;
+  var options = {
     body: body,
-    tag: d.notificationId || undefined,
+    tag: trip ? 'movera-ride-' + trip : (d.notificationId || undefined),
     icon: appRoot() + 'icons/Icon-192.png',
     data: { notificationId: d.notificationId || '', deepLink: d.deepLink || '', kind: d.kind || '' }
-  }));
+  };
+  if (trip) options.renotify = true;
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', function (event) {
