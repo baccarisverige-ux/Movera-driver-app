@@ -58,6 +58,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                     LeaveCountdown(
                       leaveAt: row.leaveAt!,
                       pickupAt: row.scheduledAt,
+                      rideId: row.tripId,
+                      startableAt: row.mustBeOnlineAt,
                       // What the server planned: pickup − drive − leaveAt.
                       earlyMin:
                           (row.scheduledAt.difference(row.leaveAt!).inSeconds -
