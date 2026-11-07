@@ -415,9 +415,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
-  Future<void> _resyncTrip() async {
+  Future<void> _resyncTrip({bool reopen = false}) async {
     try {
-      await _realtime.reconnectAndResync(widget.tripId);
+      await _realtime.reconnectAndResync(widget.tripId, reopen: reopen);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
