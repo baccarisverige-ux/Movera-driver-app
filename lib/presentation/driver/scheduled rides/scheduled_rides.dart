@@ -327,6 +327,9 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     }
 
     if (action == _ScheduledRideAction.accepted) {
+      // W1 (2026-11-07): the server's list may have been read again while
+      // the details were open (new row objects): the same booking by id.
+      ride = ScheduledRideStore._sameRequest(ride) ?? ride;
       // The request may have been answered on Home, or replaced by a new
       // session while this details route was open. Only its current owner can act.
       if (!_requests.contains(ride)) {
@@ -827,6 +830,17 @@ class ScheduledRideStore {
                   _clashWith(ride) == null,
             )
             .toList();
+
+  /// The open request now shown for [ride]: the same row, or the row
+  /// of the same booking after the server's list was read again.
+  static _ScheduledRide? _sameRequest(_ScheduledRide ride) {
+    for (final open in _visibleRequests) {
+      if (identical(open, ride) || (ride.id.isNotEmpty && open.id == ride.id)) {
+        return open;
+      }
+    }
+    return null;
+  }
 
   /// [ride]'s pickup time has passed: nobody can take it any more
   /// (driver-u164). False when its time is unknown.
