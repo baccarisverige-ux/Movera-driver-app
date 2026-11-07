@@ -78,5 +78,6 @@
   "noShowConfirmYouGet": "Markera som utebliven kund? Du får {amount}",
   "noShowConfirmNoFee": "Markera som utebliven kund? Ingen avgift",
   "cancelAfterArrivedNote": "Avbokning efter att föraren anlänt och den fria väntetiden gått ut räknas som utebliven kund",
-  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit."
+  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit.",
+  "driverEndedEarlyCollect": "Du avslutade resan tidigare"
 }

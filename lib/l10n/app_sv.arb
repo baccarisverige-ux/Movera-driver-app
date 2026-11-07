@@ -333,6 +333,7 @@
   "noShowConfirmNoFee": "Markera som utebliven kund? Ingen avgift",
   "cancelAfterArrivedNote": "Avbokning efter att föraren anlänt och den fria väntetiden gått ut räknas som utebliven kund",
   "noShowFromTime": "Kan användas från {time} om resenären inte har kommit.",
+  "driverEndedEarlyCollect": "Du avslutade resan tidigare",
   "fleetJoinTitle": "Gå med i ditt åkeri",
   "fleetJoinBody": "Ägaren av ditt åkeri delar Movera-koden med dig. Ange den tillsammans med ägarens namn och e-post så som de är registrerade hos Movera.",
   "fleetJoin": "Gå med",

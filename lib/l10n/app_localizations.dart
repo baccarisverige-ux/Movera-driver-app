@@ -2098,6 +2098,12 @@ abstract class AppLocalizations {
   /// **'Can be applied from {time} if the rider has not arrived.'**
   String noShowFromTime(Object time);
 
+  /// Finder L8 (owner 2026-11-07): subtitle of the cash sheet when the driver ended the trip with the rider on board (End trip early).
+  ///
+  /// In en, this message translates to:
+  /// **'You ended the trip early'**
+  String get driverEndedEarlyCollect;
+
   /// No description provided for @fleetJoinTitle.
   ///
   /// In en, this message translates to:

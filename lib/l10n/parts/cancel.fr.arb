@@ -78,5 +78,6 @@
   "noShowConfirmYouGet": "Signaler l’absence du passager ? Vous percevrez {amount}.",
   "noShowConfirmNoFee": "Signaler l’absence du passager ? Aucun frais ne sera facturé.",
   "cancelAfterArrivedNote": "Une annulation après l’arrivée du chauffeur et la fin de l’attente gratuite est considérée comme une absence du passager.",
-  "noShowFromTime": "Applicable à partir de {time} si le passager ne s’est pas présenté."
+  "noShowFromTime": "Applicable à partir de {time} si le passager ne s’est pas présenté.",
+  "driverEndedEarlyCollect": "Vous avez terminé la course plus tôt"
 }
