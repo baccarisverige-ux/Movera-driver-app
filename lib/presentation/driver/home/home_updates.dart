@@ -71,7 +71,11 @@ extension _HomeUpdates on _DriverHomeState {
     _HomeMapSheet(this)._showNextIslandMessage();
     _HomeRadarMotion(this)._syncRadarAnimation();
     // Back on top or back to the front: a tip given meanwhile (owner).
-    _HomeMapIsland(this)._refreshLastTripTip(auto: true);
+    // Supervisor #495: not on `inactive` (a shade, a call banner).
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle == null || lifecycle == AppLifecycleState.resumed) {
+      _HomeMapIsland(this)._refreshLastTripTip(auto: true);
+    }
     _rebuild(() {});
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
@@ -29,6 +30,17 @@ class LastTripTip {
 
   static String? _reading;
 
+  /// The clock (tests set their own).
+  static DateTime Function() now = DateTime.now;
+
+  /// Supervisor #495: Home asks by itself on every lifecycle change while
+  /// it is on screen; an [auto] read for the same trip waits this long
+  /// after the last one (a tap on LAST TRIP always reads).
+  static const Duration autoGap = Duration(seconds: 45);
+
+  static String? _autoTrip;
+  static DateTime? _autoAt;
+
   static Future<Map<String, dynamic>?> _readLive(String tripId) async {
     final api = LiveDriverServices.instance?.api;
     if (api == null) return null;
@@ -44,7 +56,18 @@ class LastTripTip {
   }) async {
     final last = waybills.last;
     if (last == null || last.tip != null || _reading == last.tripId) return;
-    if (auto && DateTime.now().difference(last.issuedAt) > autoWindow) return;
+    if (auto) {
+      final at = now();
+      if (at.difference(last.issuedAt) > autoWindow) return;
+      final previous = _autoAt;
+      if (_autoTrip == last.tripId &&
+          previous != null &&
+          at.difference(previous) < autoGap) {
+        return;
+      }
+      _autoTrip = last.tripId;
+      _autoAt = at;
+    }
     _reading = last.tripId;
     final Map<String, dynamic>? projection;
     try {
@@ -66,5 +89,13 @@ class LastTripTip {
         ? money.driverPay + tip.amount
         : money.driverPay;
     waybills.updateLast(last.copyWith(fare: total.formatted, tip: tip));
+  }
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _autoTrip = null;
+    _autoAt = null;
+    _reading = null;
+    now = DateTime.now;
   }
 }

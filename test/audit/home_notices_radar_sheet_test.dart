@@ -874,6 +874,7 @@ void main() {
     tearDown(() {
       waybills.reset();
       LastTripTip.readTrip = null;
+      LastTripTip.resetForTesting();
     });
 
     Future<void> openLastTrip(WidgetTester tester) async {
@@ -948,8 +949,10 @@ void main() {
       expect(reads, 1, reason: 'Home shown: one read');
       expect(waybills.last!.fare, '60,00 kr');
       final navigator = await _cover(tester);
-      // The rider tips 30 kr while a screen covers Home.
+      // The rider tips 30 kr while a screen covers Home (a minute: an auto
+      // read waits LastTripTip.autoGap after the last one).
       tipped = true;
+      LastTripTip.now = () => DateTime.now().add(const Duration(minutes: 1));
       navigator.pop();
       await _frames(tester, const Duration(milliseconds: 600));
       expect(reads, 2, reason: 'back on top: one read');
@@ -962,6 +965,44 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 600));
       await openLastTrip(tester);
       expect(reads, 2, reason: 'one tip per trip: nothing more is read');
+      await _end(tester);
+    });
+
+    testWidgets('supervisor #495: back from the background plus 10 '
+        'inactive/resumed flickers read the trip once', (tester) async {
+      var reads = 0;
+      LastTripTip.readTrip = (_) async {
+        reads++;
+        return projection(tipped: false);
+      };
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      // Home shown read the trip a while ago.
+      LastTripTip.now = () => DateTime.now().add(const Duration(minutes: 1));
+      reads = 0;
+      final binding = tester.binding;
+      for (final state in const [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]) {
+        binding.handleAppLifecycleStateChanged(state);
+        await _frames(tester, const Duration(milliseconds: 100));
+      }
+      for (var i = 0; i < 10; i++) {
+        binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+        await _frames(tester, const Duration(milliseconds: 100));
+        binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+        await _frames(tester, const Duration(milliseconds: 100));
+      }
+      expect(
+        reads,
+        1,
+        reason: 'one read back in the front, not one per flicker',
+      );
       await _end(tester);
     });
 
