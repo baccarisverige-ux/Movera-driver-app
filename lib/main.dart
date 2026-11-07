@@ -43,6 +43,7 @@ import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/ride/open_trip_screens.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/settings/server_settings_sync.dart';
@@ -535,9 +536,14 @@ class _MoveraAppState extends State<MoveraApp> {
       return;
     }
     // A trip push (route change, Ride Check, not heading to the rider): the
-    // trip screen (already open on the active trip, or restored by Home on
-    // a cold start) shows it from its stream; no bell list over it.
-    if (open.routeChangeTripId != null) return;
+    // trip screen comes back on top (menu pages over it close) and reads
+    // the trip again; restored by Home on a cold start. A bell notice
+    // about another trip (pay changed, « Course annulée ») opens the bell
+    // list on it (S6 I-1, S8 R2).
+    if (open.routeChangeTripId case final tripId?
+        when openTripPush(tripId, activeTripId: _session.activeTripId)) {
+      return;
+    }
     unawaited(
       navigator.push(
         MaterialPageRoute<void>(
