@@ -58,6 +58,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                     LeaveCountdown(
                       leaveAt: row.leaveAt!,
                       pickupAt: row.scheduledAt,
+                      rideId: row.tripId,
+                      startableAt: row.mustBeOnlineAt,
                       // What the server planned: pickup − drive − leaveAt.
                       earlyMin:
                           (row.scheduledAt.difference(row.leaveAt!).inSeconds -
@@ -576,7 +578,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
           _PlanRow(
             icon: AppAssets.solarCalendarMinimalistic,
             title: tr.schedPlansChanged,
-            body: ride.accepted
+            // W1: the preview words are the demo's only, never live.
+            body: ride.accepted || LiveDriverServices.active
                 ? tr.schedDriversNeverPay(_freeCancelLine(ride.route))
                 : tr.schedLocalPreviewCancel,
           ),

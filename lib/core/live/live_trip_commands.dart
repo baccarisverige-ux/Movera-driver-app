@@ -600,14 +600,23 @@ class LiveTripCommands {
   /// the trip screen asks only while its event stream is down, every
   /// `pollSeconds` (10), never faster. The answer is folded in like any
   /// projection and returned; null when the server did not answer.
-  Future<Map<String, dynamic>?> refresh(String tripId) async {
+  Future<Map<String, dynamic>?> refresh(String tripId) async =>
+      (await follow(tripId)).trip;
+
+  /// [refresh], and S6 I-3: [gone] when the server answered 403 or 404
+  /// (the trip is not this driver's any more), as the event stream reads
+  /// those answers.
+  Future<({Map<String, dynamic>? trip, bool gone})> follow(
+    String tripId,
+  ) async {
     try {
       final answer = await _api.get('$_base/${Uri.encodeComponent(tripId)}');
       observe(answer);
-      return answer;
+      return (trip: answer, gone: false);
     } on ApiError catch (error) {
       DriverLog.warn('trip $tripId not refreshed: ${error.code}', name: 'live');
-      return null;
+      final status = error.statusCode;
+      return (trip: null, gone: status == 403 || status == 404);
     }
   }
 

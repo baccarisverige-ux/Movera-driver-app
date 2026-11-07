@@ -88,6 +88,12 @@ class LiveActiveTrip {
     final arrivedAt = arrived is String
         ? DateTime.tryParse(arrived)?.toLocal()
         : null;
+    // S6 I-5: a booked ride (kind scheduled) keeps its pickup time and
+    // its booking id (the trip's): the booked badge and the late-ETA watch.
+    final scheduledAt =
+        trip['kind'] == 'scheduled' && trip['scheduledAt'] is String
+        ? DateTime.tryParse(trip['scheduledAt'] as String)
+        : null;
     return PersistedActiveRide(
       tripId: id,
       stage: stage,
@@ -123,6 +129,8 @@ class LiveActiveTrip {
       pickupLng: pickup.point.longitude,
       dropoffLat: dropoff.point.latitude,
       dropoffLng: dropoff.point.longitude,
+      scheduledPickupAt: scheduledAt,
+      scheduledRideId: scheduledAt == null ? null : id,
     );
   }
 

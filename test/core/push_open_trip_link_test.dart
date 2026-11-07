@@ -26,7 +26,8 @@ void main() {
         (((contract['onTrip'] as Map)['rideCheck'] as Map)['push']
                 as Map)['deepLink']['driver']
             as String;
-    expect(link, 'movera-driver://trip/{tripId}');
+    // v0.18.49 Q9: every trip link the contract sends is trips/{tripId}.
+    expect(link, 'movera-driver://trips/{tripId}');
     final open = _open(link);
     expect(open.offerId, isNull);
     expect(open.routeChangeTripId, 'trp_1');
@@ -39,8 +40,10 @@ void main() {
                     as Map)['notHeadingNotice']
                 as Map)['deepLink']
             as String;
-    expect(link, 'movera-driver://trip/{tripId}');
+    expect(link, 'movera-driver://trips/{tripId}');
     expect(_open(link).routeChangeTripId, 'trp_1');
+    // Q9: the app keeps accepting the older singular link.
+    expect(_open('movera-driver://trip/{tripId}').routeChangeTripId, 'trp_1');
   });
 
   test('route-change trips/{id} and offers/{id} links keep working', () {

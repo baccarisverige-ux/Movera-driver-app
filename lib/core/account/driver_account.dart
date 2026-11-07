@@ -677,7 +677,12 @@ class ServerNotification {
   /// driver because he would be too late (`reservation_taken_back`, counts as
   /// a cancel, no fee), or the older `trip_taken_back`. The texts are the
   /// server's (sv / fr / en); the bell list shows them with a warning icon.
+  /// Lifecycle L1 (contract v0.18.50 §72 `driverTripPush`): the driver's
+  /// trip ended or left him because of someone else — « Course annulée »
+  /// (`driver_trip_update`: rider cancel or early end, admin cancel,
+  /// reassign or no-show).
   bool get isTripWarning =>
+      kind == 'driver_trip_update' ||
       kind == 'heading_not_to_rider' ||
       kind == 'reservation_taken_back' ||
       kind == 'trip_taken_back';

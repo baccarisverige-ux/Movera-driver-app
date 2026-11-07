@@ -889,5 +889,7 @@
   "nextTripPopupLive": "{rider} is waiting at {pickup}. Drive there now.",
   "@nextTripPopupLive": {"description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.", "placeholders": {"rider": {"type": "String"}, "pickup": {"type": "String"}}},
   "nextTripPopupBooked": "Booked ride at {time} · {pickup}. Drive to the pickup now.",
-  "@nextTripPopupBooked": {"description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.", "placeholders": {"time": {"type": "String"}, "pickup": {"type": "String"}}}
+  "@nextTripPopupBooked": {"description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.", "placeholders": {"time": {"type": "String"}, "pickup": {"type": "String"}}},
+  "waitingBeforePickup": "Before the pickup time",
+  "@waitingBeforePickup": {"description": "contract.json#bookedRide0_18_51.texts.beforePickup: label of the waiting timer while it counts down to a booked ride's pickup time."}
 }

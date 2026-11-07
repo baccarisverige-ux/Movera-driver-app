@@ -33,6 +33,10 @@ class CustomGoogleMap extends StatefulWidget {
   /// shows the map if the script arrives later.
   static const Duration mapsUnavailableAfter = Duration(seconds: 12);
 
+  /// Finder C3: while Maps JavaScript is still missing, the page is asked to
+  /// load it again this often (a failed load frees the page's loader).
+  static const Duration mapsRequestAgainEvery = Duration(seconds: 5);
+
   final CameraPosition? initialPosition;
   final Set<Marker>? markers;
 
@@ -361,6 +365,11 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     const poll = Duration(milliseconds: 50);
     _mapsReadyPoll = Timer.periodic(poll, (timer) {
       if (!CustomGoogleMap.mapsReadyProbe()) {
+        if ((poll * timer.tick).inMilliseconds %
+                CustomGoogleMap.mapsRequestAgainEvery.inMilliseconds ==
+            0) {
+          CustomGoogleMap.requestMaps();
+        }
         if (!_mapsUnavailable &&
             poll * timer.tick >= CustomGoogleMap.mapsUnavailableAfter &&
             mounted) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -89,6 +91,9 @@ class DriverAccountSession extends ChangeNotifier {
     }
   }
 
+  /// The account and phone language last saved by [replace] (A7).
+  String? _languageSynced;
+
   /// Takes the account a command answered with.
   DriverAccount replace(DriverAccount account) {
     _account = account;
@@ -107,6 +112,19 @@ class DriverAccountSession extends ChangeNotifier {
     // Contract v0.18.2 `auth.firstLanguage`: an account's language wins
     // over the phone's when nothing was picked on this phone.
     DriverLanguage.useAccount(account.language);
+    // Finder A7: a language picked on this phone before sign-in (the
+    // globe) is saved to the account once it is known, so the server's
+    // pushes and notices follow it. Once per account and language.
+    final picked = DriverLanguage.choice;
+    final save = DriverLanguage.saveToAccount;
+    final attempt = '${account.driverId}:$picked';
+    if (picked != null &&
+        picked != account.language &&
+        save != null &&
+        _languageSynced != attempt) {
+      _languageSynced = attempt;
+      scheduleMicrotask(() => save(picked).ignore());
+    }
     // Contract v0.18.5 `legal.apps`: the account's country's terms.
     DriverLegal.instance.useAccount(
       driverId: account.driverId,
@@ -119,6 +137,7 @@ class DriverAccountSession extends ChangeNotifier {
   /// Forgets the account (sign-out).
   void clear() {
     _account = null;
+    _languageSynced = null;
     unreadNotifications.value = 0;
     DriverPerformanceConfig.live.value = null;
     notifyListeners();

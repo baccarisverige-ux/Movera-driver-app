@@ -170,6 +170,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                         seconds: seconds,
                         diameter: 132,
                         terms: terms,
+                        // A stop wait has no pickup-time countdown.
+                        beforeSeconds: widget.fullyPaid ? 0 : null,
                       ),
                       const SizedBox(height: 14),
                       Text(
@@ -181,19 +183,21 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                           letterSpacing: -0.4,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.fullyPaid
-                            ? tr.thisStopHasNoFreeMinutes
-                            : phase.detail,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: _muted,
-                          fontSize: 13,
-                          height: 1.35,
-                          fontWeight: FontWeight.w600,
+                      if (widget.fullyPaid || phase.detail.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.fullyPaid
+                              ? tr.thisStopHasNoFreeMinutes
+                              : phase.detail,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: _muted,
+                            fontSize: 13,
+                            height: 1.35,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                      ],
                       // Q42/Q43: once the free wait is over, the waiting
                       // fee counts up live; it is all the driver's.
                       if (paidSeconds > 0 && terms.pricesKnown) ...[
@@ -239,7 +243,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     title: tr.includedTime,
                     detail: tr.openingMinutesStayInsideFare,
                     value: '${terms.freeMinutes} min',
-                    state: seconds < graceSeconds
+                    state: seconds < terms.beforeSeconds
+                        ? _PhaseState.later
+                        : seconds < graceSeconds
                         ? _PhaseState.now
                         : _PhaseState.done,
                   ),
@@ -581,6 +587,9 @@ class _WaitPhase {
   final String detail;
 
   static _WaitPhase of(int seconds, WaitingTerms terms) {
+    if (seconds < terms.beforeSeconds) {
+      return _WaitPhase(tr.waitingBeforePickup, '');
+    }
     if (seconds < terms.freeSeconds) {
       return _WaitPhase(tr.includedMinutes, tr.theseFirstMinutesAreAlreadyPart);
     }
@@ -601,10 +610,15 @@ class WaitingClock extends StatefulWidget {
     this.onDark = false,
     this.paid = false,
     this.terms,
+    this.beforeSeconds,
   });
 
   /// The trip's waiting terms; null: [WaitingTerms.active].
   final WaitingTerms? terms;
+
+  /// Seconds of countdown before the free wait (v0.18.51 §73); null: the
+  /// trip's ([terms]); a paid clock has none.
+  final int? beforeSeconds;
 
   /// Paid from the first second (a stop wait): green "+m:ss" and the ring
   /// goes round once a minute.
@@ -655,9 +669,13 @@ class _WaitingClockState extends State<WaitingClock>
   Widget build(BuildContext context) {
     final paid = widget.paid;
     final terms = widget.terms ?? WaitingTerms.active;
+    final before = paid ? 0 : (widget.beforeSeconds ?? terms.beforeSeconds);
+    // v0.18.51 §73: before `waitFrom` a negative countdown (−12:00), then
+    // 0:00 at the pickup time and the free minutes as on a live ride. A
+    // paid stop wait has no countdown.
     final label = paid
         ? '+${_clockLabel(widget.seconds)}'
-        : _clockLabel(widget.seconds);
+        : _clockLabel(widget.seconds - before);
     final tone = paid
         ? const Color(0xFF146B45)
         : _waitTone(widget.seconds, terms);
@@ -671,6 +689,7 @@ class _WaitingClockState extends State<WaitingClock>
             hand: _hand.value,
             tone: tone,
             minuteRing: paid,
+            before: before,
             grace: terms.freeSeconds,
             noShow: terms.noShowSeconds,
           ),
@@ -740,10 +759,13 @@ String _clockTime(DateTime at) {
   return '${two(local.hour)}:${two(local.minute)}';
 }
 
+/// "4:05"; a negative time as "−12:00" (U+2212, the contract's sign).
 String _clockLabel(int seconds) {
-  final minutes = seconds ~/ 60;
-  final rest = (seconds % 60).toString().padLeft(2, '0');
-  return '$minutes:$rest';
+  final sign = seconds < 0 ? '\u2212' : '';
+  final value = seconds.abs();
+  final minutes = value ~/ 60;
+  final rest = (value % 60).toString().padLeft(2, '0');
+  return '$sign$minutes:$rest';
 }
 
 class _ClockPainter extends CustomPainter {
@@ -752,10 +774,13 @@ class _ClockPainter extends CustomPainter {
     required this.hand,
     required this.tone,
     this.minuteRing = false,
+    this.before = 0,
     required this.grace,
     required this.noShow,
   });
 
+  /// Countdown seconds before the free wait (v0.18.51 §73).
+  final int before;
   final int grace;
   final int noShow;
   final int seconds;
@@ -775,8 +800,10 @@ class _ClockPainter extends CustomPainter {
 
     final window = minuteRing
         ? (seconds % 60) / 60
+        : seconds < before
+        ? 1 - seconds / before
         : seconds < grace
-        ? seconds / grace
+        ? (seconds - before) / math.max(1, grace - before)
         : seconds < noShow
         ? (seconds - grace) / (noShow - grace)
         : 1.0;
@@ -813,6 +840,7 @@ class _ClockPainter extends CustomPainter {
       oldDelegate.hand != hand ||
       oldDelegate.tone != tone ||
       oldDelegate.minuteRing != minuteRing ||
+      oldDelegate.before != before ||
       oldDelegate.grace != grace ||
       oldDelegate.noShow != noShow;
 }
