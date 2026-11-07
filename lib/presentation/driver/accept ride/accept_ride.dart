@@ -909,8 +909,10 @@ class _AcceptRideState extends State<AcceptRide>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
+        // S6 I-2: back from hidden, the stream may be half open: reopen it.
+        final wasHidden = _liveUpdatesPaused;
         _AcceptRideTrip(this)._resumeLiveUpdates();
-        unawaited(_AcceptRideTrip(this)._resyncTrip());
+        unawaited(_AcceptRideTrip(this)._resyncTrip(reopen: wasHidden));
       // driver-r4-32: inactive (a shade, a prompt, a call banner) is still on
       // screen: save the trip, keep GPS and the camera.
       case AppLifecycleState.inactive:
