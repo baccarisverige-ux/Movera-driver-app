@@ -6235,7 +6235,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offerAccept => 'Accepter';
 
   @override
-  String get offerOnYourWay => 'Sur votre trajet';
+  String get offerOnYourWay => 'Sur votre chemin';
 
   @override
   String get offerHide => 'Masquer l’offre';

@@ -6125,7 +6125,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get offerAccept => 'Acceptera';
 
   @override
-  String get offerOnYourWay => 'Längs din väg';
+  String get offerOnYourWay => 'På vägen';
 
   @override
   String get offerHide => 'Dölj erbjudandet';
