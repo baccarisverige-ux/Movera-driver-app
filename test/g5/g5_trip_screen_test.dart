@@ -521,6 +521,41 @@ void main() {
     },
   );
 
+  for (final kind in [
+    DriverRealtimeKind.tripProjection,
+    DriverRealtimeKind.riderCancelled,
+  ]) {
+    testWidgets('item 12 (${kind.name}): a free rider cancel says "no fee" '
+        '(server: cancellation.fee null, no driverShare)', (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime: realtime, home: true);
+      expect(find.byType(AcceptRide), findsOneWidget);
+      realtime.emit(
+        tripId: _trip,
+        kind: kind,
+        status: TripStatus.cancelledByRider,
+        // movera-server src/trips/service.ts riderCancel: a cancel inside
+        // the free minutes is { actor, reasonCode, at, fee: null }.
+        projection: _projection(
+          status: 'cancelled_by_rider',
+          version: 3,
+          cancellation: {
+            'actor': 'rider',
+            'reasonCode': 'plans_changed',
+            'at': '2026-10-31T09:01:30Z',
+            'fee': null,
+          },
+        ),
+      );
+      await _frames(tester, 30);
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(IslandMessages.take()?.title, 'Rider cancelled · no fee');
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    });
+  }
+
   testWidgets('re-check: "Rider not at pickup" only once at the pickup', (
     tester,
   ) async {
