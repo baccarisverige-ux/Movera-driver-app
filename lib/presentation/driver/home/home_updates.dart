@@ -70,6 +70,8 @@ extension _HomeUpdates on _DriverHomeState {
     _HomeOfferRoute(this)._resumeRouteLine();
     _HomeMapSheet(this)._showNextIslandMessage();
     _HomeRadarMotion(this)._syncRadarAnimation();
+    // Back on top or back to the front: a tip given meanwhile (owner).
+    _HomeMapIsland(this)._refreshLastTripTip(auto: true);
     _rebuild(() {});
   }
 }
