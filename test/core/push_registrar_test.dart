@@ -292,7 +292,7 @@ void main() {
 
   for (final (lang, title, allow) in [
     ('sv', 'Få aviseringar när appen är stängd?', 'Slå på'),
-    ('fr', 'Recevoir les avis quand l’app est fermée ?', 'Activer'),
+    ('fr', 'Recevoir les avis quand l’application est fermée ?', 'Activer'),
     ('en', 'Get notices when the app is closed?', 'Turn on'),
   ]) {
     testWidgets('the explanation in $lang; "$allow" answers yes', (

@@ -192,10 +192,10 @@ void main() {
         ),
         (
           'fr',
-          'Code incorrect. Encore 2 essais',
-          'Trop d’essais. Réessayez dans 2 min',
+          'Code incorrect. Il vous reste 2 tentatives.',
+          'Trop de tentatives. Réessayez dans 2 min.',
           'Demandez au passager son code à 4 chiffres',
-          'Trop de codes incorrects. Appelez le support Movera',
+          'Trop de tentatives avec un code erroné. Appelez l’assistance Movera',
         ),
         (
           'en',
@@ -278,7 +278,7 @@ void main() {
         expect(jsonDecode(requests[2].body), {'expectedVersion': 7});
         // Without it the server skips the PIN (round 1 compat).
         for (final request in requests) {
-          expect(request.headers['X-Contract-Version'], '0.18.47');
+          expect(request.headers['X-Contract-Version'], '0.18.48');
         }
         expect(trips.needsPin('t1'), isFalse);
       });
@@ -490,7 +490,7 @@ void main() {
       (
         'fr',
         'L’attente payante a commencé',
-        'Vous pouvez maintenant signaler un client absent',
+        'Vous pouvez maintenant signaler l’absence du passager.',
       ),
       ('en', 'Paid waiting has started', 'You can now mark a no-show'),
     ]) {
