@@ -158,12 +158,14 @@ class PushRegistrar {
   }
 
   /// Before the session ends: forget this device's token on the server.
-  Future<void> signingOut() async {
+  /// [server] false: the sign-out already removed the session's devices
+  /// on the server (`POST /auth/sign-out`), only this phone forgets it.
+  Future<void> signingOut({bool server = true}) async {
     try {
       final token = await store.token();
       if (token == null) return;
       await store.setToken(null);
-      await api.unregister(token);
+      if (server) await api.unregister(token);
     } catch (error) {
       DriverLog.warn(
         'push not unregistered: ${error.runtimeType}',
