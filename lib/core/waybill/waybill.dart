@@ -244,6 +244,10 @@ abstract interface class WaybillRepository {
   void clearNext();
   void reset();
 
+  /// Replaces the last trip with newer money from the server (a tip given
+  /// after the trip); kept when the last trip is another one by then.
+  void updateLast(WaybillRecord record);
+
   /// Move a secured next trip into the current slot.
   ///
   /// Returns the promoted current record, or null if no trip is queued or
@@ -335,6 +339,12 @@ class InMemoryWaybillRepository implements WaybillRepository {
     _current.value = promoted;
     _next.value = null;
     return promoted;
+  }
+
+  @override
+  void updateLast(WaybillRecord record) {
+    if (last?.tripId != record.tripId) return;
+    _last.value = record;
   }
 
   @override
