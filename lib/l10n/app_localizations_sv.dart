@@ -4456,7 +4456,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String destOnlyTripsYourWay(String place) {
-    return 'Du får bara resor åt ditt håll, så varje resa tar dig närmare $place.';
+    return 'Du får alla resor; de som går åt ditt håll markeras ”På vägen”.';
   }
 
   @override
@@ -5117,7 +5117,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'Resor mot $place';
+    return 'På vägen mot $place: markerade ”På vägen”';
   }
 
   @override

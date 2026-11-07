@@ -58,7 +58,7 @@
   },
   "rrNew": "New",
   "rrDestinationRoute": "Destination route",
-  "rrTripsToward": "Trips toward {place}",
+  "rrTripsToward": "On your way to {place}: marked “On your way”",
   "@rrTripsToward": {
     "placeholders": {
       "place": {

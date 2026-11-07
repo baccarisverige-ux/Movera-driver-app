@@ -7765,7 +7765,7 @@ abstract class AppLocalizations {
   /// No description provided for @destOnlyTripsYourWay.
   ///
   /// In en, this message translates to:
-  /// **'You\'ll only get trips heading your way, so every ride takes you closer to {place}.'**
+  /// **'You get all trips; those heading your way are marked “On your way”.'**
   String destOnlyTripsYourWay(String place);
 
   /// No description provided for @destArriveBy.
@@ -8791,7 +8791,7 @@ abstract class AppLocalizations {
   /// No description provided for @rrTripsToward.
   ///
   /// In en, this message translates to:
-  /// **'Trips toward {place}'**
+  /// **'On your way to {place}: marked “On your way”'**
   String rrTripsToward(String place);
 
   /// No description provided for @rrScanningNearby.

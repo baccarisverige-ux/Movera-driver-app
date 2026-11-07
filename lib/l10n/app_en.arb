@@ -3388,7 +3388,7 @@
   "destNoAddressFound": "No address found",
   "destTryAnother": "Try another street, place, or area.",
   "destFastestRoute": "Fastest route to your destination",
-  "destOnlyTripsYourWay": "You'll only get trips heading your way, so every ride takes you closer to {place}.",
+  "destOnlyTripsYourWay": "You get all trips; those heading your way are marked “On your way”.",
   "@destOnlyTripsYourWay": {
     "placeholders": {
       "place": {
@@ -3924,7 +3924,7 @@
   },
   "rrNew": "New",
   "rrDestinationRoute": "Destination route",
-  "rrTripsToward": "Trips toward {place}",
+  "rrTripsToward": "On your way to {place}: marked “On your way”",
   "@rrTripsToward": {
     "placeholders": {
       "place": {

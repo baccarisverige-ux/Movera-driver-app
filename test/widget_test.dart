@@ -1167,7 +1167,7 @@ void main() {
       find.byKey(const ValueKey<String>('radar-destination-filter')),
       findsOneWidget,
     );
-    expect(find.textContaining('Trips toward Solna Torg'), findsOneWidget);
+    expect(find.textContaining('On your way to Solna Torg'), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-1')), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-2')), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-3')), findsOneWidget);

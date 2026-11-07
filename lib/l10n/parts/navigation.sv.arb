@@ -146,7 +146,7 @@
   "destNoAddressFound": "Ingen adress hittades",
   "destTryAnother": "Prova en annan gata, plats eller ett annat område.",
   "destFastestRoute": "Snabbaste vägen till ditt mål",
-  "destOnlyTripsYourWay": "Du får bara resor åt ditt håll, så varje resa tar dig närmare {place}.",
+  "destOnlyTripsYourWay": "Du får alla resor; de som går åt ditt håll markeras ”På vägen”.",
   "destArriveBy": "Framme kl. {time}",
   "destConfirm": "Bekräfta målet",
   "queueAirportPreview": "Förhandsvisning av flygplatskön",

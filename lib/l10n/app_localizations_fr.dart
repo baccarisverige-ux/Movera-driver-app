@@ -4534,7 +4534,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String destOnlyTripsYourWay(String place) {
-    return 'Vous ne recevrez que des courses dans votre direction : chaque course vous rapproche de $place.';
+    return 'Vous recevez toutes les courses ; celles dans votre direction sont marquées « Sur votre chemin ».';
   }
 
   @override
@@ -5207,7 +5207,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'Courses vers $place';
+    return 'Sur votre chemin vers $place : marquées « Sur votre chemin »';
   }
 
   @override
