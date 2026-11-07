@@ -51,9 +51,14 @@ class _ScreenObserver extends RouteObserver<ModalRoute<dynamic>> {
   static bool _opaque(Route<dynamic> route) =>
       route is ModalRoute && route.opaque;
 
+  /// The full screen pushed last: the screen under it reads it while it
+  /// is told it is covered (audit 2026-11-07 B1: a trip, not a menu page).
+  Route<dynamic>? lastPushed;
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     if (_opaque(route)) {
+      lastPushed = route;
       super.didPush(route, previousRoute);
     }
   }

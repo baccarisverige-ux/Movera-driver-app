@@ -636,7 +636,9 @@ class _DriverHomeState extends State<DriverHome>
           journal == JournalReplayOutcome.quarantinedCorrupt) {
         IslandMessages.show(HomeIslandNotices.recordSetAside);
       }
-      snapshot = await repo.read() ?? await _HomeLive(this)._serverActiveTrip();
+      snapshot =
+          await _HomeLive(this)._savedTripUnlessOver(repo) ??
+          await _HomeLive(this)._serverActiveTrip();
     } on ActiveRideStorageUnavailable {
       // driver-u112: blocked storage holds no trip to recover; going online
       // stays possible, and Retry reads again.
