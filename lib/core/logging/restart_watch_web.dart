@@ -35,7 +35,17 @@ RestartWatch? startRestartWatch({required RestartReport report}) {
         if (event.persisted) watch.pageShow();
       }).toJS,
     );
-    final lost = ((web.Event _) => watch.contextLost()).toJS;
+    final lost = ((web.Event event) {
+      // Q3: a closed map's context given back on purpose
+      // (driver_map_camera.js releaseMapResources) is not a lost one.
+      final target = event.target;
+      if (target != null &&
+          target.isA<web.Element>() &&
+          (target as web.Element).hasAttribute('data-movera-released')) {
+        return;
+      }
+      watch.contextLost();
+    }).toJS;
     // The event does not bubble: listen in the capture phase, and on each
     // canvas (also those inside Flutter's shadow roots) as it appears.
     document.addEventListener('webglcontextlost', lost, true.toJS);

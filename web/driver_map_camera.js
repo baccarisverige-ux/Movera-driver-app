@@ -627,17 +627,59 @@
     };
     div.addEventListener('touchend', end, {capture: true, passive: false});
     div.addEventListener('touchcancel', end, {capture: true, passive: false});
-    // Mounted Flutter platform views are removed at dispose. Release JS state.
+    // Mounted Flutter platform views are removed at dispose. Release JS state,
+    // then (Q3) the map itself once its <div> is still out of the page a
+    // moment later: Google's listeners, WebGL context and DOM.
     let wasConnected = div.isConnected;
     const observer = new MutationObserver(() => {
       wasConnected ||= div.isConnected;
       if (wasConnected && !div.isConnected) {
         state.car?.release(); overlay.setMap(null);
         state.callbacks.clear(); state.rendererCallbacks.clear(); rendererListener?.remove(); states.delete(id); observer.disconnect();
+        setTimeout(() => { if (!div.isConnected) releaseMapResources(map, div); }, 250);
       }
     });
     observer.observe(document.body, {childList: true, subtree: true});
   }
+  // Q3 (owner 2026-11-07, "Free each map, no reuse"): google.maps.Map has
+  // no destroy(). A map whose <div> Flutter has removed keeps its tiles, its
+  // listeners and, on a vector map (the live build), its WebGL context for
+  // as long as the <div> is referenced, and google_maps_flutter_web keeps
+  // every map's <div> for the life of the page, so every trip left one map
+  // behind (finding C1). Safari allows about 16 WebGL contexts per page and
+  // evicts the oldest (often Flutter's own), which blanks the screen. So a
+  // removed map gives its WebGL contexts back and its DOM is dropped (the
+  // same release as the rider's rider_map_camera.js, without its pool).
+  function releaseMapResources(map, div) {
+    try { sdk.event.clearInstanceListeners(map); } catch (_) { /* best effort */ }
+    try {
+      div.querySelectorAll('canvas').forEach(canvas => {
+        const kind = canvas.__moveraContext;
+        if (kind === 'webgl' || kind === 'webgl2') {
+          try {
+            const gl = canvas.getContext(kind);
+            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            // Given back on purpose: the restart watch (restart_watch_web.dart)
+            // does not report this webglcontextlost as a lost GPU context.
+            canvas.setAttribute?.('data-movera-released', '');
+            if (ext && !gl.isContextLost()) ext.loseContext();
+          } catch (_) { /* best effort */ }
+        }
+        try { canvas.width = 0; canvas.height = 0; } catch (_) { /* best effort */ }
+      });
+    } catch (_) { /* best effort */ }
+    try { div.replaceChildren(); } catch (_) { /* best effort */ }
+  }
+  // Which context each canvas was given, so a removed map's WebGL contexts
+  // can be found without creating one on a canvas that had none.
+  try {
+    const nativeGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(kind, ...rest) {
+      const context = nativeGetContext.call(this, kind, ...rest);
+      if (context && !this.__moveraContext) this.__moveraContext = String(kind);
+      return context;
+    };
+  } catch (_) { /* best effort: the release then only drops the DOM */ }
   function installSdk() {
     sdk = globalThis.google.maps;
     const NativeMap = sdk.Map;
