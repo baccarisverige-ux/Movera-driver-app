@@ -285,7 +285,10 @@ class ApiDriverRealtime implements DriverRealtime {
     // Contract v0.18.5 `chat.appStorage`: no chat is kept after the trip
     // (also when the end is this driver's own step, echoed below).
     if (status != null && _isTerminal(status)) _chat?.tripEnded(tripId);
-    if (json['kind'] == 'trip_projection' &&
+    // v0.18.50 §72 L7: the rider's stream hears this driver's own cancel
+    // as driver_cancelled; on his phone it is his own echo, like the
+    // trip_projection one.
+    if ((kind == 'trip_projection' || kind == 'driver_cancelled') &&
         (_trips?.isOwnEcho(
               tripId,
               status,

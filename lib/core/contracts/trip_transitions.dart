@@ -129,7 +129,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.18.48';
+  static const String contractVersion = '0.18.50';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [
@@ -304,6 +304,15 @@ abstract final class TripTransitions {
       TripStatus.inTrip,
       TripStatus.approachingDropoff,
     ], TripStatus.failed),
+    // v0.18.50 §72 (L12): a live trip queued behind a trip that failed for
+    // silence goes back to dispatch without that driver.
+    TripTransition(
+      TripCommand.release,
+      TripActor.system,
+      [TripStatus.accepted],
+      TripStatus.searching,
+      when: TripKind.live,
+    ),
   ];
 
   /// The status after [command] by [actor] from [from], or null when the
@@ -349,14 +358,21 @@ class TripRatingRule {
 }
 
 /// Who may rate a finished trip (`contract.json#ratingAllowed`, v0.3.1).
-/// The driver rates the rider after `completed` only; the rider also rates
-/// a trip they ended early. Anything else is `invalid_transition`.
+/// Both rate after `completed` and after a trip the rider ended early
+/// (v0.18.50 L5). Anything else is `invalid_transition`.
 abstract final class TripRatingRules {
   static const List<TripRatingRule> rules = [
     TripRatingRule(TripActor.rider, TripStatus.completed),
     TripRatingRule(TripActor.driver, TripStatus.completed),
     TripRatingRule(
       TripActor.rider,
+      TripStatus.cancelledByRider,
+      command: TripCommand.endEarly,
+    ),
+    // v0.18.50 §72 (L5, owner G8 Q1): the driver rates a trip the rider
+    // ended early.
+    TripRatingRule(
+      TripActor.driver,
       TripStatus.cancelledByRider,
       command: TripCommand.endEarly,
     ),

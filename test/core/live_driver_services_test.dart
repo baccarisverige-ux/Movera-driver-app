@@ -796,6 +796,31 @@ void main() {
       await sub.cancel();
     });
 
+    test('v0.18.50 L7: the driver_cancelled echo of this phone\'s own '
+        'cancel is not passed on either', () async {
+      trips.observe({
+        'tripId': 't1',
+        'status': 'driver_to_pickup',
+        'version': 8,
+      });
+      answers.add(
+        (_) => json(200, {'tripId': 't1', 'status': 'searching', 'version': 9}),
+      );
+      await trips.cancel('t1', reasonCode: 'driver_other');
+      final events = <DriverRealtimeEvent>[];
+      final sub = realtime.subscribe('t1').listen(events.add);
+      await pumpEventQueue();
+      streams.single.add(
+        utf8.encode(
+          sse(5, 'driver_cancelled', status: 'searching', version: 9),
+        ),
+      );
+      streams.single.add(utf8.encode(sse(6, 'location', version: 9)));
+      await pumpEventQueue();
+      expect(events.map((e) => e.kind), [DriverRealtimeKind.location]);
+      await sub.cancel();
+    });
+
     test('a route change after Start keeps in_trip but is newer than this '
         'phone\'s own step: it reaches the trip screen', () async {
       trips.observe({'tripId': 't1', 'status': 'in_trip', 'version': 8});
