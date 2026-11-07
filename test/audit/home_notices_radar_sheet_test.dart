@@ -24,6 +24,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/core/waybill/last_trip_tip.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
@@ -57,6 +58,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   brings Menu and Search destination back, as a touch does.
 // - driver-u125: the island's TODAY face shows today's recorded earnings,
 //   not a sample figure; LAST TRIP shows none before the first trip.
+// - owner 2026-11-07: LAST TRIP is the trip's money plus the rider's tip
+//   as one total, also for a tip given after the trip.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -820,6 +823,120 @@ void main() {
       expect(find.text('TODAY'), findsOneWidget);
       expect(find.text('183.25 kr'), findsNothing);
       expect(find.text('261,00 kr'), findsOneWidget);
+      await _end(tester);
+    });
+  });
+
+  group('owner 2026-11-07: LAST TRIP is fare + tip as one total', () {
+    final waybills = InMemoryWaybillRepository.instance;
+
+    /// The trip ended 60,00 kr for the driver; no tip known yet.
+    WaybillRecord ended() => WaybillRecord(
+      tripId: 'tip-1',
+      statusLabel: WaybillRecord.completed,
+      issuedAt: DateTime.now().subtract(const Duration(minutes: 1)),
+      fare: '60,00 kr',
+      service: 'Movera',
+      riderName: 'Sara',
+      pickup: 'Klockarvägen 35',
+      dropoff: 'Klockarvägen 37',
+      source: 'Movera Radar',
+      driverName: 'Driver',
+      vehicle: 'Car',
+      licensePlate: 'ABC 123',
+      passengerCapacity: 4,
+    );
+
+    Map<String, dynamic> sek(int minor) => {
+      'amountMinor': minor,
+      'currency': 'SEK',
+    };
+
+    /// GET /trips/{id} for the driver (contract finish.tips: driverTotal
+    /// holds the tip), with or without the rider's 30 kr tip.
+    Map<String, dynamic> projection({required bool tipped}) => {
+      'tripId': 'tip-1',
+      'status': 'completed',
+      'fare': sek(7500),
+      'driverEarnings': sek(6000),
+      'driverTotal': sek(tipped ? 9000 : 6000),
+      if (tipped)
+        'tip': {
+          'amount': sek(3000),
+          'method': 'card',
+          'at': '2026-11-07T16:14:00Z',
+        },
+    };
+
+    setUp(() => waybills.setLastForTesting(ended()));
+    tearDown(() {
+      waybills.reset();
+      LastTripTip.readTrip = null;
+    });
+
+    Future<void> openLastTrip(WidgetTester tester) async {
+      final launcher = find.byKey(const ValueKey<String>('last-trip-launcher'));
+      tester.widget<InkWell>(launcher).onTap!.call();
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(find.text('LAST TRIP'), findsOneWidget);
+    }
+
+    Future<void> closeIsland(WidgetTester tester) async {
+      // Left alone, the island goes back to its hidden face.
+      await _frames(tester, const Duration(seconds: 6));
+      expect(find.text('LAST TRIP'), findsNothing);
+    }
+
+    testWidgets('60,00 kr + a 30,00 kr tip shows 90,00 kr', (tester) async {
+      LastTripTip.readTrip = (_) async => projection(tipped: true);
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      await openLastTrip(tester);
+      expect(find.text('90,00 kr'), findsOneWidget);
+      expect(find.text('60,00 kr'), findsNothing);
+      await _end(tester);
+    });
+
+    testWidgets('a tip given later updates the island (60 → 90 kr)', (
+      tester,
+    ) async {
+      var tipped = false;
+      LastTripTip.readTrip = (_) async => projection(tipped: tipped);
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      await openLastTrip(tester);
+      expect(find.text('60,00 kr'), findsOneWidget, reason: 'no tip yet');
+      await closeIsland(tester);
+      // The rider tips 30 kr after the trip.
+      tipped = true;
+      await openLastTrip(tester);
+      expect(find.text('90,00 kr'), findsOneWidget);
+      expect(find.text('60,00 kr'), findsNothing);
+      await _end(tester);
+    });
+
+    testWidgets('a tip read while the face is up updates it in place', (
+      tester,
+    ) async {
+      final answer = Completer<Map<String, dynamic>?>();
+      LastTripTip.readTrip = (_) => answer.future;
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      await openLastTrip(tester);
+      expect(find.text('60,00 kr'), findsOneWidget);
+      answer.complete(projection(tipped: true));
+      await _frames(tester, const Duration(milliseconds: 300));
+      expect(find.text('LAST TRIP'), findsOneWidget);
+      expect(find.text('90,00 kr'), findsOneWidget);
+      await _end(tester);
+    });
+
+    testWidgets('no answer from the server keeps 60,00 kr', (tester) async {
+      LastTripTip.readTrip = (_) async => null;
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      await openLastTrip(tester);
+      expect(find.text('60,00 kr'), findsOneWidget);
       await _end(tester);
     });
   });

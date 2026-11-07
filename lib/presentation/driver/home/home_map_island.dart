@@ -94,6 +94,10 @@ extension _HomeMapIsland on _DriverHomeState {
     if (_islandFace == _IslandFace.today) {
       unawaited(DigitalIslandParts.refreshToday());
     }
+    // Owner 2026-11-07: fare + tip, a tip given after the trip included.
+    if (_islandFace == _IslandFace.lastTrip) {
+      unawaited(LastTripTip.refresh(_waybills));
+    }
     _restartIslandIdle();
   }
 
