@@ -20,7 +20,18 @@ class WaitingTerms {
     this.pricesKnown = true,
     this.serverFreeSeconds,
     this.serverNoShowSeconds,
+    this.serverBeforeSeconds,
   });
+
+  /// Contract v0.18.51 §73: seconds from the driver's arrival to
+  /// `waiting.waitFrom` (a booked ride reached before its pickup time);
+  /// until then the clock shows a negative countdown (−12:00 … −0:01).
+  final int? serverBeforeSeconds;
+  int get beforeSeconds => math.max(0, serverBeforeSeconds ?? 0);
+
+  /// [arrivalSeconds] (seconds since Arrived) as the waiting clock shows
+  /// them: negative before `waitFrom`, 0:00 at it.
+  int shownSeconds(int arrivalSeconds) => arrivalSeconds - beforeSeconds;
 
   /// G5 checker round 1: the server's own moments, as seconds after the
   /// driver arrived (`waiting.freeUntil` / `waiting.noShowAt` −
@@ -30,7 +41,11 @@ class WaitingTerms {
   final int? serverNoShowSeconds;
 
   /// These terms with the server's moments (null leaves the local count).
-  WaitingTerms anchored({int? freeSeconds, int? noShowSeconds}) => WaitingTerms(
+  WaitingTerms anchored({
+    int? freeSeconds,
+    int? noShowSeconds,
+    int? beforeSeconds,
+  }) => WaitingTerms(
     freeMinutes: freeMinutes,
     perMinute: perMinute,
     noShowAfterMinutes: noShowAfterMinutes,
@@ -41,6 +56,7 @@ class WaitingTerms {
     pricesKnown: pricesKnown,
     serverFreeSeconds: freeSeconds,
     serverNoShowSeconds: noShowSeconds,
+    serverBeforeSeconds: beforeSeconds,
   );
 
   /// False when no server terms reached the phone yet (no zone document,
@@ -73,9 +89,11 @@ class WaitingTerms {
   /// the zone's own terms.
   String get rule => ruleLabels.map(_shown).join(' · ');
 
-  int get freeSeconds => serverFreeSeconds ?? freeMinutes * 60;
-  int get noShowSeconds =>
-      math.max(freeSeconds, serverNoShowSeconds ?? noShowAfterMinutes * 60);
+  int get freeSeconds => serverFreeSeconds ?? beforeSeconds + freeMinutes * 60;
+  int get noShowSeconds => math.max(
+    freeSeconds,
+    serverNoShowSeconds ?? beforeSeconds + noShowAfterMinutes * 60,
+  );
 
   /// The driver's part of the no-show fee, in the fee's own currency and
   /// minor units (öre, cents, millimes).
@@ -141,6 +159,7 @@ class WaitingTerms {
     pricesKnown: pricesKnown,
     serverFreeSeconds: serverFreeSeconds,
     serverNoShowSeconds: serverNoShowSeconds,
+    serverBeforeSeconds: serverBeforeSeconds,
   );
 
   /// A label in the app's language: the server's rule ids
