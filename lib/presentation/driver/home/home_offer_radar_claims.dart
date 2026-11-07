@@ -140,8 +140,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
             !offer.isExclusive &&
             !offer.isReservation &&
             offer.isNearby &&
-            _homeRadarMatchingOfferId == null &&
-            _followsDestination(offer.dropoffPosition.toLatLng())) {
+            _homeRadarMatchingOfferId == null) {
           _showRadarHomeOffer(_homeOfferFromDispatch(offer));
         }
       }
@@ -513,5 +512,6 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     driverEarnings: offer.driverEarnings,
     // Worked out now, from the offer's pickup leg (never cached).
     pickupPay: _pickupPayOf(offer),
+    onYourWay: _HomeOfferRadar(this)._offerOnYourWay(offer.dropoffPosition),
   );
 }

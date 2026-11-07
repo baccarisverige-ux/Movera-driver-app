@@ -183,13 +183,9 @@ class _RideRequestsState extends State<RideRequests> {
       if (offer.source.isExclusive) {
         return false;
       }
-      if (!(widget.offerFilter?.call(offer.source) ?? true)) {
-        return false;
-      }
-      if (!widget.destinationModeActive) {
-        return true;
-      }
-      return offer.followsDestination;
+      // Q2 (owner 2026-11-07): destination mode hides no trip; the ones
+      // on the way carry the "On your way" badge.
+      return widget.offerFilter?.call(offer.source) ?? true;
     }).toList()..sort((a, b) => a.pickupKm.compareTo(b.pickupKm));
     // Every Radar trip, each with its full details.
     return List<_RadarTrip>.unmodifiable(nearby);
@@ -201,8 +197,7 @@ class _RideRequestsState extends State<RideRequests> {
       offer.isNearby &&
       !offer.isExclusive &&
       !_dismissed.contains(offer.id) &&
-      (widget.offerFilter?.call(offer) ?? true) &&
-      (!widget.destinationModeActive || _follows(offer));
+      (widget.offerFilter?.call(offer) ?? true);
 
   bool _follows(RideOffer offer) =>
       widget.followsDestination?.call(offer) ?? offer.followsDestination;
@@ -222,7 +217,7 @@ class _RideRequestsState extends State<RideRequests> {
       pickupPosition: offer.pickupPosition.toLatLng(),
       dropoffPosition: offer.dropoffPosition.toLatLng(),
       isNearby: offer.isNearby,
-      followsDestination: _follows(offer),
+      followsDestination: widget.destinationModeActive && _follows(offer),
       bags: offer.bags,
       payment: offer.payment,
       reservationTime: offer.reservationTime,
@@ -367,13 +362,7 @@ class _RideRequestsState extends State<RideRequests> {
 
   bool _isOfferStillVisible(_RadarTrip trip) {
     return _offers.any((offer) {
-      if (offer.id != trip.id || !offer.isNearby) {
-        return false;
-      }
-      if (!widget.destinationModeActive) {
-        return true;
-      }
-      return offer.followsDestination;
+      return offer.id == trip.id && offer.isNearby;
     });
   }
 
@@ -878,6 +867,7 @@ class _RideRequestsState extends State<RideRequests> {
         fareBoost: trip.source.fareBoostLabel,
         stops: trip.source.stops.length,
         riderTrips: trip.source.riderTrips,
+        onYourWay: trip.followsDestination,
         priority: trip.source.isPriority,
         driverBonus: WaybillRecord.bonusLabel(trip.source.driverBonus),
         driverEarnings: trip.source.driverEarnings?.formatted,

@@ -44,7 +44,7 @@
   "rrFreshNew": "{count} nouvelles",
   "rrNew": "Nouveau",
   "rrDestinationRoute": "Itinéraire vers la destination",
-  "rrTripsToward": "Courses vers {place}",
+  "rrTripsToward": "Destination : {place} · courses sur votre chemin marquées",
   "rrScanningNearby": "Recherche à proximité",
   "rrNewTripsAppear": "Les nouvelles courses s’afficheront ici dès que le radar trouvera des demandes autour de vous.",
   "safetyCall112": "Appeler le 112",

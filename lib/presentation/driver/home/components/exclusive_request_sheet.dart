@@ -90,7 +90,11 @@ class ExclusiveRequestSheet extends StatelessWidget {
             boost,
             key: ValueKey<String>('exclusive-offer-boost-$id'),
           ),
-        if (onYourWay) OfferBadge.note(driverText(DriverTexts.offerOnYourWay)),
+        if (onYourWay)
+          OfferBadge.note(
+            driverText(DriverTexts.offerOnYourWay),
+            key: ValueKey<String>('exclusive-offer-on-your-way-$id'),
+          ),
         // G4 decision 3: the rider's real rating while the zone shows it
         // (`offers.offerCard.riderRating`); none at all without one.
         if (offer.shownRating case final rating? when show.riderRating)

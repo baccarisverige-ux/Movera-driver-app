@@ -146,7 +146,7 @@
   "destNoAddressFound": "Aucune adresse trouvée",
   "destTryAnother": "Essayez une autre rue, un autre lieu ou une autre zone.",
   "destFastestRoute": "Itinéraire le plus rapide vers votre destination",
-  "destOnlyTripsYourWay": "Vous ne recevrez que des courses dans votre direction : chaque course vous rapproche de {place}.",
+  "destOnlyTripsYourWay": "Vous recevez toutes les courses ; celles dans votre direction sont marquées « Sur votre chemin ».",
   "destArriveBy": "Arrivée vers {time}",
   "destConfirm": "Confirmer la destination",
   "queueAirportPreview": "Aperçu de la file d’attente aéroport",

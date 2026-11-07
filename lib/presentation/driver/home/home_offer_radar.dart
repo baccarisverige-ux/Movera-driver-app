@@ -225,9 +225,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     if (!ScheduledRideStore.isOpen(offer.id)) {
       return;
     }
-    if (!_directOfferFollowsDestination(offer)) {
-      return;
-    }
+    // Q2 (owner 2026-11-07): destination mode hides no offer.
 
     // Close to pickup it is an Exclusive offer, no longer the popup.
     _HomeReservation(this)._reservationBecomesExclusive(offer.id);
@@ -240,11 +238,18 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
   }
 
-  bool _directOfferFollowsDestination(_HomeDirectOffer offer) =>
-      _followsDestination(offer.dropoffPosition);
+  /// Q2 (owner 2026-11-07, "Show all offres with badge on your way"):
+  /// destination mode hides no offer (Exclusive, booked or Radar); an offer
+  /// whose drop-off is on the way to the destination gets the
+  /// [DriverTexts.offerOnYourWay] badge (« Sur votre chemin »).
+  bool _offerOnYourWay(LatLng dropoff) =>
+      _destinationModeActive &&
+      _destinationPosition != null &&
+      _followsDestination(dropoff);
 
   /// R13-9: a drop-off near the road route to the destination (admin
-  /// corridor) that brings the driver closer, by admin's focus.
+  /// corridor) that brings the driver closer, by admin's focus. Since Q2
+  /// it only decides the "On your way" badge, never whether an offer shows.
   bool _followsDestination(LatLng dropoff) {
     if (!_destinationModeActive) {
       return true;
@@ -340,7 +345,6 @@ extension _HomeOfferRadar on _DriverHomeState {
         (!offer.reservation &&
             !offer.claimedViaDispatch &&
             (_pendingRadarHomeOffers.isNotEmpty || _hasRideOffers)) ||
-        !_directOfferFollowsDestination(offer) ||
         !_HomeScheduled(this)._fitsSchedule(offer) ||
         !_HomeOfferRules(this)._offerAllowed(offer) ||
         (offer.reservation &&
@@ -460,7 +464,6 @@ extension _HomeOfferRadar on _DriverHomeState {
   void _showRadarHomeOffer(_HomeDirectOffer offer) {
     if (!mounted ||
         !_isOnline ||
-        !_directOfferFollowsDestination(offer) ||
         !_HomeScheduled(this)._fitsSchedule(offer) ||
         !_HomeOfferRules(this)._offerAllowed(offer) ||
         _radarHomeOffers.any((item) => item.id == offer.id) ||
@@ -730,18 +733,12 @@ extension _HomeOfferRadar on _DriverHomeState {
         (offer) =>
             offer.isNearby &&
             !offer.isExclusive &&
-            _followsDestination(offer.dropoffPosition.toLatLng()) &&
             _HomeOfferRules(this)._rideAllowed(offer),
       )
       .length;
   void _showDispatchOfferAt(int index) {
     final offers = _latestDispatchOffers
-        .where(
-          (offer) =>
-              offer.isNearby &&
-              !offer.isExclusive &&
-              _followsDestination(offer.dropoffPosition.toLatLng()),
-        )
+        .where((offer) => offer.isNearby && !offer.isExclusive)
         .toList();
     if (index >= offers.length) {
       return;
@@ -1143,9 +1140,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       secondsLeft: secondsLeft,
       reservation: reservation || offer.bookedTime != null,
       reservationTime: reservation ? offer.pickupTime : offer.bookedTime,
-      // Destination mode, or trips toward the next scheduled pickup.
+      // On the way to the destination (Q2), or trips toward the next
+      // scheduled pickup.
       onYourWay:
-          _destinationModeActive ||
+          _offerOnYourWay(offer.dropoffPosition) ||
           (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
       // A ride Movera assigned says so (Q29). G4-E7 (owner "Remove short
       // line explain"): no "why you got this trip" line on any other.
@@ -1194,10 +1192,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         unawaited(_showOutsideRadarOffer(exclusive));
       }
       for (final offer in _latestDispatchOffers) {
-        if (!offer.isExclusive &&
-            !offer.isReservation &&
-            offer.isNearby &&
-            _followsDestination(offer.dropoffPosition.toLatLng())) {
+        if (!offer.isExclusive && !offer.isReservation && offer.isNearby) {
           _showRadarHomeOffer(_homeOfferFromDispatch(offer));
         }
       }

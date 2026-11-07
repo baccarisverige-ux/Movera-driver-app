@@ -44,7 +44,7 @@
   "rrFreshNew": "{count} nya",
   "rrNew": "Ny",
   "rrDestinationRoute": "Rutt till målet",
-  "rrTripsToward": "Resor mot {place}",
+  "rrTripsToward": "Destination: {place} · resor på vägen markeras",
   "rrScanningNearby": "Söker i närheten",
   "rrNewTripsAppear": "Nya resor visas här när radarn hittar förfrågningar runt dig.",
   "safetyCall112": "Ring 112",
