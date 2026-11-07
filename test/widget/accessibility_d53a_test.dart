@@ -193,7 +193,7 @@ void main() {
       );
       await _frames(tester, 40);
       final island = _islandNode(tester);
-      expect(island.label, contains('Progression de l’itinéraire'));
+      expect(island.label, contains('Progression sur le trajet'));
       expect(island.value, '42 %');
       await _unmount(tester);
       semantics.dispose();

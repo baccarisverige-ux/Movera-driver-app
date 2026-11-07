@@ -108,7 +108,7 @@ void main() {
     tester,
   ) async {
     for (final (code, query, count) in [
-      ('fr', 'airport', '2 trouvés'),
+      ('fr', 'airport', '2 résultats'),
       ('sv', 'kista', '1 träff'),
     ]) {
       await show(tester, code, const DriverDestinationPicker());
@@ -232,10 +232,7 @@ void main() {
   test('driver-80: the saved-categories message is pluralized', () {
     final said = {
       'en': ('1 ride category saved', '6 ride categories saved'),
-      'fr': (
-        '1 catégorie de course enregistrée',
-        '6 catégories de course enregistrées',
-      ),
+      'fr': ('1 catégorie enregistrée', '6 catégories enregistrées'),
       'sv': ('1 resekategori sparad', '6 resekategorier sparade'),
     };
     for (final MapEntry(key: code, value: (one, six)) in said.entries) {
@@ -323,7 +320,7 @@ void main() {
   testWidgets('driver-r3-2: the bank form section header is translated', (
     tester,
   ) async {
-    for (final (code, header) in [('fr', 'COMPTE'), ('sv', 'KONTO')]) {
+    for (final (code, header) in [('fr', 'COMPTE BANCAIRE'), ('sv', 'KONTO')]) {
       await show(tester, code, const AddNewAccount());
       expect(find.text(header), findsOneWidget, reason: code);
       expect(find.text('ACCOUNT'), findsNothing);

@@ -392,13 +392,21 @@ class RadarOfferCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    driverText(DriverTexts.offerPickup).toUpperCase(),
-                    style: const TextStyle(
-                      color: label,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.4,
+                  // A long pickup label (fr, 130 % text at 320 px) wraps
+                  // onto two lines instead of overflowing the fare.
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 120),
+                    child: Text(
+                      driverText(DriverTexts.offerPickup).toUpperCase(),
+                      textAlign: TextAlign.end,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: label,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.4,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 3),
