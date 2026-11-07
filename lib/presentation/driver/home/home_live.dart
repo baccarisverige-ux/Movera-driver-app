@@ -39,6 +39,17 @@ extension _HomeLive on _DriverHomeState {
 
   /// Clears the saved snapshot of [tripId], a trip already over, and marks
   /// it terminal so it never comes back.
+  /// Audit 2026-11-07 B2: the saved trip, unless it is already over; a stale
+  /// snapshot of a finished trip is cleared and never re-opened.
+  Future<PersistedActiveRide?> _savedTripUnlessOver(
+    ActiveRideRepository repo,
+  ) async {
+    final saved = await repo.read();
+    if (saved == null || !_tripIsOver(saved.tripId)) return saved;
+    await _clearFinishedTrip(repo, saved.tripId);
+    return null;
+  }
+
   Future<void> _clearFinishedTrip(
     ActiveRideRepository repo,
     String tripId,
