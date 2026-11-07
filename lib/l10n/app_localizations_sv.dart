@@ -2902,7 +2902,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get toNextStop => 'Till nästa stopp';
 
   @override
-  String get onYourWay => 'Längs din väg';
+  String get onYourWay => 'På vägen';
 
   @override
   String get onThisRide => 'Under den här resan';
@@ -5117,7 +5117,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'På vägen mot $place: markerade ”På vägen”';
+    return 'Destination: $place · resor på vägen markeras';
   }
 
   @override

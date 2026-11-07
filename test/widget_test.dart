@@ -1013,7 +1013,10 @@ void main() {
 
     // Choose-destination step: one option, then Confirm.
     expect(find.text('Fastest route to your destination'), findsOneWidget);
-    expect(find.textContaining('closer to Solna centrum'), findsOneWidget);
+    expect(
+      find.textContaining('those heading your way are marked'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Arrive by '), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey<String>('destination-confirm')));
     await tester.pump();
@@ -1167,7 +1170,7 @@ void main() {
       find.byKey(const ValueKey<String>('radar-destination-filter')),
       findsOneWidget,
     );
-    expect(find.textContaining('On your way to Solna Torg'), findsOneWidget);
+    expect(find.textContaining('Destination: Solna Torg'), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-1')), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-2')), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-3')), findsOneWidget);

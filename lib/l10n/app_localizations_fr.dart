@@ -2965,7 +2965,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get toNextStop => 'Vers le prochain arrêt';
 
   @override
-  String get onYourWay => 'Sur votre trajet';
+  String get onYourWay => 'Sur votre chemin';
 
   @override
   String get onThisRide => 'Pendant cette course';
@@ -5207,7 +5207,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'Sur votre chemin vers $place : marquées « Sur votre chemin »';
+    return 'Destination : $place · courses sur votre chemin marquées';
   }
 
   @override

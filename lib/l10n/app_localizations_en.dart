@@ -5117,7 +5117,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'On your way to $place: marked “On your way”';
+    return 'Destination: $place · trips on your way are marked';
   }
 
   @override

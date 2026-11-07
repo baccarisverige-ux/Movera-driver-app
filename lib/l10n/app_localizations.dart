@@ -8791,7 +8791,7 @@ abstract class AppLocalizations {
   /// No description provided for @rrTripsToward.
   ///
   /// In en, this message translates to:
-  /// **'On your way to {place}: marked “On your way”'**
+  /// **'Destination: {place} · trips on your way are marked'**
   String rrTripsToward(String place);
 
   /// No description provided for @rrScanningNearby.
