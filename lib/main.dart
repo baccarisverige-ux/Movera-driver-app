@@ -534,8 +534,9 @@ class _MoveraAppState extends State<MoveraApp> {
       );
       return;
     }
-    // A route-change push: the trip screen (already open on the active
-    // trip) hears the change on its stream; no bell list over it.
+    // A trip push (route change, Ride Check, not heading to the rider): the
+    // trip screen (already open on the active trip, or restored by Home on
+    // a cold start) shows it from its stream; no bell list over it.
     if (open.routeChangeTripId != null) return;
     unawaited(
       navigator.push(
