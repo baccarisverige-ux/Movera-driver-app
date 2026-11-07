@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/trip_transitions.dart';
+import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 
 export 'package:movera/core/ride/active_ride_repository.dart'
@@ -24,7 +25,9 @@ class ActiveRideController extends ChangeNotifier {
     this.snapshotBuilder,
     this.kind = TripKind.live,
   }) : _repository = repository ?? MemoryActiveRideRepository(),
-       _stage = initialStage;
+       _stage = initialStage {
+    RestartWatch.noteStage(tripStatus.name);
+  }
 
   final String? tripId;
 
@@ -385,10 +388,18 @@ class ActiveRideController extends ChangeNotifier {
     }, background: true);
   }
 
+  /// Restart diagnostic (owner 2026-11-07): the marker names the stage.
+  @override
+  void notifyListeners() {
+    RestartWatch.noteStage(tripStatus.name);
+    super.notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;
     _revision++;
+    RestartWatch.noteStage(null);
     super.dispose();
   }
 

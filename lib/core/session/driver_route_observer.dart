@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:movera/core/logging/crash_reports.dart';
+import 'package:movera/core/logging/restart_watch.dart';
 
 /// The app's route observer. Subscribers hear about every modal route,
 /// dialogs and bottom sheets included; [pages] only about full screens,
@@ -39,6 +40,7 @@ class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   /// Contract v0.16.0: a crash report names the screen on top.
   static void _top(Route<dynamic>? route) {
     if (route != null) CrashReports.currentScreen = route.settings.name;
+    RestartWatch.touch();
   }
 }
 
