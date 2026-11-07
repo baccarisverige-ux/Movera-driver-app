@@ -230,6 +230,7 @@ class _DriverHomeState extends State<DriverHome>
   void didPopNext() {
     _HomeRoutes(this)._backOnTop();
     _HomeAccount(this)._refreshLiveBadges();
+    _HomeMapIsland(this)._refreshLastTripTip(auto: true);
   }
 
   @override
@@ -241,6 +242,7 @@ class _DriverHomeState extends State<DriverHome>
     if (state == AppLifecycleState.resumed) {
       _HomeRecovery(this)._rearmWallClockTimers();
       _HomeAccount(this)._refreshLiveBadges();
+      _HomeMapIsland(this)._refreshLastTripTip(auto: true);
     }
     if (_liveVisible) {
       _HomeUpdates(this)._resumeHomeUpdates();

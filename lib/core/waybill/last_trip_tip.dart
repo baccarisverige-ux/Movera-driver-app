@@ -5,16 +5,29 @@ import 'package:movera/core/waybill/waybill.dart';
 /// the rider's tip as one total (60,00 kr + 30,00 kr tip = 90,00 kr).
 ///
 /// The rider can only tip once the trip has ended (contract finish.tips),
-/// after the waybill took the trip's money, so the face reads the trip
-/// again as it opens (like TODAY): the driver's `driverTotal` holds the
-/// tip, a tip given later included. One tip per trip: once one is known
-/// nothing more is read.
+/// after the waybill took the trip's money, so Home reads the trip again:
+/// as the LAST TRIP face opens (like TODAY), and by itself when Home is
+/// shown, comes back on top or back to the front, for [autoWindow] after
+/// the trip. The driver's `driverTotal` holds the tip, a tip given later
+/// included. One tip per trip: once one is known nothing more is read.
+/// One read at a time; no stream, no timer.
+///
+/// [WaybillRecord.fare] stays the driver's one number (`driverTotal`, the
+/// tip in it) as the finish writes it: Trip finished and the waybill
+/// sheet read it that way. Ride history keeps the money archived at the
+/// finish (its own "Tip" line comes from the receipt), so nothing there
+/// counts the tip twice.
 class LastTripTip {
   LastTripTip._();
 
   /// Reads the trip's driver projection; tests set their own. Null: the
   /// live `GET /trips/{tripId}`, nothing without a live build.
   static Future<Map<String, dynamic>?> Function(String tripId)? readTrip;
+
+  /// How long after the trip Home still looks for a tip by itself.
+  static const Duration autoWindow = Duration(hours: 2);
+
+  static String? _reading;
 
   static Future<Map<String, dynamic>?> _readLive(String tripId) async {
     final api = LiveDriverServices.instance?.api;
@@ -23,15 +36,23 @@ class LastTripTip {
   }
 
   /// Folds the server's tip into the last trip's money; no answer, no
-  /// tip or another trip by then keeps what the island has.
-  static Future<void> refresh(WaybillRepository waybills) async {
+  /// tip or another trip by then keeps what the island has. [auto]: Home
+  /// asks by itself, only within [autoWindow] of the trip's end.
+  static Future<void> refresh(
+    WaybillRepository waybills, {
+    bool auto = false,
+  }) async {
     final last = waybills.last;
-    if (last == null || last.tip != null) return;
+    if (last == null || last.tip != null || _reading == last.tripId) return;
+    if (auto && DateTime.now().difference(last.issuedAt) > autoWindow) return;
+    _reading = last.tripId;
     final Map<String, dynamic>? projection;
     try {
       projection = await (readTrip ?? _readLive)(last.tripId);
     } catch (_) {
       return;
+    } finally {
+      _reading = null;
     }
     final money = projection == null
         ? null

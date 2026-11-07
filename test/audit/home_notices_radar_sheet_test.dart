@@ -13,6 +13,7 @@ import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/history/today_earnings.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
@@ -29,6 +30,7 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -928,6 +930,106 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 300));
       expect(find.text('LAST TRIP'), findsOneWidget);
       expect(find.text('90,00 kr'), findsOneWidget);
+      await _end(tester);
+    });
+
+    testWidgets('a later tip reaches the island with no tap: Home back on '
+        'top reads the trip again, and stops once the tip is known', (
+      tester,
+    ) async {
+      var tipped = false;
+      var reads = 0;
+      LastTripTip.readTrip = (_) async {
+        reads++;
+        return projection(tipped: tipped);
+      };
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      expect(reads, 1, reason: 'Home shown: one read');
+      expect(waybills.last!.fare, '60,00 kr');
+      final navigator = await _cover(tester);
+      // The rider tips 30 kr while a screen covers Home.
+      tipped = true;
+      navigator.pop();
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(reads, 2, reason: 'back on top: one read');
+      expect(waybills.last!.fare, '90,00 kr', reason: 'no tap needed');
+      await openLastTrip(tester);
+      expect(find.text('90,00 kr'), findsOneWidget);
+      await closeIsland(tester);
+      await _cover(tester);
+      navigator.pop();
+      await _frames(tester, const Duration(milliseconds: 600));
+      await openLastTrip(tester);
+      expect(reads, 2, reason: 'one tip per trip: nothing more is read');
+      await _end(tester);
+    });
+
+    testWidgets('Home stops looking by itself 2 h after the trip', (
+      tester,
+    ) async {
+      waybills.setLastForTesting(
+        ended().copyWith(
+          issuedAt: DateTime.now().subtract(const Duration(hours: 3)),
+        ),
+      );
+      var reads = 0;
+      LastTripTip.readTrip = (_) async {
+        reads++;
+        return projection(tipped: true);
+      };
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      final navigator = await _cover(tester);
+      navigator.pop();
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(reads, 0);
+      // Opening the face still reads it.
+      await openLastTrip(tester);
+      expect(reads, 1);
+      expect(find.text('90,00 kr'), findsOneWidget);
+      await _end(tester);
+    });
+
+    testWidgets('the tip is counted once: island 90, trip detail Your '
+        'earnings 60 + Tip 30, TODAY 60', (tester) async {
+      final history = PrefsTripHistoryRepository();
+      // The finish archives the trip's money (no tip yet).
+      await history.archive(ended(), completedAt: DateTime.now());
+      LastTripTip.readTrip = (_) async => projection(tipped: true);
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      await openLastTrip(tester);
+      expect(find.text('90,00 kr'), findsOneWidget);
+      await _end(tester);
+
+      final rows = await history.list();
+      expect(rows.single.fare, '60,00 kr', reason: 'history not changed');
+      await TodayEarnings.refresh(read: history.list);
+      expect(TodayEarnings.label.value, '60,00 kr', reason: 'not 90 or 120');
+
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, _) => MaterialApp(
+            home: DriverRideHistoryDetail(
+              record: rows.single,
+              loadRideChecks: (_) async => const [],
+              loadPath: (_) async => null,
+              loadTip: (_) async => '30,00 kr',
+            ),
+          ),
+        ),
+      );
+      await _frames(tester, const Duration(seconds: 1));
+      await tester.scrollUntilVisible(
+        find.text('Tip'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('60,00 kr'), findsOneWidget);
+      expect(find.text('30,00 kr'), findsOneWidget);
+      expect(find.text('90,00 kr'), findsNothing);
       await _end(tester);
     });
 
