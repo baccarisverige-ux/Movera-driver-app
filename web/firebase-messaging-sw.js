@@ -6,11 +6,20 @@
 //
 // Contract v0.18.6 (driver group 4, decision 1 + E6, driverOffers.push): a
 // new offer (kind "new_offer", data offerId, tripId, offerKind, sound,
-// vibrate, expiresAt) is shown only while the app is not on screen (the
-// open app already shows the offer) and never after expiresAt. Exclusive
-// and hand-sent offers (sound "offer") make the phone's notification sound
-// and vibrate [300, 150, 300] (webVibratePattern) when vibrate is "true" and
-// the driver's own Vibrate setting is on (the default); Radar (sound "none") is silent.
+// vibrate, expiresAt) is shown as a notice. Exclusive and hand-sent offers
+// (sound "offer") make the phone's notification sound and vibrate
+// [300, 150, 300] (webVibratePattern) when vibrate is "true" and the
+// driver's own Vibrate setting is on (the default); Radar (sound "none") is silent.
+//
+// Q1 (owner 2026-11-07, "Toujours afficher"): EVERY push shows a notice,
+// also while the app is on screen and after the offer's expiresAt. iOS
+// WebKit counts a push that shows no notice as "silent" and removes the push
+// subscription after 3 of them (WebPushDaemonConstants.h maxSilentPushCount
+// = 3), after which a locked phone hears no more offers. A run-out offer is
+// shown quiet with its own text and closed at once (owner 2026-11-07: it
+// counts as shown, no "New trip for you" is left); every offer notice uses the tag
+// movera-offer-<offerId> with renotify, so a later push of the same offer
+// replaces the earlier notice instead of adding one.
 'use strict';
 
 var OFFER_KIND = 'new_offer';
@@ -35,22 +44,11 @@ function offerPrefs() {
     .catch(function () { return {}; });
 }
 
-// True while a window of the app is on screen.
-function appOnScreen() {
-  var root = appRoot();
-  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
-    return list.some(function (client) {
-      return client.url.indexOf(root) === 0 && client.visibilityState === 'visible';
-    });
-  }).catch(function () { return false; });
-}
-
 function showOffer(d, title, body) {
   var expires = Date.parse(d.expiresAt || '');
-  if (!isNaN(expires) && expires <= Date.now()) return Promise.resolve();
-  return Promise.all([appOnScreen(), offerPrefs()]).then(function (both) {
-    if (both[0]) return undefined;
-    var loud = d.sound === 'offer';
+  var runOut = !isNaN(expires) && expires <= Date.now();
+  return offerPrefs().then(function (prefs) {
+    var loud = d.sound === 'offer' && !runOut;
     var options = {
       body: body,
       tag: 'movera-offer-' + (d.offerId || d.notificationId || ''),
@@ -60,11 +58,18 @@ function showOffer(d, title, body) {
       data: { notificationId: d.notificationId || '', deepLink: d.deepLink || '', kind: d.kind || '', offerId: d.offerId || '' }
     };
     // The Vibrate setting is on unless the driver turned it off (owner 2026-10-31).
-    if (loud && d.vibrate === 'true' && both[1].vibrate !== false) options.vibrate = VIBRATE_PATTERN;
+    if (loud && d.vibrate === 'true' && prefs.vibrate !== false) options.vibrate = VIBRATE_PATTERN;
     return self.registration.showNotification(title, options).then(function () {
-      return closeWhenGone(options.tag, expires);
+      return runOut ? closeNow(options.tag) : closeWhenGone(options.tag, expires);
     });
   });
+}
+
+// A run-out offer's notice is closed right after it was shown.
+function closeNow(tag) {
+  return self.registration.getNotifications({ tag: tag }).then(function (list) {
+    (list || []).forEach(function (n) { n.close(); });
+  }).catch(function () {});
 }
 
 // The offer's notice goes away when the offer runs out (best effort: only
@@ -89,12 +94,19 @@ self.addEventListener('push', function (event) {
     event.waitUntil(showOffer(d, title, body));
     return;
   }
-  event.waitUntil(self.registration.showNotification(title, {
+  // One notice per trip (Ride Check, trip messages…): the tag comes from
+  // data.tripId first, then rideId, its legacy alias (contract
+  // wire.ids.trip), so a newer push for the same trip replaces the older
+  // one and alerts again. Without a trip, the notice's own id.
+  var trip = d.tripId || d.rideId;
+  var options = {
     body: body,
-    tag: d.notificationId || undefined,
+    tag: trip ? 'movera-ride-' + trip : (d.notificationId || undefined),
     icon: appRoot() + 'icons/Icon-192.png',
     data: { notificationId: d.notificationId || '', deepLink: d.deepLink || '', kind: d.kind || '' }
-  }));
+  };
+  if (trip) options.renotify = true;
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', function (event) {
