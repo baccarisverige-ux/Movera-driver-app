@@ -33,13 +33,16 @@ class ApiDriverRealtime implements DriverRealtime {
     LiveTripChat? chat,
     LiveTripCalls? calls,
     Duration Function(int attempt)? reconnectDelay,
+    this.streamIdleTimeout = defaultStreamIdleTimeout,
+    DateTime Function()? now,
   }) : _client = client,
        _calls = calls,
        _base = apiBase,
        _token = accessToken,
        _trips = trips,
        _chat = chat,
-       _delay = reconnectDelay ?? _backoff;
+       _delay = reconnectDelay ?? _backoff,
+       _now = now ?? DateTime.now;
 
   final http.Client _client;
   final Uri _base;
@@ -49,6 +52,16 @@ class ApiDriverRealtime implements DriverRealtime {
   final LiveTripCalls? _calls;
   final Duration Function(int attempt) _delay;
   final Future<void> Function()? renewSession;
+  final DateTime Function() _now;
+
+  /// Finder D2 (2026-11-07), like the offer feed's `feedIdleTimeout`: a
+  /// stream that goes silent without closing (an iPhone that locked or
+  /// changed network leaves the socket half open) is closed and opened
+  /// again after this long with nothing on it. The server sends
+  /// `: heartbeat` every 15 s, so a healthy stream is never this quiet.
+  final Duration streamIdleTimeout;
+
+  static const defaultStreamIdleTimeout = Duration(seconds: 45);
 
   final StreamController<DriverRealtimeEvent> _out =
       StreamController<DriverRealtimeEvent>.broadcast();
@@ -60,6 +73,8 @@ class ApiDriverRealtime implements DriverRealtime {
   bool _disposed = false;
   StreamSubscription<String>? _feed;
   Timer? _retry;
+  Timer? _idle;
+  DateTime? _lastLineAt;
 
   static Duration _backoff(int attempt) =>
       Duration(seconds: math.min(30, 1 << math.min(attempt, 5)));
@@ -87,12 +102,20 @@ class ApiDriverRealtime implements DriverRealtime {
   }
 
   /// The stream resumes by itself; a resync asked while it is down opens
-  /// it now instead of after the backoff.
+  /// it now instead of after the backoff. An "open" stream with nothing on
+  /// it for [streamIdleTimeout] (the watchdog timer may not have run while
+  /// the phone was locked) counts as down.
   @override
   Future<void> reconnectAndResync(String tripId) async {
-    if (_disposed || _tripId != tripId || _open) return;
+    if (_disposed || _tripId != tripId) return;
+    if (_open && !_silentTooLong) return;
     _retry?.cancel();
     await _connect();
+  }
+
+  bool get _silentTooLong {
+    final last = _lastLineAt;
+    return last != null && _now().difference(last) >= streamIdleTimeout;
   }
 
   /// The server sends its own events for every command (arrive, start…).
@@ -113,8 +136,13 @@ class ApiDriverRealtime implements DriverRealtime {
     final tripId = _tripId;
     if (_disposed || tripId == null) return;
     final generation = ++_generation;
-    await _feed?.cancel();
+    _idle?.cancel();
+    _idle = null;
+    // A half-open stream's cancel may never complete: it must not hold up
+    // the new stream.
+    final old = _feed;
     _feed = null;
+    unawaited(old?.cancel());
     _open = false;
     // The stream replays the trip from its first event. What this phone
     // already knows (the accept answer, or the trip read here) tells the
@@ -167,11 +195,30 @@ class ApiDriverRealtime implements DriverRealtime {
     if (_attempts > 0) unawaited(_chat?.reconcile(tripId));
     _attempts = 0;
     final data = StringBuffer();
+    void quiet() {
+      if (generation != _generation) return;
+      final feed = _feed;
+      _feed = null;
+      unawaited(feed?.cancel());
+      DriverLog.warn('trip events silent, reopening', name: 'live');
+      _lost();
+    }
+
+    void alive() {
+      _lastLineAt = _now();
+      _idle?.cancel();
+      _idle = Timer(streamIdleTimeout, quiet);
+    }
+
+    alive();
     _feed = response.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(
           (line) {
+            // Any line, the heartbeat comment too, shows the stream is
+            // alive.
+            if (generation == _generation) alive();
             if (line.startsWith('data:')) {
               data.write(line.substring(5).trim());
             } else if (line.isEmpty && data.isNotEmpty) {
@@ -259,6 +306,8 @@ class ApiDriverRealtime implements DriverRealtime {
   /// screen hears it as a trip back with dispatch.
   void _released(String tripId) {
     _open = false;
+    _idle?.cancel();
+    _idle = null;
     // This driver's own cancel handed it back: the screen already knows.
     if (_out.isClosed ||
         (_trips?.isOwnEcho(tripId, 'searching') ?? false) ||
@@ -281,6 +330,8 @@ class ApiDriverRealtime implements DriverRealtime {
 
   void _lost() {
     _open = false;
+    _idle?.cancel();
+    _idle = null;
     if (_disposed || _tripId == null) return;
     _retry?.cancel();
     _retry = Timer(_delay(_attempts++), () => unawaited(_connect()));
@@ -290,6 +341,9 @@ class ApiDriverRealtime implements DriverRealtime {
     _generation++;
     _retry?.cancel();
     _retry = null;
+    _idle?.cancel();
+    _idle = null;
+    _lastLineAt = null;
     final feed = _feed;
     _feed = null;
     _open = false;
