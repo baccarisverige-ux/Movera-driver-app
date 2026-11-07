@@ -20,7 +20,49 @@ extension _HomeLive on _DriverHomeState {
     final found = await live.activeTrip.fetch();
     if (found == null) return null;
     live.trips.observe(found.projection);
+    // Audit 2026-11-07 B2: a server slower than this phone still names a
+    // trip that is over here (a newer projection is kept): not re-opened.
+    if (_tripIsOver(found.ride.tripId)) return null;
     return found.ride.stamped();
+  }
+
+  /// The trip's newest known status is terminal
+  /// (`contract.json#tripStatus.terminal`); false in the demo.
+  bool _tripIsOver(String tripId) => _finishedStatus(tripId) != null;
+
+  TripStatus? _finishedStatus(String tripId) {
+    final status = TripStatusWire.tryParse(
+      LiveDriverServices.instance?.trips.statusOf(tripId),
+    );
+    return status != null && status.isTerminal ? status : null;
+  }
+
+  /// Clears the saved snapshot of [tripId], a trip already over, and marks
+  /// it terminal so it never comes back.
+  /// Audit 2026-11-07 B2: the saved trip, unless it is already over; a stale
+  /// snapshot of a finished trip is cleared and never re-opened.
+  Future<PersistedActiveRide?> _savedTripUnlessOver(
+    ActiveRideRepository repo,
+  ) async {
+    final saved = await repo.read();
+    if (saved == null || !_tripIsOver(saved.tripId)) return saved;
+    await _clearFinishedTrip(repo, saved.tripId);
+    return null;
+  }
+
+  Future<void> _clearFinishedTrip(
+    ActiveRideRepository repo,
+    String tripId,
+  ) async {
+    DriverLog.info('Saved trip $tripId is already over: not re-opened');
+    if (repo is TerminalRideRepository) {
+      final terminal = repo as TerminalRideRepository;
+      final status = _finishedStatus(tripId);
+      if (status != null) await terminal.markTerminal(tripId, status);
+      await terminal.clearForTrip(tripId);
+    } else {
+      await repo.clear();
+    }
   }
 
   /// Asks the server to go online while the switch animates; null in the
