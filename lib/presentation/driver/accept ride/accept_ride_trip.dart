@@ -1154,6 +1154,12 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.matching) {
       return;
     }
+    // On-trip Exclusive (2026-11-08): a server offer is accepted on the
+    // server (POST /offers/{offerId}/accept).
+    if (offer.serverOfferId != null) {
+      unawaited(_serverNext.accept());
+      return;
+    }
     _rebuild(() => _onTripRadarState = _OnTripRadarState.matching);
     ExclusiveAnswers.instance.accepted();
     _nextTripOfferExpiry?.cancel();
@@ -1178,12 +1184,18 @@ extension _AcceptRideTrip on _AcceptRideState {
     _nextTripRadarDemoTimer?.cancel();
     _nextTripRadarMatchTimer?.cancel();
     _nextTripOfferExpiry?.cancel();
+    final server = _nextTripRadarOffer?.serverOfferId;
     _rebuild(() {
-      _onTripRadarDeclined = true;
+      // A server offer's No is for that offer only: the server sends the
+      // next one when it has one.
+      _onTripRadarDeclined = server == null;
       _nextTripRadarOffer = null;
       _onTripRadarState = _OnTripRadarState.scanning;
     });
     _restoreRideSheet();
+    if (server != null) {
+      _serverNext.declined(server);
+    }
     // Owner 2026-10-27 (contract v0.8.0 §6.7): an Exclusive offer missed or
     // declined while the driver is on a trip never counts toward going
     // offline.

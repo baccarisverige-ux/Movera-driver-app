@@ -23,8 +23,13 @@ class NextTripCard extends StatefulWidget {
     this.load,
     this.queued,
     this.cancel,
+    this.refresh,
     this.now = DateTime.now,
   });
+
+  /// On-trip Exclusive (2026-11-08): the trip screen accepted a next trip;
+  /// the card reads it at once instead of at the next minute.
+  final Listenable? refresh;
 
   /// Lifecycle L4 (contract v0.18.50 §72 `lifecycle0_18_50.l4`, owner
   /// 2026-11-07 "Allow cancel"): the driver's cancel of the queued live
@@ -131,10 +136,14 @@ class _NextTripCardState extends State<NextTripCard> {
     if (_load == null && _queued == null) return;
     unawaited(_refresh());
     _timer = Timer.periodic(const Duration(minutes: 1), (_) => _refresh());
+    widget.refresh?.addListener(_refreshNow);
   }
+
+  void _refreshNow() => unawaited(_refresh());
 
   @override
   void dispose() {
+    widget.refresh?.removeListener(_refreshNow);
     _timer?.cancel();
     super.dispose();
   }

@@ -128,6 +128,7 @@ part 'accept_ride_trip.dart';
 part 'accept_ride_trip_outcome.dart';
 part 'accept_ride_trip_drive.dart';
 part 'accept_ride_trip_next.dart';
+part 'accept_ride_server_next.dart';
 part 'accept_ride_trip_cover.dart';
 part 'accept_ride_panel.dart';
 part 'accept_ride_panel_clean.dart';
@@ -590,6 +591,7 @@ class _AcceptRideState extends State<AcceptRide>
   _OnTripRadarState _onTripRadarState = _OnTripRadarState.off;
   _NextTripRadarOffer? _nextTripRadarOffer;
   bool _onTripRadarDeclined = false;
+  late final _serverNext = _ServerNextOffers(this); // 2026-11-08
 
   /// R10-2: a next-trip offer came while a Ride check was open; it waits
   /// for the answer from this moment, and drops once its time has passed.
@@ -706,6 +708,7 @@ class _AcceptRideState extends State<AcceptRide>
         LiveDriverServices.instance?.realtime() ??
         MemoryDriverRealtime();
     _AcceptRideLive(this)._beginLiveTrip();
+    _serverNext.start();
     _AcceptRidePickup(this)._beginPickupWaiting();
     _realtimeSubscription = _realtime
         .subscribe(widget.tripId)
@@ -887,6 +890,7 @@ class _AcceptRideState extends State<AcceptRide>
     _nextTripRadarDemoTimer?.cancel();
     _nextTripRadarMatchTimer?.cancel();
     _nextTripOfferExpiry?.cancel();
+    _serverNext.dispose();
     _radarPulseController.dispose();
     _radarSweepController.dispose();
     _positionSubscription?.cancel();

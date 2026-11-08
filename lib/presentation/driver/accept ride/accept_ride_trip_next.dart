@@ -149,8 +149,10 @@ extension _AcceptRideTripNext on _AcceptRideState {
   }
 
   void _maybeScheduleOnTripRadarDemoOffer() {
-    // A live build: no demo next trip; the server sends real ones.
+    // A live build: no demo next trip; the server sends real ones, and
+    // one that waits is shown now if it may be (accept_ride_server_next).
     if (LiveDriverServices.active) {
+      _serverNext.present();
       return;
     }
     // Q18: while driving a rider only Exclusive offers come, when admin
@@ -220,6 +222,11 @@ extension _AcceptRideTripNext on _AcceptRideState {
     if (_offersHeld || _rideLifecycle.terminal) {
       return;
     }
+    // A live build shows the server's own offer, with its own time.
+    if (LiveDriverServices.active) {
+      _serverNext.present();
+      return;
+    }
     _rebuild(() {
       final offer = _onTripRadarOfferForDestination();
       if (!_dropoffFollowsDestination(offer.dropoffPosition)) {
@@ -243,6 +250,11 @@ extension _AcceptRideTripNext on _AcceptRideState {
     }
     _nextTripOfferExpiry = Timer(time, () {
       if (!mounted || _onTripRadarState != _OnTripRadarState.offerAvailable) {
+        return;
+      }
+      // A server offer that ran out is only taken away (no decline sent).
+      if (LiveDriverServices.active) {
+        _serverNext.expired();
         return;
       }
       _denyNextTripRadar();
