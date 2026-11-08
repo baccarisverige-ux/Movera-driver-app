@@ -10,6 +10,12 @@
 // ("trp_booked-<micros>"); the server answered 404 for it, the trip
 // screen read that as the trip taken away and Home showed for ~2 s until
 // it reopened the server's trip. It must open under the server's own id.
+//
+// Live 5+5 run 2 (Rules audits/screens-2026-11-08/live-5x5-run2,
+// 4-booked-p4 045 → 046 → 047): one painted Home frame between the tap and
+// the trip. The banner popped the details and the list first (Home on top,
+// pop animation), and the trip was pushed only after the server's start
+// answered. Home must never be the top screen between the tap and the trip.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -125,6 +131,8 @@ void main() {
             'nextCursor': null,
           });
         case '/api/v1/driver/reservations/trp_booked/start':
+          // The server takes a moment to answer, as live.
+          await Future<void>.delayed(const Duration(milliseconds: 400));
           started = true;
           return json(trip());
         case '/api/v1/trips/trp_booked':
@@ -207,14 +215,18 @@ void main() {
       const ValueKey<String>('scheduled-leave-countdown'),
     );
     expect(banner, findsOneWidget);
+    final homeRoute = ModalRoute.of(home)!;
     await tester.tap(banner);
     // Every frame from the tap: once the trip screen is open, the same
     // one stays (no close and reopen, so no Home in between).
     State? opened;
     var flashes = 0;
-    for (var i = 0; i < 70; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
+    // Frames with Home the top screen before the trip opened.
+    var homeFrames = 0;
+    for (var i = 0; i < 140; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
       final trips = find.byType(AcceptRide).evaluate().toList();
+      if (trips.isEmpty && homeRoute.isCurrent) homeFrames++;
       if (trips.length != 1) {
         // None (Home on top), or one closing while another opens.
         if (opened != null || trips.length > 1) flashes++;
@@ -236,6 +248,11 @@ void main() {
       reason: 'the booked trip opened under a made-up id, not the server\'s',
     );
     expect(flashes, 0, reason: 'the trip screen closed and Home showed');
+    expect(
+      homeFrames,
+      0,
+      reason: 'Home was the top screen between the tap and the trip',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await live.dispose();
     LiveDriverServices.instance = null;

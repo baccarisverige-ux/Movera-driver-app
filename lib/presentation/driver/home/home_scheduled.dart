@@ -84,7 +84,7 @@ extension _HomeScheduled on _DriverHomeState {
       final id = startBookedRideNow.value;
       if (id == null) return;
       startBookedRideNow.value = null;
-      // Outside the tap's navigation: Home is on top again by then.
+      // Outside the tap: its details stay on top until the trip opens.
       Timer.run(() => _startBookedByHand(id));
     }
 
@@ -251,7 +251,11 @@ extension _HomeScheduled on _DriverHomeState {
   /// top: with a screen or sheet over it the trip cannot open, so the
   /// ride stays in Accepted, late, and starts when Home is back on top.
   bool get _canStartScheduled =>
-      ModalRoute.of(context)?.isCurrent != false &&
+      ModalRoute.of(context)?.isCurrent != false && _freeToStartScheduled;
+
+  /// [_canStartScheduled] but for Home being on top: a booked ride
+  /// started by hand from its details opens over them.
+  bool get _freeToStartScheduled =>
       _recoveryResolved &&
       _driverSession.availableForOffers &&
       _claimedHomeOffer == null &&
@@ -344,16 +348,30 @@ extension _HomeScheduled on _DriverHomeState {
   /// start from `mustBeOnlineAt`): the booked ride starts now, as at its
   /// leave time. Refused, it stays planned as it was (no late warning or
   /// backup driver for an early start) and the driver is told why.
+  ///
+  /// Live 5+5 run 2 (4-booked-p4 046): the ride's details stay on top
+  /// while the server starts it; they close in the frame the trip opens
+  /// over them, so Home never shows in between. When it cannot start,
+  /// Home comes back on top as before.
   void _startBookedByHand(String id) {
     final ride = _nextScheduledRide;
-    if (!mounted || ride == null || ride.id != id) return;
+    if (!mounted) return;
+    if (ride == null || ride.id != id) return _homeOnTop();
     if (!identical(_scheduled.ride, ride)) _planScheduled();
     if (!_driverSession.isOnline) {
+      _homeOnTop();
       _remindOnline(ride);
       return;
     }
-    if (!_canStartScheduled) return;
+    if (!_freeToStartScheduled) return _homeOnTop();
     _startScheduledTrip(ride, byHand: true);
+  }
+
+  /// Closes the screens over Home (a booked ride's details and list).
+  void _homeOnTop() {
+    final home = ModalRoute.of(context);
+    if (home == null || home.isCurrent) return;
+    Navigator.of(context).popUntil((route) => route == home);
   }
 
   void _startScheduledTrip(
@@ -372,7 +390,7 @@ extension _HomeScheduled on _DriverHomeState {
         if (!mounted || !identical(_scheduled.ride, ride)) return;
         if (refused == null) {
           _serverStartedReservations.add(ride.id);
-          _startScheduledTrip(ride);
+          _startScheduledTrip(ride, byHand: byHand);
         } else if (byHand) {
           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
             SnackBar(content: Text(bookedStartRefusalMessage(refused))),
@@ -386,6 +404,9 @@ extension _HomeScheduled on _DriverHomeState {
     _scheduled.planning = true;
     final started = ScheduledRideStore.start(ride);
     _scheduled.planning = false;
+    // By hand: the screens over Home close in this same frame, under the
+    // trip that opens over them.
+    if (byHand) _homeOnTop();
     if (!started) {
       return;
     }
