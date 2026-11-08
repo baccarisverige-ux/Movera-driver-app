@@ -1,5 +1,7 @@
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/live/live_active_trip.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
 
 /// Contract v0.18.17 Book later (`contract.json#bookLater.driver`): the
@@ -80,9 +82,19 @@ class LiveReservations {
   /// trip opens as the current trip ([onStarted]).
   Future<ReservationRefusal?> start(String tripId) => _run(() async {
     final trip = await _api.post(commandPath(tripId, 'start'), body: const {});
-    if (trip['tripId'] is String) onStarted?.call(trip);
+    if (trip['tripId'] is String) {
+      _started[tripId] = LiveActiveTrip.snapshotOf(trip);
+      onStarted?.call(trip);
+    }
     return trip;
   });
+
+  final Map<String, PersistedActiveRide?> _started = {};
+
+  /// The trip a Start of booked ride [tripId] answered with: its payment
+  /// method and cash, which the Scheduled rides row (`DriverReservation`)
+  /// does not carry. Null before a Start.
+  PersistedActiveRide? startedTrip(String tripId) => _started[tripId];
 
   Future<ReservationRefusal?> _run(
     Future<Map<String, dynamic>> Function() call,
