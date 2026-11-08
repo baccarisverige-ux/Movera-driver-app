@@ -223,11 +223,9 @@ class _LeaveCountdownState extends State<LeaveCountdown> {
         child: InkWell(
           key: const ValueKey<String>('scheduled-leave-start'),
           borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            // Home opens the trip: it must be on top.
-            Navigator.of(context).popUntil((route) => route.isFirst);
-            startBookedRideNow.value = id;
-          },
+          // Home starts the ride on the server and opens its trip over
+          // these details: they stay until then (live 5+5 run 2, 046).
+          onTap: () => startBookedRideNow.value = id,
           child: banner,
         ),
       ),
