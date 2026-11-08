@@ -62,10 +62,10 @@ void main() {
   });
   test('Paid pickup and stop clocks use their own elapsed time', () {
     final c = TripIslandController(input(waiting: 155, paid: 35));
-    expect(c.face.title, '00:35');
+    expect(c.face.title, '0:35');
     expect(c.face.subtitle, 'Paid waiting');
     c.update(input(waiting: 80, paid: 80, atStop: true));
-    expect(c.face.title, '01:20');
+    expect(c.face.title, '1:20');
     expect(c.face.subtitle, 'Waiting at stop');
     c.dispose();
   });
