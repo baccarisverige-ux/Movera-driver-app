@@ -150,6 +150,8 @@ extension _AcceptRideSheet on _AcceptRideState {
       return NextTripCard(
         key: const ValueKey<String>('next-trip'),
         currentTripId: widget.tripId,
+        // On-trip Exclusive: read again the moment one is accepted here.
+        refresh: _serverNext.accepted,
       );
     }
     return Padding(
@@ -366,7 +368,20 @@ class _NextTripRadarOffer {
     this.pickupKm = 1.6,
     this.securedPickupPay,
     this.driverEarnings,
+    this.serverOfferId,
+    this.serverPickupPay,
+    this.expiresAt,
   });
+
+  /// On-trip Exclusive (2026-11-08): the server's offer id (accept and
+  /// decline go to it); null for a demo or restored offer, whose [id] is
+  /// the trip.
+  final String? serverOfferId;
+
+  /// The server offer's own `pickupPay` (the local rates are for demo
+  /// offers) and `expiresAt` (its time to answer).
+  final Money? serverPickupPay;
+  final DateTime? expiresAt;
 
   final String id;
   final String category;
@@ -400,6 +415,7 @@ class _NextTripRadarOffer {
             category: category,
             kind: PickupPayOfferKind.nextTripWhileDriving,
             leg: leg,
+            serverPay: serverPickupPay,
           )
         : PickupPayQuote(
             pay: secured,
@@ -437,6 +453,9 @@ class _NextTripRadarOffer {
     dropoffPosition: dropoffPosition,
     pickupKm: pickupKm,
     securedPickupPay: pickupPay.pay,
+    serverOfferId: serverOfferId,
+    serverPickupPay: serverPickupPay,
+    expiresAt: expiresAt,
   );
   final int tripMinutes;
   final String riderName;
