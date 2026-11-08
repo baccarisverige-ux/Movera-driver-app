@@ -913,13 +913,15 @@ extension _HomeOfferRadar on _DriverHomeState {
   ///
   /// A scheduled ride opened at "Leave now" passes its pickup time
   /// [scheduledPickupAt] and reservation [scheduledRideId]: the trip
-  /// watches the ETA to that pickup.
+  /// watches the ETA to that pickup. [tripId]: the server's own trip id,
+  /// when known before the offer carries it (a booked ride it started).
   void _openOfferTrip(
     _HomeDirectOffer offer,
     String matchedVia, {
     DateTime? scheduledPickupAt,
     String? scheduledRideId,
     Money? acceptedPickupPay,
+    String? tripId,
   }) {
     _cancelAllOfferTimers();
     // An Exclusive card slides back down behind the trip.
@@ -966,6 +968,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           // A sample scheduled ride has no dispatch id.
           offerId: offer.id.isEmpty ? null : offer.id,
           tripId:
+              tripId ??
               offer.tripId ??
               tripOccurrenceId(offer.id.isEmpty ? 'scheduled' : offer.id),
           dispatchRepository: _dispatch,

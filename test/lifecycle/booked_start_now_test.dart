@@ -4,6 +4,12 @@
 // tap sends nothing and the server stays `accepted`. The server allows the
 // start from `mustBeOnlineAt` (scheduledAt − onlineBeforeMin, contract
 // bookLater start).
+//
+// Live 5+5 test 2026-11-08 (Rules audits/screens-2026-11-08/live-5x5,
+// 4-booked-p4 068 → 071/072 → 074): the trip opened under a made-up id
+// ("trp_booked-<micros>"); the server answered 404 for it, the trip
+// screen read that as the trip taken away and Home showed for ~2 s until
+// it reopened the server's trip. It must open under the server's own id.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -134,6 +140,11 @@ void main() {
             'version': 2,
           });
       }
+      // As the server: a trip id it does not know is not this driver's.
+      if (path.contains('/trips/') &&
+          !RegExp(r'/trips/trp_booked(/|$)').hasMatch(path)) {
+        return json({'code': 'not_found'}, 404);
+      }
       return json({'code': 'unavailable'}, 503);
     });
     final tokens = MemoryTokenStore()..save(access: 'a1', refresh: 'r1');
@@ -197,13 +208,34 @@ void main() {
     );
     expect(banner, findsOneWidget);
     await tester.tap(banner);
-    await frames(40);
+    // Every frame from the tap: once the trip screen is open, the same
+    // one stays (no close and reopen, so no Home in between).
+    State? opened;
+    var flashes = 0;
+    for (var i = 0; i < 70; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      final trips = find.byType(AcceptRide).evaluate().toList();
+      if (trips.length != 1) {
+        // None (Home on top), or one closing while another opens.
+        if (opened != null || trips.length > 1) flashes++;
+        continue;
+      }
+      final state = (trips.single as StatefulElement).state;
+      if (opened != null && !identical(opened, state)) flashes++;
+      opened = state;
+    }
     expect(
       posts,
       contains('/api/v1/driver/reservations/trp_booked/start'),
       reason: 'the banner sent nothing',
     );
     expect(find.byType(AcceptRide), findsOneWidget);
+    expect(
+      tester.widget<AcceptRide>(find.byType(AcceptRide)).tripId,
+      'trp_booked',
+      reason: 'the booked trip opened under a made-up id, not the server\'s',
+    );
+    expect(flashes, 0, reason: 'the trip screen closed and Home showed');
     await tester.pumpWidget(const SizedBox.shrink());
     await live.dispose();
     LiveDriverServices.instance = null;
