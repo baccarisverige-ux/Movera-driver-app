@@ -424,7 +424,12 @@ extension _HomeScheduled on _DriverHomeState {
       ride.pickupAddress,
       leaveNow: true,
     );
-    final offer = RideOffer.reservation(ride);
+    // A booked ride the server started opens with that trip's payment
+    // method, cash and earnings (live 5+5 run 2, 4-booked-p4 283/305).
+    final offer = RideOffer.reservation(
+      ride,
+      started: LiveDriverServices.instance?.reservations.startedTrip(ride.id),
+    );
     // The trip knows its pickup time: from here to the pickup it watches
     // the driver's ETA (admin "Late ETA").
     _HomeOfferRadar(this)._openOfferTrip(
