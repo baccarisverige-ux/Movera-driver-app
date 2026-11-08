@@ -18,6 +18,13 @@ import 'driver_map_web_bridge_stub.dart'
     if (dart.library.js_interop) 'driver_map_web_bridge.dart'
     as web;
 
+/// Google Cloud Map ID (the owner's styled Movera map) baked into native
+/// builds with `--dart-define=MOVERA_GOOGLE_MAP_ID=...` (same define as the
+/// rider app). Empty means no Map ID: the map keeps the in-app Movera style.
+/// The web build does not use it: there the page's
+/// `movera-google-map-id` meta tag and web/driver_map_camera.js set it.
+const String moveraGoogleMapId = String.fromEnvironment('MOVERA_GOOGLE_MAP_ID');
+
 class CustomGoogleMap extends StatefulWidget {
   /// Web: Maps JavaScript is installed. Tests replace it.
   @visibleForTesting
@@ -80,6 +87,11 @@ class CustomGoogleMap extends StatefulWidget {
   /// Web only: Google's camera (zoom / pan) control in the corner.
   final bool webCameraControlEnabled;
 
+  /// Native (Android / iOS) Cloud Map ID. When non-empty the cloud style
+  /// draws the map, so no inline JSON style is passed (Google ignores it
+  /// alongside a Map ID). Ignored on the web (see [moveraGoogleMapId]).
+  final String cloudMapId;
+
   const CustomGoogleMap({
     super.key,
     this.initialPosition,
@@ -110,6 +122,7 @@ class CustomGoogleMap extends StatefulWidget {
     this.padding = EdgeInsets.zero,
     this.cameraAnchor = .5,
     this.webCameraControlEnabled = false,
+    this.cloudMapId = moveraGoogleMapId,
   });
 
   @override
@@ -144,6 +157,12 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   }
 
   GoogleMapController? _mapController;
+
+  /// The Cloud Map ID for a native map, or null (web, or none configured).
+  String? get _nativeMapId {
+    final id = widget.cloudMapId.trim();
+    return kIsWeb || id.isEmpty ? null : id;
+  }
 
   /// Far / near map style band (parks change green at zoom 12.5). Changes
   /// only when the camera crosses the band, so the map rebuilds rarely.
@@ -565,7 +584,8 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               },
               webGestureHandling: WebGestureHandling.greedy,
               webCameraControlEnabled: widget.webCameraControlEnabled,
-              style: _styleBand.style,
+              cloudMapId: _nativeMapId,
+              style: _nativeMapId == null ? _styleBand.style : null,
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
                 if (mounted) {

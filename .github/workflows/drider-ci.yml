@@ -256,7 +256,17 @@ jobs:
           grep -q "Native release requires GOOGLE_MAPS_API_KEY" /tmp/movera-maps.txt
 
       - name: Explicit internal preview build
-        run: MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true flutter build apk --release
+        env:
+          # Same Map ID as the web deploy and the test APK (empty: no Map ID).
+          DRIVER_MAP_ID: ${{ vars.DRIVER_MAP_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${DRIVER_MAP_ID:-}" ] && ! printf '%s' "$DRIVER_MAP_ID" | grep -Eq '^[A-Za-z0-9]+$'; then
+            echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."
+            exit 1
+          fi
+          MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true flutter build apk --release \
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
 
   # The iOS release compile preflight (macOS, billed 10x) moved to
   # drider-ios.yml with the same job name (CI cost cut, owner 2026-11-06).
