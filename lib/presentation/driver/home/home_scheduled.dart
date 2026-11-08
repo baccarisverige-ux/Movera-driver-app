@@ -412,6 +412,11 @@ extension _HomeScheduled on _DriverHomeState {
       scheduledPickupAt: ride.pickupAt(_clock.now()),
       scheduledRideId: ride.id,
       acceptedPickupPay: ScheduledRideStore.acceptedPickupPay(ride.id),
+      // Live 5+5 2026-11-08 (4-booked-p4 071): a booked ride the server
+      // started is its trip (`/driver/reservations/{tripId}/start`): it
+      // opens under that id. A made-up one was 404 on the server, read as
+      // the trip taken away, and Home showed until it reopened the trip.
+      tripId: _serverStartedReservations.contains(ride.id) ? ride.id : null,
     );
     _planScheduled();
   }
