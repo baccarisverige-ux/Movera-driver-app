@@ -187,28 +187,31 @@ void main() {
       paidSeconds: paid ? seconds - 27 * 60 : null,
     );
 
-    test('−12:00 · Before the pickup time, then 00:00 at the pickup', () {
-      WaitingTerms.active = WaitingRules.current.base.anchored(
-        freeSeconds: 27 * 60,
-        noShowSeconds: 27 * 60,
-        beforeSeconds: 12 * 60,
-      );
-      final island = TripIslandController(input(0));
-      expect(island.face.title, '−12:00');
-      expect(island.face.subtitle, 'Before the pickup time');
-      island.update(input(11 * 60 + 59));
-      expect(island.face.title, '\u221200:01');
-      island.update(input(12 * 60));
-      expect(island.face.title, '00:00');
-      expect(island.face.subtitle, 'Waiting time');
-      island.update(input(20 * 60));
-      expect(island.face.title, '08:00');
-      island.dispose();
-    });
+    test(
+      '−12:00 · Before the pickup time, then 0:00 at the pickup (contract m:ss)',
+      () {
+        WaitingTerms.active = WaitingRules.current.base.anchored(
+          freeSeconds: 27 * 60,
+          noShowSeconds: 27 * 60,
+          beforeSeconds: 12 * 60,
+        );
+        final island = TripIslandController(input(0));
+        expect(island.face.title, '−12:00');
+        expect(island.face.subtitle, 'Before the pickup time');
+        island.update(input(11 * 60 + 59));
+        expect(island.face.title, '\u22120:01');
+        island.update(input(12 * 60));
+        expect(island.face.title, '0:00');
+        expect(island.face.subtitle, 'Waiting time');
+        island.update(input(20 * 60));
+        expect(island.face.title, '8:00');
+        island.dispose();
+      },
+    );
 
     test('a live ride has no countdown (unchanged)', () {
       final island = TripIslandController(input(65));
-      expect(island.face.title, '01:05');
+      expect(island.face.title, '1:05');
       expect(island.face.subtitle, 'Waiting time');
       island.dispose();
     });

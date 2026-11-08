@@ -663,7 +663,7 @@ void main() {
     await tester.pumpWidget(surface(seconds: 125));
     expect(
       find.byWidgetPredicate(
-        (w) => w is IslandRollingClock && w.text == '02:05',
+        (w) => w is IslandRollingClock && w.text == '2:05',
       ),
       findsOneWidget,
     );
@@ -673,7 +673,7 @@ void main() {
     expect(find.text('Waiting for Angelica'), findsOneWidget);
     expect(
       find.byWidgetPredicate(
-        (w) => w is IslandRollingClock && w.text == '02:05',
+        (w) => w is IslandRollingClock && w.text == '2:05',
       ),
       findsNothing,
     );
@@ -681,7 +681,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 900));
     expect(
       find.byWidgetPredicate(
-        (w) => w is IslandRollingClock && w.text == '02:05',
+        (w) => w is IslandRollingClock && w.text == '2:05',
       ),
       findsOneWidget,
     );

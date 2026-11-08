@@ -227,9 +227,12 @@ class TripIslandController extends ChangeNotifier {
     );
   }
 
+  /// "1:05", "0:00", "12:00": minutes without a leading zero, as the
+  /// contract (`bookedRide0_18_51.beforePickup`: −12:00 … −0:01, 0:00)
+  /// and the rider app show it (live 5+5 2026-11-08: "−01:43" vs "−1:43").
   static String clock(int value) {
     final s = value < 0 ? 0 : value;
-    return '${(s ~/ 60).toString().padLeft(2, '0')}:${(s % 60).toString().padLeft(2, '0')}';
+    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
   }
 
   @override
