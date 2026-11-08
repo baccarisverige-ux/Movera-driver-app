@@ -86,16 +86,19 @@ class RideOffer {
   /// not known here, so the demo uses a fixed one.
   ///
   /// [started]: the server's own trip once it started the booked ride
-  /// (`POST /driver/reservations/{tripId}/start`). Its payment method and
-  /// cash win: a Scheduled rides row (`DriverReservation`) has no payment
-  /// method (live 5+5 run 2, 4-booked-p4 283/305: a cash ride opened as
-  /// paid in the app, with no cash step).
+  /// (`POST /driver/reservations/{tripId}/start`). Its payment method,
+  /// cash and driver earnings win: a Scheduled rides row
+  /// (`DriverReservation`) has no payment method and carries the earnings
+  /// as its fare (live 5+5 run 2, 4-booked-p4 283/305: a cash ride opened
+  /// as paid in the app, with no cash step, and its card took Movera's
+  /// commission from the earnings again: 94,23 kr for 125,64 kr).
   factory RideOffer.reservation(
     ReservationRequestPreview reservation, {
     PersistedActiveRide? started,
   }) {
     final cash = started?.paidByCash ?? reservation.paidByCash;
     final startedCash = started?.cashToCollect;
+    final startedPay = started?.fare;
     return RideOffer(
       id: reservation.id,
       category: reservation.category,
@@ -122,6 +125,10 @@ class RideOffer {
           : startedCash != null
           ? Money.parseLabel(startedCash)
           : _amount(reservation.cashToCollect, 'cashToCollect'),
+      // The server's earnings + pickup pay + bonus, as the restore path
+      // (`LiveActiveTrip.snapshotOf`): no commission taken on the phone.
+      driverEarnings: startedPay == null ? null : Money.parseLabel(startedPay),
+      driverBonus: started?.driverBonus,
     );
   }
 

@@ -92,8 +92,8 @@ class LiveReservations {
   final Map<String, PersistedActiveRide?> _started = {};
 
   /// The trip a Start of booked ride [tripId] answered with: its payment
-  /// method and cash, which the Scheduled rides row (`DriverReservation`)
-  /// does not carry. Null before a Start.
+  /// method, cash and driver earnings, which the Scheduled rides row
+  /// (`DriverReservation`) does not carry. Null before a Start.
   PersistedActiveRide? startedTrip(String tripId) => _started[tripId];
 
   Future<ReservationRefusal?> _run(

@@ -225,6 +225,11 @@ void main() {
       reason: 'the server\'s cash ride opened as an in-app payment',
     );
     expect(opened.cashToCollect, '173,00 kr', reason: 'the cash to collect');
+    expect(
+      opened.fare,
+      '125,64 kr',
+      reason: 'the card took a second commission from the earnings',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await live.dispose();
     LiveDriverServices.instance = null;
@@ -277,6 +282,30 @@ void main() {
       await frames(10);
     }
     expect(collect, findsOneWidget, reason: 'no "Collect cash" step');
+    // The trip card ("Current trip … kr", the sheet opened).
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .open();
+    await frames(10);
+    final card = find.byKey(
+      const ValueKey<String>('active-ride-current-trip-card'),
+    );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('125,64')),
+      findsOneWidget,
+      reason: 'the trip card shows the server\'s earnings',
+    );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('94,23')),
+      findsNothing,
+      reason: 'the trip card took a second commission',
+    );
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .animatePanelToSnapPoint();
+    await frames(10);
     await tester.ensureVisible(collect);
     await tester.tap(collect);
     await frames(5);
