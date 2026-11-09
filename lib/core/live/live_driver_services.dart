@@ -1,4 +1,5 @@
 import 'package:movera/core/live/live_reservations.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -373,9 +374,14 @@ class LivePresence {
     _session = null;
   }
 
+  /// W2: the session's last status, to tell a trip that just ended.
+  DriverOnlineStatus? _lastStatus;
+
   void _onSession() {
     final session = _session;
     if (session == null) return;
+    final was = _lastStatus;
+    _lastStatus = session.status;
     switch (session.status) {
       case DriverOnlineStatus.onTrip:
         // A trip (also one restored after a restart) sends its fixes: the
@@ -385,9 +391,23 @@ class LivePresence {
         if (serverOnline) _startOnline();
       case DriverOnlineStatus.offline || DriverOnlineStatus.suspended:
         OfflineAfterTrips.pending.value = false;
+        // §74 (owner Q14, 2026-11-09): the trip's sender stops the moment a
+        // trip ends with the app offline. Before, the sender started by the
+        // trip kept posting every 10 s with the driver "offline" (U17).
+        if (was == DriverOnlineStatus.onTrip && !_wantOnline) _reporter.stop();
         // Offline after a trip, on hold, the driving limit…: the server
         // hears it too. Home's own switch already asked ([goOffline]).
-        if (_wantOnline) unawaited(goOffline());
+        if (_wantOnline) {
+          unawaited(goOffline());
+        } else if (was == DriverOnlineStatus.onTrip && !serverOnline) {
+          // W2 (real-screen run 2026-11-07, 3-cancel 047/192): a trip
+          // restored after a restart ended and the app is back offline
+          // (D11: a restart is offline), while the server put the driver
+          // `online` again at the trip's end: dispatch offered him trips
+          // his app never showed (Radar AV / Pausad). The server is set
+          // offline too, as at the start ([settleAfterStart]).
+          unawaited(_serial(_settleOffline));
+        }
       case DriverOnlineStatus.goingOnline:
         break;
     }
@@ -515,39 +535,40 @@ class LivePresence {
   Future<void> settleAfterStart() {
     if (_settled) return Future<void>.value();
     _settled = true;
-    return _serial(() async {
-      if (_wantOnline || serverOnline) return;
-      try {
-        var profile = await _api.get(profilePath);
-        for (var attempt = 0; attempt < 3; attempt++) {
-          if (_wantOnline || profile['onlineStatus'] != 'online') return;
-          try {
-            profile = await _api.post(
-              availabilityPath,
-              body: {
-                'expectedVersion': profile['version'],
-                'onlineStatus': 'offline',
-              },
+    return _serial(_settleOffline);
+  }
+
+  /// D11 / W2: a server that still holds this driver `online` while the
+  /// app is offline (and was not asked online) is set offline.
+  Future<void> _settleOffline() async {
+    if (_wantOnline || serverOnline) return;
+    try {
+      var profile = await _api.get(profilePath);
+      for (var attempt = 0; attempt < 3; attempt++) {
+        if (_wantOnline || profile['onlineStatus'] != 'online') return;
+        try {
+          profile = await _api.post(
+            availabilityPath,
+            body: {
+              'expectedVersion': profile['version'],
+              'onlineStatus': 'offline',
+            },
+          );
+          // Decision 3: the offline card says the app was restarted.
+          if (profile['onlineStatus'] == 'offline') {
+            DriverSetOfflineNotice.instance.show(
+              reason: DriverOfflineReason.appRestart,
             );
-            // Decision 3: the offline card says the app was restarted.
-            if (profile['onlineStatus'] == 'offline') {
-              DriverSetOfflineNotice.instance.show(
-                reason: DriverOfflineReason.appRestart,
-              );
-            }
-          } on ApiError catch (error) {
-            final current = error.projection;
-            if (error.code != 'version_mismatch' || current == null) rethrow;
-            profile = current;
           }
+        } on ApiError catch (error) {
+          final current = error.projection;
+          if (error.code != 'version_mismatch' || current == null) rethrow;
+          profile = current;
         }
-      } catch (error) {
-        DriverLog.warn(
-          'start offline refused: ${_detail(error)}',
-          name: 'live',
-        );
       }
-    });
+    } catch (error) {
+      DriverLog.warn('start offline refused: ${_detail(error)}', name: 'live');
+    }
   }
 
   /// Goes offline on the server; the feed and location stop at once.
