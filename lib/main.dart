@@ -70,6 +70,7 @@ import 'package:movera/core/push/push_registrar.dart';
 import 'package:movera/core/push/offer_push.dart';
 import 'package:movera/core/sound/offer_alert.dart';
 import 'package:movera/core/phone/phone_checks.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/push/push_explanation.dart';
 import 'package:movera/core/legal/driver_legal.dart';
@@ -542,6 +543,18 @@ class _MoveraAppState extends State<MoveraApp> {
     // list on it (S6 I-1, S8 R2).
     if (open.routeChangeTripId case final tripId?
         when openTripPush(tripId, activeTripId: _session.activeTripId)) {
+      return;
+    }
+    // Contract v0.18.53 §75 (owner Q39): a support answer push opens the
+    // ticket itself (Support list under it), not the bell list.
+    if (open.supportTicketId case final ticketId?) {
+      unawaited(
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => supportScreen(openTicketId: ticketId),
+          ),
+        ),
+      );
       return;
     }
     unawaited(

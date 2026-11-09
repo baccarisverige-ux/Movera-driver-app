@@ -18,16 +18,25 @@ class SupportInboxScreen extends StatefulWidget {
 
 /// Live builds send support messages to the server as tickets (contract v0.9.0 §16); the demo keeps the local inbox.
 class SupportScreen extends StatelessWidget {
-  const SupportScreen({super.key, this.repository, this.tickets});
+  const SupportScreen({
+    super.key,
+    this.repository,
+    this.tickets,
+    this.openTicketId,
+  });
   final LocalSupportRepository? repository;
   final ServerSupportTickets? tickets;
+
+  /// Contract v0.18.53 §75: the ticket a `support_reply` push opens (live
+  /// builds only; the demo's local inbox has no server tickets).
+  final String? openTicketId;
   @override
   Widget build(BuildContext context) {
     final live = repository == null
         ? tickets ?? ServerSupportTickets.fromApp()
         : null;
     return live != null
-        ? LiveSupportInbox(tickets: live)
+        ? LiveSupportInbox(tickets: live, openTicketId: openTicketId)
         : SupportInboxScreen(repository: repository);
   }
 }
