@@ -3,6 +3,7 @@ import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
 enum ClaimOutcome {
@@ -83,32 +84,53 @@ class RideOffer {
 
   /// A reservation as a Radar trip. The driver's distance to the pickup is
   /// not known here, so the demo uses a fixed one.
-  factory RideOffer.reservation(ReservationRequestPreview reservation) =>
-      RideOffer(
-        id: reservation.id,
-        category: reservation.category,
-        fare: _amount(reservation.fare, 'fare')!,
-        rating: reservation.rating,
-        pickupMinutes: 16,
-        pickupKm: 2.1,
-        tripMinutes: reservation.tripMinutes,
-        tripKm: reservation.tripKm,
-        pickup: reservation.pickupAddress,
-        dropoff: reservation.dropoffAddress,
-        pickupPosition: reservation.pickup,
-        dropoffPosition: reservation.dropoff,
-        isNearby: true,
-        followsDestination: false,
-        payment: reservation.paidByCash ? 'Cash' : 'Card',
-        reservationTime: reservation.pickupTime,
-        riderName: reservation.riderName,
-        riderTrips: reservation.riderTrips,
-        stops: reservation.stops,
-        fareBoost: _amount(reservation.fareBoost, 'fareBoost'),
-        cashToCollect: reservation.paidByCash
-            ? _amount(reservation.cashToCollect, 'cashToCollect')
-            : null,
-      );
+  ///
+  /// [started]: the server's own trip once it started the booked ride
+  /// (`POST /driver/reservations/{tripId}/start`). Its payment method,
+  /// cash and driver earnings win: a Scheduled rides row
+  /// (`DriverReservation`) has no payment method and carries the earnings
+  /// as its fare (live 5+5 run 2, 4-booked-p4 283/305: a cash ride opened
+  /// as paid in the app, with no cash step, and its card took Movera's
+  /// commission from the earnings again: 94,23 kr for 125,64 kr).
+  factory RideOffer.reservation(
+    ReservationRequestPreview reservation, {
+    PersistedActiveRide? started,
+  }) {
+    final cash = started?.paidByCash ?? reservation.paidByCash;
+    final startedCash = started?.cashToCollect;
+    final startedPay = started?.fare;
+    return RideOffer(
+      id: reservation.id,
+      category: reservation.category,
+      fare: _amount(reservation.fare, 'fare')!,
+      rating: reservation.rating,
+      pickupMinutes: 16,
+      pickupKm: 2.1,
+      tripMinutes: reservation.tripMinutes,
+      tripKm: reservation.tripKm,
+      pickup: reservation.pickupAddress,
+      dropoff: reservation.dropoffAddress,
+      pickupPosition: reservation.pickup,
+      dropoffPosition: reservation.dropoff,
+      isNearby: true,
+      followsDestination: false,
+      payment: cash ? 'Cash' : 'Card',
+      reservationTime: reservation.pickupTime,
+      riderName: reservation.riderName,
+      riderTrips: reservation.riderTrips,
+      stops: reservation.stops,
+      fareBoost: _amount(reservation.fareBoost, 'fareBoost'),
+      cashToCollect: !cash
+          ? null
+          : startedCash != null
+          ? Money.parseLabel(startedCash)
+          : _amount(reservation.cashToCollect, 'cashToCollect'),
+      // The server's earnings + pickup pay + bonus, as the restore path
+      // (`LiveActiveTrip.snapshotOf`): no commission taken on the phone.
+      driverEarnings: startedPay == null ? null : Money.parseLabel(startedPay),
+      driverBonus: started?.driverBonus,
+    );
+  }
 
   /// Reservation previews still carry SEK labels (follow-up); offers do not.
   static Money? _amount(String? label, String field) {

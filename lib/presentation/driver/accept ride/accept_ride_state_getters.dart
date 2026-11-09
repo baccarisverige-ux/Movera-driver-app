@@ -269,6 +269,10 @@ extension _AcceptRideStateGetters on _AcceptRideState {
 
   String get _waitBarStatus {
     if (_paidStopWait) return _AcceptRideRouteChange(this)._stopWaitStatus();
+    // v0.18.51 §73: before a booked ride's pickup time nothing runs yet.
+    if (_waitSeconds < _waitTerms.beforeSeconds) {
+      return tr.waitingBeforePickup;
+    }
     if (_inIncludedWait) {
       return tr.includedWaitThenPaid;
     }

@@ -11797,6 +11797,12 @@ abstract class AppLocalizations {
   /// **'Booked ride at {time} · {pickup}. Drive to the pickup now.'**
   String nextTripPopupBooked(String time, String pickup);
 
+  /// contract.json#bookedRide0_18_51.texts.beforePickup: label of the waiting timer while it counts down to a booked ride's pickup time.
+  ///
+  /// In en, this message translates to:
+  /// **'Before the pickup time'**
+  String get waitingBeforePickup;
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:

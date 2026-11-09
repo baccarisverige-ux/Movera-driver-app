@@ -415,9 +415,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
-  Future<void> _resyncTrip() async {
+  Future<void> _resyncTrip({bool reopen = false}) async {
     try {
-      await _realtime.reconnectAndResync(widget.tripId);
+      await _realtime.reconnectAndResync(widget.tripId, reopen: reopen);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -481,16 +481,7 @@ extension _AcceptRideTrip on _AcceptRideState {
   /// `pickupWaiting.follow`: while the event stream is down, read the
   /// trip every 10 s so the ETA, the waiting and a moved pickup still
   /// reach the screen; the stream itself replays what it missed.
-  Future<void> _followTick() async {
-    if (!mounted || _rideLifecycle.terminal || _liveUpdatesPaused) return;
-    final realtime = _realtime;
-    if (realtime is ApiDriverRealtime && realtime.connected) return;
-    final trips = _AcceptRideLive(this)._liveTrips;
-    if (trips == null) return;
-    final projection = await trips.refresh(widget.tripId);
-    if (!mounted || projection == null) return;
-    _applyLive(TripLiveDetails.fromProjection(projection));
-  }
+  Future<void> _followTick() => _AcceptRideLive(this)._followTickMoved();
 
   /// X5: the trip went back to dispatch without this driver. Navigation
   /// and offers stop, the island says so on Home, and the driver is back
@@ -1163,6 +1154,12 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.matching) {
       return;
     }
+    // On-trip Exclusive (2026-11-08): a server offer is accepted on the
+    // server (POST /offers/{offerId}/accept).
+    if (offer.serverOfferId != null) {
+      unawaited(_serverNext.accept());
+      return;
+    }
     _rebuild(() => _onTripRadarState = _OnTripRadarState.matching);
     ExclusiveAnswers.instance.accepted();
     _nextTripOfferExpiry?.cancel();
@@ -1187,12 +1184,18 @@ extension _AcceptRideTrip on _AcceptRideState {
     _nextTripRadarDemoTimer?.cancel();
     _nextTripRadarMatchTimer?.cancel();
     _nextTripOfferExpiry?.cancel();
+    final server = _nextTripRadarOffer?.serverOfferId;
     _rebuild(() {
-      _onTripRadarDeclined = true;
+      // A server offer's No is for that offer only: the server sends the
+      // next one when it has one.
+      _onTripRadarDeclined = server == null;
       _nextTripRadarOffer = null;
       _onTripRadarState = _OnTripRadarState.scanning;
     });
     _restoreRideSheet();
+    if (server != null) {
+      _serverNext.declined(server);
+    }
     // Owner 2026-10-27 (contract v0.8.0 §6.7): an Exclusive offer missed or
     // declined while the driver is on a trip never counts toward going
     // offline.

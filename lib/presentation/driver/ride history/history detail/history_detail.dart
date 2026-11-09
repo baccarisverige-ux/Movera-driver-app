@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:movera/core/geo/compact_address.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -428,7 +429,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                     children: [
                       Expanded(
                         child: TextWidget(
-                          text: _ride.pickup,
+                          text: compactAddress(_ride.pickup),
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                           color: AppColor.title,
@@ -452,7 +453,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                     children: [
                       Expanded(
                         child: TextWidget(
-                          text: _ride.dropoff,
+                          text: compactAddress(_ride.dropoff),
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                           color: AppColor.title,

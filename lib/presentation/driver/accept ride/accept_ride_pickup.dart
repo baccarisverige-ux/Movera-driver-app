@@ -45,9 +45,17 @@ extension _AcceptRidePickup on _AcceptRideState {
     final waiting = _live?.waiting;
     final free = waiting?.secondsAfterArrival(waiting.freeUntil);
     final noShow = waiting?.secondsAfterArrival(waiting.noShowAt);
-    return free == null && noShow == null
+    // v0.18.51 §73: a booked ride reached early counts down to `waitFrom`
+    // first. Seconds after Arrived (server − server), so the phone's own
+    // clock and any offset to the server's never enter.
+    final before = waiting?.secondsAfterArrival(waiting.waitFrom);
+    return free == null && noShow == null && (before ?? 0) == 0
         ? terms
-        : terms.anchored(freeSeconds: free, noShowSeconds: noShow);
+        : terms.anchored(
+            freeSeconds: free,
+            noShowSeconds: noShow,
+            beforeSeconds: before,
+          );
   }
 
   /// What the server already told this phone (the accept answer, a read

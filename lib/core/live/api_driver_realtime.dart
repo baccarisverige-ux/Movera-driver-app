@@ -105,10 +105,17 @@ class ApiDriverRealtime implements DriverRealtime {
   /// it now instead of after the backoff. An "open" stream with nothing on
   /// it for [streamIdleTimeout] (the watchdog timer may not have run while
   /// the phone was locked) counts as down.
+  ///
+  /// S6 I-2 (2026-11-07): [reopen] after the app was hidden: a lock or an
+  /// app switch of a few seconds leaves the socket half open with no way
+  /// to tell, and the watchdog would only see it after
+  /// [streamIdleTimeout] (a status up to 45 s late on screen). The stream
+  /// is opened again with `after=` the last sequence, so only what was
+  /// missed is replayed.
   @override
-  Future<void> reconnectAndResync(String tripId) async {
+  Future<void> reconnectAndResync(String tripId, {bool reopen = false}) async {
     if (_disposed || _tripId != tripId) return;
-    if (_open && !_silentTooLong) return;
+    if (_open && !reopen && !_silentTooLong) return;
     _retry?.cancel();
     await _connect();
   }
@@ -285,7 +292,10 @@ class ApiDriverRealtime implements DriverRealtime {
     // Contract v0.18.5 `chat.appStorage`: no chat is kept after the trip
     // (also when the end is this driver's own step, echoed below).
     if (status != null && _isTerminal(status)) _chat?.tripEnded(tripId);
-    if (json['kind'] == 'trip_projection' &&
+    // v0.18.50 §72 L7: the rider's stream hears this driver's own cancel
+    // as driver_cancelled; on his phone it is his own echo, like the
+    // trip_projection one.
+    if ((kind == 'trip_projection' || kind == 'driver_cancelled') &&
         (_trips?.isOwnEcho(
               tripId,
               status,

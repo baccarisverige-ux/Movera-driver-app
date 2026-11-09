@@ -10,6 +10,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/location/location_freshness.dart';
 import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/ride/open_trip_screens.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 
 import 'dart:async';
@@ -127,6 +128,7 @@ part 'accept_ride_trip.dart';
 part 'accept_ride_trip_outcome.dart';
 part 'accept_ride_trip_drive.dart';
 part 'accept_ride_trip_next.dart';
+part 'accept_ride_server_next.dart';
 part 'accept_ride_trip_cover.dart';
 part 'accept_ride_panel.dart';
 part 'accept_ride_panel_clean.dart';
@@ -148,7 +150,7 @@ class AcceptRide extends StatefulWidget {
     this.riderName = 'Angelica',
     // G4 decision 3: no made-up rating; none shows "New".
     this.riderRating,
-    this.riderTrips = 312,
+    this.riderTrips = 0,
     this.fare = '—',
     this.paidByCash = false,
     this.cashToCollect,
@@ -325,7 +327,7 @@ class AcceptRide extends StatefulWidget {
       tripId: snapshot.tripId,
       riderName: snapshot.riderName ?? tr.riderDataUnavailable,
       riderRating: snapshot.riderRating,
-      riderTrips: snapshot.riderTrips ?? 312,
+      riderTrips: snapshot.riderTrips ?? 0,
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
       cashToCollect: snapshot.cashToCollect,
@@ -589,6 +591,7 @@ class _AcceptRideState extends State<AcceptRide>
   _OnTripRadarState _onTripRadarState = _OnTripRadarState.off;
   _NextTripRadarOffer? _nextTripRadarOffer;
   bool _onTripRadarDeclined = false;
+  late final _serverNext = _ServerNextOffers(this); // 2026-11-08
 
   /// R10-2: a next-trip offer came while a Ride check was open; it waits
   /// for the answer from this moment, and drops once its time has passed.
@@ -705,6 +708,7 @@ class _AcceptRideState extends State<AcceptRide>
         LiveDriverServices.instance?.realtime() ??
         MemoryDriverRealtime();
     _AcceptRideLive(this)._beginLiveTrip();
+    _serverNext.start();
     _AcceptRidePickup(this)._beginPickupWaiting();
     _realtimeSubscription = _realtime
         .subscribe(widget.tripId)
@@ -752,6 +756,7 @@ class _AcceptRideState extends State<AcceptRide>
       _waitSeconds += math.max(0, elapsed);
     }
     _AcceptRideRouteChange(this)._restoreServerStops();
+    OpenTripScreens.add(widget.tripId, _bringToFront);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.sessionController?.beginTrip(widget.tripId);
@@ -849,8 +854,14 @@ class _AcceptRideState extends State<AcceptRide>
   @override
   void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
 
+  /// S6 I-1: a trip push tap brings this screen back on top.
+  late final VoidCallback _bringToFront = _AcceptRideRouteChange(
+    this,
+  )._bringTripToFront;
+
   @override
   void dispose() {
+    OpenTripScreens.remove(widget.tripId, _bringToFront);
     driverRouteObserver.unsubscribe(this);
     driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
@@ -879,6 +890,7 @@ class _AcceptRideState extends State<AcceptRide>
     _nextTripRadarDemoTimer?.cancel();
     _nextTripRadarMatchTimer?.cancel();
     _nextTripOfferExpiry?.cancel();
+    _serverNext.dispose();
     _radarPulseController.dispose();
     _radarSweepController.dispose();
     _positionSubscription?.cancel();
@@ -901,8 +913,10 @@ class _AcceptRideState extends State<AcceptRide>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
+        // S6 I-2: back from hidden, the stream may be half open: reopen it.
+        final wasHidden = _liveUpdatesPaused;
         _AcceptRideTrip(this)._resumeLiveUpdates();
-        unawaited(_AcceptRideTrip(this)._resyncTrip());
+        unawaited(_AcceptRideTrip(this)._resyncTrip(reopen: wasHidden));
       // driver-r4-32: inactive (a shade, a prompt, a call banner) is still on
       // screen: save the trip, keep GPS and the camera.
       case AppLifecycleState.inactive:

@@ -9,6 +9,9 @@ extension _AcceptRideOfferCard on _AcceptRideState {
       return const SizedBox.shrink();
     }
     const alertCoral = Color(0xFFFF765C);
+    // On-trip Exclusive (2026-11-08): a server offer counts down to its
+    // own `expiresAt`; a demo offer has the whole admin time.
+    final (:left, :span) = _offerTimeLeft(offer);
 
     return Material(
       key: const ValueKey<String>('on-trip-radar-offer-button'),
@@ -134,21 +137,24 @@ extension _AcceptRideOfferCard on _AcceptRideState {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                const MoveraLineIcon(
-                  mark: MoveraMark.star,
-                  color: Color(0xFFD7A02C),
-                  size: 16,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  offer.rating.toStringAsFixed(2),
-                  style: const TextStyle(
-                    color: Color(0xFF6F7B82),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
+                // G4 decision 3: no made-up rating when the server sent none.
+                if (offer.rating > 0) ...[
+                  const SizedBox(width: 8),
+                  const MoveraLineIcon(
+                    mark: MoveraMark.star,
+                    color: Color(0xFFD7A02C),
+                    size: 16,
                   ),
-                ),
+                  const SizedBox(width: 4),
+                  Text(
+                    offer.rating.toStringAsFixed(2),
+                    style: const TextStyle(
+                      color: Color(0xFF6F7B82),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 5),
@@ -163,16 +169,14 @@ extension _AcceptRideOfferCard on _AcceptRideState {
             const SizedBox(height: 10),
             TweenAnimationBuilder<double>(
               key: ValueKey<String>('on-trip-offer-${offer.id}'),
-              tween: Tween<double>(begin: 1, end: 0),
-              duration: _AcceptRideState._onTripOfferLifetime,
+              tween: Tween<double>(
+                begin: left.inMilliseconds / span.inMilliseconds,
+                end: 0,
+              ),
+              duration: left,
               builder: (context, remaining, _) {
-                final seconds =
-                    (remaining *
-                            (_AcceptRideState
-                                    ._onTripOfferLifetime
-                                    .inMilliseconds /
-                                1000))
-                        .ceil();
+                final seconds = (remaining * (span.inMilliseconds / 1000))
+                    .ceil();
                 return Column(
                   children: [
                     Row(
@@ -293,6 +297,18 @@ extension _AcceptRideOfferCard on _AcceptRideState {
         ),
       ),
     );
+  }
+
+  /// The offer's time to answer: [left] of a bar [span] long.
+  ({Duration left, Duration span}) _offerTimeLeft(_NextTripRadarOffer offer) {
+    final lifetime = _AcceptRideState._onTripOfferLifetime;
+    final expires = offer.expiresAt;
+    if (expires == null) return (left: lifetime, span: lifetime);
+    final left = expires.difference(_AcceptRideTrip(this)._offerNow());
+    if (left <= Duration.zero) {
+      return (left: const Duration(milliseconds: 1), span: lifetime);
+    }
+    return (left: left, span: left > lifetime ? left : lifetime);
   }
 
   Widget _offerLocationRow({

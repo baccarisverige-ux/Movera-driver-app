@@ -73,6 +73,7 @@ import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
 import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
+import 'package:movera/core/waybill/last_trip_tip.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/movera_line_icon.dart';
@@ -87,7 +88,6 @@ import 'package:movera/presentation/driver/home/components/home_map_layers.dart'
 import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
-import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/info_session_screen.dart';
 import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
@@ -101,7 +101,6 @@ import 'package:geolocator/geolocator.dart'
 import 'package:movera/presentation/driver/vehicles/live_vehicles_screen.dart';
 import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
 import 'package:movera/presentation/driver/account/start_company_screen.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
@@ -129,6 +128,7 @@ import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/presentation/driver/home/booked_start_refusal.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
@@ -851,7 +851,7 @@ class _DriverHomeState extends State<DriverHome>
   void _openActivationSupport() {
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const SupportScreen()),
+      MaterialPageRoute<void>(builder: (_) => supportScreen()),
     );
   }
 

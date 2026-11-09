@@ -334,10 +334,11 @@
   "liveAnalyticsSoon": "Vos statistiques de courses s’afficheront ici quand Movera les comptera sur le serveur.",
   "offlineReasonDocumentsExpired": "Un document a expiré. Envoyez le nouveau pour rouler à nouveau.",
   "liveTripPositionStale": "Votre position est trop ancienne – activez la localisation",
-  "nextBookedRideAt": "Suivante : course réservée à {time}",
+  "nextBookedRideAt": "Suivante : course programmée à {time}",
   "nextBookedRideHint": "Après cette course, allez à la prise en charge",
   "nextTripAfterThis": "Suivante : {rider} · après cette course",
   "nextTripPopupTitle": "Votre prochaine course",
   "nextTripPopupLive": "{rider} vous attend à {pickup}. Allez-y maintenant.",
-  "nextTripPopupBooked": "Course réservée à {time} · {pickup}. Allez à la prise en charge maintenant."
+  "nextTripPopupBooked": "Course programmée à {time} · {pickup}. Allez à la prise en charge maintenant.",
+  "waitingBeforePickup": "Avant l’heure de prise en charge"
 }

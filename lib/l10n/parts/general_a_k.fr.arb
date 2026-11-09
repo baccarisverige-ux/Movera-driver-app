@@ -250,7 +250,7 @@
   "feeKindCancelShort": "Frais d’annulation",
   "g6RuleFarPickup": "Prise en charge à plus de {km} km",
   "g6RuleAirport": "Prise en charge à l’aéroport",
-  "g6RuleScheduled": "Course réservée",
+  "g6RuleScheduled": "Course programmée",
   "g6RuleEvent": "Prise en charge à un événement",
   "g6PinAsk": "Demandez au passager son code à 4 chiffres",
   "g6PinWrong": "Code incorrect. Il vous reste {left} tentatives.",

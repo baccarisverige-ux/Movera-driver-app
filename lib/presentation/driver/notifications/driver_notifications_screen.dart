@@ -1,10 +1,10 @@
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/styles/movera_map_palette.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -162,7 +162,7 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
         // Contract v0.17.0: the documents and their upload guides.
         pushSingle(
           context,
-          MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),
+          MaterialPageRoute<void>(builder: (_) => driverDocumentsScreen()),
         );
       case null:
         break;
