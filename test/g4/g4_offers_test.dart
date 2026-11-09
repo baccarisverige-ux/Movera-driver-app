@@ -522,7 +522,7 @@ void main() {
       expect(buzz, hasLength(1));
       await _closeHome(tester);
     });
-    // Radar offers on Home making no sound: test/widget_test.dart
+    // Radar offers on Home making no sound: test/widget/home_suite/radar_offers_test.dart
     // 'Exclusive Radar stays separate …' (G4-E6 lines).
   });
 
