@@ -305,7 +305,7 @@ extension _HomeMapDestination on _DriverHomeState {
   void _openHoldDocuments() {
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),
+      MaterialPageRoute<void>(builder: (_) => driverDocumentsScreen()),
     );
   }
 

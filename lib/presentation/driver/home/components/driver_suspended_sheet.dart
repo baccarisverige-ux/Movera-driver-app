@@ -1,9 +1,9 @@
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
 
 const Color _ink = Color(0xFF202A31);
@@ -24,9 +24,9 @@ Future<void> showDriverSuspendedSheet(BuildContext context) {
       canPop: false,
       child: DriverSuspendedSheet(
         onContactSupport: () => unawaited(
-          Navigator.of(sheetContext).push(
-            MaterialPageRoute<void>(builder: (_) => const SupportInboxScreen()),
-          ),
+          Navigator.of(
+            sheetContext,
+          ).push(MaterialPageRoute<void>(builder: (_) => supportInboxScreen())),
         ),
         onSignOut: () => unawaited(signOutDriver(sheetContext)),
       ),

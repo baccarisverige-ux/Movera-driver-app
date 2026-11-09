@@ -6,7 +6,6 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/home/components/radar_edge_dash.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 
 /// Collapsed / expanded bottom-sheet navigation chrome for driver home.
@@ -111,7 +110,7 @@ class DriverSheetNav {
                                 pushSingle(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const SupportScreen(),
+                                    builder: (_) => supportScreen(),
                                   ),
                                 );
                               },
@@ -232,7 +231,7 @@ class DriverSheetNav {
             onTap: () {
               pushSingle(
                 context,
-                MaterialPageRoute(builder: (_) => const SupportScreen()),
+                MaterialPageRoute(builder: (_) => supportScreen()),
               );
             },
           ),

@@ -540,7 +540,7 @@ extension _HomeAccount on _DriverHomeState {
     }
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),
+      MaterialPageRoute<void>(builder: (_) => driverDocumentsScreen()),
     );
   }
 }
