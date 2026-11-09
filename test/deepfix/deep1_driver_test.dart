@@ -312,7 +312,7 @@ void main() {
     testWidgets('a new number: change, then the code to verify', (
       tester,
     ) async {
-      final sent = await run(tester, ContactKind.phone, '+46701112233', (r) {
+      final sent = await run(tester, ContactKind.phone, '+46701740633', (r) {
         if (r.url.path.endsWith('/phone/change')) {
           return {
             'sessionId': 'ses_1',
@@ -322,12 +322,12 @@ void main() {
           };
         }
         if (r.url.path.endsWith('/phone/verify')) {
-          return {'phone': '+46701112233'};
+          return {'phone': '+46701740633'};
         }
-        return {'driverId': 'd1', 'phone': '+46701112233'};
+        return {'driverId': 'd1', 'phone': '+46701740633'};
       });
       expect(sent.single.url.path, '/api/v1/account/phone/change');
-      expect(jsonDecode(sent.single.body), {'phone': '+46701112233'});
+      expect(jsonDecode(sent.single.body), {'phone': '+46701740633'});
       await tester.enterText(
         find.byKey(const ValueKey('contact-code')),
         '1234',
@@ -336,7 +336,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(sent[1].url.path, '/api/v1/account/phone/verify');
       expect(jsonDecode(sent[1].body), {
-        'phone': '+46701112233',
+        'phone': '+46701740633',
         'sessionId': 'ses_1',
         'code': '1234',
       });
@@ -347,7 +347,7 @@ void main() {
       await run(
         tester,
         ContactKind.phone,
-        '+46701112233',
+        '+46701740633',
         (_) => {
           '_status': 409,
           'code': 'conflict',
