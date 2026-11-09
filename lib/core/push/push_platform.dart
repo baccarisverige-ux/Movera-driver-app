@@ -36,6 +36,19 @@ class PushOpen {
     final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
     return id == null || id.isEmpty ? null : id;
   }
+
+  static final RegExp _supportLink = RegExp(
+    r'^movera-driver://support/([^/?#]+)$',
+  );
+
+  /// Contract v0.18.53 §75 `support.answerPush` (owner Q39): the ticket of
+  /// a `support_reply` push (`movera-driver://support/{ticketId}`), else
+  /// null. The tap opens that ticket in Support (its answer is there).
+  String? get supportTicketId {
+    final match = _supportLink.firstMatch(deepLink?.trim() ?? '');
+    final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
+    return id == null || id.isEmpty ? null : id;
+  }
 }
 
 /// The device side of push: the permission, the FCM token and taps.

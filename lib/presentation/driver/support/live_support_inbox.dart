@@ -9,9 +9,13 @@ import 'package:movera/core/support/ticket_error_text.dart';
 /// The live build's Support (contract v0.9.0, owner 2026-10-27): the driver
 /// writes to Movera, Admin › Support answers, and the answer shows here.
 class LiveSupportInbox extends StatefulWidget {
-  const LiveSupportInbox({super.key, required this.tickets});
+  const LiveSupportInbox({super.key, required this.tickets, this.openTicketId});
 
   final ServerSupportTickets tickets;
+
+  /// Contract v0.18.53 §75: the ticket a `support_reply` push tap
+  /// (`movera-driver://support/{ticketId}`) opens over the list at once.
+  final String? openTicketId;
 
   @override
   State<LiveSupportInbox> createState() => _LiveSupportInboxState();
@@ -24,6 +28,26 @@ String liveTicketStatus(String status) =>
 
 class _LiveSupportInboxState extends State<LiveSupportInbox> {
   late Future<List<ServerTicket>> _list = widget.tickets.mine();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openTicketId case final ticketId?) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final again = await _openTicket(ticketId);
+        if (again == true && mounted) await _write();
+      });
+    }
+  }
+
+  Future<bool?> _openTicket(String ticketId) =>
+      Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(
+          builder: (_) =>
+              _LiveTicket(ticketId: ticketId, tickets: widget.tickets),
+        ),
+      );
 
   void _reload() {
     setState(() {
@@ -105,14 +129,7 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () async {
                   // Owner "Can't write": a solved ticket offers "New ticket".
-                  final again = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute<bool>(
-                      builder: (_) => _LiveTicket(
-                        ticketId: ticket.id,
-                        tickets: widget.tickets,
-                      ),
-                    ),
-                  );
+                  final again = await _openTicket(ticket.id);
                   if (again == true && mounted) await _write();
                 },
               ),

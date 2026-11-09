@@ -46,9 +46,11 @@ Widget driverDocumentsScreen() => DeferredScreen(
   builder: (_) => documents.DriverDocuments(),
 );
 
-Widget supportScreen() => DeferredScreen(
+/// [openTicketId]: contract v0.18.53 §75, a `support_reply` push tap opens
+/// that ticket over the Support list.
+Widget supportScreen({String? openTicketId}) => DeferredScreen(
   load: support.loadLibrary,
-  builder: (_) => support.SupportScreen(),
+  builder: (_) => support.SupportScreen(openTicketId: openTicketId),
 );
 
 Widget supportInboxScreen() => DeferredScreen(
