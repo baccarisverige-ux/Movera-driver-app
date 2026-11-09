@@ -62,6 +62,7 @@ class LiveDriverConfig extends ChangeNotifier {
     this.onContentPublished,
     this.onZonesPublished,
     this.onEventsPublished,
+    this.onReservationsChanged,
     DriverConfigCache? cache,
     this.retryAfter = const Duration(seconds: 5),
     this.requestTimeout = const Duration(seconds: 60),
@@ -88,6 +89,12 @@ class LiveDriverConfig extends ChangeNotifier {
   /// (an event of the driver's country was created, changed or deleted)
   /// goes here.
   final void Function()? onEventsPublished;
+
+  /// Contract v0.18.45 §68 (L-a Q7 "Live push"): the booked rides must be
+  /// read again (`GET /driver/reservations`). Called on each
+  /// `driver_reservations_changed` (a hint only) and each time the stream
+  /// opens, so a reconnect catches what was missed while it was down.
+  final void Function()? onReservationsChanged;
   final Duration retryAfter;
   final Duration requestTimeout;
 
@@ -236,6 +243,8 @@ class LiveDriverConfig extends ChangeNotifier {
         return;
       }
       final data = StringBuffer();
+      // §68: every (re)connect reads the booked rides again.
+      onReservationsChanged?.call();
       _stream = response.stream
           .transform(utf8.decoder)
           .transform(const LineSplitter())
@@ -250,6 +259,11 @@ class LiveDriverConfig extends ChangeNotifier {
               data.clear();
               try {
                 final event = jsonDecode(raw);
+                if (event is Map &&
+                    event['kind'] == 'driver_reservations_changed') {
+                  onReservationsChanged?.call();
+                  return;
+                }
                 if (event is! Map || event['kind'] != 'config_published') {
                   return;
                 }

@@ -6,6 +6,7 @@ import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
 import 'package:movera/core/logging/crash_reports.dart';
+import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 import 'package:flutter/material.dart';
@@ -36,11 +37,13 @@ import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/reservations_refresh.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/ride/open_trip_screens.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/settings/server_settings_sync.dart';
@@ -159,6 +162,7 @@ class _MoveraAppState extends State<MoveraApp> {
 
   /// G4-E6: tells the web push whether offer pushes may vibrate.
   VoidCallback? _offerAlertsToPush;
+  ReservationsRefresh? _reservationsRefresh;
 
   /// Live builds: tells [LiveDriverServices] when the app is back on screen.
   AppLifecycleListener? _lifecycle;
@@ -201,6 +205,15 @@ class _MoveraAppState extends State<MoveraApp> {
         next: DriverLog.sink,
       );
       DriverLog.sink = reports.call;
+      // Owner 2026-11-07 ("5. Mouchard redémarrage"): proof of a page
+      // that iOS restarts from zero (live web builds only).
+      RestartWatch.instance = startRestartWatch(
+        report: (message) => reports.report(
+          message,
+          StackTrace.empty,
+          kind: CrashReports.kindError,
+        ),
+      );
     }
     _auth = AuthController(
       repository: AuthRepository(api: _api, tokens: _tokens),
@@ -278,12 +291,24 @@ class _MoveraAppState extends State<MoveraApp> {
       offerAlertsToPush();
       // The offline card's "Turn on" notifications registers push too.
       DevicePhoneChecks.notificationsAllowed = () => unawaited(push.signedIn());
-      live.afterSignedIn = () => unawaited(
-        push.signedIn().then((_) {
-          final launch = pushPlatform.takeLaunchOpen();
-          if (launch != null) _openPush(launch);
-        }),
+      // L-a Q7 "Live push" (contract v0.18.45 §68): the booked rides are
+      // read at sign-in, on each stream reconnect and on each
+      // driver_reservations_changed, at most once every 2 s.
+      final reservationsRefresh = _reservationsRefresh = ReservationsRefresh(
+        read: () => ScheduledRideStore.syncFromServer(live.reservations),
       );
+      live.onReservationsStale = reservationsRefresh.request;
+      live.afterSignedIn = () {
+        // No demo or earlier driver's rides survive a sign-in.
+        ScheduledRideStore.clearRides();
+        reservationsRefresh.request();
+        unawaited(
+          push.signedIn().then((_) {
+            final launch = pushPlatform.takeLaunchOpen();
+            if (launch != null) _openPush(launch);
+          }),
+        );
+      };
       live.attach(_session);
       // Contract v0.18.5 `legal` (G1-B2): the country's terms and privacy
       // policy (no token) on start and each time the app comes back.
@@ -338,6 +363,7 @@ class _MoveraAppState extends State<MoveraApp> {
   @override
   void dispose() {
     DriverLanguage.current.removeListener(_languageChanged);
+    _reservationsRefresh?.dispose();
     final offerAlerts = _offerAlertsToPush;
     if (offerAlerts != null) {
       OfferAlertSettings.vibrate.removeListener(offerAlerts);
@@ -509,9 +535,15 @@ class _MoveraAppState extends State<MoveraApp> {
       );
       return;
     }
-    // A route-change push: the trip screen (already open on the active
-    // trip) hears the change on its stream; no bell list over it.
-    if (open.routeChangeTripId != null) return;
+    // A trip push (route change, Ride Check, not heading to the rider): the
+    // trip screen comes back on top (menu pages over it close) and reads
+    // the trip again; restored by Home on a cold start. A bell notice
+    // about another trip (pay changed, « Course annulée ») opens the bell
+    // list on it (S6 I-1, S8 R2).
+    if (open.routeChangeTripId case final tripId?
+        when openTripPush(tripId, activeTripId: _session.activeTripId)) {
+      return;
+    }
     unawaited(
       navigator.push(
         MaterialPageRoute<void>(
@@ -530,13 +562,20 @@ class _MoveraAppState extends State<MoveraApp> {
     // none possible) keeps its logout as it was and never touches the
     // token store.
     if (DriverRuntimeConfig.current.authRequired) {
-      // Offline on the server while the token is still there.
-      await _live?.presence.goOffline().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => null,
-      );
-      await _push?.signingOut();
+      // Offline on the server while the token is still there (never on a
+      // trip: that would set "offline after the trip").
+      if (_session.activeTripId == null) {
+        await _live?.presence.goOffline().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () => null,
+        );
+      }
+      // v0.18.49 §71 (owner Q8, S8 R4): the server's sign-out BEFORE push
+      // or local data; refused for a current trip ([SignOutOnTrip], thrown
+      // to the caller), nothing here changes. It removes the session's
+      // push devices itself.
       await _auth.signOut();
+      await _push?.signingOut(server: false);
       _account.clear();
     }
     await PrefsActiveRideRepository.settle();

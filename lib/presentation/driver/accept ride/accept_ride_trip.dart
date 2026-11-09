@@ -415,9 +415,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
-  Future<void> _resyncTrip() async {
+  Future<void> _resyncTrip({bool reopen = false}) async {
     try {
-      await _realtime.reconnectAndResync(widget.tripId);
+      await _realtime.reconnectAndResync(widget.tripId, reopen: reopen);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -481,16 +481,7 @@ extension _AcceptRideTrip on _AcceptRideState {
   /// `pickupWaiting.follow`: while the event stream is down, read the
   /// trip every 10 s so the ETA, the waiting and a moved pickup still
   /// reach the screen; the stream itself replays what it missed.
-  Future<void> _followTick() async {
-    if (!mounted || _rideLifecycle.terminal || _liveUpdatesPaused) return;
-    final realtime = _realtime;
-    if (realtime is ApiDriverRealtime && realtime.connected) return;
-    final trips = _AcceptRideLive(this)._liveTrips;
-    if (trips == null) return;
-    final projection = await trips.refresh(widget.tripId);
-    if (!mounted || projection == null) return;
-    _applyLive(TripLiveDetails.fromProjection(projection));
-  }
+  Future<void> _followTick() => _AcceptRideLive(this)._followTickMoved();
 
   /// X5: the trip went back to dispatch without this driver. Navigation
   /// and offers stop, the island says so on Home, and the driver is back
@@ -591,8 +582,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       // tap, so a live build tells it first.
       final stop = _stopCursor;
       if (LiveDriverServices.active &&
-          (!await _AcceptRideLive(this)._serverStep(
-                (trips) => trips.arriveAtStop(widget.tripId, stop),
+          (!await _whileStepBusy(
+                () => _AcceptRideLive(this)._serverStep(
+                  (trips) => trips.arriveAtStop(widget.tripId, stop),
+                ),
               ) ||
               !mounted ||
               _stage != ActiveRideStage.onTrip ||
@@ -811,7 +804,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (trips != null && preview == null) {
       _stageTransitioning = true;
       try {
-        preview = await trips.previewComplete(widget.tripId);
+        preview = await _whileStepBusy(
+          () => trips.previewComplete(widget.tripId),
+        );
       } finally {
         _stageTransitioning = false;
       }
@@ -972,11 +967,13 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.secured && offer != null;
     final next = queuedNext ? _snapshotForOffer(offer) : null;
     if (LiveDriverServices.active &&
-        (!await _AcceptRideLive(this)._serverStep(
-              (trips) => trips.complete(
-                widget.tripId,
-                preview: trips.previewOf(widget.tripId),
-                cash: widget.paidByCash,
+        (!await _whileStepBusy(
+              () => _AcceptRideLive(this)._serverStep(
+                (trips) => trips.complete(
+                  widget.tripId,
+                  preview: trips.previewOf(widget.tripId),
+                  cash: widget.paidByCash,
+                ),
               ),
             ) ||
             !mounted ||
@@ -1036,29 +1033,33 @@ extension _AcceptRideTrip on _AcceptRideState {
       return;
     }
     _waybills.completeCurrent();
-    Widget? nextRide = queuedNext ? _nextRideFor(offer) : null;
     // Fix job 5 (owner 2026-11-05): the next trip — a live one he accepted
     // during this trip, or a booked ride whose time to drive is near — opens
     // on screen after this one, with an information popup (OK only).
+    // Finder A4: the summary shows at once; the server is asked for the
+    // next trip behind it, and Done waits only if it has not answered yet.
+    final nextRide = queuedNext ? _nextRideFor(offer) : null;
+    Future<Widget?>? nextRideLater;
     if (nextRide == null) {
-      final opened = await openNextTripAfter(widget.tripId);
-      if (!mounted) return;
-      if (opened != null) {
-        nextRide = NextTripPopupHost(
-          next: opened.next,
-          child: AcceptRide.fromPersisted(
-            opened.ride,
-            locationRepository: widget.locationRepository,
-            routeRepository: widget.routeRepository,
-            waybillRepository: _waybills,
-            sessionController: widget.sessionController,
-            activeRideRepository: widget.activeRideRepository,
-            dispatchRepository: widget.dispatchRepository,
-          ),
-        );
-      }
+      final screen = widget, waybills = _waybills;
+      nextRideLater = openNextTripAfter(screen.tripId).then<Widget?>(
+        (opened) => opened == null
+            ? null
+            : NextTripPopupHost(
+                next: opened.next,
+                child: AcceptRide.fromPersisted(
+                  opened.ride,
+                  locationRepository: screen.locationRepository,
+                  routeRepository: screen.routeRepository,
+                  waybillRepository: waybills,
+                  sessionController: screen.sessionController,
+                  activeRideRepository: screen.activeRideRepository,
+                  dispatchRepository: screen.dispatchRepository,
+                ),
+              ),
+        onError: (Object _) => null,
+      );
     }
-    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       BottomToTopTransition(
         DriverRideCompleted(
@@ -1066,6 +1067,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           sessionController: widget.sessionController,
           activeRideRepository: widget.activeRideRepository,
           nextRide: nextRide,
+          nextRideLater: nextRideLater,
           paidByCash: widget.paidByCash,
         ),
       ),
@@ -1152,6 +1154,12 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.matching) {
       return;
     }
+    // On-trip Exclusive (2026-11-08): a server offer is accepted on the
+    // server (POST /offers/{offerId}/accept).
+    if (offer.serverOfferId != null) {
+      unawaited(_serverNext.accept());
+      return;
+    }
     _rebuild(() => _onTripRadarState = _OnTripRadarState.matching);
     ExclusiveAnswers.instance.accepted();
     _nextTripOfferExpiry?.cancel();
@@ -1176,12 +1184,18 @@ extension _AcceptRideTrip on _AcceptRideState {
     _nextTripRadarDemoTimer?.cancel();
     _nextTripRadarMatchTimer?.cancel();
     _nextTripOfferExpiry?.cancel();
+    final server = _nextTripRadarOffer?.serverOfferId;
     _rebuild(() {
-      _onTripRadarDeclined = true;
+      // A server offer's No is for that offer only: the server sends the
+      // next one when it has one.
+      _onTripRadarDeclined = server == null;
       _nextTripRadarOffer = null;
       _onTripRadarState = _OnTripRadarState.scanning;
     });
     _restoreRideSheet();
+    if (server != null) {
+      _serverNext.declined(server);
+    }
     // Owner 2026-10-27 (contract v0.8.0 §6.7): an Exclusive offer missed or
     // declined while the driver is on a trip never counts toward going
     // offline.

@@ -1,3 +1,4 @@
+import 'package:movera/core/geo/compact_address.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -892,7 +893,7 @@ class _HistoryRideCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${ride.pickup} → ${ride.dropoff}',
+                          '${compactAddress(ride.pickup)} → ${compactAddress(ride.dropoff)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

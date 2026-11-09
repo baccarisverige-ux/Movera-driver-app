@@ -315,6 +315,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   }
 
   Future<void> _openRideDetails(_ScheduledRide ride) async {
+    final session = ScheduledRideStore._session;
     final action = await pushSingle<_ScheduledRideAction>(
       context,
       MaterialPageRoute(
@@ -327,6 +328,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     }
 
     if (action == _ScheduledRideAction.accepted) {
+      // W1 (2026-11-07): the server's list may have been read again while
+      // the details were open (new row objects): the same booking by id.
+      // Not across a session reset (another driver's list).
+      if (session == ScheduledRideStore._session) {
+        ride = ScheduledRideStore._sameRequest(ride) ?? ride;
+      }
       // The request may have been answered on Home, or replaced by a new
       // session while this details route was open. Only its current owner can act.
       if (!_requests.contains(ride)) {
@@ -828,6 +835,17 @@ class ScheduledRideStore {
             )
             .toList();
 
+  /// The open request now shown for [ride]: the same row, or the row
+  /// of the same booking after the server's list was read again.
+  static _ScheduledRide? _sameRequest(_ScheduledRide ride) {
+    for (final open in _visibleRequests) {
+      if (identical(open, ride) || (ride.id.isNotEmpty && open.id == ride.id)) {
+        return open;
+      }
+    }
+    return null;
+  }
+
   /// [ride]'s pickup time has passed: nobody can take it any more
   /// (driver-u164). False when its time is unknown.
   static bool _pickupPassed(_ScheduledRide ride) {
@@ -1304,7 +1322,24 @@ class ScheduledRideStore {
   /// Back to a fresh session: logout calls it, so the previous driver's
   /// accepted rides, late cancels and pause, reminder and backup note do
   /// not carry over to the next driver on the device (driver-u167).
+  /// L-a Q7 (owner 2026-11-06): at sign-in the list holds no ride yet; no
+  /// demo seed and no earlier driver's ride stays. The server's read
+  /// ([syncFromServer]) fills it.
+  static void clearRides() {
+    _requests.clear();
+    _accepted.clear();
+    _serverRows.clear();
+    _claims.clear();
+    keepQuestions.value = const [];
+    _changed();
+  }
+
+  /// W1: counts [reset]s, so a details screen opened before one does not
+  /// act on the new session's list.
+  static int _session = 0;
+
   static void reset() {
+    _session++;
     _requests
       ..clear()
       ..addAll(_seedRequests());

@@ -143,6 +143,14 @@ extension _HomeRoutes on _DriverHomeState {
   void _pageCovered() {
     _routeVisible = false;
     _HomeUpdates(this)._pauseHomeUpdates();
+    // Audit 2026-11-07 B1: the trip screen is pushed before its trip is
+    // begun; it, and the summary that replaces it, never close for a new
+    // offer. The trip's routes are the only ones of these kinds over Home.
+    final cover = driverRouteObserver.pages.lastPushed;
+    if (cover is ActiveRideTransition || cover is BottomToTopTransition) {
+      _stopCoverWatch();
+      return;
+    }
     _watchOffersWhileCovered();
   }
 
@@ -162,6 +170,11 @@ extension _HomeRoutes on _DriverHomeState {
     _coverOfferWatches[this] = _dispatch.watchNearbyOffers().listen((offers) {
       if (!mounted) {
         // Home is gone (disposed under the page): the watch ends.
+        _stopCoverWatch();
+        return;
+      }
+      if (_driverSession.activeTripId != null) {
+        // A trip began under the menu page: the watch ends (B1).
         _stopCoverWatch();
         return;
       }

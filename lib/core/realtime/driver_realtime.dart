@@ -386,7 +386,10 @@ class DriverRealtimeSequenceGate {
 abstract interface class DriverRealtime {
   Stream<DriverRealtimeEvent> subscribe(String tripId);
 
-  Future<void> reconnectAndResync(String tripId);
+  /// [reopen] (S6 I-2): the app is back on screen after being hidden; an
+  /// open stream may have gone half open meanwhile, so it is opened again
+  /// (the server replays what was missed after the last sequence).
+  Future<void> reconnectAndResync(String tripId, {bool reopen = false});
 
   /// Demo only: a driver signal shown to the in-process rider stand-in.
   /// With a backend these are commands (`POST /trips/{id}/arrive`), and the
@@ -523,7 +526,7 @@ class MemoryDriverRealtime implements DriverRealtime {
   }
 
   @override
-  Future<void> reconnectAndResync(String tripId) async {
+  Future<void> reconnectAndResync(String tripId, {bool reopen = false}) async {
     if (_disposed || _tripId != tripId) {
       return;
     }

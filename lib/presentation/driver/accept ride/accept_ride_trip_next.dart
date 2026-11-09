@@ -149,8 +149,10 @@ extension _AcceptRideTripNext on _AcceptRideState {
   }
 
   void _maybeScheduleOnTripRadarDemoOffer() {
-    // A live build: no demo next trip; the server sends real ones.
+    // A live build: no demo next trip; the server sends real ones, and
+    // one that waits is shown now if it may be (accept_ride_server_next).
     if (LiveDriverServices.active) {
+      _serverNext.present();
       return;
     }
     // Q18: while driving a rider only Exclusive offers come, when admin
@@ -220,6 +222,11 @@ extension _AcceptRideTripNext on _AcceptRideState {
     if (_offersHeld || _rideLifecycle.terminal) {
       return;
     }
+    // A live build shows the server's own offer, with its own time.
+    if (LiveDriverServices.active) {
+      _serverNext.present();
+      return;
+    }
     _rebuild(() {
       final offer = _onTripRadarOfferForDestination();
       if (!_dropoffFollowsDestination(offer.dropoffPosition)) {
@@ -243,6 +250,11 @@ extension _AcceptRideTripNext on _AcceptRideState {
     }
     _nextTripOfferExpiry = Timer(time, () {
       if (!mounted || _onTripRadarState != _OnTripRadarState.offerAvailable) {
+        return;
+      }
+      // A server offer that ran out is only taken away (no decline sent).
+      if (LiveDriverServices.active) {
+        _serverNext.expired();
         return;
       }
       _denyNextTripRadar();
@@ -381,6 +393,17 @@ extension _AcceptRideTripNext on _AcceptRideState {
       _cancellationInFlight = false;
       return;
     }
+    // Finder L8 (owner 2026-11-07): the driver ended the trip with the
+    // rider on board. The server priced the trip and booked the cash
+    // (`finish.cashToCollect`): the driver sees the same cash sheet as when
+    // the rider ends early, then the finished screen; never just Home.
+    final onboardFinish = !noShow && _stage == ActiveRideStage.onTrip
+        ? _ownOnboardFinish()
+        : null;
+    if (onboardFinish != null) {
+      await _finishAfterOwnOnboardEnd(reason, outcome, onboardFinish);
+      return;
+    }
     try {
       _flushNextTripMatch();
       final secured = _onTripRadarState == _OnTripRadarState.secured
@@ -462,6 +485,106 @@ extension _AcceptRideTripNext on _AcceptRideState {
     if (navigator.canPop()) {
       navigator.pop();
     }
+  }
+
+  /// Finder L8: the server's money for this driver's own on-board end, when
+  /// its answer (`cancelled_by_driver`) carries `finish`; else null (an
+  /// older server, a demo trip: the plain cancel goes on).
+  LiveTripMoney? _ownOnboardFinish() {
+    if (!LiveDriverServices.active) return null;
+    final projection = _liveTrips?.projectionOf(widget.tripId);
+    if (projection == null ||
+        projection['status'] != TripStatus.cancelledByDriver.wireName) {
+      return null;
+    }
+    final money = LiveTripMoney.tryParse(projection);
+    return money?.finish == null ? null : money;
+  }
+
+  /// Finder L8: like the rider's early end (`_finishAfterRiderEnded`): the
+  /// cash sheet with the server's amount ("You ended the trip early"), the
+  /// journal with the server's money, then the finished screen.
+  Future<void> _finishAfterOwnOnboardEnd(
+    _TripCancellationReason reason,
+    TripStatus outcome,
+    LiveTripMoney money,
+  ) async {
+    final finish = money.finish!;
+    final cash = widget.paidByCash ? money.cash : null;
+    _flushNextTripMatch();
+    final offer = _onTripRadarState == _OnTripRadarState.secured
+        ? _nextTripRadarOffer
+        : null;
+    final next = offer == null ? null : _snapshotForOffer(offer);
+    if (cash != null && cash.minorUnits > 0) {
+      await showCashCollectSheet(
+        context,
+        fare: money.driverPay.formatted,
+        cash: cash.formatted,
+        riderName: _riderName,
+        category: widget.category,
+        breakdown: money.earningsBreakdown,
+        driverEnded: true,
+      );
+      if (!mounted) {
+        _cancellationInFlight = false;
+        return;
+      }
+    }
+    final paid = _withMoney(
+      _paidWaybill(),
+      money,
+    ).copyWith(endedEarlyBy: 'driver');
+    try {
+      await CompletionJournal(
+        active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
+      ).finish(
+        paid,
+        pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
+        status: outcome,
+        cancellationReasonCode: reason.code,
+        cancellationActor: 'driver',
+        next: next,
+        paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
+        cashCollected: cash?.formatted,
+      );
+    } catch (error, stack) {
+      DriverLog.error('Driver on-board end journal failed', error, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr.couldNotSaveCancellationRetry)),
+        );
+      }
+      _cancellationInFlight = false;
+      return;
+    }
+    if (await _yieldToAuthoritativeTerminal()) return;
+    if (!await _rideLifecycle.cancel(clearSnapshot: false)) {
+      _cancellationInFlight = false;
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    _waitTimer?.cancel();
+    _nextTripRadarDemoTimer?.cancel();
+    _nextTripRadarMatchTimer?.cancel();
+    _setOwnWaybill(paid);
+    _waybills.completeCurrent();
+    final nextRide = offer == null ? null : _nextRideFor(offer);
+    _navigatorAtTripRoute().pushReplacement(
+      BottomToTopTransition(
+        DriverRideCompleted(
+          waybillRepository: _waybills,
+          sessionController: widget.sessionController,
+          activeRideRepository: widget.activeRideRepository,
+          nextRide: nextRide,
+          paidByCash: widget.paidByCash,
+          ratingAllowed: finish.ratingAllowed,
+        ),
+      ),
+    );
   }
 
   // Ride check: the trip screen feeds the detector, and opens the card

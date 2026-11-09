@@ -80,7 +80,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('add-emergency-contact')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).at(0), 'New person');
-    await tester.enterText(find.byType(TextFormField).at(1), '+46707654321');
+    await tester.enterText(find.byType(TextFormField).at(1), '+46701740621');
     await tester.tap(find.text('Save contact'));
     await tester.pumpAndSettle();
     expect(find.text('Saved person'), findsOneWidget);

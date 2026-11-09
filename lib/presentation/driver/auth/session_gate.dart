@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/auth/auth_controller.dart';
+import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
@@ -99,13 +100,24 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
   Future<void> _signOut() async {
     try {
       await widget.auth.signOut();
-    } finally {
+    } on SignOutOnTrip {
+      // v0.18.49 §71 (owner Q8): still signed in, with a current trip:
+      // say so and read the account again (Home opens the trip).
       if (mounted) {
-        setState(() {
-          _root = Future.value(_Root.signIn);
-          _armSpinner();
-        });
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(tr.fleetOnTrip)));
+        _retry();
       }
+      return;
+    } catch (_) {
+      // Any other failure: the phone is signed out all the same.
+    }
+    if (mounted) {
+      setState(() {
+        _root = Future.value(_Root.signIn);
+        _armSpinner();
+      });
     }
   }
 

@@ -124,7 +124,7 @@
   "offerMatch": "Ta resan",
   "offerMatching": "Matchar…",
   "offerAccept": "Acceptera",
-  "offerOnYourWay": "Längs din väg",
+  "offerOnYourWay": "På vägen",
   "offerHide": "Dölj erbjudandet",
   "offerReservationRequest": "Bokningsförfrågan",
   "offerYourNextRide": "Din nästa resa",
@@ -339,5 +339,6 @@
   "nextTripAfterThis": "Nästa: {rider} · efter den här resan",
   "nextTripPopupTitle": "Din nästa resa",
   "nextTripPopupLive": "{rider} väntar vid {pickup}. Kör dit nu.",
-  "nextTripPopupBooked": "Bokad resa kl. {time} · {pickup}. Kör till upphämtningen nu."
+  "nextTripPopupBooked": "Bokad resa kl. {time} · {pickup}. Kör till upphämtningen nu.",
+  "waitingBeforePickup": "Före upphämtningstiden"
 }

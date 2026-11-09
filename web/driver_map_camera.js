@@ -1,7 +1,8 @@
 /* Driver-only Google Maps adapter for google_maps_flutter_web 0.5.14+2.
  * That version does not expose vector rendering, padding, touch rotation/tilt
  * or bitmap marker rotation. Keep these SDK gaps out of the Dart policy.
- * Uses public Maps JS APIs. Styled vector maps require a configured cloud map ID.
+ * Uses public Maps JS APIs, except the size watch (Google's own hidden size
+ * frame, see remeasure()). Styled vector maps require a configured cloud map ID.
  */
 (() => {
   'use strict';
@@ -286,6 +287,7 @@
     state.overlay = overlay;
     states.set(id, state);
     byMap.set(map, state);
+    watchSize(state);
     const nativeMove = map.moveCamera.bind(map);
     const nativePanTo = typeof map.panTo === 'function'
       ? map.panTo.bind(map)
@@ -627,17 +629,125 @@
     };
     div.addEventListener('touchend', end, {capture: true, passive: false});
     div.addEventListener('touchcancel', end, {capture: true, passive: false});
-    // Mounted Flutter platform views are removed at dispose. Release JS state.
+    // Mounted Flutter platform views are removed at dispose. Release JS state,
+    // then (Q3) the map itself once its <div> is still out of the page a
+    // moment later: Google's listeners, WebGL context and DOM.
     let wasConnected = div.isConnected;
     const observer = new MutationObserver(() => {
       wasConnected ||= div.isConnected;
       if (wasConnected && !div.isConnected) {
         state.car?.release(); overlay.setMap(null);
         state.callbacks.clear(); state.rendererCallbacks.clear(); rendererListener?.remove(); states.delete(id); observer.disconnect();
+        unwatchSize(div);
+        setTimeout(() => { if (!div.isConnected) releaseMapResources(map, div); }, 250);
       }
     });
     observer.observe(document.body, {childList: true, subtree: true});
   }
+  // Grey band (port of rider PR #559). Maps JS (3.66) has no 'resize'
+  // listener on the map (trigger(map, 'resize') does nothing) and no
+  // ResizeObserver: it measures its element only when a hidden <iframe> it
+  // keeps in .gm-style fires 'load' (when it enters the page) or that
+  // frame's window fires 'resize'. When the browser does not deliver one
+  // (iPhone Safari after the map's box grew), Google keeps drawing its old
+  // height and the rest of the element shows a flat grey band until a zoom
+  // reads the element again. So each map's element is watched here, and
+  // when its size changes (not to 0 x 0) Google's own measuring runs once
+  // on the next frame. Google compares the size first (no change, no work)
+  // and keeps the camera's center. Owner decision 1 (no flying camera):
+  // no camera call here, and no network call of ours.
+  const measuredWindows = new WeakSet();
+  function sizeFrame(div) {
+    const gm = div?.querySelector?.('.gm-style');
+    for (const child of gm?.children || []) {
+      if (child.tagName === 'IFRAME' && child.getAttribute?.('aria-hidden') === 'true') return child;
+    }
+    return null;
+  }
+  function remeasure(state) {
+    try {
+      const frame = sizeFrame(state.div);
+      const win = frame?.contentWindow;
+      if (!win) return false;
+      if (!measuredWindows.has(win)) {
+        // A frame window Google may never have heard from: its 'load'
+        // handler measures and starts listening to this window's 'resize'.
+        measuredWindows.add(win);
+        frame.dispatchEvent(new Event('load'));
+      } else {
+        win.dispatchEvent(new Event('resize'));
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  function watchSize(state) {
+    try {
+      const Observer = globalThis.ResizeObserver;
+      const {div} = state;
+      if (typeof Observer !== 'function' || !div) return;
+      let pending = false;
+      const run = () => { pending = false; remeasure(state); };
+      const observer = new Observer(entries => {
+        const box = entries[entries.length - 1]?.contentRect;
+        if (!box || !(box.width > 0) || !(box.height > 0)) return;
+        if (pending) return;
+        pending = true;
+        if (typeof globalThis.requestAnimationFrame === 'function') {
+          globalThis.requestAnimationFrame(run);
+        } else {
+          setTimeout(run, 16);
+        }
+      });
+      observer.observe(div);
+      div.__moveraSizeWatch = observer;
+    } catch (_) { /* best effort: Google then measures as before */ }
+  }
+  function unwatchSize(div) {
+    try { div.__moveraSizeWatch?.disconnect(); } catch (_) { /* best effort */ }
+    try { delete div.__moveraSizeWatch; } catch (_) { /* best effort */ }
+  }
+  // Q3 (owner 2026-11-07, "Free each map, no reuse"): google.maps.Map has
+  // no destroy(). A map whose <div> Flutter has removed keeps its tiles, its
+  // listeners and, on a vector map (the live build), its WebGL context for
+  // as long as the <div> is referenced, and google_maps_flutter_web keeps
+  // every map's <div> for the life of the page, so every trip left one map
+  // behind (finding C1). Safari allows about 16 WebGL contexts per page and
+  // evicts the oldest (often Flutter's own), which blanks the screen. So a
+  // removed map gives its WebGL contexts back and its DOM is dropped (the
+  // same release as the rider's rider_map_camera.js, without its pool).
+  function releaseMapResources(map, div) {
+    unwatchSize(div);
+    try { sdk.event.clearInstanceListeners(map); } catch (_) { /* best effort */ }
+    try {
+      div.querySelectorAll('canvas').forEach(canvas => {
+        const kind = canvas.__moveraContext;
+        if (kind === 'webgl' || kind === 'webgl2') {
+          try {
+            const gl = canvas.getContext(kind);
+            const ext = gl && gl.getExtension('WEBGL_lose_context');
+            // Given back on purpose: the restart watch (restart_watch_web.dart)
+            // does not report this webglcontextlost as a lost GPU context.
+            canvas.setAttribute?.('data-movera-released', '');
+            if (ext && !gl.isContextLost()) ext.loseContext();
+          } catch (_) { /* best effort */ }
+        }
+        try { canvas.width = 0; canvas.height = 0; } catch (_) { /* best effort */ }
+      });
+    } catch (_) { /* best effort */ }
+    try { div.replaceChildren(); } catch (_) { /* best effort */ }
+  }
+  // Which context each canvas was given, so a removed map's WebGL contexts
+  // can be found without creating one on a canvas that had none.
+  try {
+    const nativeGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(kind, ...rest) {
+      const context = nativeGetContext.call(this, kind, ...rest);
+      if (context && !this.__moveraContext) this.__moveraContext = String(kind);
+      return context;
+    };
+  } catch (_) { /* best effort: the release then only drops the DOM */ }
   function installSdk() {
     sdk = globalThis.google.maps;
     const NativeMap = sdk.Map;

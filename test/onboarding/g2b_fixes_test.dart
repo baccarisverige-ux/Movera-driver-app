@@ -525,7 +525,7 @@ void main() {
       _speak('fr');
       expect(
         reminderWords(reminder, nameOf: (_) => 'RIB de la société').title,
-        'Refusé : RIB de la société',
+        'Document refusé : RIB de la société',
       );
     });
 

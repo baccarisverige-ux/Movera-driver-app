@@ -1013,7 +1013,10 @@ void main() {
 
     // Choose-destination step: one option, then Confirm.
     expect(find.text('Fastest route to your destination'), findsOneWidget);
-    expect(find.textContaining('closer to Solna centrum'), findsOneWidget);
+    expect(
+      find.textContaining('those heading your way are marked'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Arrive by '), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey<String>('destination-confirm')));
     await tester.pump();
@@ -1146,11 +1149,13 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets('Destination radar only shows same-way frontend offers', (
-    WidgetTester tester,
-  ) async {
+  // Q2 (owner 2026-11-07): destination mode hides no trip; the ones on the
+  // way carry the "On your way" badge.
+  testWidgets('Destination radar shows every trip, same-way ones with the '
+      '"On your way" badge', (WidgetTester tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.binding.setSurfaceSize(const Size(375, 812));
+    // Tall enough for all three cards at once.
+    await tester.binding.setSurfaceSize(const Size(375, 1600));
     await tester.pumpWidget(
       const MaterialApp(
         home: RideRequests(
@@ -1165,10 +1170,20 @@ void main() {
       find.byKey(const ValueKey<String>('radar-destination-filter')),
       findsOneWidget,
     );
-    expect(find.textContaining('Trips toward Solna Torg'), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('nearby-1')), findsNothing);
+    expect(find.textContaining('Destination: Solna Torg'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('nearby-1')), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-2')), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('nearby-3')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('radar-offer-on-your-way-nearby-1')),
+      findsNothing,
+    );
+    for (final id in ['nearby-2', 'nearby-3']) {
+      expect(
+        find.byKey(ValueKey<String>('radar-offer-on-your-way-$id')),
+        findsOneWidget,
+      );
+    }
     _expectNoException(tester);
   });
 

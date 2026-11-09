@@ -156,7 +156,7 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
               onPressed: _restoreSettings,
               child: Text(tr.couldNotLoadSavedPreferencesRetry),
             ),
-          Text(tr.localDemoPreferencesSavedOnThis),
+          // L-a Q3 (owner 2026-11-06): no "Local demo preferences" text.
           _card(
             children: [
               Text(

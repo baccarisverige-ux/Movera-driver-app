@@ -796,7 +796,7 @@
   "noNotificationsYet": "No notifications yet",
   "cancelRateTitle": "Cancelation Rate",
   "cancelRateKeepLow": "Keep your cancel rate low to keep full access to trips",
-  "cancelRateEveryCancelCounts": "Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.",
+  "cancelRateEveryCancelCounts": "Every cancel counts, whatever the reason.",
   "cancelRateHowCalculated": "How your cancelation is calculated",
   "cancelRateHowBody": "Your cancellation rate is calculated based on the number of trips you cancel compared to the total trips you confirm. We use your last 100 confirmed trip requests to determine this percentage.",
   "cancelRateWhyMatters": "Why cancelation rate matters",
@@ -826,6 +826,10 @@
         "type": "Object"
       }
     }
+  },
+  "driverEndedEarlyCollect": "You ended the trip early",
+  "@driverEndedEarlyCollect": {
+    "description": "Finder L8 (owner 2026-11-07): subtitle of the cash sheet when the driver ended the trip with the rider on board (End trip early)."
   },
   "fleetJoinTitle": "Join your fleet",
   "fleetJoinBody": "Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.",
@@ -3388,7 +3392,7 @@
   "destNoAddressFound": "No address found",
   "destTryAnother": "Try another street, place, or area.",
   "destFastestRoute": "Fastest route to your destination",
-  "destOnlyTripsYourWay": "You'll only get trips heading your way, so every ride takes you closer to {place}.",
+  "destOnlyTripsYourWay": "You get all trips; those heading your way are marked “On your way”.",
   "@destOnlyTripsYourWay": {
     "placeholders": {
       "place": {
@@ -3924,7 +3928,7 @@
   },
   "rrNew": "New",
   "rrDestinationRoute": "Destination route",
-  "rrTripsToward": "Trips toward {place}",
+  "rrTripsToward": "Destination: {place} · trips on your way are marked",
   "@rrTripsToward": {
     "placeholders": {
       "place": {
@@ -5129,6 +5133,8 @@
   "@nextTripPopupLive": {"description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.", "placeholders": {"rider": {"type": "String"}, "pickup": {"type": "String"}}},
   "nextTripPopupBooked": "Booked ride at {time} · {pickup}. Drive to the pickup now.",
   "@nextTripPopupBooked": {"description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.", "placeholders": {"time": {"type": "String"}, "pickup": {"type": "String"}}},
+  "waitingBeforePickup": "Before the pickup time",
+  "@waitingBeforePickup": {"description": "contract.json#bookedRide0_18_51.texts.beforePickup: label of the waiting timer while it counts down to a booked ride's pickup time."},
   "docInsuranceLetter": "Insurance letter",
   "docTaxiDriverLicense": "Taxi driver license",
   "docTaxiLicenseShort": "Taxi license",

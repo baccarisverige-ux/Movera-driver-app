@@ -14,7 +14,9 @@ import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
+import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
@@ -473,6 +475,13 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     final scope = DriverRuntimeScope.maybeOf(context);
     try {
       await scope?.logout?.call();
+    } on SignOutOnTrip {
+      // v0.18.49 §71 (owner Q8): refused for a current trip; still signed in.
+      if (mounted) {
+        setState(() => _leaving = false);
+        showSignOutOnTrip(context);
+      }
+      return;
     } catch (_) {
       // The tokens are gone either way (AuthController.signOut clears
       // them before anything else can fail); step 1 is right.

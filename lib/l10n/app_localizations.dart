@@ -2047,7 +2047,7 @@ abstract class AppLocalizations {
   /// No description provided for @cancelRateEveryCancelCounts.
   ///
   /// In en, this message translates to:
-  /// **'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.'**
+  /// **'Every cancel counts, whatever the reason.'**
   String get cancelRateEveryCancelCounts;
 
   /// No description provided for @cancelRateHowCalculated.
@@ -2097,6 +2097,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can be applied from {time} if the rider has not arrived.'**
   String noShowFromTime(Object time);
+
+  /// Finder L8 (owner 2026-11-07): subtitle of the cash sheet when the driver ended the trip with the rider on board (End trip early).
+  ///
+  /// In en, this message translates to:
+  /// **'You ended the trip early'**
+  String get driverEndedEarlyCollect;
 
   /// No description provided for @fleetJoinTitle.
   ///
@@ -7765,7 +7771,7 @@ abstract class AppLocalizations {
   /// No description provided for @destOnlyTripsYourWay.
   ///
   /// In en, this message translates to:
-  /// **'You\'ll only get trips heading your way, so every ride takes you closer to {place}.'**
+  /// **'You get all trips; those heading your way are marked “On your way”.'**
   String destOnlyTripsYourWay(String place);
 
   /// No description provided for @destArriveBy.
@@ -8791,7 +8797,7 @@ abstract class AppLocalizations {
   /// No description provided for @rrTripsToward.
   ///
   /// In en, this message translates to:
-  /// **'Trips toward {place}'**
+  /// **'Destination: {place} · trips on your way are marked'**
   String rrTripsToward(String place);
 
   /// No description provided for @rrScanningNearby.
@@ -11790,6 +11796,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booked ride at {time} · {pickup}. Drive to the pickup now.'**
   String nextTripPopupBooked(String time, String pickup);
+
+  /// contract.json#bookedRide0_18_51.texts.beforePickup: label of the waiting timer while it counts down to a booked ride's pickup time.
+  ///
+  /// In en, this message translates to:
+  /// **'Before the pickup time'**
+  String get waitingBeforePickup;
 
   /// No description provided for @docInsuranceLetter.
   ///

@@ -10,6 +10,7 @@ import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -118,6 +119,12 @@ class CompletionJournal {
         'service': record.service,
         'pickup': record.pickup,
         'dropoff': record.dropoff,
+        // L-a Q6 (owner 2026-11-06): the waybill a replay rebuilds keeps the
+        // trip's real source, driver, vehicle and plate.
+        'source': record.source,
+        'driverName': record.driverName,
+        'vehicle': record.vehicle,
+        'licensePlate': record.licensePlate,
         // "Cash" for a cash trip: its details show the cash collected and
         // what is owed to Movera (Q23).
         if (paymentMethod != null) 'paymentMethod': paymentMethod,
@@ -207,10 +214,10 @@ class CompletionJournal {
           riderName: row['riderName'] as String,
           pickup: row['pickup'] as String,
           dropoff: row['dropoff'] as String,
-          source: WaybillRecord.localDemoSource,
-          driverName: WaybillRecord.unavailable,
-          vehicle: WaybillRecord.unavailable,
-          licensePlate: WaybillRecord.unavailable,
+          source: _text(row['source']) ?? _fallbackSource,
+          driverName: _text(row['driverName']) ?? WaybillRecord.unavailable,
+          vehicle: _text(row['vehicle']) ?? WaybillRecord.unavailable,
+          licensePlate: _text(row['licensePlate']) ?? WaybillRecord.unavailable,
           passengerCapacity: 0,
           driverBonus: row['driverBonus'] is String
               ? row['driverBonus'] as String
@@ -319,6 +326,15 @@ class CompletionJournal {
     afterWrite?.call('cleanup');
     return JournalReplayOutcome.applied;
   }
+
+  static String? _text(Object? value) =>
+      value is String && value.trim().isNotEmpty ? value : null;
+
+  /// An older journal saved no source: a live trip came from Movera Radar;
+  /// "Local demo" is the demo build's word only (L-a Q6).
+  static String get _fallbackSource => driverDemoFeatures
+      ? WaybillRecord.localDemoSource
+      : WaybillRecord.moveraRadarSource;
 
   static String _statusLabel(TripStatus status) => switch (status) {
     TripStatus.completed => WaybillRecord.completed,

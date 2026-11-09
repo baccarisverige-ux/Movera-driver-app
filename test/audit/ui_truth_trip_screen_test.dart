@@ -346,8 +346,9 @@ void main() {
     await tester.ensureVisible(rider.first);
     await tester.tap(rider.first);
     await _frames(tester, 16);
-    // G4 decision 3 (checker LOW 11): only the rides, no rating word.
-    expect(find.text('0 rides'), findsWidgets);
+    // G4 decision 3 (checker LOW 11): no rating word. Finder A2
+    // (2026-11-07): the server sends no rides count (0), so none is shown.
+    expect(find.text('0 rides'), findsNothing);
     expect(find.textContaining('New ★'), findsNothing);
     expect(find.textContaining('★'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());

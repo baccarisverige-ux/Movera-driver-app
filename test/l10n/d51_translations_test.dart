@@ -407,7 +407,8 @@ void main() {
     ]);
     expect(terms.rule, 'Bokad resa');
     speak('fr');
-    expect(terms.rule, 'Course réservée');
+    // v0.18.49 Q11 (owner): « Course programmée » everywhere in French.
+    expect(terms.rule, 'Course programmée');
     expect(terms.rule, isNot(contains('Bokad')));
   });
 

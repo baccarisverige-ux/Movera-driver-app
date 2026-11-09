@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1132,7 +1131,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.';
+      'Every cancel counts, whatever the reason.';
 
   @override
   String get cancelRateHowCalculated => 'How your cancelation is calculated';
@@ -1164,6 +1163,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String noShowFromTime(Object time) {
     return 'Can be applied from $time if the rider has not arrived.';
   }
+
+  @override
+  String get driverEndedEarlyCollect => 'You ended the trip early';
 
   @override
   String get fleetJoinTitle => 'Join your fleet';
@@ -4452,7 +4454,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String destOnlyTripsYourWay(String place) {
-    return 'You\'ll only get trips heading your way, so every ride takes you closer to $place.';
+    return 'You get all trips; those heading your way are marked “On your way”.';
   }
 
   @override
@@ -5117,7 +5119,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'Trips toward $place';
+    return 'Destination: $place · trips on your way are marked';
   }
 
   @override
@@ -6856,6 +6858,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String nextTripPopupBooked(String time, String pickup) {
     return 'Booked ride at $time · $pickup. Drive to the pickup now.';
   }
+
+  @override
+  String get waitingBeforePickup => 'Before the pickup time';
 
   @override
   String get docInsuranceLetter => 'Insurance letter';

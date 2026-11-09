@@ -152,6 +152,11 @@ class _KeepCard extends StatelessWidget {
   );
 }
 
+/// W3 (real-screen run 2026-11-07, 2-booked 069/075): the booked ride the
+/// driver asked to start by hand (« Starta nu mot upphämtningen »). Home
+/// listens, starts it on the server and opens its trip.
+final ValueNotifier<String?> startBookedRideNow = ValueNotifier<String?>(null);
+
 /// Owner leave on time: "Start in 12 min", then "Start now towards the
 /// pickup", from the server's leaveAt (live position, road route).
 class LeaveCountdown extends StatefulWidget {
@@ -161,12 +166,20 @@ class LeaveCountdown extends StatefulWidget {
     required this.pickupAt,
     required this.earlyMin,
     this.now,
+    this.rideId,
+    this.startableAt,
   });
 
   final DateTime leaveAt;
   final DateTime pickupAt;
   final int earlyMin;
   final DateTime Function()? now;
+
+  /// W3: the booked ride; from [startableAt] (the server's start window,
+  /// `scheduledAt − onlineBeforeMin` = `mustBeOnlineAt`) the banner is a
+  /// button that starts it.
+  final String? rideId;
+  final DateTime? startableAt;
 
   @override
   State<LeaveCountdown> createState() => _LeaveCountdownState();
@@ -195,6 +208,31 @@ class _LeaveCountdownState extends State<LeaveCountdown> {
     final left = widget.leaveAt.difference(now);
     final go = left.inSeconds <= 0;
     final minutes = (left.inSeconds / 60).ceil();
+    final id = widget.rideId;
+    final from = widget.startableAt;
+    final startable =
+        id != null && id.isNotEmpty && from != null && !now.isBefore(from);
+    final banner = _banner(go, minutes);
+    if (!startable) return banner;
+    return Semantics(
+      button: true,
+      label: tr.schedLeaveNowTitle,
+      excludeSemantics: true,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: const ValueKey<String>('scheduled-leave-start'),
+          borderRadius: BorderRadius.circular(18),
+          // Home starts the ride on the server and opens its trip over
+          // these details: they stay until then (live 5+5 run 2, 046).
+          onTap: () => startBookedRideNow.value = id,
+          child: banner,
+        ),
+      ),
+    );
+  }
+
+  Widget _banner(bool go, int minutes) {
     return Container(
       key: const ValueKey<String>('scheduled-leave-countdown'),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

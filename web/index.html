@@ -18,6 +18,11 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <!-- Owner 2026-11-07: the same tag Flutter adds at start-up, written here so
+       the page is laid out at the phone's width from the first byte (without
+       it the boot screen showed at 980 px, small, then big). Pinch-zoom stays
+       allowed: the zoom is not locked and the page is not edge to edge. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Movera Driver. On-trip cockpit for pickup, navigation, and delivery.">
 
@@ -48,6 +53,14 @@
     .gm-style img[src*="/mapfiles/transparent.png"] { visibility: hidden !important; }
   </style>
   <style>
+    /* Owner 2026-11-07: beige page behind the boot screen, as in the rider
+       app, so no white shows around it while the app loads. */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #eef1e8;
+    }
     /* Owner 2026-11-03 (LT-2): the same loading screen as the rider app,
        copied from movera-rider-app web/index.html. */
     /* Boot screen. Plain HTML and CSS so it paints in milliseconds, while the
@@ -136,6 +149,14 @@
       var script = document.createElement('script');
       script.src = 'https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY';
       script.async = true;
+      // Finder C3: a failed load (a network switch, a tunnel) frees the
+      // loader again, so the map's next ask (it asks again every 5 s while
+      // it waits) loads it instead of leaving every map unavailable until
+      // a reload.
+      script.onerror = function() {
+        window.moveraGoogleMapsRequested = false;
+        if (script.parentNode) script.parentNode.removeChild(script);
+      };
       document.head.appendChild(script);
     };
   </script>

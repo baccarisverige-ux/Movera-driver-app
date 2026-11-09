@@ -282,8 +282,8 @@ void main() {
 
   test('the same words in French and Swedish', () {
     DriverLanguage.applyZone(AppLanguages.forCountry('FR'));
-    expect(expiring(7), 'X expire dans 7 jours');
-    expect(expiring(1), 'X expire demain');
+    expect(expiring(7), 'Expiration du document dans 7 jours : X');
+    expect(expiring(1), 'Expiration du document demain : X');
     DriverLanguage.applyZone(AppLanguages.forCountry('SE'));
     expect(expiring(7), 'X går ut om 7 dagar');
     expect(expiring(0), 'X går ut i dag');

@@ -70,7 +70,7 @@
   "noNotificationsYet": "Inga aviseringar än",
   "cancelRateTitle": "Avbokningsgrad",
   "cancelRateKeepLow": "Håll avbokningsgraden låg för att behålla full tillgång till resor",
-  "cancelRateEveryCancelCounts": "Varje avbokning räknas, utom skäl som är märkta ”Räknas inte”, till exempel en resenär som inte dyker upp eller ett säkerhetsproblem.",
+  "cancelRateEveryCancelCounts": "Varje avbokning räknas, oavsett skäl.",
   "cancelRateHowCalculated": "Så beräknas din avbokningsgrad",
   "cancelRateHowBody": "Din avbokningsgrad jämför antalet resor du avbokar med alla resor du bekräftar. Vi använder dina senaste 100 bekräftade förfrågningar för procentsatsen.",
   "cancelRateWhyMatters": "Varför avbokningsgraden spelar roll",
@@ -78,5 +78,6 @@
   "noShowConfirmYouGet": "Markera som utebliven kund? Du får {amount}",
   "noShowConfirmNoFee": "Markera som utebliven kund? Ingen avgift",
   "cancelAfterArrivedNote": "Avbokning efter att föraren anlänt och den fria väntetiden gått ut räknas som utebliven kund",
-  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit."
+  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit.",
+  "driverEndedEarlyCollect": "Du avslutade resan tidigare"
 }

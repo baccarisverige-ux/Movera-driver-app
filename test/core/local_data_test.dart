@@ -28,7 +28,7 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'movera_driver_support_drafts': '{not json',
       'movera_driver_settings_section_contacts':
-          '{"schemaVersion":1,"values":{"rows":[{"phone":"+46701112233"}]}}',
+          '{"schemaVersion":1,"values":{"rows":[{"phone":"+46701740633"}]}}',
       'movera_driver_completed_trips': '{"schemaVersion":1,"rows":[]}',
       'movera_driver_active_ride': '{"tripId":"trip-1"}',
       'movera_driver_terminal_trips': <String>['trip-1'],

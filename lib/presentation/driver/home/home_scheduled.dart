@@ -31,6 +31,7 @@ class _HomeScheduledState {
   ReservationRequestPreview? onlineReminded;
 
   VoidCallback? storeListener;
+  VoidCallback? startNowListener;
   StreamSubscription<ReservationRequestPreview>? assignments;
 
   /// Assigned rides by id, and the ones still waiting for their card.
@@ -56,6 +57,9 @@ class _HomeScheduledState {
     if (listener != null) {
       ScheduledRideStore.changes.removeListener(listener);
     }
+    if (startNowListener case final startNow?) {
+      startBookedRideNow.removeListener(startNow);
+    }
     assignments?.cancel();
     assignments = null;
   }
@@ -76,6 +80,16 @@ extension _HomeScheduled on _DriverHomeState {
 
     _scheduled.storeListener = changed;
     ScheduledRideStore.changes.addListener(changed);
+    void startNow() {
+      final id = startBookedRideNow.value;
+      if (id == null) return;
+      startBookedRideNow.value = null;
+      // Outside the tap: its details stay on top until the trip opens.
+      Timer.run(() => _startBookedByHand(id));
+    }
+
+    _scheduled.startNowListener = startNow;
+    startBookedRideNow.addListener(startNow);
     // A Radar list Match held a due ride back: its answer decides.
     _radarListClaiming.addListener(() {
       if (_radarListClaiming.value) {
@@ -237,7 +251,11 @@ extension _HomeScheduled on _DriverHomeState {
   /// top: with a screen or sheet over it the trip cannot open, so the
   /// ride stays in Accepted, late, and starts when Home is back on top.
   bool get _canStartScheduled =>
-      ModalRoute.of(context)?.isCurrent != false &&
+      ModalRoute.of(context)?.isCurrent != false && _freeToStartScheduled;
+
+  /// [_canStartScheduled] but for Home being on top: a booked ride
+  /// started by hand from its details opens over them.
+  bool get _freeToStartScheduled =>
       _recoveryResolved &&
       _driverSession.availableForOffers &&
       _claimedHomeOffer == null &&
@@ -326,7 +344,40 @@ extension _HomeScheduled on _DriverHomeState {
     );
   }
 
-  void _startScheduledTrip(ReservationRequestPreview ride) {
+  /// W3: « Starta nu mot upphämtningen » tapped (the server allows the
+  /// start from `mustBeOnlineAt`): the booked ride starts now, as at its
+  /// leave time. Refused, it stays planned as it was (no late warning or
+  /// backup driver for an early start) and the driver is told why.
+  ///
+  /// Live 5+5 run 2 (4-booked-p4 046): the ride's details stay on top
+  /// while the server starts it; they close in the frame the trip opens
+  /// over them, so Home never shows in between. When it cannot start,
+  /// Home comes back on top as before.
+  void _startBookedByHand(String id) {
+    final ride = _nextScheduledRide;
+    if (!mounted) return;
+    if (ride == null || ride.id != id) return _homeOnTop();
+    if (!identical(_scheduled.ride, ride)) _planScheduled();
+    if (!_driverSession.isOnline) {
+      _homeOnTop();
+      _remindOnline(ride);
+      return;
+    }
+    if (!_freeToStartScheduled) return _homeOnTop();
+    _startScheduledTrip(ride, byHand: true);
+  }
+
+  /// Closes the screens over Home (a booked ride's details and list).
+  void _homeOnTop() {
+    final home = ModalRoute.of(context);
+    if (home == null || home.isCurrent) return;
+    Navigator.of(context).popUntil((route) => route == home);
+  }
+
+  void _startScheduledTrip(
+    ReservationRequestPreview ride, {
+    bool byHand = false,
+  }) {
     // Contract v0.18.17 Book later: on live the server starts the booked
     // ride first (`POST /driver/reservations/{id}/start`); its trip then
     // opens as the current trip. Refused (too early, offline, another
@@ -339,7 +390,11 @@ extension _HomeScheduled on _DriverHomeState {
         if (!mounted || !identical(_scheduled.ride, ride)) return;
         if (refused == null) {
           _serverStartedReservations.add(ride.id);
-          _startScheduledTrip(ride);
+          _startScheduledTrip(ride, byHand: byHand);
+        } else if (byHand) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text(bookedStartRefusalMessage(refused))),
+          );
         } else {
           _lateScheduled(ride);
         }
@@ -349,6 +404,9 @@ extension _HomeScheduled on _DriverHomeState {
     _scheduled.planning = true;
     final started = ScheduledRideStore.start(ride);
     _scheduled.planning = false;
+    // By hand: the screens over Home close in this same frame, under the
+    // trip that opens over them.
+    if (byHand) _homeOnTop();
     if (!started) {
       return;
     }
@@ -366,7 +424,12 @@ extension _HomeScheduled on _DriverHomeState {
       ride.pickupAddress,
       leaveNow: true,
     );
-    final offer = RideOffer.reservation(ride);
+    // A booked ride the server started opens with that trip's payment
+    // method, cash and earnings (live 5+5 run 2, 4-booked-p4 283/305).
+    final offer = RideOffer.reservation(
+      ride,
+      started: LiveDriverServices.instance?.reservations.startedTrip(ride.id),
+    );
     // The trip knows its pickup time: from here to the pickup it watches
     // the driver's ETA (admin "Late ETA").
     _HomeOfferRadar(this)._openOfferTrip(
@@ -375,6 +438,11 @@ extension _HomeScheduled on _DriverHomeState {
       scheduledPickupAt: ride.pickupAt(_clock.now()),
       scheduledRideId: ride.id,
       acceptedPickupPay: ScheduledRideStore.acceptedPickupPay(ride.id),
+      // Live 5+5 2026-11-08 (4-booked-p4 071): a booked ride the server
+      // started is its trip (`/driver/reservations/{tripId}/start`): it
+      // opens under that id. A made-up one was 404 on the server, read as
+      // the trip taken away, and Home showed until it reopened the trip.
+      tripId: _serverStartedReservations.contains(ride.id) ? ride.id : null,
     );
     _planScheduled();
   }

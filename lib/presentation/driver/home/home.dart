@@ -73,6 +73,7 @@ import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
 import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
+import 'package:movera/core/waybill/last_trip_tip.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/movera_line_icon.dart';
@@ -127,6 +128,7 @@ import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/presentation/driver/home/booked_start_refusal.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
@@ -634,7 +636,9 @@ class _DriverHomeState extends State<DriverHome>
           journal == JournalReplayOutcome.quarantinedCorrupt) {
         IslandMessages.show(HomeIslandNotices.recordSetAside);
       }
-      snapshot = await repo.read() ?? await _HomeLive(this)._serverActiveTrip();
+      snapshot =
+          await _HomeLive(this)._savedTripUnlessOver(repo) ??
+          await _HomeLive(this)._serverActiveTrip();
     } on ActiveRideStorageUnavailable {
       // driver-u112: blocked storage holds no trip to recover; going online
       // stays possible, and Retry reads again.

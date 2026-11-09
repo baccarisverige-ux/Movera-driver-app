@@ -88,7 +88,14 @@ extension _AcceptRideTripOutcome on _AcceptRideState {
           await _finishAfterRiderEnded(money!);
         } else {
           await _handleRiderCancelled(
-            fee: cancellation == null ? riderFeeZero : cancellation.driverEarns,
+            fee: cancellation == null
+                ? riderFeeZero
+                // Item 12: the server decides a rider's fee in the cancel
+                // itself (movera-server riderCancel); `fee: null` on a
+                // rider cancel is "no fee", never "not decided yet".
+                : cancellation.actor == 'rider' && cancellation.fee == null
+                ? Money.zone(0)
+                : cancellation.driverEarns,
             feeKind: cancellation?.feeKind,
             riderFee: cancellation?.fee,
           );

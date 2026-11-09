@@ -89,7 +89,17 @@ jobs:
         run: flutter pub get --enforce-lockfile
 
       - name: Compile iOS release without codesign
-        run: flutter build ios --release --no-codesign
+        env:
+          # Same Map ID as the web deploy and the Android APK (empty: no Map ID).
+          DRIVER_MAP_ID: ${{ vars.DRIVER_MAP_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${DRIVER_MAP_ID:-}" ] && ! printf '%s' "$DRIVER_MAP_ID" | grep -Eq '^[A-Za-z0-9]+$'; then
+            echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."
+            exit 1
+          fi
+          flutter build ios --release --no-codesign \
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
 
       - name: Missing maps key fails an iOS release candidate
         run: |

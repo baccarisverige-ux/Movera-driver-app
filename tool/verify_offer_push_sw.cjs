@@ -18,8 +18,11 @@ function scope({ visible = false, prefs = null } = {}) {
   const self = {
     registration: {
       scope: 'https://app.test/live/firebase-cloud-messaging-push-scope',
-      showNotification: (title, options) => { shown.push({ title, options }); return Promise.resolve(); },
-      getNotifications: () => Promise.resolve([]),
+      showNotification: (title, options) => { shown.push({ title, options, closed: false }); return Promise.resolve(); },
+      // Like the browser: the notices still in the tray with that tag.
+      getNotifications: ({ tag } = {}) => Promise.resolve(shown
+        .filter((n) => !n.closed && (tag === undefined || n.options.tag === tag))
+        .map((n) => ({ close: () => { n.closed = true; } }))),
     },
     clients: {
       matchAll: () => Promise.resolve(visible ? [{ url: 'https://app.test/live/#/', visibilityState: 'visible' }] : [{ url: 'https://app.test/live/#/', visibilityState: 'hidden' }]),
@@ -86,21 +89,79 @@ function offer(kind, extra = {}) {
   assert.equal(sw.shown[0].options.silent, true);
   assert.equal(sw.shown[0].options.vibrate, undefined);
 
-  // App on screen: nothing (the offer stream shows it).
+  // Q1 (owner 2026-11-07, "Toujours afficher"): every push shows a notice,
+  // because iOS WebKit removes the push subscription after 3 pushes that show
+  // none (maxSilentPushCount = 3). App on screen: shown as usual, same tag.
   sw = scope({ visible: true, prefs: { vibrate: true } });
   await sw.push(offer('exclusive'));
-  assert.equal(sw.shown.length, 0);
+  assert.equal(sw.shown.length, 1);
+  assert.equal(sw.shown[0].title, 'New trip for you');
+  assert.equal(sw.shown[0].options.silent, false);
+  assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
+  assert.equal(sw.shown[0].options.renotify, true);
 
-  // Run out: nothing.
+  // Run out: still shown (its own text, so iOS counts the push as shown),
+  // quiet, on the same tag, then closed at once (owner 2026-11-07): no
+  // "New trip for you" left in the tray for an offer that is gone.
   sw = scope({ prefs: { vibrate: true } });
   await sw.push(offer('exclusive', { expiresAt: new Date(Date.now() - 1000).toISOString() }));
-  assert.equal(sw.shown.length, 0);
+  assert.equal(sw.shown.length, 1);
+  assert.equal(sw.shown[0].title, 'New trip for you');
+  assert.equal(sw.shown[0].options.silent, true);
+  assert.equal(sw.shown[0].options.vibrate, undefined);
+  assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
+  assert.equal(sw.shown[0].closed, true, 'a run-out offer notice is closed at once');
+
+  // In time: it stays up (closed only when the offer runs out).
+  sw = scope({ prefs: { vibrate: true } });
+  await sw.push(offer('exclusive'));
+  assert.equal(sw.shown[0].closed, false, 'an open offer notice stays');
+
+  // Run out while the app is on screen: still exactly one notice.
+  sw = scope({ visible: true, prefs: { vibrate: true } });
+  await sw.push(offer('radar', { expiresAt: new Date(Date.now() - 1000).toISOString() }));
+  assert.equal(sw.shown.length, 1);
+
+  // Every kind, on screen or not, in time or run out: one notice each.
+  for (const kind of ['exclusive', 'assigned', 'radar']) {
+    for (const visible of [false, true]) {
+      for (const delta of [120000, -1000]) {
+        sw = scope({ visible });
+        await sw.push(offer(kind, { expiresAt: new Date(Date.now() + delta).toISOString() }));
+        assert.equal(sw.shown.length, 1, `${kind} visible=${visible} delta=${delta}`);
+        assert.equal(sw.shown[0].closed, delta < 0, `${kind} visible=${visible} delta=${delta} closed`);
+      }
+    }
+  }
+
+  // A push with no data at all still shows a notice.
+  sw = scope();
+  await sw.push({});
+  assert.equal(sw.shown.length, 1);
 
   // Any other push is shown as before.
   sw = scope({ visible: true });
   await sw.push({ notificationId: 'ntf_2', kind: 'document_expiring', deepLink: 'movera-driver://documents', title: 'T', body: 'B' });
   assert.equal(sw.shown.length, 1);
   assert.equal(sw.shown[0].options.tag, 'ntf_2');
+
+  // A trip push (Ride Check, a trip message…) is one notice per trip: the
+  // tag comes from data.tripId first, then the legacy alias rideId
+  // (contract wire.ids.trip), so a newer push for the same trip replaces it.
+  sw = scope();
+  await sw.push({ notificationId: 'ntf_9', kind: 'ride_check', deepLink: 'movera-driver://trips/trp_1', tripId: 'trp_1', title: 'T', body: 'B' });
+  assert.equal(sw.shown[0].options.tag, 'movera-ride-trp_1', 'trip push tag from tripId');
+  assert.equal(sw.shown[0].options.renotify, true, 'a replaced trip notice alerts again');
+  sw = scope();
+  await sw.push({ notificationId: 'ntf_10', kind: 'trip_message', rideId: 'r7', title: 'T', body: 'B' });
+  assert.equal(sw.shown[0].options.tag, 'movera-ride-r7', 'legacy rideId alias');
+  sw = scope();
+  await sw.push({ notificationId: 'ntf_11', kind: 'trip_message', tripId: 'trp_2', rideId: 'r_old', title: 'T', body: 'B' });
+  assert.equal(sw.shown[0].options.tag, 'movera-ride-trp_2', 'tripId wins over rideId');
+  // An offer stays one notice per offer (its own expiry and close).
+  sw = scope();
+  await sw.push(offer('exclusive'));
+  assert.equal(sw.shown[0].options.tag, 'movera-offer-off_1');
 
   console.log('offer push service worker: ok');
 })().catch((error) => { console.error(error); process.exit(1); });

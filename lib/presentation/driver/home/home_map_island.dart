@@ -94,6 +94,9 @@ extension _HomeMapIsland on _DriverHomeState {
     if (_islandFace == _IslandFace.today) {
       unawaited(DigitalIslandParts.refreshToday());
     }
+    if (_islandFace == _IslandFace.lastTrip) {
+      _refreshLastTripTip();
+    }
     _restartIslandIdle();
   }
 
@@ -121,6 +124,12 @@ extension _HomeMapIsland on _DriverHomeState {
     }
     await prefs.setBool(_islandHintSeenKey, true);
     IslandMessages.show(HomeIslandNotices.earningsHint(_onIslandEarningsTap));
+  }
+
+  /// Owner 2026-11-07: LAST TRIP is fare + tip, a tip given after the trip
+  /// included. [auto]: Home shown, back on top or back to the front.
+  void _refreshLastTripTip({bool auto = false}) {
+    unawaited(LastTripTip.refresh(_waybills, auto: auto));
   }
 
   /// A trip that just ended still has its money updating.

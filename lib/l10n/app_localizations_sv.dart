@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1133,7 +1132,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Varje avbokning räknas, utom skäl som är märkta ”Räknas inte”, till exempel en resenär som inte dyker upp eller ett säkerhetsproblem.';
+      'Varje avbokning räknas, oavsett skäl.';
 
   @override
   String get cancelRateHowCalculated => 'Så beräknas din avbokningsgrad';
@@ -1165,6 +1164,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String noShowFromTime(Object time) {
     return 'Kan användas från $time om resenären inte har kommit.';
   }
+
+  @override
+  String get driverEndedEarlyCollect => 'Du avslutade resan tidigare';
 
   @override
   String get fleetJoinTitle => 'Gå med i ditt åkeri';
@@ -2902,7 +2904,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get toNextStop => 'Till nästa stopp';
 
   @override
-  String get onYourWay => 'Längs din väg';
+  String get onYourWay => 'På vägen';
 
   @override
   String get onThisRide => 'Under den här resan';
@@ -4456,7 +4458,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String destOnlyTripsYourWay(String place) {
-    return 'Du får bara resor åt ditt håll, så varje resa tar dig närmare $place.';
+    return 'Du får alla resor; de som går åt ditt håll markeras ”På vägen”.';
   }
 
   @override
@@ -5117,7 +5119,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'Resor mot $place';
+    return 'Destination: $place · resor på vägen markeras';
   }
 
   @override
@@ -6125,7 +6127,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get offerAccept => 'Acceptera';
 
   @override
-  String get offerOnYourWay => 'Längs din väg';
+  String get offerOnYourWay => 'På vägen';
 
   @override
   String get offerHide => 'Dölj erbjudandet';
@@ -6868,6 +6870,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String nextTripPopupBooked(String time, String pickup) {
     return 'Bokad resa kl. $time · $pickup. Kör till upphämtningen nu.';
   }
+
+  @override
+  String get waitingBeforePickup => 'Före upphämtningstiden';
 
   @override
   String get docInsuranceLetter => 'Försäkringsbrev';

@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _name = 'Anna Svensson';
 const _pickup = 'Sveavagen 12, Stockholm';
 const _dropoff = 'Kungsgatan 4, Stockholm';
-const _phone = '+46709998877';
+const _phone = '+46701740677';
 
 /// A JSON record cut off after the private fields, as a half-written save.
 String _truncated(String head) =>

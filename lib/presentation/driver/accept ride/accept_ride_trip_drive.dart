@@ -57,9 +57,11 @@ extension _AcceptRideTripDrive on _AcceptRideState {
 
     _stageTransitioning = true;
     if (LiveDriverServices.active &&
-        (!await _AcceptRideLive(
-              this,
-            )._serverStep((trips) => trips.arrive(widget.tripId)) ||
+        (!await _whileStepBusy(
+              () => _AcceptRideLive(
+                this,
+              )._serverStep((trips) => trips.arrive(widget.tripId)),
+            ) ||
             !mounted ||
             _rideLifecycle.terminal ||
             _stage != ActiveRideStage.headingToPickup)) {

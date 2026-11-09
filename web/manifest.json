@@ -3,7 +3,7 @@
     "short_name": "Movera Driver",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
+    "background_color": "#eef1e8",
     "theme_color": "#252E3A",
     "description": "Movera Driver. On-trip cockpit for pickup, navigation, and delivery.",
     "orientation": "portrait-primary",

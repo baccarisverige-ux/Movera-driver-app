@@ -33,6 +33,7 @@ class RadarOfferView {
     this.priority = false,
     this.driverBonus,
     this.driverEarnings,
+    this.onYourWay = false,
   });
 
   final String id;
@@ -88,6 +89,10 @@ class RadarOfferView {
 
   /// Pickup pay worked out when the offer shows; null for none.
   final PickupPayQuote? pickupPay;
+
+  /// Q2 (owner 2026-11-07): destination mode is on and the drop-off is on
+  /// the way; the card shows [DriverTexts.offerOnYourWay].
+  final bool onYourWay;
 
   /// The amount the card shows: the driver's own money
   /// ([OfferCardDetails.fare]: [driverEarnings], else the share of [fare]
@@ -264,6 +269,13 @@ class RadarOfferCard extends StatelessWidget {
                         boost,
                         key: ValueKey<String>('radar-offer-boost-${offer.id}'),
                       ),
+                    if (offer.onYourWay)
+                      OfferBadge.note(
+                        driverText(DriverTexts.offerOnYourWay),
+                        key: ValueKey<String>(
+                          'radar-offer-on-your-way-${offer.id}',
+                        ),
+                      ),
                     // The rider's trips, next to the badges so the header
                     // still fits a narrow phone.
                     if (show.riderRating && offer.riderTrips > 0)
@@ -392,13 +404,21 @@ class RadarOfferCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    driverText(DriverTexts.offerPickup).toUpperCase(),
-                    style: const TextStyle(
-                      color: label,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.4,
+                  // A long pickup label (fr, 130 % text at 320 px) wraps
+                  // onto two lines instead of overflowing the fare.
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 120),
+                    child: Text(
+                      driverText(DriverTexts.offerPickup).toUpperCase(),
+                      textAlign: TextAlign.end,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: label,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.4,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 3),

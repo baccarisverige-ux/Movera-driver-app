@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:movera/core/logging/crash_reports.dart';
+import 'package:movera/core/logging/restart_watch.dart';
 
 /// The app's route observer. Subscribers hear about every modal route,
 /// dialogs and bottom sheets included; [pages] only about full screens,
@@ -39,6 +40,7 @@ class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   /// Contract v0.16.0: a crash report names the screen on top.
   static void _top(Route<dynamic>? route) {
     if (route != null) CrashReports.currentScreen = route.settings.name;
+    RestartWatch.touch();
   }
 }
 
@@ -49,9 +51,14 @@ class _ScreenObserver extends RouteObserver<ModalRoute<dynamic>> {
   static bool _opaque(Route<dynamic> route) =>
       route is ModalRoute && route.opaque;
 
+  /// The full screen pushed last: the screen under it reads it while it
+  /// is told it is covered (audit 2026-11-07 B1: a trip, not a menu page).
+  Route<dynamic>? lastPushed;
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     if (_opaque(route)) {
+      lastPushed = route;
       super.didPush(route, previousRoute);
     }
   }

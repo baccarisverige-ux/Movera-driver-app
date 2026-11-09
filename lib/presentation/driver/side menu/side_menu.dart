@@ -1,3 +1,4 @@
+import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -73,6 +74,22 @@ class DriverSideMenu extends StatelessWidget {
     );
   }
 
+  /// L-a Q1 (owner 2026-11-06): a live build shows the driver's own first
+  /// and last name from `GET /driver/profile`, "—" until it is read; the
+  /// demo keeps its brand stand-in.
+  static String _personName(DriverAccountSession? session) {
+    if (session == null) return 'Movera Driver';
+    final name = session.account?.fullName.trim() ?? '';
+    return name.isEmpty ? '—' : name;
+  }
+
+  /// The initials of [_personName]; "—" while a live name is unknown.
+  static String _initials(DriverAccountSession? session) {
+    if (session == null) return 'MD';
+    final letters = initialsOf(session.account?.fullName ?? '');
+    return letters.isEmpty ? '—' : letters;
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
@@ -92,7 +109,18 @@ class DriverSideMenu extends StatelessWidget {
           children: [
             SafeArea(
               bottom: false,
-              child: Column(children: [_buildHeader(context)]),
+              child: Column(
+                children: [
+                  // The name follows the account as it is read (L-a Q1).
+                  if (session == null)
+                    _buildHeader(context)
+                  else
+                    ListenableBuilder(
+                      listenable: session,
+                      builder: (context, _) => _buildHeader(context),
+                    ),
+                ],
+              ),
             ),
             Expanded(
               child: ListView(
@@ -208,6 +236,7 @@ class DriverSideMenu extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final session = accountSessionOf(context);
     const orange = Color(0xFFF08C2B);
     const green = Color(0xFF1FA463);
     final statusColor = isOnline
@@ -266,7 +295,8 @@ class DriverSideMenu extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'MD',
+                      _initials(session),
+                      key: const ValueKey<String>('menu-profile-initials'),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: compact ? 19 : 22,
@@ -289,7 +319,8 @@ class DriverSideMenu extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Movera Driver',
+                          _personName(session),
+                          key: const ValueKey<String>('menu-profile-name'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

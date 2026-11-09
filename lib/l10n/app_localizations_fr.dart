@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -46,7 +45,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get yourCurrentTripContinues => 'Votre course actuelle continue.';
 
   @override
-  String get yourFare => 'Votre tarif';
+  String get yourFare => 'Votre gain prévu';
 
   @override
   String get yourTrip => 'Votre course';
@@ -114,8 +113,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count catégories de course enregistrées',
-      one: '$count catégorie de course enregistrée',
+      other: '$count catégories enregistrées',
+      one: '$count catégorie enregistrée',
     );
     return '$_temp0';
   }
@@ -152,7 +151,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get anaSamplePerformance => 'Performances (exemple)';
 
   @override
-  String get anaCancel => 'Annulation';
+  String get anaCancel => 'Annuler';
 
   @override
   String get anaSamePeriodHome => 'Même période que sur l’accueil';
@@ -240,7 +239,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get anaSampleTripRoute => 'Gare centrale → Södermalm';
 
   @override
-  String get bankAccountSection => 'COMPTE';
+  String get bankAccountSection => 'COMPTE BANCAIRE';
 
   @override
   String get acctDetailsTitle => 'Vos informations';
@@ -262,7 +261,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get acctPickDate => 'Choisir une date';
 
   @override
-  String get acctEmail => 'E-mail';
+  String get acctEmail => 'Adresse e-mail';
 
   @override
   String get acctCountry => 'Pays';
@@ -362,7 +361,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get acctDetailsLocked =>
-      'Vos informations sont déjà approuvées. Contactez le support pour les modifier.';
+      'Vos informations sont déjà approuvées. Contactez l’assistance pour les modifier.';
 
   @override
   String get acctCouldNotSend =>
@@ -461,7 +460,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ratingTagPolite => 'Poli';
 
   @override
-  String get ratingTagClearPickup => 'Prise en charge claire';
+  String get ratingTagClearPickup => 'Prise en charge facile à trouver';
 
   @override
   String get ratingCommentOptional => 'Commentaire (facultatif)';
@@ -705,7 +704,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authRequestNewCode =>
-      'Revenez en arrière et demandez un nouveau code.';
+      'Revenez à l’écran précédent pour demander un nouveau code.';
 
   @override
   String get authNeverAskCode =>
@@ -827,7 +826,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authHelpComingSoon => 'Coordonnées bientôt disponibles';
 
   @override
-  String get authHelpEmail => 'E-mail';
+  String get authHelpEmail => 'Adresse e-mail';
 
   @override
   String get authHelpPhone => 'Téléphone';
@@ -840,11 +839,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authSignedOutExpired =>
-      'Vous avez été déconnecté – reconnectez-vous';
+      'Vous avez été déconnecté de votre compte. Reconnectez-vous.';
 
   @override
   String get authSignedOutRevoked =>
-      'Vous avez été déconnecté – reconnectez-vous';
+      'Vous avez été déconnecté de votre compte. Reconnectez-vous.';
 
   @override
   String get authSignedOutDetailExpired =>
@@ -920,10 +919,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cancel => 'Annuler';
 
   @override
-  String get noShow => 'Absence';
+  String get noShow => 'Absence du passager';
 
   @override
-  String get noShowCanBeApplied => 'L’absence peut être appliquée';
+  String get noShowCanBeApplied => 'Vous pouvez signaler l’absence du passager';
 
   @override
   String get noAnswer => 'Pas de réponse';
@@ -938,7 +937,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noPayoutBalanceUntilPaymentService =>
-      'Aucun solde à verser tant qu’aucun service de paiement n’est connecté.';
+      'Aucun solde de versement tant que le service de paiement n’est pas connecté.';
 
   @override
   String get noAutomaticPayout => 'Pas de versement automatique';
@@ -1065,7 +1064,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancelReasonScheduledPickupTooFar =>
-      'La prise en charge est trop loin';
+      'Le lieu de prise en charge est trop éloigné';
 
   @override
   String get cancelReasonScheduledTripDetails =>
@@ -1096,7 +1095,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancelReasonNextTripRiderRequestedDetail =>
-      'Le prochain passager ne veut plus la course';
+      'Le passager de la prochaine course ne souhaite plus voyager';
 
   @override
   String get cancelReasonNextTripVehicleIssue => 'Problème avec la voiture';
@@ -1160,7 +1159,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Chaque annulation compte, sauf les motifs marqués « Ne compte pas », comme un passager absent ou un problème de sécurité.';
+      'Chaque annulation compte, quel que soit le motif.';
 
   @override
   String get cancelRateHowCalculated =>
@@ -1179,20 +1178,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String noShowConfirmYouGet(Object amount) {
-    return 'Marquer comme client absent ? Vous recevez $amount';
+    return 'Signaler l’absence du passager ? Vous percevrez $amount.';
   }
 
   @override
-  String get noShowConfirmNoFee => 'Marquer comme client absent ? Pas de frais';
+  String get noShowConfirmNoFee =>
+      'Signaler l’absence du passager ? Aucun frais ne sera facturé.';
 
   @override
   String get cancelAfterArrivedNote =>
-      'Annuler après l’arrivée du chauffeur et la fin de l’attente gratuite compte comme un client absent';
+      'Une annulation après l’arrivée du chauffeur et la fin de l’attente gratuite est considérée comme une absence du passager.';
 
   @override
   String noShowFromTime(Object time) {
-    return 'Applicable à partir de $time si le passager n’est pas arrivé.';
+    return 'Applicable à partir de $time si le passager ne s’est pas présenté.';
   }
+
+  @override
+  String get driverEndedEarlyCollect => 'Vous avez terminé la course plus tôt';
 
   @override
   String get fleetJoinTitle => 'Rejoindre votre flotte';
@@ -1571,10 +1574,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appTitle => 'Movera Chauffeur';
 
   @override
-  String get hideReservationRequest => 'Masquer la demande de réservation';
+  String get hideReservationRequest => 'Masquer cette demande de réservation';
 
   @override
-  String get findingTrips => 'Recherche de courses';
+  String get findingTrips => 'Recherche de courses en cours…';
 
   @override
   String get inbox => 'Messages';
@@ -1589,7 +1592,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get driverStatus => 'STATUT DU CHAUFFEUR';
 
   @override
-  String get accountAccessPaused => 'Accès au compte suspendu';
+  String get accountAccessPaused =>
+      'Accès à votre compte temporairement suspendu';
 
   @override
   String get gotIt => 'Compris';
@@ -1601,22 +1605,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backToRequest => 'Retour à la demande';
 
   @override
-  String get dropOff => 'Dépose';
+  String get dropOff => 'Destination';
 
   @override
   String destinationModeUntilUntil(Object until) {
-    return 'Mode destination jusqu’à $until';
+    return 'Mode destination actif jusqu’à $until';
   }
 
   @override
   String get couldNotOpenUpdatePleaseTry =>
-      'Impossible d’ouvrir la mise à jour. Veuillez réessayer.';
+      'Impossible d’ouvrir la mise à jour. Réessayez.';
 
   @override
   String get goOfflineQuestion => 'Passer hors ligne ?';
 
   @override
-  String get goOffline => 'Hors ligne';
+  String get goOffline => 'Passer hors ligne';
 
   @override
   String get findingYourLocation => 'Recherche de votre position';
@@ -1626,22 +1630,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String headToYourPickupTimePickup(Object pickupTime, Object pickupAddress) {
-    return 'Partez maintenant pour votre prise en charge de $pickupTime : $pickupAddress.';
+    return 'Rendez-vous dès maintenant au lieu de prise en charge prévu à $pickupTime : $pickupAddress.';
   }
 
   @override
   String headToYourPickupTimePickup2(Object pickupTime) {
-    return 'Partez pour votre prise en charge de $pickupTime';
+    return 'Partez maintenant rejoindre le lieu de prise en charge prévu à $pickupTime';
   }
 
   @override
   String goOnlineNowForYourPickup(Object pickupTime) {
-    return 'Passez en ligne maintenant pour votre prise en charge de $pickupTime.';
+    return 'Passez en ligne maintenant pour assurer la prise en charge prévue à $pickupTime.';
   }
 
   @override
   String goOnlineForPickupTimePickup(Object pickupTime) {
-    return 'Passez en ligne pour la prise en charge de $pickupTime';
+    return 'Passez en ligne pour la course de $pickupTime';
   }
 
   @override
@@ -1665,14 +1669,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get closeTrip => 'Clôturer la course';
 
   @override
-  String get closeUnreadableTrip => 'Clôturer la course illisible';
+  String get closeUnreadableTrip => 'Clôturer cette course inaccessible';
 
   @override
   String get finishOrCloseSavedTripBefore =>
       'Terminez ou clôturez la course enregistrée avant de passer en ligne.';
 
   @override
-  String get account => 'Compte';
+  String get account => 'Mon compte';
 
   @override
   String get connecting => 'Connexion';
@@ -1689,16 +1693,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de terminer l’enregistrement de cette course. Relancez la clôture ; le reçu ne sera pas dupliqué.';
 
   @override
-  String get alongYourDestination => 'Vers votre destination';
+  String get alongYourDestination => 'Sur votre itinéraire vers la destination';
 
   @override
-  String get endThisTripEarlyQuestion => 'Terminer cette course plus tôt ?';
+  String get endThisTripEarlyQuestion =>
+      'Terminer cette course avant la destination prévue ?';
 
   @override
   String get endTripEarly => 'Terminer plus tôt';
 
   @override
-  String get keepTrip => 'Garder la course';
+  String get keepTrip => 'Conserver la course';
 
   @override
   String get couldNotSaveCancellationRetry =>
@@ -1712,7 +1717,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get arrival => 'Arrivée';
 
   @override
-  String get arriving => 'Arrivée proche';
+  String get arriving => 'Arrivée imminente';
 
   @override
   String demoValue(Object value) {
@@ -1732,7 +1737,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String droppingOffRiderName(Object riderName) {
-    return 'Dépose de $riderName';
+    return 'En route vers la destination de $riderName';
   }
 
   @override
@@ -1742,27 +1747,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String dropOffRiderName(Object riderName) {
-    return 'Déposer $riderName';
+    return 'Déposer $riderName à destination';
   }
 
   @override
   String get enRoute => 'En route';
 
   @override
-  String get includedWaitThenPaid => 'Attente incluse · puis payante';
+  String get includedWaitThenPaid => 'Attente gratuite incluse, puis facturée';
 
   @override
   String get actionCouldNotBeCompletedPlease =>
-      'L’action n’a pas pu aboutir. Veuillez réessayer.';
+      'L’action n’a pas pu aboutir. Réessayez.';
 
   @override
-  String get confirmThisTripActionQuestion => 'Confirmer cette action ?';
+  String get confirmThisTripActionQuestion =>
+      'Confirmer cette action sur la course ?';
 
   @override
   String get confirm => 'Confirmer';
 
   @override
-  String get finishSoSoonQuestion => 'Terminer si tôt ?';
+  String get finishSoSoonQuestion => 'Vous terminez déjà la course ?';
 
   @override
   String get backToRide => 'Retour à la course';
@@ -1781,14 +1787,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get couldNotOpenDialerDial112 =>
-      'Impossible d’ouvrir le clavier d’appel. Composez le 112 vous-même.';
+      'Impossible d’ouvrir l’application Téléphone. Composez directement le 112.';
 
   @override
   String get ifSomeoneIsHurtOrIn =>
       'Si quelqu’un est blessé ou en danger, appelez les secours.';
 
   @override
-  String get audioStoppedWhenAppLeft => 'arrêté quand Movera a quitté l’écran';
+  String get audioStoppedWhenAppLeft =>
+      'L’enregistrement s’est arrêté lorsque vous avez quitté Movera.';
 
   @override
   String audioSavedTime(Object time) {
@@ -1796,10 +1803,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get allowMicrophoneFirst => 'autorisez d’abord le micro';
+  String get allowMicrophoneFirst => 'Autorisez d’abord l’accès au microphone.';
 
   @override
-  String get couldNotRecordTryAgain => 'échec de l’enregistrement, réessayez';
+  String get couldNotRecordTryAgain => 'Échec de l’enregistrement. Réessayez.';
 
   @override
   String bodyYourNextTripStartsNow(Object body) {
@@ -1833,10 +1840,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get googleMapsIsUnavailable => 'Google Maps est indisponible.';
 
   @override
-  String get currentWaybill => 'Bon de commande actuel';
+  String get currentWaybill => 'Fiche de course en cours';
 
   @override
-  String get currentTripWaybill => 'Bon de commande de la course';
+  String get currentTripWaybill => 'Fiche de la course en cours';
 
   @override
   String get activeTripCancelledByRider =>
@@ -1847,7 +1854,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Gardez le contrôle du véhicule et arrêtez-vous en sécurité avant de continuer.';
 
   @override
-  String get iHaveStoppedSafely => 'Je suis arrêté en sécurité';
+  String get iHaveStoppedSafely => 'Je me suis arrêté en lieu sûr';
 
   @override
   String collectAmountInCash(Object amount) {
@@ -1862,11 +1869,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String dropOffTripMinutesMinTrip(Object tripMinutes) {
-    return 'Dépose · course de $tripMinutes min';
+    return 'Destination · course de $tripMinutes min';
   }
 
   @override
-  String get everyMinuteIsPaid => 'Chaque minute est payée';
+  String get everyMinuteIsPaid => 'Chaque minute d’attente est rémunérée';
 
   @override
   String get includedTime => 'Temps inclus';
@@ -1881,7 +1888,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String canBeAppliedAfterNoShow(Object noShowAfterMinutes) {
-    return 'Applicable après $noShowAfterMinutes min si le passager n’est pas arrivé.';
+    return 'Applicable après $noShowAfterMinutes min si le passager ne s’est pas présenté.';
   }
 
   @override
@@ -1905,7 +1912,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get completed => 'Terminée';
 
   @override
-  String get fare => 'Tarif';
+  String get fare => 'Montant de la course';
 
   @override
   String get from => 'De';
@@ -1914,7 +1921,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get driver => 'Chauffeur';
 
   @override
-  String get inApp => 'Dans l’app';
+  String get inApp => 'Dans l’application';
 
   @override
   String basePriceService(Object service) {
@@ -1937,7 +1944,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get demoRider => 'Passager de démo';
 
   @override
-  String get dropOffLocation => 'Lieu de dépose';
+  String get dropOffLocation => 'Adresse de destination';
 
   @override
   String answerAnswer(Object answer) {
@@ -2008,7 +2015,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hoursOnlineAndRestRules => 'Heures en ligne et règles de repos';
 
   @override
-  String get appAndDriverSettings => 'Réglages de l’app et du chauffeur';
+  String get appAndDriverSettings =>
+      'Paramètres de l’application et du chauffeur';
 
   @override
   String get active => 'Actif';
@@ -2044,7 +2052,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flashForRequests => 'Flash pour les demandes';
 
   @override
-  String get appSettings => 'Réglages de l’app';
+  String get appSettings => 'Paramètres de l’application';
 
   @override
   String get darkMode => 'Mode sombre';
@@ -2370,7 +2378,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get backgroundLocationBody =>
-      'Votre position est envoyée pour recevoir des courses';
+      'Votre position est transmise pour vous proposer des courses à proximité.';
 
   @override
   String get batterySaverWarning =>
@@ -2385,11 +2393,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get eventPickupNote => 'Prise en charge';
+  String get eventPickupNote => 'Lieu de prise en charge';
 
   @override
   String feeKindNoShow(Object amount) {
-    return 'Frais de client absent $amount';
+    return 'Frais de non-présentation du passager : $amount';
   }
 
   @override
@@ -2423,7 +2431,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get feeKindNoShowShort => 'Frais de client absent';
+  String get feeKindNoShowShort => 'Frais de non-présentation du passager';
 
   @override
   String get feeKindCancelShort => 'Frais d’annulation';
@@ -2437,7 +2445,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g6RuleAirport => 'Prise en charge à l’aéroport';
 
   @override
-  String get g6RuleScheduled => 'Course réservée';
+  String get g6RuleScheduled => 'Course programmée';
 
   @override
   String get g6RuleEvent => 'Prise en charge à un événement';
@@ -2447,12 +2455,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String g6PinWrong(Object left) {
-    return 'Code incorrect. Encore $left essais';
+    return 'Code incorrect. Il vous reste $left tentatives.';
   }
 
   @override
   String g6PinLocked(Object min) {
-    return 'Trop d’essais. Réessayez dans $min min';
+    return 'Trop de tentatives. Réessayez dans $min min.';
   }
 
   @override
@@ -2466,14 +2474,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get g6PinNeeded =>
-      'Cette course demande le code du passager avant le départ';
+      'Le code du passager est nécessaire pour démarrer cette course.';
 
   @override
   String get g6AlertPaid => 'L’attente payante a commencé';
 
   @override
   String get g6AlertNoShow =>
-      'Vous pouvez maintenant signaler un client absent';
+      'Vous pouvez maintenant signaler l’absence du passager.';
 
   @override
   String g6StopFreeWait(Object min) {
@@ -2482,14 +2490,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get g6PinBlocked =>
-      'Trop de codes incorrects. Appelez le support Movera';
+      'Trop de tentatives avec un code erroné. Appelez l’assistance Movera';
 
   @override
   String get g6PinNotNow =>
       'Le code se saisit une fois arrivé au point de prise en charge';
 
   @override
-  String get g7RouteAsk => 'Le passager souhaite modifier l\'itinéraire';
+  String get g7RouteAsk => 'Le passager souhaite modifier l’itinéraire';
 
   @override
   String g7RouteEarnings(String earnings, String difference) {
@@ -2551,7 +2559,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g8LineTrip => 'Course';
 
   @override
-  String get g8LinePickupPay => 'Approche';
+  String get g8LinePickupPay => 'Rémunération d’approche';
 
   @override
   String get g8LineBonus => 'Bonus';
@@ -2584,7 +2592,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get g8PricedForDriven => 'Le prix correspond au trajet effectué.';
 
   @override
-  String get g8BookedPriceStands => 'Le prix réservé s’applique.';
+  String get g8BookedPriceStands =>
+      'Le prix confirmé lors de la réservation reste applicable.';
 
   @override
   String get g8EndedEarly => 'Terminée plus tôt';
@@ -2626,7 +2635,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notNow => 'Pas maintenant';
 
   @override
-  String get scheduled => 'Planifiées';
+  String get scheduled => 'Programmées';
 
   @override
   String get recommendations => 'Recommandations';
@@ -2636,7 +2645,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Movera utilisera le statut officiel de votre compte. Cet écran ne devine ni la raison ni la date de déblocage.';
 
   @override
-  String get showRoute => 'Voir l’itinéraire';
+  String get showRoute => 'Afficher l’itinéraire';
 
   @override
   String get turnOffDestination => 'Désactiver la destination';
@@ -2653,18 +2662,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get updating => 'MISE À JOUR';
 
   @override
-  String get slideToOpen => 'GLISSER POUR OUVRIR';
+  String get slideToOpen => 'GLISSEZ POUR OUVRIR';
 
   @override
   String get youStopGettingTripOffersUntil =>
-      'Vous ne recevrez plus d’offres de course jusqu’à votre retour en ligne.';
+      'Vous ne recevrez plus de demandes de course tant que vous serez hors ligne.';
 
   @override
   String get stayOnline => 'Rester en ligne';
 
   @override
   String restUntilTime(Object time) {
-    return 'Repos jusqu’à $time';
+    return 'Pause jusqu’à $time';
   }
 
   @override
@@ -2681,7 +2690,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get skipExclusiveOffer => 'Passer l’offre exclusive';
+  String get skipExclusiveOffer => 'Ignorer cette offre exclusive';
 
   @override
   String get pleaseWait => 'Patientez';
@@ -2690,10 +2699,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tapToAccept => 'Touchez ici';
 
   @override
-  String get scheduledRide => 'Course planifiée';
+  String get scheduledRide => 'Course programmée';
 
   @override
-  String get matching => 'Attribution';
+  String get matching => 'Attribution de la course en cours…';
 
   @override
   String get recenter => 'Recentrer';
@@ -2720,22 +2729,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get performance => 'Performance';
 
   @override
-  String get latestWaybill => 'Dernier bon de commande';
+  String get latestWaybill => 'Dernière fiche de course';
 
   @override
   String get noneYet => 'Aucun pour l’instant';
 
   @override
-  String get worked => 'Travaillé';
+  String get worked => 'Durée travaillée';
 
   @override
-  String get leftBeforeRest => 'Restant avant le repos';
+  String get leftBeforeRest => 'Temps restant avant la prochaine pause';
 
   @override
-  String get restUntil => 'Repos jusqu’à';
+  String get restUntil => 'Pause jusqu’à';
 
   @override
-  String get workLimit => 'Limite de travail';
+  String get workLimit => 'Durée maximale de conduite';
 
   @override
   String get restAfterIt => 'Repos ensuite';
@@ -2769,36 +2778,37 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de clôturer la course enregistrée.';
 
   @override
-  String get savedTripCannotBeRead => 'Course enregistrée illisible';
+  String get savedTripCannotBeRead =>
+      'Impossible de consulter la course enregistrée';
 
   @override
   String get savedTripCouldNotBeRead =>
       'Une course enregistrée est illisible. Clôturez-la pour passer en ligne.';
 
   @override
-  String get review => 'Voir';
+  String get review => 'Consulter';
 
   @override
   String get unreadableTripCouldNotBeClosed =>
       'Impossible de clôturer la course illisible.';
 
   @override
-  String get openSavedTrip => 'Ouvrir la course enregistrée';
+  String get openSavedTrip => 'Reprendre la course enregistrée';
 
   @override
   String get radar => 'Radar';
 
   @override
-  String get tapForDetails => 'Touchez pour les détails';
+  String get tapForDetails => 'Appuyez pour afficher les détails';
 
   @override
   String get notActive => 'Inactif';
 
   @override
-  String get tapToScan => 'Touchez ici';
+  String get tapToScan => 'Appuyez pour lancer la recherche';
 
   @override
-  String get tapForAll => 'Tout voir';
+  String get tapForAll => 'Voir toutes les courses';
 
   @override
   String get scanning => 'Recherche';
@@ -2808,7 +2818,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get thisStopNeedsVerifiedMapLocation =>
-      'Cet arrêt doit avoir une position vérifiée sur la carte avant l’arrivée.';
+      'La position de cet arrêt doit être confirmée sur la carte avant de déclarer l’arrivée.';
 
   @override
   String get locationUnavailableEnableLocationToConfirm =>
@@ -2816,7 +2826,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get preciseLocationOff =>
-      'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
+      'La localisation précise est désactivée. Activez-la dans les paramètres pour afficher votre position et confirmer votre arrivée.';
 
   @override
   String get preciseLocationOffShort => 'Position exacte désactivée';
@@ -2847,17 +2857,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get turnExclusiveOffersOn => 'Activer les offres exclusives';
 
   @override
-  String get paidByCard => 'Payé par carte';
+  String get paidByCard => 'Réglé par carte';
 
   @override
-  String get routeProgress => 'Progression de l’itinéraire';
+  String get routeProgress => 'Progression sur le trajet';
 
   @override
   String get unavailable => 'Indisponible';
 
   @override
   String pickingUpRiderName(Object riderName) {
-    return 'Prise en charge de $riderName';
+    return 'En route pour prendre en charge $riderName';
   }
 
   @override
@@ -2867,44 +2877,47 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String paidWaitAtStopNumber(Object number) {
-    return 'Attente payante à l’arrêt $number';
+    return 'Temps d’attente facturé à l’arrêt $number';
   }
 
   @override
-  String get paidWaitRunning => 'Attente payante en cours';
+  String get paidWaitRunning => 'Attente facturée en cours';
 
   @override
-  String get paidWaitNoShowAvailable => 'Attente payante · absence possible';
+  String get paidWaitNoShowAvailable =>
+      'Attente facturée · absence du passager déclarable';
 
   @override
-  String get toDropOff => 'Vers la dépose';
+  String get toDropOff => 'Vers la destination';
 
   @override
-  String get thenDropOff => 'Puis dépose';
+  String get thenDropOff => 'Puis vers la destination';
 
   @override
   String youPickedUpRiderMinutesMin(Object minutes) {
-    return 'Vous avez pris en charge le passager il y a $minutes min. Ne terminez que si la course est vraiment finie.';
+    return 'Vous avez pris en charge le passager il y a $minutes min. Ne terminez la course que si elle est réellement finie.';
   }
 
   @override
-  String get orTellUsWhatSHappening => 'Ou dites-nous ce qui se passe';
+  String get orTellUsWhatSHappening =>
+      'Vous pouvez aussi nous décrire la situation.';
 
   @override
   String get whatIsHappeningQuestion => 'Que se passe-t-il ?';
 
   @override
   String get thanksThisIsSavedToTrip =>
-      'Merci, c’est enregistré dans la course.';
+      'Merci. Votre réponse a été enregistrée pour cette course.';
 
   @override
   String get moveraCouldNotBeAlerted => 'Impossible d’alerter Movera';
 
   @override
-  String get moveraSafetyTeamAlerted => 'Équipe sécurité de Movera alertée';
+  String get moveraSafetyTeamAlerted =>
+      'L’équipe de sécurité Movera a été prévenue.';
 
   @override
-  String get tellUsInFewWords => 'Dites-le-nous en quelques mots';
+  String get tellUsInFewWords => 'Décrivez la situation en quelques mots';
 
   @override
   String recordingTime(Object time) {
@@ -2915,7 +2928,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get savedOnlyOnThisPhone => 'enregistré uniquement sur ce téléphone';
 
   @override
-  String get recordAudio => 'Enregistrer l’audio';
+  String get recordAudio => 'Lancer un enregistrement audio';
 
   @override
   String get onlyOnThisPhone => 'uniquement sur ce téléphone';
@@ -2954,7 +2967,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get toNextStop => 'Vers le prochain arrêt';
 
   @override
-  String get onYourWay => 'Sur votre trajet';
+  String get onYourWay => 'Sur votre chemin';
 
   @override
   String get onThisRide => 'Pendant cette course';
@@ -2963,7 +2976,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navigateWithGoogleMaps => 'Naviguer avec Google Maps';
 
   @override
-  String get messageRider => 'Écrire au passager';
+  String get messageRider => 'Envoyer un message au passager';
 
   @override
   String get retryRoute => 'Recalculer l’itinéraire';
@@ -2991,7 +3004,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whyAreYouCancellingQuestion => 'Pourquoi annulez-vous ?';
 
   @override
-  String get pickReasonThatFitsBest => 'Choisissez le motif le plus adapté.';
+  String get pickReasonThatFitsBest =>
+      'Sélectionnez le motif le plus adapté à votre situation.';
 
   @override
   String get returnToRequests => 'Retour aux demandes';
@@ -3012,10 +3026,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get to => 'VERS';
 
   @override
-  String get openWaybill => 'Ouvrir le bon de commande';
+  String get openWaybill => 'Consulter la fiche de course';
 
   @override
-  String get waybill => 'Bon de commande';
+  String get waybill => 'Fiche de course';
 
   @override
   String get thisStopHasNoFreeMinutes =>
@@ -3028,7 +3042,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get openingMinutesStayInsideFare =>
-      'Les premières minutes sont comprises dans le tarif.';
+      'Les premières minutes d’attente sont comprises dans le prix de la course.';
 
   @override
   String get waitTime => 'Temps d’attente';
@@ -3040,7 +3054,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String youGetDriverShareWaitPercent(Object driverShareWaitPercent) {
-    return 'Vous recevez $driverShareWaitPercent % du temps d’attente.';
+    return 'Vous percevez $driverShareWaitPercent % des frais d’attente.';
   }
 
   @override
@@ -3049,7 +3063,7 @@ class AppLocalizationsFr extends AppLocalizations {
     Object driverShareNoShowPercent,
     Object driverNoShowFeeFormatted,
   ) {
-    return 'Vous recevez $driverShareWaitPercent % du temps d’attente et $driverShareNoShowPercent % des frais d’absence ($driverNoShowFeeFormatted).';
+    return 'Vous percevez $driverShareWaitPercent % des frais d’attente et $driverShareNoShowPercent % des frais de non-présentation du passager ($driverNoShowFeeFormatted).';
   }
 
   @override
@@ -3060,13 +3074,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ces premières minutes sont déjà comprises dans le tarif.';
 
   @override
-  String get waitTimeIsRunning => 'Le temps d’attente court';
+  String get waitTimeIsRunning => 'Décompte du temps d’attente en cours';
 
   @override
   String get payment => 'Paiement';
 
   @override
-  String get lastWaybill => 'Dernier bon de commande';
+  String get lastWaybill => 'Dernière fiche de course';
 
   @override
   String get open => 'Ouvrir';
@@ -3114,10 +3128,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sample => 'Exemple';
 
   @override
-  String get samplePickupStockholm => 'Prise en charge d’exemple, Stockholm';
+  String get samplePickupStockholm => 'Prise en charge fictive (Stockholm)';
 
   @override
-  String get sampleDropOffStockholm => 'Dépose d’exemple, Stockholm';
+  String get sampleDropOffStockholm => 'Destination fictive (Stockholm)';
 
   @override
   String get pastRideRouteDriven => 'Itinéraire parcouru';
@@ -3206,7 +3220,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get work => 'TRAVAIL';
 
   @override
-  String get scheduledRides => 'Courses planifiées';
+  String get scheduledRides => 'Courses programmées';
 
   @override
   String get reservationsAndAcceptedTrips =>
@@ -3219,7 +3233,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messagesAndSupportTickets => 'Messages et demandes d’assistance';
 
   @override
-  String get settings => 'Réglages';
+  String get settings => 'Paramètres';
 
   @override
   String sampleRating(Object rating) {
@@ -3539,15 +3553,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get moveraDriver => 'Chauffeur Movera';
+  String get moveraDriver => 'Movera Chauffeur';
 
   @override
   String get legalPrivacyBody =>
-      'Movera Driver utilise la localisation et les données de course et de véhicule pour attribuer les courses, afficher les itinéraires et conserver une feuille de route sur cet appareil.\n\nLes versions de démo gardent ces informations en mémoire sur le téléphone. Rien n’est vendu à des annonceurs. Vous pouvez vous déconnecter à tout moment depuis Profil.\n\nUne fois un vrai serveur connecté, les mêmes écrans utiliseront ce texte jusqu’à la publication d’une version signée.';
+      'Movera Driver utilise la localisation et les données de course et de véhicule pour attribuer les courses, afficher les itinéraires et conserver une fiche de course sur cet appareil.\n\nLes versions de démo gardent ces informations en mémoire sur le téléphone. Rien n’est vendu à des annonceurs. Vous pouvez vous déconnecter à tout moment depuis Profil.\n\nUne fois un vrai serveur connecté, les mêmes écrans utiliseront ce texte jusqu’à la publication d’une version signée.';
 
   @override
   String get legalTermsBody =>
-      'Vous vous engagez à conduire uniquement avec un permis et une assurance valides et un véhicule conforme aux documents de cette application.\n\nLes offres Radar vont au premier qui les prend. Accepter une autre course pendant un trajet est facultatif. Terminer une course crée une feuille de route que vous pouvez rouvrir depuis l’accueil.\n\nMovera peut suspendre un compte de démo qui utilise abusivement les outils de sécurité ou les appels d’urgence.\n\nRapports de plantage et d’erreur : quand l’application plante ou affiche une erreur, elle envoie automatiquement un rapport à Movera pour que nous puissions corriger le problème : l’erreur, l’endroit de l’application où elle s’est produite, la version, la plateforme et l’heure. Les noms, numéros de téléphone, adresses e-mail, adresses et positions sont retirés avant que le rapport ne quitte votre appareil. Les rapports sont conservés 30 jours.';
+      'Vous vous engagez à conduire uniquement avec un permis et une assurance valides et un véhicule conforme aux documents de cette application.\n\nLes offres Radar vont au premier qui les prend. Accepter une autre course pendant un trajet est facultatif. Terminer une course crée une fiche de course que vous pouvez rouvrir depuis l’accueil.\n\nMovera peut suspendre un compte de démo qui utilise abusivement les outils de sécurité ou les appels aux secours.\n\nRapports de plantage et d’erreur : quand l’application plante ou affiche une erreur, elle envoie automatiquement un rapport à Movera pour que nous puissions corriger le problème : l’erreur, l’endroit de l’application où elle s’est produite, la version, la plateforme et l’heure. Les noms, numéros de téléphone, adresses e-mail, adresses et positions sont retirés avant que le rapport ne quitte votre appareil. Les rapports sont conservés 30 jours.';
 
   @override
   String get privacyPolicyTitle => 'Politique de confidentialité';
@@ -3579,7 +3593,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profCouldNotClear =>
-      'Impossible d’effacer les données locales. Vous êtes toujours connecté. Veuillez réessayer.';
+      'Impossible d’effacer les données locales. Vous êtes toujours connecté. Réessayez.';
 
   @override
   String minutesAgo(int minutes) {
@@ -3676,7 +3690,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get locationBlockedSettings =>
-      'La localisation est bloquée pour Movera. Autorisez-la dans les réglages pour recevoir des courses.';
+      'La localisation est bloquée pour Movera. Autorisez-la dans les paramètres pour recevoir des courses.';
 
   @override
   String get myFleet => 'Ma flotte';
@@ -3714,7 +3728,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swTripStatusAccepted => 'Acceptée';
 
   @override
-  String get swTripStatusDriverToPickup => 'Chauffeur vers la prise en charge';
+  String get swTripStatusDriverToPickup =>
+      'Chauffeur en route vers le lieu de prise en charge';
 
   @override
   String get swTripStatusArrived => 'Chauffeur arrivé';
@@ -3726,7 +3741,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swTripStatusInTrip => 'En course';
 
   @override
-  String get swTripStatusApproachingDropoff => 'Approche de la dépose';
+  String get swTripStatusApproachingDropoff => 'Approche de la destination';
 
   @override
   String get swTripStatusCompleted => 'Terminée';
@@ -3738,13 +3753,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swTripStatusCancelledByDriver => 'Annulée par le chauffeur';
 
   @override
-  String get swTripStatusCancelledByAdmin => 'Annulée par un admin';
+  String get swTripStatusCancelledByAdmin => 'Annulée par un administrateur';
 
   @override
   String get swTripStatusCancelledBySystem => 'Annulée par le système';
 
   @override
-  String get swTripStatusNoShow => 'Absence';
+  String get swTripStatusNoShow => 'Absence du passager';
 
   @override
   String get swTripStatusExpired => 'Expirée';
@@ -3768,7 +3783,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swDriverOnlineStatusOffline => 'Hors ligne';
 
   @override
-  String get swDriverOnlineStatusGoingOnline => 'Mise en ligne';
+  String get swDriverOnlineStatusGoingOnline => 'Passage en ligne';
 
   @override
   String get swDriverOnlineStatusOnline => 'En ligne';
@@ -3888,11 +3903,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swRatingStatusSkipped => 'Ignorée';
 
   @override
-  String get pushAskTitle => 'Recevoir les avis quand l’app est fermée ?';
+  String get pushAskTitle =>
+      'Recevoir les avis quand l’application est fermée ?';
 
   @override
   String get pushAskBody =>
-      'Movera vous prévient quand un document va expirer, quand Movera a vérifié vos documents ou votre voiture, des invitations de flotte et des messages des passagers. Vous pouvez désactiver cela à tout moment dans les réglages du navigateur ou du téléphone.';
+      'Movera vous prévient quand un document va expirer, quand Movera a vérifié vos documents ou votre voiture, des invitations de flotte et des messages des passagers. Vous pouvez désactiver cela à tout moment dans les paramètres du navigateur ou du téléphone.';
 
   @override
   String get pushAskAllow => 'Activer';
@@ -3904,11 +3920,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get locationRequired => 'Activez la localisation pour passer en ligne';
 
   @override
-  String get locationOpenSettings => 'Ouvrir les réglages';
+  String get locationOpenSettings => 'Ouvrir les paramètres';
 
   @override
   String get setOfflineLine =>
-      'Vous avez été mis hors ligne – appuyez pour repasser en ligne';
+      'Vous avez été mis hors ligne. Appuyez pour repasser en ligne.';
 
   @override
   String get outsideAreaTitle =>
@@ -3934,7 +3950,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get soundOffTapToAllow => 'Touchez pour autoriser le son';
 
   @override
-  String get navigationApp => 'Appli de navigation';
+  String get navigationApp => 'Application de navigation';
 
   @override
   String get navigationAppHint =>
@@ -3948,11 +3964,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get navigationAppSaveFailed =>
-      'Appli de navigation non enregistrée. Réessayez.';
+      'Application de navigation non enregistrée. Réessayez.';
 
   @override
   String get suspendedShortBody =>
-      'Votre compte est en pause. Contactez le support.';
+      'Votre compte est temporairement suspendu. Contactez l’assistance.';
 
   @override
   String get previewBanner => 'Aperçu';
@@ -4063,7 +4079,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get islandAssignedByMovera => 'Attribuée par Movera';
 
   @override
-  String get islandAssignmentAccepted => 'Course planifiée acceptée';
+  String get islandAssignmentAccepted => 'Course programmée acceptée';
 
   @override
   String get islandAssignmentNotAccepted => 'Attribution non acceptée';
@@ -4114,7 +4130,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String islandRestUntil(Object time) {
-    return 'Repos jusqu’à $time';
+    return 'Pause jusqu’à $time';
   }
 
   @override
@@ -4142,7 +4158,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get islandScheduledPaused => 'Courses planifiées en pause';
+  String get islandScheduledPaused => 'Courses programmées en pause';
 
   @override
   String get islandSavedTripOpen => 'Course enregistrée ouverte';
@@ -4454,7 +4470,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navPickupAhead => 'Prise en charge juste devant';
 
   @override
-  String get navDropOffAhead => 'Dépose juste devant';
+  String get navDropOffAhead => 'Destination à proximité';
 
   @override
   String navPointAhead(String point) {
@@ -4470,7 +4486,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get navDropOffLower => 'la dépose';
+  String get navDropOffLower => 'destination';
 
   @override
   String get navWaitingForRider => 'En attente du passager';
@@ -4520,7 +4536,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String destOnlyTripsYourWay(String place) {
-    return 'Vous ne recevrez que des courses dans votre direction : chaque course vous rapproche de $place.';
+    return 'Vous recevez toutes les courses ; celles dans votre direction sont marquées « Sur votre chemin ».';
   }
 
   @override
@@ -4572,8 +4588,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count trouvés',
-      one: '$count trouvé',
+      other: '$count résultats',
+      one: '$count résultat',
     );
     return '$_temp0';
   }
@@ -4609,7 +4625,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String leaveNowForPickupTimePickup(Object pickupTime) {
-    return 'Partez maintenant pour la prise en charge de $pickupTime';
+    return 'Partez maintenant pour votre course prévue à $pickupTime';
   }
 
   @override
@@ -4776,25 +4792,25 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get schedRidesAreOff => 'Les courses planifiées sont désactivées';
+  String get schedRidesAreOff => 'Les courses programmées sont désactivées';
 
   @override
   String schedRidesOffUntil(String date) {
-    return 'Courses planifiées désactivées jusqu’au $date';
+    return 'Courses programmées désactivées jusqu’au $date';
   }
 
   @override
   String schedRidesPausedUntil(String date) {
-    return 'Courses planifiées en pause jusqu’au $date';
+    return 'Courses programmées en pause jusqu’au $date';
   }
 
   @override
   String get schedOffInYourArea =>
-      'Movera a suspendu les nouvelles courses planifiées dans votre zone. Les courses que vous avez déjà acceptées ont quand même lieu.';
+      'Movera a suspendu les nouvelles courses programmées dans votre zone. Les courses que vous avez déjà acceptées ont quand même lieu.';
 
   @override
   String get schedTurnedOffByMovera =>
-      'Movera a désactivé les courses planifiées pour votre compte. Contactez l’assistance si vous avez des questions.';
+      'Movera a désactivé les courses programmées pour votre compte. Contactez l’assistance si vous avez des questions.';
 
   @override
   String schedLateCancelsInDays(String count, String days) {
@@ -4812,7 +4828,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String schedLateCancelPauses(String count, String days, String date) {
-    return 'C’est une annulation tardive ($count en $days jours). Les courses planifiées sont en pause jusqu’au $date.';
+    return 'C’est une annulation tardive ($count en $days jours). Les courses programmées sont en pause jusqu’au $date.';
   }
 
   @override
@@ -4845,7 +4861,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String remDocumentNeeded(Object document, String plural) {
     String _temp0 = intl.Intl.selectLogic(plural, {
-      'other': 'Il manque : $document',
+      'yes': 'Documents manquants : $document',
+      'other': 'Document manquant : $document',
     });
     return '$_temp0';
   }
@@ -4853,7 +4870,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String remDocumentRejected(Object document, String plural) {
     String _temp0 = intl.Intl.selectLogic(plural, {
-      'other': 'Refusé : $document',
+      'yes': 'Documents refusés : $document',
+      'other': 'Document refusé : $document',
     });
     return '$_temp0';
   }
@@ -4861,7 +4879,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String remDocumentExpired(Object document, String plural) {
     String _temp0 = intl.Intl.selectLogic(plural, {
-      'other': '$document a expiré',
+      'yes': 'Documents expirés : $document',
+      'other': 'Document expiré : $document',
     });
     return '$_temp0';
   }
@@ -4869,7 +4888,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String remDocumentExpiring(Object document, Object when, String plural) {
     String _temp0 = intl.Intl.selectLogic(plural, {
-      'other': '$document expire $when',
+      'yes': 'Expiration des documents $when : $document',
+      'other': 'Expiration du document $when : $document',
     });
     return '$_temp0';
   }
@@ -4931,7 +4951,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get remActionJoinFleet => 'Rejoindre une flotte';
 
   @override
-  String get remActionStartCompany => 'Créer ma propre société';
+  String get remActionStartCompany => 'Créer ma propre entreprise';
 
   @override
   String get remNoVehicleNotActive => 'Choisissez une voiture de votre flotte';
@@ -4955,7 +4975,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get schedServerClash =>
-      'Cette course est trop proche d\'une autre course réservée que vous avez.';
+      'Cette course est trop proche d\'une autre course programmée que vous avez.';
 
   @override
   String get schedKeepTitle => 'La garder à la nouvelle heure ?';
@@ -4976,7 +4996,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get schedHomeAreaSaved =>
-      'Zone de domicile enregistrée. Les courses réservées proches peuvent vous être proposées.';
+      'Zone de domicile enregistrée. Les courses programmées proches peuvent vous être proposées.';
 
   @override
   String get schedHomeAreaNoFix => 'Activez d\'abord la localisation.';
@@ -4996,7 +5016,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get schedGaveBack => 'La course est retournée dans Courses réservées.';
+  String get schedGaveBack =>
+      'La course est retournée dans Courses programmées.';
 
   @override
   String schedKeepNewPrice(String price) {
@@ -5018,7 +5039,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String schedBookedBadge(String time) {
-    return 'Course réservée · $time';
+    return 'Course programmée · $time';
   }
 
   @override
@@ -5121,7 +5142,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get safetyRideCheckExplained =>
-      'Activé pour chaque course. Demande « Tout va bien ? » après un long arrêt, une dépose loin de la destination, un grand détour ou un freinage très brusque.';
+      'Activé pour chaque course. Demande « Tout va bien ? » après un long arrêt, la destination loin de la destination, un grand détour ou un freinage très brusque.';
 
   @override
   String get safetyTools => 'Outils de sécurité';
@@ -5189,7 +5210,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String rrTripsToward(String place) {
-    return 'Courses vers $place';
+    return 'Destination : $place · courses sur votre chemin marquées';
   }
 
   @override
@@ -5349,7 +5370,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatSending => 'Envoi…';
 
   @override
-  String get chatNotSentTapToRetry => 'Non envoyé · Appuyez pour réessayer';
+  String get chatNotSentTapToRetry => 'Non envoyé · Touchez pour réessayer';
 
   @override
   String get chatSendFailed =>
@@ -5371,7 +5392,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get noticeNewScheduledRide => 'Nouvelle course planifiée';
+  String get noticeNewScheduledRide => 'Nouvelle course programmée';
 
   @override
   String noticeScheduledBody(String day, String time, String fare) {
@@ -5432,11 +5453,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String noticePayoutSentBody(String amount) {
-    return '$amount est en route vers votre banque.';
+    return 'Votre versement de $amount est en cours de transfert vers votre compte bancaire.';
   }
 
   @override
-  String get supportTicketMovera => 'Support Movera';
+  String get supportTicketMovera => 'Assistance Movera';
 
   @override
   String get supportSendFailed => 'Envoi impossible. Réessayez.';
@@ -5455,7 +5476,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportNoTicketsYet => 'Aucun message à Movera pour l\'instant.';
 
   @override
-  String get contentUpdateTitle => 'Mettre à jour l\'app';
+  String get contentUpdateTitle => 'Mettre à jour l\'application';
 
   @override
   String get contentUpdateBody =>
@@ -5469,10 +5490,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contentUpdateRecommended =>
-      'Une nouvelle version de l\'app est disponible.';
+      'Une nouvelle version de l\'application est disponible.';
 
   @override
-  String get contentUpdateAfterTrip => 'Mettez à jour l\'app après la course.';
+  String get contentUpdateAfterTrip =>
+      'Mettez à jour l\'application après la course.';
 
   @override
   String get contentTermsTitle => 'Nouvelles conditions';
@@ -5525,10 +5547,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get guideCameraBlockedBody =>
-      'L’accès à l’appareil photo est désactivé pour Movera. Activez-le dans Réglages, ou choisissez un fichier que vous avez déjà.';
+      'L’accès à l’appareil photo est désactivé pour Movera. Activez-le dans Paramètres, ou choisissez un fichier que vous avez déjà.';
 
   @override
-  String get guideOpenSettings => 'Ouvrir les Réglages';
+  String get guideOpenSettings => 'Ouvrir les Paramètres';
 
   @override
   String get guideUploadingSlow =>
@@ -5759,30 +5781,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String tripMinutesMinTrip(Object tripMinutes) {
-    return 'Course de $tripMinutes min';
+    return 'Durée de la course : $tripMinutes min';
   }
 
   @override
   String pickupWhenLabel(Object whenLabel) {
-    return 'Prise en charge $whenLabel';
+    return 'Prise en charge prévue $whenLabel';
   }
 
   @override
-  String get exclusive => 'Exclusive';
+  String get exclusive => 'Offre exclusive';
 
   @override
   String pickupMinutesMin(Object minutes) {
-    return ' · Prise en charge $minutes min';
+    return ' · Prise en charge dans $minutes min';
   }
 
   @override
-  String get ridePreferences => 'Préférences de course';
+  String get ridePreferences => 'Préférences de courses';
 
   @override
-  String get exclusiveForYou => 'Exclusive pour vous';
+  String get exclusiveForYou => 'Une offre rien que pour vous';
 
   @override
-  String get pickup => 'Prise en charge';
+  String get pickup => 'Lieu de prise en charge';
 
   @override
   String stopNumber(Object number) {
@@ -5803,22 +5825,22 @@ class AppLocalizationsFr extends AppLocalizations {
     Object left,
     Object pickupAddress,
   ) {
-    return 'Prise en charge à $pickupTime dans $left : $pickupAddress.';
+    return 'Prise en charge à $pickupTime (dans $left) · $pickupAddress';
   }
 
   @override
   String pickupTimePickupInLeft(Object pickupTime, Object left) {
-    return 'Prise en charge de $pickupTime dans $left';
+    return 'Prise en charge à $pickupTime (dans $left)';
   }
 
   @override
   String get accept => 'Accepter';
 
   @override
-  String get hold => 'Maintenir';
+  String get hold => 'Maintenir appuyé';
 
   @override
-  String get cashRides => 'Courses en espèces';
+  String get cashRides => 'Courses réglées en espèces';
 
   @override
   String get exclusiveReservation => 'Réservation exclusive';
@@ -5838,7 +5860,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripSavedOnThisDeviceIs =>
-      'La course enregistrée sur cet appareil est endommagée ou provient d’une autre version de l’app. Clôturez-la pour continuer. Une copie est conservée sur cet appareil pour l’assistance.';
+      'La course enregistrée sur cet appareil est endommagée ou provient d’une autre version de l’application. Clôturez-la pour continuer. Une copie est conservée sur cet appareil pour l’assistance.';
 
   @override
   String get riderDataUnavailable => 'Données du passager indisponibles';
@@ -5847,7 +5869,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripFound => 'Course trouvée';
 
   @override
-  String get nextTripSecured => 'Prochaine course assurée';
+  String get nextTripSecured => 'Prochaine course confirmée';
 
   @override
   String riderNameIsOnWay(Object riderName) {
@@ -5880,13 +5902,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tripRouteAndOptions => 'Itinéraire et options';
+  String get tripRouteAndOptions => 'Itinéraire et options de la course';
 
   @override
-  String get cashCollectInCar => 'Espèces : à encaisser dans la voiture';
+  String get cashCollectInCar => 'Paiement en espèces à encaisser à bord';
 
   @override
-  String get rideCheckDemo => 'Démo de vérification de course';
+  String get rideCheckDemo => 'Vérification de sécurité (démonstration)';
 
   @override
   String get tripUpdatesDisconnectedReconnectingIsRequired =>
@@ -5926,11 +5948,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String rideCheckTitle(Object title) {
-    return 'Vérification de course. $title';
+    return 'Vérification de sécurité · $title';
   }
 
   @override
-  String get rideCheck => 'Vérification de course';
+  String get rideCheck => 'Vérification de sécurité';
 
   @override
   String rideCheckShort(Object short) {
@@ -6002,7 +6024,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String exclusiveSecondsS(Object seconds) {
-    return 'Exclusive · $seconds s';
+    return 'Offre exclusive · $seconds s';
   }
 
   @override
@@ -6015,20 +6037,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les détails du passager issus de la réservation s’afficheront ici quand le profil sera connecté au serveur.';
 
   @override
-  String get nextTripWaybill => 'Bon de commande de la prochaine course';
+  String get nextTripWaybill => 'Fiche de la prochaine course';
 
   @override
-  String get nextTripsOnYourWay => 'Prochaines courses sur votre trajet';
+  String get nextTripsOnYourWay => 'Prochaines courses sur votre itinéraire';
 
   @override
   String get stopSafelyFirstReasonRequired =>
-      'Arrêtez-vous d’abord en sécurité · motif requis';
+      'Arrêtez-vous en lieu sûr avant de continuer · motif obligatoire';
 
   @override
   String get stopInSafePlaceFirst => 'Arrêtez-vous d’abord en lieu sûr.';
 
   @override
-  String get riderEndedTrip => 'Le passager a terminé la course';
+  String get riderEndedTrip => 'Course terminée à la demande du passager';
 
   @override
   String riderNameCancelledWhileTripWas(Object riderName) {
@@ -6051,25 +6073,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get waitingInProgress => 'Attente en cours';
 
   @override
-  String get cashFromRider => 'Espèces du passager';
+  String get cashFromRider => 'Montant à encaisser en espèces';
 
   @override
   String get riderPaidMoreThanYourFare =>
-      'Le passager a payé plus que votre tarif (promotion). La différence est réglée lors de votre prochain versement.';
+      'Le passager a payé davantage que le montant prévu pour vous (promotion). La différence sera régularisée lors de votre prochain versement.';
 
   @override
   String get riderPaidLessThanYourFare =>
-      'Le passager a payé moins que votre tarif (promotion). Movera ajoute la différence à votre prochain versement.';
+      'Le passager a payé moins que le montant prévu pour vous (promotion). Movera ajoutera la différence à votre prochain versement.';
 
   @override
-  String get pickupArrived => 'Prise en charge · arrivé';
+  String get pickupArrived => 'Prise en charge · sur place';
 
   @override
   String get pickupPickedUp => 'Prise en charge · passager à bord';
 
   @override
   String stopNumberDone(Object number) {
-    return 'Arrêt $number · fait';
+    return 'Arrêt $number · effectué';
   }
 
   @override
@@ -6089,10 +6111,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get stopWait => 'Attente à l’arrêt';
 
   @override
-  String get pickupWait => 'Attente à la prise en charge';
+  String get pickupWait => 'Attente sur le lieu de prise en charge';
 
   @override
-  String get riderDidnTShow => 'Passager absent';
+  String get riderDidnTShow => 'Le passager ne s’est pas présenté';
 
   @override
   String waitingFeePerMinuteFormattedMin(Object perMinuteFormatted) {
@@ -6101,7 +6123,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get riderIsStillNotHereNo =>
-      'Le passager n’est toujours pas là. Le montant d’absence est maintenant disponible.';
+      'Le passager ne s’est toujours pas présenté. Vous pouvez désormais appliquer les frais d’absence.';
 
   @override
   String get tripDetails => 'Détails de la course';
@@ -6110,7 +6132,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rideCompleted => 'Course terminée';
 
   @override
-  String get tripId => 'N° de course';
+  String get tripId => 'Identifiant de la course';
 
   @override
   String get trip => 'Course n°';
@@ -6119,7 +6141,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get riderPays => 'Le passager paie';
 
   @override
-  String get pickupFrom => 'Prise en charge à';
+  String get pickupFrom => 'Lieu de prise en charge';
 
   @override
   String get rideCost => 'Prix de la course';
@@ -6173,7 +6195,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextTripSecuredNextTripFare(Object nextTripFare) {
-    return 'Prochaine course assurée · $nextTripFare';
+    return 'Prochaine course confirmée · $nextTripFare';
   }
 
   @override
@@ -6188,10 +6210,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offerFare => 'Tarif';
 
   @override
-  String get offerPickup => 'Prise en charge';
+  String get offerPickup => 'Lieu de prise en charge';
 
   @override
-  String get offerDropoff => 'Dépose';
+  String get offerDropoff => 'Destination';
 
   @override
   String get offerPickupNearby => 'Prise en charge proche';
@@ -6216,7 +6238,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get offerAccept => 'Accepter';
 
   @override
-  String get offerOnYourWay => 'Sur votre trajet';
+  String get offerOnYourWay => 'Sur votre chemin';
 
   @override
   String get offerHide => 'Masquer l’offre';
@@ -6257,7 +6279,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tripGoToDropoff => 'Aller à la dépose';
+  String get tripGoToDropoff => 'Rejoindre la destination';
 
   @override
   String get cashPriceChanged =>
@@ -6298,7 +6320,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get waitingRulePickupFarAway => 'Prise en charge éloignée';
 
   @override
-  String get waitingRuleScheduledRide => 'Course planifiée';
+  String get waitingRuleScheduledRide => 'Course programmée';
 
   @override
   String get waitingRuleAirportPickup => 'Prise en charge à l’aéroport';
@@ -6388,8 +6410,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get promoCouldNotCopy =>
-      'Impossible de copier le code. Veuillez réessayer.';
+  String get promoCouldNotCopy => 'Impossible de copier le code. Réessayez.';
 
   @override
   String get promoPreviewTitle => 'Aperçu des promotions';
@@ -6467,7 +6488,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Un taux d’acceptation bas réduit vos chances de recevoir des demandes et peut nuire à votre position sur la plateforme. Un taux élevé vous apporte plus de courses et une expérience fiable pour les passagers.';
 
   @override
-  String get rcTriggerDroppedFar => 'Terminée loin de la dépose';
+  String get rcTriggerDroppedFar => 'Terminée loin de la destination';
 
   @override
   String get rcTriggerLongStop => 'Arrêt prolongé';
@@ -6626,7 +6647,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tipHighBoostNearby => 'Bonus élevé à proximité';
 
   @override
-  String get tipExpectTrip => 'Une course est attendue d’ici 2 à 5 min';
+  String get tipExpectTrip =>
+      'Une nouvelle course pourrait vous être proposée d’ici 2 à 5 min';
 
   @override
   String tipPromotionRides(String rides, String kr) {
@@ -6815,7 +6837,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get startCompanyFailed =>
-      'Impossible de créer l’entreprise. Réessayez.';
+      'Impossible de créer votre espace entreprise. Réessayez.';
 
   @override
   String get startCompanyAlreadyFleet =>
@@ -6888,7 +6910,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineCheckBrowser =>
-      'Autorisez-le dans les réglages du site du navigateur';
+      'Autorisez-le dans les paramètres du site du navigateur';
 
   @override
   String get offlineFixTurnOn => 'Activer';
@@ -6906,13 +6928,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineReasonAccountStatus =>
-      'Votre compte est en pause – contactez Movera';
+      'Votre compte est temporairement suspendu. Contactez Movera.';
 
   @override
-  String get tripSettings => 'Réglages du trajet';
+  String get tripSettings => 'Paramètres du trajet';
 
   @override
-  String get pickupMovedIsland => 'Le point de départ a été déplacé';
+  String get pickupMovedIsland => 'Le lieu de prise en charge a été déplacé';
 
   @override
   String waitingChargedSoFar(Object amount) {
@@ -6925,15 +6947,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get livePromotionsSoon =>
-      'Les campagnes ne sont pas encore connectées à l’appli. Les bonus de vos courses apparaissent dans vos gains.';
+      'Les campagnes ne sont pas encore connectées à l’application. Les bonus de vos courses apparaissent dans vos gains.';
 
   @override
   String get liveBankSoon =>
-      'L’ajout d’un compte de versement dans l’appli arrive bientôt.';
+      'L’ajout d’un compte de versement dans l’application arrive bientôt.';
 
   @override
   String get livePinSoon =>
-      'Movera décide par zone si un code PIN est demandé à la prise en charge. Dans ce cas, l’appli vous demande le code du passager à votre arrivée.';
+      'Movera décide par zone si un code PIN est demandé à la prise en charge. Dans ce cas, l’application vous demande le code du passager à votre arrivée.';
 
   @override
   String get liveAnalyticsSoon =>
@@ -6949,7 +6971,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextBookedRideAt(String time) {
-    return 'Suivante : course réservée à $time';
+    return 'Suivante : course programmée à $time';
   }
 
   @override
@@ -6971,8 +6993,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nextTripPopupBooked(String time, String pickup) {
-    return 'Course réservée à $time · $pickup. Allez à la prise en charge maintenant.';
+    return 'Course programmée à $time · $pickup. Allez à la prise en charge maintenant.';
   }
+
+  @override
+  String get waitingBeforePickup => 'Avant l’heure de prise en charge';
 
   @override
   String get docInsuranceLetter => 'Attestation d’assurance';
@@ -7321,7 +7346,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get vehDocsMissingCantDrive =>
-      'Ne peut pas rouler – téléversez les documents';
+      'Véhicule indisponible : documents à transmettre';
 
   @override
   String get docOpenGuide => 'Ouvrir le guide et envoyer';
@@ -7332,7 +7357,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get carFuel => 'Carburant';
+  String get carFuel => 'Motorisation';
 
   @override
   String carTypesFitHint(Object country) {
@@ -7380,7 +7405,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get carExtraNeedsRide =>
-      'Le rehausseur est une option : choisissez aussi un type de course.';
+      'Le rehausseur est une option supplémentaire : sélectionnez aussi une catégorie de véhicule.';
 
   @override
   String get carRulesNotMet =>
@@ -7418,7 +7443,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get carProblemExtraNeedsRide => 'seulement avec un type de course';
 
   @override
-  String get carProblemOther => 'ne convient pas';
+  String get carProblemOther => 'ne convient pas au trajet';
 
   @override
   String get docInvalidFileContent =>

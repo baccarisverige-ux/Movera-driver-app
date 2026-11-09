@@ -74,7 +74,7 @@ void main() {
       expect(DriverLanguage.current.value, 'sv');
       await DriverLanguage.choose('fr', store);
       expect(DriverLanguage.current.value, 'fr');
-      expect(tr.goOffline, 'Hors ligne');
+      expect(tr.goOffline, 'Passer hors ligne');
 
       // A new app start: memory is gone, the zone default comes first.
       DriverLanguage.resetForTest();
@@ -234,7 +234,7 @@ void main() {
     expect(DriverLanguage.current.value, 'fr');
     expect(find.text('FR · Français'), findsOneWidget);
     expect(find.text('Langue'), findsOneWidget);
-    expect(find.text('Réglages de l’app'), findsOneWidget);
+    expect(find.text('Paramètres de l’application'), findsOneWidget);
     await SettingsRepository.settle();
     final saved = await SettingsRepository().read(DriverLanguage.section);
     expect(saved[DriverLanguage.key], 'fr');

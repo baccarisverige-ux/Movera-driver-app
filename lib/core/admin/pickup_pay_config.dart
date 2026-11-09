@@ -1,3 +1,4 @@
+import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 
 /// Which kind of offer a pickup pay is worked out for. Admin switches each
@@ -194,8 +195,17 @@ class PickupPayConfig {
     kinds: <PickupPayOfferKind>{},
   );
 
-  /// The config in use. Mirrors the admin defaults until a backend sets it.
-  static PickupPayConfig current = const PickupPayConfig();
+  /// The config in use: the server's (`DriverAppConfig.pickupPay`) once it
+  /// came. Before that, L-a Q4 (owner 2026-11-06, "Show none until
+  /// server"): a live build pays no pickup pay at all ([disabled]); only
+  /// the demo shows the demo rates.
+  static PickupPayConfig get current =>
+      _current ?? (driverDemoFeatures ? const PickupPayConfig() : disabled);
+  static set current(PickupPayConfig value) => _current = value;
+  static PickupPayConfig? _current;
+
+  /// Forgets the server's config (tests; the next read is the default).
+  static void reset() => _current = null;
 
   /// Every kind on that admin can switch on.
   static const Set<PickupPayOfferKind> defaultKinds = <PickupPayOfferKind>{
