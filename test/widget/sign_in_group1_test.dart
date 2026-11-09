@@ -208,7 +208,7 @@ void main() {
         return _json(404, {'code': 'not_found', 'message': 'x'});
       });
       await _pumpSignIn(tester, _controller(server));
-      await _continueWith(tester, '70 555 12 34');
+      await _continueWith(tester, '70 174 06 34');
       await _settle(tester);
       expect(find.text(tr.authSignInRestricted), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('auth-join-waitlist')));
@@ -216,7 +216,7 @@ void main() {
       final sent = server.requests.last;
       expect(sent.url.path, AuthRepository.waitlistPath);
       expect(jsonDecode(sent.body), {
-        'phone': '+46705551234',
+        'phone': '+46701740634',
         'app': 'driver',
         'locale': 'en',
       });
