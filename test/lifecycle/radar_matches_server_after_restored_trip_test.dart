@@ -51,8 +51,10 @@ class _Gps implements DriverLocationRepository {
 }
 
 void main() {
-  testWidgets('W2 a trip restored after a restart ends: the app is offline '
-      'and the server is set offline too', (tester) async {
+  testWidgets('W2 a trip restored after a restart ends: the app is offline, '
+      'the server is set offline too and the sender stops (§74)', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     CompletionJournal.resetForTesting();
     IslandMessages.reset();
@@ -66,6 +68,8 @@ void main() {
     var driverStatus = 'on_trip';
     var driverVersion = 7;
     final offline = <Object?>[];
+    // §74 (2026-11-09): every POST /driver/location, to prove the sender stops.
+    final locationPosts = <DateTime>[];
     final events = StreamController<List<int>>();
     Map<String, Object?> trip() => {
       'tripId': 'trp_r',
@@ -117,6 +121,7 @@ void main() {
         case '/api/v1/driver/offers':
           return json({'items': <Object>[], 'nextCursor': null});
         case '/api/v1/driver/location':
+          locationPosts.add(DateTime.now());
           return json({'accepted': 1});
       }
       return json({'code': 'unavailable'}, 503);
@@ -132,7 +137,8 @@ void main() {
         tokens: tokens,
       ),
       location: _Gps(),
-      locationEvery: const Duration(hours: 1),
+      // Short ticks, so a sender left running shows up within a few frames.
+      locationEvery: const Duration(milliseconds: 300),
     );
     LiveDriverServices.instance = live;
     await tester.binding.setSurfaceSize(const Size(375, 812));
@@ -202,6 +208,15 @@ void main() {
       reason: 'the server still holds the driver online ($driverStatus)',
     );
     expect(driverStatus, 'offline');
+    // §74 (owner Q14, 2026-11-09): once the restored trip is over and the app
+    // is offline, the location sender stops: no POST /driver/location after.
+    final postsAtEnd = locationPosts.length;
+    await frames(30);
+    expect(
+      locationPosts.length,
+      postsAtEnd,
+      reason: 'the sender kept posting after the trip ended offline',
+    );
     unawaited(events.close());
     await tester.pumpWidget(const SizedBox.shrink());
     await live.dispose();

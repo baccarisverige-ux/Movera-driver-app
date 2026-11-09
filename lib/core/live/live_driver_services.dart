@@ -391,6 +391,10 @@ class LivePresence {
         if (serverOnline) _startOnline();
       case DriverOnlineStatus.offline || DriverOnlineStatus.suspended:
         OfflineAfterTrips.pending.value = false;
+        // §74 (owner Q14, 2026-11-09): the trip's sender stops the moment a
+        // trip ends with the app offline. Before, the sender started by the
+        // trip kept posting every 10 s with the driver "offline" (U17).
+        if (was == DriverOnlineStatus.onTrip && !_wantOnline) _reporter.stop();
         // Offline after a trip, on hold, the driving limit…: the server
         // hears it too. Home's own switch already asked ([goOffline]).
         if (_wantOnline) {
