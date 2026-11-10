@@ -144,10 +144,10 @@ void main() {
       ),
       categories: {},
     );
-    await _trip(tester, fare: '12,500 DT', waitSeconds: 6 * 60 + 30);
+    await _trip(tester, fare: '12.500 DT', waitSeconds: 6 * 60 + 30);
     final last = InMemoryWaybillRepository.instance.last!;
-    expect(last.fare, '12,950 DT');
-    expect(last.waitingFee, '0,450 DT');
+    expect(last.fare, '12.950 DT');
+    expect(last.waitingFee, '0.450 DT');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);

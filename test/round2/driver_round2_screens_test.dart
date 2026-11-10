@@ -166,7 +166,7 @@ void main() {
         driverShareNoShowPercent: 80,
       );
       await _sheet(tester, () => 7 * 60, terms);
-      expect(_amount(tester), '+0,600 DT');
+      expect(_amount(tester), '+0.600 DT');
       expect(
         find.byKey(const ValueKey('waiting-driver-share')),
         findsOneWidget,
@@ -175,7 +175,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const ValueKey('waiting-driver-share')))
             .data,
-        contains('80% of the no-show fee (4,000 DT)'),
+        contains('80% of the no-show fee (4.000 DT)'),
       );
     });
 

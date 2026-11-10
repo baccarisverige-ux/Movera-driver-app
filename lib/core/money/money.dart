@@ -100,7 +100,7 @@ class Money {
   };
 
   /// A display label in any known currency, e.g. `104,80 kr`, `24,50 €`,
-  /// `12,500 DT` or `+40 kr`: the currency comes from its symbol (or
+  /// `12.500 DT` or `+40 kr`: the currency comes from its symbol (or
   /// [currency] when it has none) and the fraction may have up to that
   /// currency's exponent of digits. Null when it is not an amount, or its
   /// symbol is another currency than [currency]. SEK reads exactly like
@@ -226,7 +226,11 @@ class Money {
     return Money(minorUnits: minorUnits - other.minorUnits, currency: currency);
   }
 
-  /// Local display: `104,80 kr` / `2 994,80 kr` / `12,500 DT`.
+  /// Decimal sign: a dot for the dinar (contract v0.18.59 §81), else a comma.
+  String get _decimalSign => currency == 'TND' ? '.' : ',';
+
+  /// Local display: `104,80 kr` / `2 994,80 kr` / `12.500 DT` /
+  /// `1 250.000 DT` (contract v0.18.59 §81: the dinar with a dot).
   String get formatted {
     final symbol = symbols[currency];
     if (symbol == null) {
@@ -234,14 +238,14 @@ class Money {
     }
     final parts = majorString.replaceFirst('-', '').split('.');
     final sign = minorUnits < 0 ? '−' : '';
-    return '$sign${_group(int.parse(parts[0]))},${parts[1]} $symbol';
+    return '$sign${_group(int.parse(parts[0]))}$_decimalSign${parts[1]} $symbol';
   }
 
   /// Like [formatted], without a zero fraction: `40 kr`, `12,50 kr`. Used
   /// where the app showed whole amounts (boosts, cash to collect).
   String get formattedShort {
     final full = formatted;
-    final zero = ',${'0' * exponent} ';
+    final zero = '$_decimalSign${'0' * exponent} ';
     return full.contains(zero) ? full.replaceFirst(zero, ' ') : full;
   }
 

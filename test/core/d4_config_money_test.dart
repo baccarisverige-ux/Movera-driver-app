@@ -20,7 +20,7 @@ void main() {
     final fee = terms.driverNoShowFee;
     expect(fee, const Money(minorUnits: 15600, currency: 'TND'));
     expect(fee.exponent, 3);
-    expect(fee.formatted, '15,600 DT');
+    expect(fee.formatted, '15.600 DT');
   });
 
   test('X12: category waiting rules apply by id and by driver label', () {
