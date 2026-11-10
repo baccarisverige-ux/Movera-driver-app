@@ -70,6 +70,7 @@ dependencies:
   # Decision 2 (driver group 3): battery saver warns once before going online.
   battery_plus: ^7.1.2
   flutter_webrtc: ^1.6.3
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   integration_test:
