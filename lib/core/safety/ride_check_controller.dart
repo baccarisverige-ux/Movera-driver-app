@@ -1,3 +1,4 @@
+import 'package:movera/core/safety/emergency_numbers.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -206,7 +207,9 @@ class RideCheckController extends ChangeNotifier {
   /// What the SOS sent with Call 112 came to; null before it has an answer.
   DriverSosOutcome? get sosOutcome => _sosOutcome;
 
-  Future<void> callEmergency() async {
+  /// v0.18.57 §79: dials [number] (a row of the country's list), else the
+  /// country's main emergency number.
+  Future<void> callEmergency({String? number}) async {
     if (!_answerable) return;
     switch (_step) {
       case RideCheckStep.main:
@@ -236,7 +239,9 @@ class RideCheckController extends ChangeNotifier {
       );
     }
     final result = await handoffEmergencyDial(
-      () => services.launch(RideCheckServices.emergencyNumber),
+      () => services.launch(
+        Uri(scheme: 'tel', path: number ?? EmergencyNumbers.main.number),
+      ),
     );
     if (_disposed) return;
     _dialOpened = result == EmergencyDialResult.opened;

@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_external_action.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/safety/emergency_numbers.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
@@ -28,8 +29,11 @@ class _EmergencyContact {
     required this.name,
     required this.phone,
     required this.relation,
+    this.builtIn = false,
   });
 
+  /// v0.18.57 §79: one of the country's emergency numbers, never saved.
+  final bool builtIn;
   final String name;
   final String phone;
   final String relation;
@@ -41,11 +45,17 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
 
   final _dialAction = OwnedExternalAction();
   final List<_EmergencyContact> _contacts = [
-    _EmergencyContact(
-      name: tr.emEmergencyServices112,
-      phone: '112',
-      relation: tr.emEmergency,
-    ),
+    // v0.18.57 §79: the built-in rows are the country's emergency numbers
+    // (112 only if the app never got a list).
+    for (final row in EmergencyNumbers.current)
+      _EmergencyContact(
+        name: EmergencyNumbers.received
+            ? row.localLabel
+            : tr.emEmergencyServices112,
+        phone: row.number,
+        relation: tr.emEmergency,
+        builtIn: true,
+      ),
   ];
 
   late final _settings = widget.repository ?? SettingsRepository();
@@ -72,7 +82,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       if (mounted) {
         setState(() {
           if (rows is List) {
-            _contacts.removeWhere((c) => c.phone != '112');
+            _contacts.removeWhere((c) => !c.builtIn);
             for (final row in rows) {
               if (row is Map &&
                   row['name'] is String &&
@@ -110,7 +120,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       RegExp(
         r'^\+?[0-9]{7,15}$',
       ).hasMatch(phone.replaceAll(RegExp(r'[\s()-]'), '')) ||
-      phone == '112';
+      EmergencyNumbers.current.any((row) => row.number == phone);
   Future<void> _addContact() async {
     if (!mounted ||
         ModalRoute.of(context)?.isCurrent != true ||
@@ -144,7 +154,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
             final updated = [..._contacts, contact];
             await _settings.save('contacts', {
               'rows': updated
-                  .where((c) => c.phone != '112')
+                  .where((c) => !c.builtIn)
                   .map(
                     (c) => {
                       'name': c.name,
