@@ -171,6 +171,18 @@ class _ServerNextOffers {
       present();
       return;
     }
+    if (result.outcome == ClaimOutcome.networkError) {
+      // IN-DL.9 #524 (a): no answer and the offer's local time is over.
+      // Not "gone": keep asking the server (same Idempotency-Key).
+      result = await _askUntilKnown(dispatch, offer);
+      if (!s.mounted || s._onTripRadarState != _OnTripRadarState.matching) {
+        return;
+      }
+      if (result.outcome == ClaimOutcome.networkError) {
+        _unknownAfterChecks();
+        return;
+      }
+    }
     _done.add(offer.id);
     _pending = null;
     s._rebuild(() {

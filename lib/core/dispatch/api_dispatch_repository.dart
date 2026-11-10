@@ -693,11 +693,22 @@ class ApiDispatchRepository implements DispatchRepository {
   /// until it knows ([_checkLostAccept]) instead of guessing.
   @override
   Future<ClaimResult> claimOffer(String offerId) async {
-    final offer = _find(offerId);
+    // An Accept still unanswered is asked again even after its offer
+    // left the feed (it ran out locally): only the server says it is gone.
+    final offer = _find(offerId) ?? _unanswered[offerId];
     if (offer == null) return const ClaimResult.unavailable();
-    final outcome = await _sendAccept(offerId, offer, offer.version);
-    return outcome ?? await _checkLostAccept(offerId, offer);
+    _unanswered[offerId] = offer;
+    final outcome =
+        await _sendAccept(offerId, offer, offer.version) ??
+        await _checkLostAccept(offerId, offer);
+    if (outcome.outcome != ClaimOutcome.networkError) {
+      _unanswered.remove(offerId);
+    }
+    return outcome;
   }
+
+  /// Offers whose Accept got no answer yet (IN-DL.9 #524 a).
+  final Map<String, RideOffer> _unanswered = <String, RideOffer>{};
 
   /// One Accept (and its one stale-version retry). Null: no answer.
   Future<ClaimResult?> _sendAccept(
