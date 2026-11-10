@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/settings/settings_repository.dart';
@@ -6,9 +6,8 @@ import 'package:movera/core/settings/settings_repository.dart';
 /// The driver app's language (Round 4, owner Q48/Q49).
 ///
 /// Until a language is picked the app speaks the phone's language
-/// ([applyDevice], contract v0.18.2 `auth.firstLanguage`); without that
-/// the zone's `languages.default.driver` (`sv` in Sweden, `fr` in France
-/// and Tunisia). The driver can pick another one (sign-in globe, Settings,
+/// ([applyDevice], owner 2026-11-10: French phone → fr, Swedish → sv,
+/// anything else → en). The driver can pick another one (sign-in globe, Settings,
 /// details step); that choice is saved on this phone and wins.
 abstract final class DriverLanguage {
   static const String section = 'language';
@@ -39,34 +38,49 @@ abstract final class DriverLanguage {
   static String? _firstOpen;
   static List<String> _available = supported;
 
-  /// Contract v0.18.2 `auth.firstLanguage.countryDefault`: the start
-  /// country's language when the phone speaks none of the app's.
-  static const Map<String, String> countryDefault = <String, String>{
-    'SE': 'sv',
-    'FR': 'fr',
-  };
-
   /// Contract v0.18.2 `auth.firstLanguage.fallback`.
   static const String fallback = 'en';
 
-  /// The language before any pick (`auth.firstLanguage`, owner
-  /// 2026-10-30 "Phone language (Recommended)"): the phone's language when
-  /// it is sv, fr or en; else the start country's ([countryDefault]);
-  /// else English.
+  /// The language before any pick (owner 2026-11-10): the phone's
+  /// language when it is sv, fr or en; anything else is English. The start
+  /// country no longer decides (a French phone in Tunis opened in Swedish).
   static String firstLanguage({String? phoneLanguage, String? startCountry}) =>
-      _usable(phoneLanguage ?? '') ??
-      countryDefault[startCountry?.trim().toUpperCase()] ??
-      fallback;
+      _usable(phoneLanguage ?? '') ?? fallback;
 
   /// The app opens in the phone's language ([firstLanguage]) until the
   /// person picks one (the globe button, Settings, the details step). The
   /// picked language is kept and wins.
   static void applyDevice({String? phoneLanguage, String? startCountry}) {
-    _firstOpen = firstLanguage(
-      phoneLanguage: phoneLanguage,
-      startCountry: startCountry,
-    );
+    _firstOpen = firstLanguage(phoneLanguage: phoneLanguage);
     _apply();
+  }
+
+  static _DeviceLocaleObserver? _observer;
+
+  /// Follows the phone's language: on Android the engine can report the
+  /// locales only after `main` has read them, so a later report (or a
+  /// change in the phone's settings) is applied too. A pick still wins.
+  static void followDevice([String? Function()? read]) {
+    final reader =
+        read ??
+        () => WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    final old = _observer;
+    if (old != null) WidgetsBinding.instance.removeObserver(old);
+    final observer = _DeviceLocaleObserver((locales) {
+      String? code = locales == null || locales.isEmpty
+          ? null
+          : locales.first.languageCode;
+      if (code == null) {
+        try {
+          code = reader();
+        } catch (_) {
+          code = null;
+        }
+      }
+      applyDevice(phoneLanguage: code);
+    });
+    _observer = observer;
+    WidgetsBinding.instance.addObserver(observer);
   }
 
   /// The zone's default for the driver app.
@@ -139,6 +153,9 @@ abstract final class DriverLanguage {
     _available = supported;
     _choice = null;
     _firstOpen = null;
+    final old = _observer;
+    if (old != null) WidgetsBinding.instance.removeObserver(old);
+    _observer = null;
     _apply();
   }
 
@@ -152,4 +169,13 @@ abstract final class DriverLanguage {
     DriverAppTexts.language = code;
     current.value = code;
   }
+}
+
+class _DeviceLocaleObserver with WidgetsBindingObserver {
+  _DeviceLocaleObserver(this._onChange);
+
+  final void Function(List<Locale>? locales) _onChange;
+
+  @override
+  void didChangeLocales(List<Locale>? locales) => _onChange(locales);
 }

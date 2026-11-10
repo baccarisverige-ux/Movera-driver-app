@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
@@ -112,11 +113,10 @@ void main() {
   });
 
   group('auth.firstLanguage', () {
-    test('the phone\'s language when sv, fr or en; else the start '
-        'country\'s; else English', () {
+    test('the phone\'s language when sv, fr or en; else English (owner '
+        '2026-11-10)', () {
       final rule = contract['firstLanguage'] as Map<String, dynamic>;
       expect(rule['supported'], unorderedEquals(DriverLanguage.supported));
-      expect(rule['countryDefault'], DriverLanguage.countryDefault);
       expect(rule['fallback'], DriverLanguage.fallback);
 
       String first(String? phone, String? country) =>
@@ -127,8 +127,10 @@ void main() {
       expect(first('fr', 'SE'), 'fr');
       expect(first('en', 'SE'), 'en');
       expect(first('sv', 'FR'), 'sv');
-      expect(first('de', 'FR'), 'fr');
-      expect(first('ar', 'SE'), 'sv');
+      expect(first('de', 'FR'), 'en');
+      expect(first('ar', 'SE'), 'en');
+      expect(first('fr', 'TN'), 'fr');
+      expect(first('', 'SE'), 'en');
       expect(first('de', null), 'en');
       expect(first(null, null), 'en');
     });
@@ -143,7 +145,29 @@ void main() {
       DriverLanguage.applyDevice(phoneLanguage: 'en', startCountry: 'SE');
       expect(DriverLanguage.current.value, 'en');
       DriverLanguage.applyDevice(phoneLanguage: 'de', startCountry: 'FR');
+      expect(DriverLanguage.current.value, 'en');
+    });
+
+    testWidgets('a phone language reported after start (Android) is '
+        'followed; a pick still wins', (tester) async {
+      DriverLanguage.resetForTest();
+      SharedPreferences.setMockInitialValues({});
+      DriverLanguage.applyZone(const DriverHomeAdminContentService().languages);
+      // main(): the engine has not reported the locale yet.
+      DriverLanguage.applyDevice(phoneLanguage: '', startCountry: 'SE');
+      expect(DriverLanguage.current.value, 'en');
+      DriverLanguage.followDevice();
+      tester.platformDispatcher.localesTestValue = const [Locale('fr', 'TN')];
       expect(DriverLanguage.current.value, 'fr');
+      tester.platformDispatcher.localesTestValue = const [Locale('sv', 'SE')];
+      expect(DriverLanguage.current.value, 'sv');
+      tester.platformDispatcher.localesTestValue = const [Locale('de', 'DE')];
+      expect(DriverLanguage.current.value, 'en');
+      await DriverLanguage.choose('fr', SettingsRepository());
+      tester.platformDispatcher.localesTestValue = const [Locale('sv', 'SE')];
+      expect(DriverLanguage.current.value, 'fr');
+      tester.platformDispatcher.clearLocalesTestValue();
+      DriverLanguage.resetForTest();
     });
 
     test('a picked language is kept and wins over the phone', () async {
