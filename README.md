@@ -1,7 +1,7 @@
 # Movera Driver
 
 Driver frontend for pickup, navigation, and delivery (Flutter; bundle id `se.movera.driver`,
-unchanged). Contract copy in `contracts/` (version **0.18.54**).
+unchanged). Contract copy in `contracts/` (version **0.18.55**).
 
 Two builds come from this repository. The **live** build
 (`--dart-define=MOVERA_AUTH_REQUIRED=true --dart-define=MOVERA_API_BASE_URL=<server>`) signs in
