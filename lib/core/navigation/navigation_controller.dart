@@ -184,6 +184,15 @@ class NavigationController extends ChangeNotifier {
   /// Faster than this between two fixes is a GPS jump, not driving.
   static const double maxPlausibleSpeedMetersPerSecond = 70;
 
+  /// BrowserStack Tunis 2026-11-10: a far fix held back as a GPS jump
+  /// that no later fix contradicts within this time is the car's real
+  /// position (a location set once, GPS back far away): the caller gives
+  /// it again ([heldJump]) so the map does not stay frozen.
+  static const heldJumpConfirmAfter = Duration(seconds: 3);
+
+  /// The far fix held back as a possible GPS jump, if any.
+  DriverLocation? get heldJump => _heldJump;
+
   /// Routes replaced because the driver left the route. The island says
   /// "Route updated" only when this grows, never after a silent refresh.
   int get reroutes => _reroutes;

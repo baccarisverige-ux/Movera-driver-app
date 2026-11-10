@@ -631,6 +631,7 @@ class _AcceptRideState extends State<AcceptRide>
   DriverRealtimeEvent? _pendingProjection, _ownCompletionEcho;
   bool _drainingProjection = false;
   Timer? _projectionRetry;
+  Timer? _heldJumpConfirm;
   String _vehicleLabel = WaybillRecord.vehicleUnavailable;
   String _vehiclePlate = WaybillRecord.plateUnavailable;
 
@@ -877,6 +878,7 @@ class _AcceptRideState extends State<AcceptRide>
     _browsePulse.dispose();
     _locationEpoch++;
     _projectionRetry?.cancel();
+    _heldJumpConfirm?.cancel();
     _sheetTrace.dispose();
     _rideSheetPositionGuardTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
