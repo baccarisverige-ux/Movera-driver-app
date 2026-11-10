@@ -37,6 +37,21 @@ class PushOpen {
     return id == null || id.isEmpty ? null : id;
   }
 
+  static final RegExp _callLink = RegExp(
+    r'^movera-driver://trips/([^/?#]+)/call$',
+  );
+
+  /// Contract v0.18.56 §78 `inAppCalls.push` (owner Q79): the trip of a
+  /// `call_ringing` push (`movera-driver://trips/{tripId}/call`), else
+  /// null. The tap brings back the trip screen; its stream brings the
+  /// incoming-call sheet while the call still rings (a call that no
+  /// longer rings shows nothing).
+  String? get callTripId {
+    final match = _callLink.firstMatch(deepLink?.trim() ?? '');
+    final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
+    return id == null || id.isEmpty ? null : id;
+  }
+
   static final RegExp _supportLink = RegExp(
     r'^movera-driver://support/([^/?#]+)$',
   );
