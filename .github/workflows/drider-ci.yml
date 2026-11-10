@@ -130,8 +130,10 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
-      - name: Web size budget (audit Phase 7; baseline 5,631,828 B raw, 1,595,503 B gzip)
-        run: python3 tool/check_web_budget.py build/web --main-raw 6200000 --main-gzip 1760000
+      # Step 50 / U4 (owner Q51): budget = 2026-11-10 size + 2 % from
+      # tool/web_budget.json; a breach warns until 2026-11-17, then fails.
+      - name: Web size budget (demo variant)
+        run: python3 tool/check_web_budget.py build/web --variant demo
 
       - name: Upload verification evidence
         if: always()
@@ -200,6 +202,11 @@ jobs:
           # B9: the wasm build keeps the JS fallback next to it.
           test -f build/web/main.dart.wasm
           test -f build/web/main.dart.js
+
+      # Step 50 / U4: the live build has its own budget (it carries the
+      # live-only code the demo tree-shakes; see tool/web_budget.json).
+      - name: Web size budget (live variant)
+        run: python3 tool/check_web_budget.py build/web --variant live
 
   android-release:
     name: Android release signing and preview
