@@ -11803,6 +11803,12 @@ abstract class AppLocalizations {
   /// **'Before the pickup time'**
   String get waitingBeforePickup;
 
+  /// Contract v0.18.58 §80 (arrivedDistance.texts.driverFar): Collect cash sheet when the complete preview says earlyEnd; m = distanceToDropoffMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'You are {m} m from the destination – the trip ends early'**
+  String arrivedFarWarning(int m);
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:

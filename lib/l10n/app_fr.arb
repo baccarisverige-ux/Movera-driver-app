@@ -1947,6 +1947,7 @@
   "nextTripPopupLive": "{rider} vous attend à {pickup}. Allez-y maintenant.",
   "nextTripPopupBooked": "Course programmée à {time} · {pickup}. Allez à la prise en charge maintenant.",
   "waitingBeforePickup": "Avant l’heure de prise en charge",
+  "arrivedFarWarning": "Vous êtes à {m} m de la destination – la course se termine plus tôt",
   "docInsuranceLetter": "Attestation d’assurance",
   "docTaxiDriverLicense": "Carte professionnelle de taxi",
   "docTaxiLicenseShort": "Carte taxi",
