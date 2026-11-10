@@ -8830,6 +8830,18 @@ abstract class AppLocalizations {
   /// **'Trip sharing is coming soon.'**
   String get safetyTripSharingComingSoon;
 
+  /// Contract v0.18.57 §79 emergencyNumbers.texts.callNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Call {label} {number}'**
+  String emergencyCallNumber(String label, String number);
+
+  /// Contract v0.18.57 §79: label of the 112 fallback row.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency number'**
+  String get emergencyGeneralLabel;
+
   /// No description provided for @call112.
   ///
   /// In en, this message translates to:

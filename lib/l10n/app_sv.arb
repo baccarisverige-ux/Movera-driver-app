@@ -1453,6 +1453,8 @@
   "safetyCall112": "Ring 112",
   "safetyAudioComingSoon": "Ljudinspelning kommer snart.",
   "safetyTripSharingComingSoon": "Delning av resa kommer snart.",
+  "emergencyCallNumber": "Ring {label} {number}",
+  "emergencyGeneralLabel": "Nödnummer",
   "call112": "Ring 112",
   "call112OnYourPhone": "Ring 112 från din telefon",
   "call112IfYouNeedHelp": "\nRing 112 om du behöver hjälp nu.",

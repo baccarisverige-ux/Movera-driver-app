@@ -1,4 +1,8 @@
+import 'dart:ui' show Locale;
+
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/l10n/app_localizations.dart' show lookupAppLocalizations;
 
 /// One row of `DriverAppConfig.emergencyNumbers` (contract v0.18.57 §79,
 /// `contract.json#emergencyNumbers.item`).
@@ -28,14 +32,8 @@ class EmergencyNumber {
       label[DriverAppTexts.language] ?? label['en'] ?? number;
 
   /// `emergencyNumbers.texts.callNumber`: "Call {label} {number}".
-  String get callText {
-    final template =
-        EmergencyNumbers.callNumberTexts[DriverAppTexts.language] ??
-        EmergencyNumbers.callNumberTexts['en']!;
-    return template
-        .replaceAll('{label}', localLabel)
-        .replaceAll('{number}', number);
-  }
+  /// The text lives in lib/l10n/parts/safety.*.arb (emergencyCallNumber).
+  String get callText => tr.emergencyCallNumber(localLabel, number);
 
   static EmergencyNumber? fromJson(Object? json) {
     if (json is! Map) return null;
@@ -61,25 +59,18 @@ class EmergencyNumber {
 /// the last list works offline; [fallback] (112) only if none was ever
 /// received.
 abstract final class EmergencyNumbers {
-  /// `contract.json#emergencyNumbers.texts.callNumber`.
-  static const callNumberTexts = {
-    'sv': 'Ring {label} {number}',
-    'fr': 'Appeler {label} {number}',
-    'en': 'Call {label} {number}',
-  };
-
   /// "A country with no default and nothing saved shows 112."
-  static const fallback = [
+  /// The label comes from lib/l10n (emergencyGeneralLabel).
+  static final List<EmergencyNumber> fallback = List.unmodifiable([
     EmergencyNumber(
       kind: 'general',
       number: '112',
       label: {
-        'sv': 'Nödnummer',
-        'fr': 'Numéro d’urgence',
-        'en': 'Emergency number',
+        for (final code in const ['sv', 'fr', 'en'])
+          code: lookupAppLocalizations(Locale(code)).emergencyGeneralLabel,
       },
     ),
-  ];
+  ]);
 
   static List<EmergencyNumber> current = fallback;
 

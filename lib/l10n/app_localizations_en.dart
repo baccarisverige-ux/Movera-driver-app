@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5138,6 +5137,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get safetyTripSharingComingSoon => 'Trip sharing is coming soon.';
+
+  @override
+  String emergencyCallNumber(String label, String number) {
+    return 'Call $label $number';
+  }
+
+  @override
+  String get emergencyGeneralLabel => 'Emergency number';
 
   @override
   String get call112 => 'Call 112';
