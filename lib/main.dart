@@ -98,6 +98,7 @@ Future<void> main() async {
     phoneLanguage: deviceLanguage(),
     startCountry: defaultPhoneCountry().iso,
   );
+  DriverLanguage.followDevice(deviceLanguage);
   try {
     await DriverLanguage.restore().timeout(const Duration(seconds: 2));
   } catch (_) {
