@@ -151,6 +151,7 @@ extension _AcceptRideTripDrive on _AcceptRideState {
     }
     // A far GPS outlier: keep the car, camera and route where they are.
     if (!_navigation.setVehicle(location)) {
+      _confirmHeldJumpLater(location);
       return;
     }
     final next = location.point.toLatLng();
@@ -194,6 +195,23 @@ extension _AcceptRideTripDrive on _AcceptRideState {
     if (mounted && _fixView != shown) {
       _rebuild(() {});
     }
+  }
+
+  /// BrowserStack Tunis 2026-11-10: a far fix that no later fix
+  /// contradicts is applied again after a short wait (the controller then
+  /// takes it), instead of freezing the car until the screen reopens.
+  void _confirmHeldJumpLater(DriverLocation location) {
+    _heldJumpConfirm?.cancel();
+    final epoch = _locationEpoch;
+    _heldJumpConfirm = Timer(NavigationController.heldJumpConfirmAfter, () {
+      if (!mounted ||
+          _liveUpdatesPaused ||
+          epoch != _locationEpoch ||
+          !identical(_navigation.heldJump, location)) {
+        return;
+      }
+      unawaited(_applyDriverPosition(location));
+    });
   }
 
   Future<void> _refreshRoadRoute({bool force = false}) async {
