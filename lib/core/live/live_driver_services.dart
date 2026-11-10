@@ -244,6 +244,8 @@ class LiveDriverServices {
     // Contract v0.18.3 R7: push is set up once there is a session.
     afterSignedIn?.call();
     unawaited(zones.start());
+    // Owner 2026-11-10 (§21): and again when the app comes back.
+    zones.watchResume();
     unawaited(events.refresh());
     unawaited(
       config.start().then((_) {
