@@ -49,5 +49,7 @@
   "rrNewTripsAppear": "Les nouvelles courses s’afficheront ici dès que le radar trouvera des demandes autour de vous.",
   "safetyCall112": "Appeler le 112",
   "safetyAudioComingSoon": "L’enregistrement audio arrive bientôt.",
-  "safetyTripSharingComingSoon": "Le partage de course arrive bientôt."
+  "safetyTripSharingComingSoon": "Le partage de course arrive bientôt.",
+  "emergencyCallNumber": "Appeler {label} {number}",
+  "emergencyGeneralLabel": "Numéro d’urgence"
 }

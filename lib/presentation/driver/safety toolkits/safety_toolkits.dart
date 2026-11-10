@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
+import 'package:movera/core/safety/emergency_numbers.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -34,6 +35,7 @@ class SafetyToolKits extends StatefulWidget {
     super.key,
     this.duringTrip = false,
     this.launchEmergencyDial,
+    this.dialNumber,
     this.sendSos,
     this.web = kIsWeb,
   });
@@ -43,6 +45,10 @@ class SafetyToolKits extends StatefulWidget {
   final bool duringTrip;
 
   final Future<bool> Function()? launchEmergencyDial;
+
+  /// v0.18.57 §79: opens the dialer with one of the country's emergency
+  /// numbers (`tel:<number>` by default).
+  final Future<bool> Function(String number)? dialNumber;
 
   /// Contract v0.7.0: the SOS to Movera ([DriverSos.fromApp] by default).
   final Future<DriverSosOutcome> Function()? sendSos;
@@ -69,6 +75,19 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
   /// is a failure or a feature that is not there (driver-93).
   bool _statusOk = false;
   bool _emergencyInFlight = false;
+
+  /// v0.18.57 §79: the SOS reached Movera; the other numbers show.
+  bool _sosSent = false;
+
+  Future<bool> _launch(String number) {
+    final dial = widget.dialNumber;
+    if (dial != null) return dial(number);
+    final legacy = widget.launchEmergencyDial;
+    if (legacy != null && number == EmergencyNumbers.main.number) {
+      return legacy();
+    }
+    return launchUrl(Uri(scheme: 'tel', path: number));
+  }
 
   bool get _ownsRoute => mounted && ModalRoute.of(context)?.isCurrent == true;
 
@@ -126,10 +145,11 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
       // Both at once: the dialer does not wait for the network.
       final alert = (widget.sendSos ?? DriverSos.fromApp)();
       final dial = await handoffEmergencyDial(
-        widget.launchEmergencyDial ?? () => launchUrl(Uri.parse('tel:112')),
+        () => _launch(EmergencyNumbers.main.number),
       );
       final outcome = await alert;
       if (!_ownsRoute) return;
+      if (outcome == DriverSosOutcome.sent) setState(() => _sosSent = true);
       final dialed = dial == EmergencyDialResult.opened;
       _showMessage(switch (outcome) {
         // A browser reports a tel: launch as opened whether or not a dialer
@@ -150,12 +170,12 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
 
   /// No trip: "Call 112" opens the phone's dialer; nothing goes to Movera
   /// (the server takes an SOS only during a live trip).
-  Future<void> _call112() async {
+  Future<void> _call112([String? number]) async {
     if (!_ownsRoute || _emergencyInFlight) return;
     _emergencyInFlight = true;
     try {
       final dial = await handoffEmergencyDial(
-        widget.launchEmergencyDial ?? () => launchUrl(Uri.parse('tel:112')),
+        () => _launch(number ?? EmergencyNumbers.main.number),
       );
       if (dial != EmergencyDialResult.opened) {
         _showMessage(tr.couldNotOpenDialerDial112);
@@ -165,13 +185,35 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
     }
   }
 
-  Widget _call112Button() => Material(
-    key: const ValueKey('safety-call-112'),
+  /// v0.18.57 §79: one call button per emergency number of the country.
+  Widget _callButtons() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final (i, row) in EmergencyNumbers.current.indexed) ...[
+        if (i > 0) const SizedBox(height: 10),
+        _call112Button(row),
+      ],
+    ],
+  );
+
+  /// The extra numbers on "SOS sent".
+  Widget _otherNumbers() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final row in EmergencyNumbers.others) ...[
+        const SizedBox(height: 10),
+        _call112Button(row, key: ValueKey('sos-call-${row.number}')),
+      ],
+    ],
+  );
+
+  Widget _call112Button(EmergencyNumber row, {Key? key}) => Material(
+    key: key ?? ValueKey('safety-call-${row.number}'),
     color: RideCheckStyle.red,
     borderRadius: BorderRadius.circular(18),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
-      onTap: _call112,
+      onTap: () => _call112(row.number),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -187,7 +229,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr.safetyCall112,
+                    EmergencyNumbers.labelFor(row, tr.safetyCall112),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -589,7 +631,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
               const SizedBox(height: 12),
               _header(context),
               const SizedBox(height: 12),
-              if (widget.duringTrip) _sosButton() else _call112Button(),
+              if (widget.duringTrip) _sosButton() else _callButtons(),
+              if (widget.duringTrip && _sosSent) _otherNumbers(),
               if (_status != null) ...[
                 const SizedBox(height: 10),
                 _statusBanner(),

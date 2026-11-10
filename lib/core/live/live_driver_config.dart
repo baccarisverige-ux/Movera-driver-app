@@ -1,3 +1,4 @@
+import 'package:movera/core/safety/emergency_numbers.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -127,7 +128,11 @@ class LiveDriverConfig extends ChangeNotifier {
   Future<void> start() async {
     try {
       final cached = await _cache.read();
-      if (cached != null) _use(DriverAppConfig.fromJson(cached));
+      if (cached != null) {
+        // v0.18.57 §79: the last emergency numbers, offline too.
+        EmergencyNumbers.accept(cached['emergencyNumbers']);
+        _use(DriverAppConfig.fromJson(cached));
+      }
     } catch (error) {
       DriverLog.warn('driver_config.cache_read_failed: $error');
     }
@@ -172,6 +177,8 @@ class LiveDriverConfig extends ChangeNotifier {
       final raw = jsonDecode(response.body);
       if (raw is! Map || raw['version'] is! int) return _current;
       final document = Map<String, dynamic>.from(raw);
+      // v0.18.57 §79: the country's emergency numbers.
+      EmergencyNumbers.accept(document['emergencyNumbers']);
       if (_use(DriverAppConfig.fromJson(document))) {
         try {
           await _cache.write(document);

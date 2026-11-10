@@ -49,5 +49,7 @@
   "rrNewTripsAppear": "Nya resor visas här när radarn hittar förfrågningar runt dig.",
   "safetyCall112": "Ring 112",
   "safetyAudioComingSoon": "Ljudinspelning kommer snart.",
-  "safetyTripSharingComingSoon": "Delning av resa kommer snart."
+  "safetyTripSharingComingSoon": "Delning av resa kommer snart.",
+  "emergencyCallNumber": "Ring {label} {number}",
+  "emergencyGeneralLabel": "Nödnummer"
 }

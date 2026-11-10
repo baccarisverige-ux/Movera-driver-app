@@ -3944,6 +3944,22 @@
   },
   "safetyAudioComingSoon": "Audio recording is coming soon.",
   "safetyTripSharingComingSoon": "Trip sharing is coming soon.",
+  "emergencyCallNumber": "Call {label} {number}",
+  "@emergencyCallNumber": {
+    "description": "Contract v0.18.57 §79 emergencyNumbers.texts.callNumber.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "emergencyGeneralLabel": "Emergency number",
+  "@emergencyGeneralLabel": {
+    "description": "Contract v0.18.57 §79: label of the 112 fallback row."
+  },
   "call112": "Call 112",
   "call112OnYourPhone": "Call 112 on your phone",
   "call112IfYouNeedHelp": "\nCall 112 if you need help now.",

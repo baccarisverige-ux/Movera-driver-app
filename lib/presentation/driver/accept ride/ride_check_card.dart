@@ -1,3 +1,4 @@
+import 'package:movera/core/safety/emergency_numbers.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/safety/driver_sos.dart';
@@ -501,9 +502,13 @@ class RideCheckCard extends StatelessWidget {
         // otherwise one above the other, so "Call 112" keeps its number.
         LayoutBuilder(
           builder: (context, constraints) {
+            final callLabel = EmergencyNumbers.labelFor(
+              EmergencyNumbers.main,
+              tr.call112,
+            );
             final call = _button(
               key: const ValueKey('ride-check-call-112'),
-              label: tr.call112,
+              label: callLabel,
               icon: AppAssets.solarPhoneCalling,
               background: RideCheckStyle.red,
               foreground: Colors.white,
@@ -519,7 +524,7 @@ class RideCheckCard extends StatelessWidget {
             );
             final room = (constraints.maxWidth - 9) / 2 - _buttonIconRoom;
             final scaler = MediaQuery.textScalerOf(context);
-            if (_labelFits(tr.call112, room, scaler) &&
+            if (_labelFits(callLabel, room, scaler) &&
                 _labelFits(tr.iMOk, room, scaler)) {
               return Row(
                 children: [
@@ -535,6 +540,18 @@ class RideCheckCard extends StatelessWidget {
             );
           },
         ),
+        // v0.18.57 §79: "Need help" offers every number of the country.
+        for (final row in EmergencyNumbers.others) ...[
+          const SizedBox(height: 9),
+          _button(
+            key: ValueKey('ride-check-call-${row.number}'),
+            label: row.callText,
+            icon: AppAssets.solarPhoneCalling,
+            background: RideCheckStyle.red,
+            foreground: Colors.white,
+            onTap: () => c.callEmergency(number: row.number),
+          ),
+        ],
         // Owner decision 10: hidden while the option is off, except a
         // recording already under way, which keeps its Stop.
         if (_RecordAudio.shown(c)) ...[
@@ -873,7 +890,10 @@ class RideCheckCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tr.call112Now,
+                      EmergencyNumbers.labelFor(
+                        EmergencyNumbers.main,
+                        tr.call112Now,
+                      ),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
