@@ -458,7 +458,7 @@ class WaybillPayment {
     String? waitingFee,
   }) {
     // driver-32: "1 234,50 kr" has a thousands group; read the whole label.
-    // driver-r4-15: a "24,75 €" or "12,950 DT" fare keeps its currency.
+    // driver-r4-15: a "24,75 €" or "12.950 DT" fare keeps its currency.
     final money = _money(fare);
     if (money == null) return null;
     final fareOre = money.minorUnits;
@@ -513,7 +513,7 @@ class WaybillPayment {
   String? get bonus => _bonusOre > 0 ? _format(_bonusOre) : null;
 
   /// [label] as money: a whole label in any currency ("1 234,50 kr",
-  /// "126.75 kr", "12,950 DT"), else the first amount in it, in the zone's
+  /// "126.75 kr", "12.950 DT"), else the first amount in it, in the zone's
   /// currency (Job 3 / L12; a two-decimal amount).
   static Money? _money(String label) {
     final money = Money.parseLabel(label);

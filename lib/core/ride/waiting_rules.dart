@@ -122,7 +122,7 @@ class WaitingTerms {
     );
   }
 
-  /// [label] (e.g. "104,80 kr", "24,50 €", "12,500 DT") with [fee]
+  /// [label] (e.g. "104,80 kr", "24,50 €", "12.500 DT") with [fee]
   /// added, in the same display form. The label is read in the fee's
   /// currency with that currency's exponent. Unchanged with no fee, or
   /// when the label is not money in the fee's currency.

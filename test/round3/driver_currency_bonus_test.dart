@@ -44,7 +44,7 @@ void main() {
         const Money(minorUnits: 2450, currency: 'EUR'),
       );
       expect(
-        Money.parseLabel('12,500 DT'),
+        Money.parseLabel('12.500 DT'),
         const Money(minorUnits: 12500, currency: 'TND'),
       );
       expect(
@@ -84,12 +84,12 @@ void main() {
       expect(WaitingTerms.addFee('24,00 €', fee), '24,75 €');
     });
 
-    test('TND: 90 s at 0,300 DT / min, three decimals', () {
+    test('TND: 90 s at 0.300 DT / min, three decimals', () {
       final fee = terms(
         const Money(minorUnits: 300, currency: 'TND'),
       ).driverWaitingFee(90);
       expect(fee, const Money(minorUnits: 450, currency: 'TND'));
-      expect(WaitingTerms.addFee('12,500 DT', fee), '12,950 DT');
+      expect(WaitingTerms.addFee('12.500 DT', fee), '12.950 DT');
     });
 
     test('a fare in another currency than the fee is left alone', () {

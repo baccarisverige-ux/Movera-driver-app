@@ -73,7 +73,7 @@ void main() {
     );
     expect(
       const Money(minorUnits: 12500, currency: 'TND').formatted,
-      '12,500 DT',
+      '12.500 DT',
     );
     expect(
       const Money(minorUnits: 4000, currency: 'SEK').formattedShort,
@@ -83,5 +83,32 @@ void main() {
       const Money(minorUnits: 4050, currency: 'SEK').formattedShort,
       '40,50 kr',
     );
+  });
+
+  // Contract v0.18.59 §81 (owner 2026-11-10): the dinar is written with a
+  // dot, 3 decimals, a space between thousands; SEK and EUR keep the comma.
+  test('TND with a dot: 12.350 DT, 1 250.000 DT', () {
+    expect(
+      const Money(minorUnits: 12350, currency: 'TND').formatted,
+      '12.350 DT',
+    );
+    expect(
+      const Money(minorUnits: 1250000, currency: 'TND').formatted,
+      '1 250.000 DT',
+    );
+    expect(
+      const Money(minorUnits: 2000, currency: 'TND').formattedShort,
+      '2 DT',
+    );
+    expect(
+      const Money(minorUnits: 12350, currency: 'TND').formattedShort,
+      '12.350 DT',
+    );
+    expect(Money.parseLabel('12.350 DT')?.amountMinor, 12350);
+    expect(
+      const Money(minorUnits: 12675, currency: 'SEK').formatted,
+      '126,75 kr',
+    );
+    expect(const Money(minorUnits: 741, currency: 'EUR').formatted, '7,41 €');
   });
 }

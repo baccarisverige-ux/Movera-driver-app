@@ -120,14 +120,14 @@ void main() {
       expect(config.currency, 'TND');
       expect(config.timeZone, 'Africa/Tunis');
       final terms = config.waiting.termsFor(category: 'Movera');
-      expect(terms.noShowFee.formatted, '19,500 DT');
-      expect(terms.driverNoShowFee.formatted, '15,600 DT');
+      expect(terms.noShowFee.formatted, '19.500 DT');
+      expect(terms.driverNoShowFee.formatted, '15.600 DT');
       expect(terms.driverNoShowFee.currency, 'TND');
       final premium = config.waiting.termsFor(category: 'Premium');
-      expect(premium.perMinute.formatted, '5,100 DT');
+      expect(premium.perMinute.formatted, '5.100 DT');
       expect(premium.freeMinutes, 5);
       // G6: a far pickup's fee is the server's (no app rule).
-      expect(config.waiting.termsFor().noShowFee.formatted, '19,500 DT');
+      expect(config.waiting.termsFor().noShowFee.formatted, '19.500 DT');
     });
 
     test('apply() puts the zone rules in use', () {
@@ -306,7 +306,7 @@ void main() {
     for (final (zone, country, lang, limit, max) in const [
       ('Z001', 'SE', 'sv', '200,00 kr', '1 000,00 kr'),
       ('FR-PC', 'FR', 'fr', '20,00 €', '95,00 €'),
-      ('TN-TC', 'TN', 'fr', '60,000 DT', '300,000 DT'),
+      ('TN-TC', 'TN', 'fr', '60.000 DT', '300.000 DT'),
     ]) {
       test('$zone admin export', () {
         final config = _admin(zone);
