@@ -46,6 +46,10 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_chat_card.dart';
+import 'package:movera/core/chat/chat_message_alert.dart';
+import 'package:movera/core/live/live_trip_chat.dart';
+import 'package:movera/core/live/trip_chat_options.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
@@ -566,6 +570,9 @@ class _AcceptRideState extends State<AcceptRide>
   late final DriverRealtime _realtime;
   late final bool _ownsRealtime;
   bool _riderOnTheWay = false;
+  late final TripChatAlerts? _chatAlerts = _AcceptRideTripChat(
+    this,
+  )._newChatAlerts();
   bool _handlingRiderCancellation = false;
   Timer? _nextTripRadarDemoTimer;
   Timer? _nextTripRadarMatchTimer;
@@ -690,6 +697,7 @@ class _AcceptRideState extends State<AcceptRide>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _chatAlerts?.start();
     // A RideCheck demo trip drives its own scripted GPS (DemoTripDrive).
     _locationService =
         DemoTripDrive.forTrip(
@@ -867,6 +875,7 @@ class _AcceptRideState extends State<AcceptRide>
   @override
   void dispose() {
     OpenTripScreens.remove(widget.tripId, _bringToFront);
+    _chatAlerts?.dispose();
     driverRouteObserver.unsubscribe(this);
     driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);

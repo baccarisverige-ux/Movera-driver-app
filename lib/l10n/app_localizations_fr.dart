@@ -1198,6 +1198,43 @@ class AppLocalizationsFr extends AppLocalizations {
   String get driverEndedEarlyCollect => 'Vous avez terminé la course plus tôt';
 
   @override
+  String get chatHeaderLine => 'Un problème ? Utilisez Support ou SOS';
+
+  @override
+  String chatTranslateTo(String language) {
+    return 'Traduire en $language';
+  }
+
+  @override
+  String get chatSeeOriginal => 'Voir l\'original';
+
+  @override
+  String get chatTranslationComingSoon => 'Traduction bientôt disponible';
+
+  @override
+  String get chatTranslationOff => 'La traduction est désactivée';
+
+  @override
+  String get chatTranslationFailed => 'Traduction impossible. Réessayez.';
+
+  @override
+  String get chatOwnLanguageName => 'français';
+
+  @override
+  String get chatAutomatic => 'Automatique';
+
+  @override
+  String chatCardFrom(String name) {
+    return 'De $name';
+  }
+
+  @override
+  String get chatCardOpen => 'Ouvrir le chat';
+
+  @override
+  String get chatQuickReplies => 'Réponses rapides';
+
+  @override
   String get fleetJoinTitle => 'Rejoindre votre flotte';
 
   @override

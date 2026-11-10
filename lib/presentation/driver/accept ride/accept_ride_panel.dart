@@ -544,6 +544,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                 TripSheetFadeIn(child: _buildRiderRow())
               else
                 _buildRiderRow(),
+              _AcceptRideTripChat(this)._chatCard(),
               TripSheetFadeIn(
                 child: Padding(
                   key: _middleActionKey,

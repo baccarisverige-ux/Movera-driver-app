@@ -831,6 +831,60 @@
   "@driverEndedEarlyCollect": {
     "description": "Finder L8 (owner 2026-11-07): subtitle of the cash sheet when the driver ended the trip with the rider on board (End trip early)."
   },
+  "chatHeaderLine": "Problem? Use Support or SOS",
+  "@chatHeaderLine": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatTranslateTo": "Translate to {language}",
+  "@chatTranslateTo": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "chatSeeOriginal": "See original",
+  "@chatSeeOriginal": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatTranslationComingSoon": "Translation coming soon",
+  "@chatTranslationComingSoon": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatTranslationOff": "Translation is turned off",
+  "@chatTranslationOff": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatTranslationFailed": "Could not translate. Try again.",
+  "@chatTranslationFailed": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatOwnLanguageName": "English",
+  "@chatOwnLanguageName": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatAutomatic": "Automatic",
+  "@chatAutomatic": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatCardFrom": "From {name}",
+  "@chatCardFrom": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardOpen": "Open chat",
+  "@chatCardOpen": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
+  "chatQuickReplies": "Quick replies",
+  "@chatQuickReplies": {
+    "description": "v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10)."
+  },
   "fleetJoinTitle": "Join your fleet",
   "fleetJoinBody": "Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.",
   "fleetJoin": "Join",

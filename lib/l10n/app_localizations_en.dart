@@ -1168,6 +1168,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverEndedEarlyCollect => 'You ended the trip early';
 
   @override
+  String get chatHeaderLine => 'Problem? Use Support or SOS';
+
+  @override
+  String chatTranslateTo(String language) {
+    return 'Translate to $language';
+  }
+
+  @override
+  String get chatSeeOriginal => 'See original';
+
+  @override
+  String get chatTranslationComingSoon => 'Translation coming soon';
+
+  @override
+  String get chatTranslationOff => 'Translation is turned off';
+
+  @override
+  String get chatTranslationFailed => 'Could not translate. Try again.';
+
+  @override
+  String get chatOwnLanguageName => 'English';
+
+  @override
+  String get chatAutomatic => 'Automatic';
+
+  @override
+  String chatCardFrom(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String get chatCardOpen => 'Open chat';
+
+  @override
+  String get chatQuickReplies => 'Quick replies';
+
+  @override
   String get fleetJoinTitle => 'Join your fleet';
 
   @override

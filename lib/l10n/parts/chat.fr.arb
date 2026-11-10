@@ -1,0 +1,13 @@
+{
+  "chatHeaderLine": "Un problème ? Utilisez Support ou SOS",
+  "chatTranslateTo": "Traduire en {language}",
+  "chatSeeOriginal": "Voir l'original",
+  "chatTranslationComingSoon": "Traduction bientôt disponible",
+  "chatTranslationOff": "La traduction est désactivée",
+  "chatTranslationFailed": "Traduction impossible. Réessayez.",
+  "chatOwnLanguageName": "français",
+  "chatAutomatic": "Automatique",
+  "chatCardFrom": "De {name}",
+  "chatCardOpen": "Ouvrir le chat",
+  "chatQuickReplies": "Réponses rapides"
+}
