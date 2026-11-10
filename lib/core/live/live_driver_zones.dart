@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -53,9 +53,39 @@ class MemoryDriverZonesCache implements DriverZonesCache {
 /// server answers ([DriverZones.useServer]). Live builds only: the demo
 /// keeps its own zone. Never throws to its callers.
 class LiveDriverZones extends ChangeNotifier {
-  LiveDriverZones({required ApiClient api, DriverZonesCache? cache})
-    : _api = api,
-      _cache = cache ?? const PrefsDriverZonesCache();
+  LiveDriverZones({
+    required ApiClient api,
+    DriverZonesCache? cache,
+    List<Duration>? retryDelays,
+  }) : _api = api,
+       _cache = cache ?? const PrefsDriverZonesCache(),
+       retryDelays = retryDelays ?? defaultRetryDelays;
+
+  /// Owner 2026-11-10: a failed read while a kept list is in use is tried
+  /// again after each of these delays (bounded: 3 more tries).
+  static const defaultRetryDelays = [
+    Duration(seconds: 3),
+    Duration(seconds: 10),
+    Duration(seconds: 30),
+  ];
+
+  final List<Duration> retryDelays;
+
+  /// Owner 2026-11-10 (§21): reads the list again when the app comes back.
+  /// Called once per session (after [start]); [dispose] stops it.
+  void watchResume() {
+    if (_resume != null) return;
+    try {
+      _resume = AppLifecycleListener(onResume: () => unawaited(refresh()));
+    } on FlutterError catch (error) {
+      // No Flutter binding (a pure Dart harness): nothing comes back.
+      DriverLog.warn('driver_zones.resume_watch_skipped: $error');
+    }
+  }
+
+  AppLifecycleListener? _resume;
+  Timer? _retryTimer;
+  int _retries = 0;
 
   static const path = '/api/v1/driver/zones';
 
@@ -90,11 +120,14 @@ class LiveDriverZones extends ChangeNotifier {
   Future<bool> refresh() =>
       _inFlight ??= _fetch().whenComplete(() => _inFlight = null);
 
-  Future<bool> _fetch() async {
+  Future<bool> _fetch({bool retry = false}) async {
     try {
       final zones = parse(await _api.get(path));
       if (zones == null) throw const FormatException('not a zones answer');
       _use(zones);
+      _retryTimer?.cancel();
+      _retryTimer = null;
+      _retries = 0;
       try {
         await _cache.write({
           'zones': [for (final zone in zones) zone.toJson()],
@@ -105,8 +138,31 @@ class LiveDriverZones extends ChangeNotifier {
       return true;
     } catch (error) {
       DriverLog.warn('driver_zones.fetch_failed: $error');
+      if (!retry) _retries = 0;
+      _scheduleRetry();
       return false;
     }
+  }
+
+  /// Owner 2026-11-10: the kept list stays in use when a read fails, so it
+  /// is read again after a short delay (bounded by [retryDelays]) instead
+  /// of keeping an old list silently.
+  void _scheduleRetry() {
+    if (DriverZones.server == null || _retryTimer != null) return;
+    if (_retries >= retryDelays.length) return;
+    _retryTimer = Timer(retryDelays[_retries++], () {
+      _retryTimer = null;
+      unawaited(
+        _inFlight ??= _fetch(retry: true).whenComplete(() => _inFlight = null),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _resume?.dispose();
+    _retryTimer?.cancel();
+    super.dispose();
   }
 
   void _use(List<DriverZone> zones) {
