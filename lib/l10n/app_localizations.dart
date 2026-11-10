@@ -2104,6 +2104,72 @@ abstract class AppLocalizations {
   /// **'You ended the trip early'**
   String get driverEndedEarlyCollect;
 
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Problem? Use Support or SOS'**
+  String get chatHeaderLine;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to {language}'**
+  String chatTranslateTo(String language);
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'See original'**
+  String get chatSeeOriginal;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Translation coming soon'**
+  String get chatTranslationComingSoon;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Translation is turned off'**
+  String get chatTranslationOff;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not translate. Try again.'**
+  String get chatTranslationFailed;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get chatOwnLanguageName;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get chatAutomatic;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String chatCardFrom(String name);
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get chatCardOpen;
+
+  /// v0.18.56 §78 G9 part 2 chat (owner Q79–Q85, 2026-11-10).
+  ///
+  /// In en, this message translates to:
+  /// **'Quick replies'**
+  String get chatQuickReplies;
+
   /// No description provided for @fleetJoinTitle.
   ///
   /// In en, this message translates to:

@@ -125,6 +125,8 @@ class RealtimeMessage {
     required this.from,
     required this.text,
     this.at,
+    this.quickReplyId,
+    this.auto,
   });
 
   factory RealtimeMessage.fromJson(Map<String, dynamic> json) =>
@@ -135,7 +137,15 @@ class RealtimeMessage {
         at: json['at'] is String
             ? DateTime.parse(json['at'] as String).toUtc()
             : null,
+        quickReplyId: json['quickReplyId'] as String?,
+        auto: json['auto'] as String?,
       );
+
+  /// v0.18.56 §78: the quick-reply chip it was sent from, if any.
+  final String? quickReplyId;
+
+  /// v0.18.56 §78: `arrived` / `on_my_way` when the server wrote it.
+  final String? auto;
 
   final String messageId;
 

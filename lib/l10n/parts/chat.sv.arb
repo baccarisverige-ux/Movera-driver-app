@@ -1,0 +1,13 @@
+{
+  "chatHeaderLine": "Problem? Använd Support eller SOS",
+  "chatTranslateTo": "Översätt till {language}",
+  "chatSeeOriginal": "Visa original",
+  "chatTranslationComingSoon": "Översättning kommer snart",
+  "chatTranslationOff": "Översättning är avstängd",
+  "chatTranslationFailed": "Kunde inte översätta. Försök igen.",
+  "chatOwnLanguageName": "svenska",
+  "chatAutomatic": "Automatiskt",
+  "chatCardFrom": "Från {name}",
+  "chatCardOpen": "Öppna chatten",
+  "chatQuickReplies": "Snabbsvar"
+}

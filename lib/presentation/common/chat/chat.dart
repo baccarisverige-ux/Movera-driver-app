@@ -8,6 +8,8 @@ import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/live/trip_chat_options.dart';
+import 'package:movera/presentation/common/chat/chat_g92.dart';
 import 'package:movera/presentation/common/chat/components/appbar.dart';
 import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/presentation/common/chat/local_chat_messages.dart';
@@ -61,6 +63,13 @@ class _ChatState extends State<Chat> {
   String? _callNotice;
   Timer? _callNoticeTimer;
   int _shown = 0;
+
+  /// v0.18.56 §78 translate link: the translations read (never stored
+  /// beyond this screen), which of them show now, and which are on the
+  /// way. The original text is always kept.
+  final Map<String, String> _translated = {};
+  final Set<String> _showingTranslation = {};
+  final Set<String> _translating = {};
 
   @override
   void initState() {
@@ -138,8 +147,46 @@ class _ChatState extends State<Chat> {
   /// Opened on the live trip: the history is read once (then the trip's
   /// stream brings every message); the screen says when it could not be.
   Future<void> _openLive(LiveTripChat live, String tripId) async {
+    unawaited(live.loadOptions(tripId));
     final ok = await live.open(tripId);
     if (mounted && !ok) setState(() => _historyFailed = true);
+  }
+
+  /// "Translate" ↔ "See original" under a message from the other side.
+  Future<void> _toggleTranslation(TripChatMessage message) async {
+    final id = message.messageId;
+    if (_showingTranslation.remove(id)) {
+      setState(() {});
+      return;
+    }
+    if (_translated.containsKey(id)) {
+      setState(() => _showingTranslation.add(id));
+      return;
+    }
+    final live = _live;
+    final tripId = widget.tripId;
+    if (live == null || tripId == null || !_translating.add(id)) return;
+    setState(() {});
+    final outcome = await live.translate(tripId, id);
+    if (!mounted) return;
+    setState(() {
+      _translating.remove(id);
+      if (outcome.text case final text?) {
+        _translated[id] = text;
+        _showingTranslation.add(id);
+      }
+    });
+    if (translateNotice(outcome.result) case final notice?) {
+      _showCallNotice(notice);
+    }
+  }
+
+  void _sendQuickReply(QuickReply reply) {
+    final live = _live;
+    final tripId = widget.tripId;
+    if (live == null || tripId == null || (_thread?.closed ?? false)) return;
+    unawaited(_deliver(live.sendQuickReply(tripId, reply)));
+    _scrollToNewest();
   }
 
   Future<void> _loadAgain() async {
@@ -221,18 +268,34 @@ class _ChatState extends State<Chat> {
     TripChatSendState.sent => DriverDates.time(message.at.toLocal()),
   };
 
+  /// "Automatic · 14:05" for a message the server wrote (§78).
+  String _timeLabel(TripChatMessage message, String label) =>
+      message.automatic ? '${tr.chatAutomatic} · $label' : label;
+
   Widget _liveMessage(TripChatMessage message) {
     if (!message.own) {
+      final id = message.messageId;
+      final showing = _showingTranslation.contains(id);
+      final translation = _thread?.options.translation ?? true;
       return RiderMessage(
         sender: message.fromSupport ? tr.chatSupportSender : null,
-        text: message.text,
-        label: DriverDates.time(message.at.toLocal()),
+        text: showing ? _translated[id]! : message.text,
+        label: _timeLabel(message, DriverDates.time(message.at.toLocal())),
+        footer: translation
+            ? ChatTranslateLink(
+                showingTranslation: showing,
+                busy: _translating.contains(id),
+                onTap: () => unawaited(_toggleTranslation(message)),
+              )
+            : null,
       );
     }
     final failed = message.state == TripChatSendState.failed;
     return SenderMessage(
       text: message.text,
-      label: _ownLabel(message),
+      label: message.local
+          ? _ownLabel(message)
+          : _timeLabel(message, _ownLabel(message)),
       onTap: failed
           ? () => unawaited(_deliver(_live!.retry(widget.tripId!, message)))
           : null,
@@ -266,6 +329,7 @@ class _ChatState extends State<Chat> {
       ),
       body: Column(
         children: [
+          if (live) ChatHeaderLine(options: thread.options),
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -316,6 +380,14 @@ class _ChatState extends State<Chat> {
                               fontSize: 13,
                             ),
                           ),
+                        ),
+                      ),
+                    if (live && !closed && thread.options.chips.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: QuickReplyChips(
+                          replies: thread.options.chips,
+                          onTap: _sendQuickReply,
                         ),
                       ),
                     if (closed)
@@ -464,7 +536,11 @@ class RiderMessage extends StatelessWidget {
     required this.text,
     required this.label,
     this.sender,
+    this.footer,
   });
+
+  /// Under the time: the translate link (§78).
+  final Widget? footer;
 
   /// Over the bubble: "Movera" for a support message, so it never looks
   /// like the rider's (G9 live 2026-11-02). None for the rider.
@@ -520,6 +596,7 @@ class RiderMessage extends StatelessWidget {
             fontSize: 12,
             fontWeight: fwNormal,
           ),
+          ?footer,
         ],
       ),
     );

@@ -542,7 +542,8 @@ class _MoveraAppState extends State<MoveraApp> {
     // the trip again; restored by Home on a cold start. A bell notice
     // about another trip (pay changed, « Course annulée ») opens the bell
     // list on it (S6 I-1, S8 R2).
-    if (open.routeChangeTripId case final tripId?
+    // v0.18.56 §78 (owner Q79): an incoming-call push is a trip push.
+    if ((open.routeChangeTripId ?? open.callTripId) case final tripId?
         when openTripPush(tripId, activeTripId: _session.activeTripId)) {
       return;
     }

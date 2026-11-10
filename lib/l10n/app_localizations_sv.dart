@@ -1169,6 +1169,43 @@ class AppLocalizationsSv extends AppLocalizations {
   String get driverEndedEarlyCollect => 'Du avslutade resan tidigare';
 
   @override
+  String get chatHeaderLine => 'Problem? Använd Support eller SOS';
+
+  @override
+  String chatTranslateTo(String language) {
+    return 'Översätt till $language';
+  }
+
+  @override
+  String get chatSeeOriginal => 'Visa original';
+
+  @override
+  String get chatTranslationComingSoon => 'Översättning kommer snart';
+
+  @override
+  String get chatTranslationOff => 'Översättning är avstängd';
+
+  @override
+  String get chatTranslationFailed => 'Kunde inte översätta. Försök igen.';
+
+  @override
+  String get chatOwnLanguageName => 'svenska';
+
+  @override
+  String get chatAutomatic => 'Automatiskt';
+
+  @override
+  String chatCardFrom(String name) {
+    return 'Från $name';
+  }
+
+  @override
+  String get chatCardOpen => 'Öppna chatten';
+
+  @override
+  String get chatQuickReplies => 'Snabbsvar';
+
+  @override
   String get fleetJoinTitle => 'Gå med i ditt åkeri';
 
   @override

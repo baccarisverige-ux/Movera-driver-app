@@ -5,6 +5,49 @@ part of 'accept_ride.dart';
 // accept_ride_panel.dart and accept_ride_trip.dart (no behaviour change).
 
 extension _AcceptRideTripChat on _AcceptRideState {
+  /// v0.18.56 §78: the live trip's new-message watcher; none in the demo.
+  TripChatAlerts? _newChatAlerts() {
+    final chat = LiveDriverServices.instance?.chat;
+    if (chat == null) return null;
+    return TripChatAlerts(
+      chat: chat,
+      tripId: widget.tripId,
+      onNew: _onNewChatMessage,
+    );
+  }
+
+  /// Owner Q82: a folded sheet opens by itself on a new message only
+  /// (admin `sheetAutoOpen`); then the sound, vibration and read aloud.
+  void _onNewChatMessage(TripChatMessage message, TripChatOptions options) {
+    if (!mounted || _rideLifecycle.terminal) return;
+    if (options.opensSheet &&
+        _ridePanelController.isAttached &&
+        _ridePanelController.panelPosition < _rideSnapPoint(context) - 0.02) {
+      _showRideMiddle();
+    }
+    unawaited(
+      ChatMessageAlert.forMessage(
+        message.text,
+        sound: options.sound,
+        readAloudDefault: options.readAloudDefault,
+      ),
+    );
+  }
+
+  /// The message card under the rider row (G9-2.8).
+  Widget _chatCard() {
+    final alerts = _chatAlerts;
+    if (alerts == null) return const SizedBox.shrink();
+    return TripChatCard(
+      alerts: alerts,
+      riderFirstName: _riderName.split(' ').first,
+      onOpen: () {
+        alerts.dismiss();
+        _messageRider();
+      },
+    );
+  }
+
   /// Chat with the rider; a live build counts their unread messages on it.
   Widget _chatButton() {
     final chat = LiveDriverServices.instance?.chat;
@@ -71,6 +114,10 @@ extension _AcceptRideTripChat on _AcceptRideState {
       return;
     }
     _rebuild(() => _riderOnTheWay = true);
+    // v0.18.56 §78 (G9-2.14): live, the server writes the rider's "I'm on
+    // my way" into the chat (`Message.auto = on_my_way`), shown as the
+    // sheet's message card; the short notice stays for the demo only.
+    if (_chatAlerts != null) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
         content: Text(

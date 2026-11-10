@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/live/trip_chat_options.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 
@@ -22,6 +24,8 @@ class TripChatMessage {
     required this.text,
     required this.at,
     this.state = TripChatSendState.sent,
+    this.quickReplyId,
+    this.auto,
   });
 
   factory TripChatMessage.fromJson(Map<String, dynamic> json) =>
@@ -30,6 +34,8 @@ class TripChatMessage {
         from: json['from'] as String,
         text: json['text'] as String,
         at: DateTime.parse(json['at'] as String).toUtc(),
+        quickReplyId: json['quickReplyId'] as String?,
+        auto: json['auto'] as String?,
       );
 
   factory TripChatMessage.fromRealtime(RealtimeMessage message) =>
@@ -38,6 +44,8 @@ class TripChatMessage {
         from: message.from,
         text: message.text,
         at: message.at ?? DateTime.now().toUtc(),
+        quickReplyId: message.quickReplyId,
+        auto: message.auto,
       );
 
   /// The server's id; this phone's own copy carries its `Idempotency-Key`
@@ -49,6 +57,17 @@ class TripChatMessage {
   final String text;
   final DateTime at;
   final TripChatSendState state;
+
+  /// v0.18.56 §78: the quick-reply chip it was sent from (the server wrote
+  /// the chip in the reader's language).
+  final String? quickReplyId;
+
+  /// v0.18.56 §78: written by the server, not typed: `arrived` (the
+  /// driver's "I've arrived") or `on_my_way` (the rider's "I'm on my way").
+  final String? auto;
+
+  /// Shown marked "Automatic".
+  bool get automatic => auto != null;
 
   /// Written on this phone.
   bool get own => from == 'driver';
@@ -65,6 +84,8 @@ class TripChatMessage {
     text: text,
     at: at,
     state: state,
+    quickReplyId: quickReplyId,
+    auto: auto,
   );
 }
 
@@ -80,6 +101,21 @@ class TripChatThread extends ChangeNotifier {
   int _open = 0;
   bool _loaded = false;
   bool _closed = false;
+  int _incoming = 0;
+  TripChatMessage? _lastIncoming;
+  TripChatOptions _options = TripChatOptions.defaults;
+  bool _optionsRead = false;
+
+  /// v0.18.56 §78: the trip's chat options (defaults until read).
+  TripChatOptions get options => _options;
+
+  /// Messages from the rider (or support) the stream brought, counted
+  /// whether Chat shows the thread or not (the trip sheet's card, its
+  /// auto-open and the sound follow it). History reads do not count.
+  int get incomingCount => _incoming;
+
+  /// The newest of those (the trip sheet's message card).
+  TripChatMessage? get lastIncoming => _lastIncoming;
 
   /// The trip ended: the chat closed at drop-off (contract v0.13.0 §22).
   /// Since v0.18.5 (`chat.appStorage.afterTrip`) the messages are gone
@@ -94,6 +130,7 @@ class TripChatThread extends ChangeNotifier {
     _messages.clear();
     _unread = 0;
     _unreadSupport = 0;
+    _lastIncoming = null;
     _loaded = true;
     _closed = true;
     notifyListeners();
@@ -163,13 +200,23 @@ class TripChatThread extends ChangeNotifier {
 
   /// Puts a message from the server in; a new one from the rider (or
   /// support) counts as unread unless Chat shows the thread.
-  void _add(TripChatMessage message, {String? replacing}) {
+  void _add(TripChatMessage message, {String? replacing, bool live = false}) {
     final fresh = _put(message, replacing: replacing);
+    if (fresh && live && !message.own) {
+      _incoming++;
+      _lastIncoming = message;
+      notifyListeners();
+    }
     if (fresh && !message.own && !isOpen) {
       _unread++;
       if (message.fromSupport) _unreadSupport++;
       notifyListeners();
     }
+  }
+
+  void _markLoadedOptions() {
+    _optionsRead = true;
+    notifyListeners();
   }
 
   void _markLoaded() {
@@ -276,17 +323,105 @@ class LiveTripChat {
   /// this phone's own echo replaces the copy still waiting for an answer.
   void receive(String tripId, RealtimeMessage message) {
     final thread = this.thread(tripId);
-    final incoming = TripChatMessage.fromRealtime(message);
+    var incoming = TripChatMessage.fromRealtime(message);
     String? copy;
     if (incoming.own) {
       for (final sent in thread._messages) {
-        if (sent.local && sent.text == incoming.text) {
+        // A chip comes back in the rider's language: matched by its id.
+        final same = incoming.quickReplyId != null
+            ? sent.quickReplyId == incoming.quickReplyId
+            : sent.text == incoming.text;
+        if (sent.local && same) {
           copy = sent.messageId;
           break;
         }
       }
     }
-    thread._add(incoming, replacing: copy);
+    final prior =
+        thread._find(incoming.messageId) ??
+        (copy == null ? null : thread._find(copy));
+    if (prior != null && prior.quickReplyId != null && incoming.own) {
+      incoming = _ownText(incoming, prior);
+    }
+    thread._add(incoming, replacing: copy, live: true);
+  }
+
+  /// v0.18.56 §78: `GET /trips/{tripId}/messages/options`, read once per
+  /// trip; the defaults (`configDefaults.chat`) stay when it fails.
+  Future<TripChatOptions> loadOptions(String tripId) async {
+    final thread = this.thread(tripId);
+    if (thread._optionsRead) return thread._options;
+    try {
+      final answer = await _api.get('${_path(tripId)}/options');
+      thread._options = TripChatOptions.fromJson(answer);
+      thread._optionsRead = true;
+      thread._markLoadedOptions();
+    } on ApiError catch (error) {
+      DriverLog.warn(
+        'trip $tripId chat options not read: ${error.code}',
+        name: 'live',
+      );
+    } on TypeError {
+      DriverLog.warn('trip $tripId chat options unreadable', name: 'live');
+    }
+    return thread._options;
+  }
+
+  /// v0.18.56 §78: a quick-reply chip, sent as a normal message with its
+  /// id; the server writes it in the rider's language. This phone shows
+  /// it in the driver's own language.
+  Future<LiveTripOutcome> sendQuickReply(String tripId, QuickReply reply) {
+    if (thread(tripId).closed) {
+      return Future.value(LiveTripOutcome.failed(tr.chatClosedAfterTrip));
+    }
+    final key = ApiClient.randomKey();
+    thread(tripId)._put(
+      TripChatMessage(
+        messageId: key,
+        from: 'driver',
+        text: reply.textIn(DriverAppTexts.language),
+        at: DateTime.now().toUtc(),
+        state: TripChatSendState.sending,
+        quickReplyId: reply.id,
+      ),
+    );
+    return _post(tripId, key);
+  }
+
+  /// The language a translation goes to: the driver's own app language
+  /// (owner A1), sv, fr or en.
+  static String get translateTarget =>
+      const ['sv', 'fr', 'en'].contains(DriverAppTexts.language)
+      ? DriverAppTexts.language
+      : 'en';
+
+  /// v0.18.56 §78: `POST /trips/{tripId}/messages/translate`. 503
+  /// `coming_soon` until the server has a provider; 403 `translation_off`
+  /// when the admin turned it off. Nothing is kept.
+  Future<TranslateOutcome> translate(String tripId, String messageId) async {
+    try {
+      final answer = await _api.post(
+        '${_path(tripId)}/translate',
+        body: {'messageId': messageId, 'to': translateTarget},
+        idempotencyKey: ApiClient.randomKey(),
+      );
+      final text = answer['text'];
+      if (text is String && text.trim().isNotEmpty) {
+        return TranslateOutcome(TranslateResult.translated, text);
+      }
+      return const TranslateOutcome(TranslateResult.failed);
+    } on ApiError catch (error) {
+      if (error.reason == 'coming_soon' || error.statusCode == 503) {
+        return const TranslateOutcome(TranslateResult.comingSoon);
+      }
+      if (error.reason == 'translation_off') {
+        return const TranslateOutcome(TranslateResult.off);
+      }
+      DriverLog.warn('translate refused: ${error.code}', name: 'live');
+      return const TranslateOutcome(TranslateResult.failed);
+    } on TypeError {
+      return const TranslateOutcome(TranslateResult.failed);
+    }
   }
 
   /// `POST /trips/{tripId}/messages`: the message shows at once as this
@@ -330,12 +465,18 @@ class LiveTripChat {
     try {
       final answer = await _api.post(
         _path(tripId),
-        body: {'text': copy.text},
+        body: {
+          'text': copy.text,
+          if (copy.quickReplyId != null) 'quickReplyId': copy.quickReplyId,
+        },
         idempotencyKey: key,
       );
       // The stream's echo may have replaced the copy meanwhile.
       if (thread._find(key) == null) return const LiveTripOutcome.ok();
-      thread._put(TripChatMessage.fromJson(answer), replacing: key);
+      thread._put(
+        _ownText(TripChatMessage.fromJson(answer), copy),
+        replacing: key,
+      );
       return const LiveTripOutcome.ok();
     } on ApiError catch (error) {
       DriverLog.warn('trip message refused: ${error.detail}', name: 'live');
@@ -345,6 +486,22 @@ class LiveTripChat {
       return _notSent(thread, key, error);
     }
   }
+
+  /// A chip the server wrote in the rider's language reads on this phone
+  /// as the driver tapped it.
+  static TripChatMessage _ownText(
+    TripChatMessage answer,
+    TripChatMessage copy,
+  ) => copy.quickReplyId == null
+      ? answer
+      : TripChatMessage(
+          messageId: answer.messageId,
+          from: answer.from,
+          text: copy.text,
+          at: answer.at,
+          quickReplyId: answer.quickReplyId ?? copy.quickReplyId,
+          auto: answer.auto,
+        );
 
   LiveTripOutcome _notSent(TripChatThread thread, String key, Object error) {
     // 409 invalid_transition, reason chat_closed: the trip has ended.

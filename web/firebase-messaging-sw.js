@@ -23,6 +23,7 @@
 'use strict';
 
 var OFFER_KIND = 'new_offer';
+var CALL_KIND = 'call_ringing';
 var VIBRATE_PATTERN = [300, 150, 300];
 var PREFS_CACHE = 'movera-push-prefs';
 var PREFS = 'movera-push-prefs.json';
@@ -92,6 +93,22 @@ self.addEventListener('push', function (event) {
   var body = d.body || (payload.notification && payload.notification.body) || '';
   if (d.kind === OFFER_KIND) {
     event.waitUntil(showOffer(d, title, body));
+    return;
+  }
+  // v0.18.56 §78 (owner Q79, inAppCalls.push): an incoming call (kind
+  // call_ringing, data tripId + callId) always rings: its own notice, with
+  // sound and the phone's vibration, kept until tapped or closed.
+  if (d.kind === CALL_KIND) {
+    event.waitUntil(self.registration.showNotification(title, {
+      body: body,
+      tag: 'movera-call-' + (d.callId || d.tripId || d.notificationId || ''),
+      renotify: true,
+      silent: false,
+      requireInteraction: true,
+      vibrate: VIBRATE_PATTERN,
+      icon: appRoot() + 'icons/Icon-192.png',
+      data: { notificationId: d.notificationId || '', deepLink: d.deepLink || '', kind: d.kind }
+    }));
     return;
   }
   // One notice per trip (Ride Check, trip messages…): the tag comes from
