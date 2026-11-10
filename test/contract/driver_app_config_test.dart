@@ -262,7 +262,11 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
+<<<<<<< HEAD
       expect(contract['version'], '0.18.57');
+=======
+      expect(contract['version'], '0.18.59');
+>>>>>>> 897564f4 (Contract pins 0.18.59 (api client, transitions, docs, tests))
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],

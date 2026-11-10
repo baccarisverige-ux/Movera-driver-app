@@ -23,7 +23,11 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
+<<<<<<< HEAD
 The source of truth is now `contracts/contract.json` (v0.18.57, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+=======
+The source of truth is now `contracts/contract.json` (v0.18.59, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+>>>>>>> 897564f4 (Contract pins 0.18.59 (api client, transitions, docs, tests))
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -101,7 +105,11 @@ Fix (no UX change, no lifecycle change):
 
 ## Contract v0.4 (October 2026)
 
+<<<<<<< HEAD
 `contracts/` now holds the shared Movera contract v0.18.57 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+=======
+`contracts/` now holds the shared Movera contract v0.18.59 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+>>>>>>> 897564f4 (Contract pins 0.18.59 (api client, transitions, docs, tests))
 
 - v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
 - v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
