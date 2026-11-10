@@ -386,6 +386,25 @@ class WalletScreen extends StatelessWidget {
   }
 }
 
+/// Owner 2026-11-10: the currency the wallet opens on, the driver's zone
+/// currency (`DriverAppConfig.currency`); null (the server's default)
+/// until a zone config is known.
+@visibleForTesting
+String? walletOpeningCurrency() => Money.zoneKnown ? Money.zoneCurrency : null;
+
+/// The wallet's currency tabs: the zone currency first, then every other
+/// currency the driver has a balance in, and the shown one never missing.
+@visibleForTesting
+List<String> walletCurrencyTabs(EarningsWeek report) {
+  final zone = walletOpeningCurrency();
+  final tabs = <String>[?zone, ?report.currency, ...report.currencies];
+  final seen = <String>{};
+  return [
+    for (final c in tabs)
+      if (seen.add(c)) c,
+  ];
+}
+
 /// Audit 2026-11-01: this week's earnings from `GET /driver/earnings`, so the
 /// wallet agrees with Earnings & history instead of a fixed 0 kr.
 class _LiveWeekBalance extends StatefulWidget {
@@ -396,14 +415,38 @@ class _LiveWeekBalance extends StatefulWidget {
 }
 
 class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
-  late Future<EarningsWeek> _week = LiveDriverServices.instance!.earnings
-      .week();
+  /// Owner 2026-11-10: the wallet opens on the driver's own zone currency
+  /// (Tunis → DT, Paris → €, Stockholm → kr), not the server's default.
+  late Future<EarningsWeek> _week = _load(walletOpeningCurrency());
+  bool _picked = false;
+
+  Future<EarningsWeek> _load(String? currency) =>
+      LiveDriverServices.instance!.earnings.week(currency: currency);
+
+  @override
+  void initState() {
+    super.initState();
+    Money.zoneCurrencyChanges.addListener(_zoneArrived);
+  }
+
+  @override
+  void dispose() {
+    Money.zoneCurrencyChanges.removeListener(_zoneArrived);
+    super.dispose();
+  }
+
+  /// The zone config landed after the wallet opened: reopen on its tab
+  /// unless the driver already picked one.
+  void _zoneArrived() {
+    if (_picked || !mounted) return;
+    setState(() => _week = _load(walletOpeningCurrency()));
+  }
 
   /// v0.18.14: another currency of the report (kr / €), asked again.
-  void _pick(String currency) => setState(
-    () =>
-        _week = LiveDriverServices.instance!.earnings.week(currency: currency),
-  );
+  void _pick(String currency) => setState(() {
+    _picked = true;
+    _week = _load(currency);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -417,11 +460,11 @@ class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (report != null && report.currencies.length > 1) ...[
+            if (report != null && walletCurrencyTabs(report).length > 1) ...[
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final c in report.currencies)
+                  for (final c in walletCurrencyTabs(report))
                     ChoiceChip(
                       key: ValueKey<String>('wallet-currency-$c'),
                       label: Text(Money.symbols[c] ?? c),
