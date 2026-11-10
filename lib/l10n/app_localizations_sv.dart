@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6248,7 +6249,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get holdToGoOffline => 'Håll för att gå offline';
+  String get holdToGoOffline => 'Håll in för att gå offline';
 
   @override
   String get tripOptions => 'Resealternativ';

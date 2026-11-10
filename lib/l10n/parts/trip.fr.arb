@@ -160,7 +160,7 @@
   "stopOrdinal4": "quatrième",
   "stopOrdinal5": "cinquième",
   "stopOrdinalN": "{number}e",
-  "holdToGoOffline": "Maintenez pour passer hors ligne",
+  "holdToGoOffline": "Maintenez pour vous déconnecter",
   "tripOptions": "Options de la course",
   "acceptTermsAndPrivacy": "Acceptez les conditions et la politique de confidentialité",
   "rideTypeLabel": "Type de course",

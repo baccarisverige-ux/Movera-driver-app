@@ -1,5 +1,6 @@
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -91,7 +92,31 @@ class _RadarHoldOffState extends State<RadarHoldOff>
 
   // Also after a full hold: if the driver stays (Q19 "Stay online") the
   // ring empties and the next hold asks again.
-  void _release() => _hold.reverse();
+  // Owner 2026-11-10: a tap (let go before the hold fills) shows a short
+  // "Hold to go offline" hint so drivers know how to go offline.
+  void _release() {
+    if (!_fired) {
+      _showHint();
+    }
+    _hold.reverse();
+  }
+
+  void _showHint() {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          key: const ValueKey<String>('hold-to-go-offline-hint'),
+          content: Text(tr.holdToGoOffline),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
 
   @override
   void dispose() {
@@ -110,7 +135,7 @@ class _RadarHoldOffState extends State<RadarHoldOff>
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => _press(),
         onTapUp: (_) => _release(),
-        onTapCancel: _release,
+        onTapCancel: () => _hold.reverse(),
         child: SizedBox.square(
           dimension: widget.size,
           child: Stack(
