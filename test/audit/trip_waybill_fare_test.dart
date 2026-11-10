@@ -76,13 +76,11 @@ void main() {
       expect(payment.earnings, '925,87 kr');
     });
 
-    test(
-      'the net-fare offer card shows the driver share of the whole fare',
-      () {
-        const details = OfferCardDetails(netFare: true);
-        expect(details.fare('1 234,50 kr', commissionRate: 0.25), '925,87 kr');
-      },
-    );
+    test('the net-fare offer card never computes a share itself (owner '
+        '2026-11-10): without the server\'s earnings it shows "—"', () {
+      const details = OfferCardDetails(netFare: true);
+      expect(details.fare('1 234,50 kr', commissionRate: 0.25), '—');
+    });
 
     test('short fares keep their format', () {
       expect(WaybillPayment.fromFare('139,00 kr')!.earnings, '104,25 kr');

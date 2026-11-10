@@ -659,6 +659,8 @@ class ScheduledRideStore {
     final route = ReservationRequestPreview(
       category: 'Comfort',
       fare: '184,00 kr',
+      // Demo sample earnings, written out (owner 2026-11-10).
+      earnings: '138,00 kr',
       rating: '4.90',
       riderName: 'Lars',
       riderTrips: 47,

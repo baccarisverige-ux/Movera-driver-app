@@ -495,6 +495,17 @@ class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            // Owner 2026-11-10: couldn't load → "—" and Retry, never a
+            // made-up number.
+            if (failed)
+              TextButton(
+                key: const ValueKey<String>('wallet-week-retry'),
+                onPressed: () => setState(() {
+                  _picked = false;
+                  _week = _load(walletOpeningCurrency());
+                }),
+                child: Text(tr.retry),
+              ),
           ],
         );
       },
@@ -511,10 +522,10 @@ class _LivePayouts extends StatefulWidget {
 }
 
 class _LivePayoutsState extends State<_LivePayouts> {
-  late final Future<List<DriverPayout>> _payouts = LiveDriverServices
-      .instance!
-      .earnings
-      .payouts();
+  late Future<List<DriverPayout>> _payouts = _load();
+
+  Future<List<DriverPayout>> _load() =>
+      LiveDriverServices.instance!.earnings.payouts();
 
   @override
   Widget build(BuildContext context) {
@@ -543,13 +554,25 @@ class _LivePayoutsState extends State<_LivePayouts> {
           }
           final items = snap.data ?? const <DriverPayout>[];
           if (snap.hasError || items.isEmpty) {
-            return Text(
+            final note = Text(
               snap.hasError ? tr.walletLiveUnavailable : tr.walletLiveNoPayouts,
               style: const TextStyle(
                 color: WalletScreen._muted,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
+            );
+            if (!snap.hasError) return note;
+            // Owner 2026-11-10: couldn't load → Retry.
+            return Row(
+              children: [
+                Expanded(child: note),
+                TextButton(
+                  key: const ValueKey<String>('wallet-payouts-retry'),
+                  onPressed: () => setState(() => _payouts = _load()),
+                  child: Text(tr.retry),
+                ),
+              ],
             );
           }
           return Column(

@@ -208,10 +208,8 @@ class OfferCardDetails {
   /// fare [full] (owner decision 2026-10-26, "price must be after
   /// commission that show to driver"). The server's [earnings]
   /// (`Offer.driverEarnings`, Movera's bonus in it, driver-r5-1) when it
-  /// sent them; else, for a demo offer, [full] after Movera's commission,
-  /// where Movera's [bonus] in [full] (Q16) is never charged commission:
-  /// the share keeps all of it ([WaybillPayment.shareOf]). [full] itself
-  /// when it is not an amount ("—"). Pickup pay comes on top
+  /// sent them; else "—" (owner decision 2026-11-10: the phone never
+  /// computes earnings). [commissionRate] and [bonus] are ignored. Pickup pay comes on top
   /// (`PickupPayQuote.totalOf`).
   String fare(
     String full, {
@@ -219,15 +217,9 @@ class OfferCardDetails {
     String? bonus,
     String? earnings,
   }) {
-    if (earnings != null) {
-      return earnings;
-    }
-    final payment = WaybillPayment.fromFare(
-      full,
-      feeRate: commissionRate ?? DriverOfferRules.current.commissionRate,
-      bonus: bonus,
-    );
-    return payment?.earnings ?? full;
+    // Owner decision 2026-11-10: never show made-up earnings. Only the
+    // server's own number is shown; without it the card shows "—".
+    return earnings ?? '—';
   }
 }
 

@@ -43,6 +43,7 @@ RideOffer _far({
   id: id,
   category: 'Comfort',
   fare: const Money(minorUnits: 12000, currency: 'SEK'),
+  driverEarnings: Money(minorUnits: 9000, currency: 'SEK'),
   rating: rating,
   riderName: 'Sara',
   pickupMinutes: 8,

@@ -176,20 +176,18 @@ void main() {
       expect(offer.riderCashLabel, '200,00 kr');
     });
 
-    test('an old payload without driverEarnings falls back to the share, '
-        'never to 0', () {
+    test('an old payload without driverEarnings shows "—", never a share '
+        'made up on the phone (owner 2026-11-10)', () {
       final old = OfferWire.parse(_wire()..remove('driverEarnings'));
       expect(old.driverEarnings, isNull);
-      expect(
-        old.driverPay,
-        WaybillPayment.shareOf(Money(minorUnits: 20000, currency: 'SEK')),
-      );
-      expect(old.driverPayLabel, '150,00 kr');
-      expect(_view(old).shownFare(const OfferCardDetails()), '159,00 kr');
+      expect(old.driverPay, isNull);
+      expect(old.driverPayLabel, '—');
+      expect(_view(old).shownFare(const OfferCardDetails()), '—');
     });
 
-    test('a demo offer: the fare after the demo commission, the bonus kept '
-        'whole, the same number its card shows', () {
+    test('a demo offer: its written-out sample earnings (the fare after a '
+        '25 % commission, the bonus kept whole), the same number its card '
+        'shows', () {
       // 168,00 kr fare, no bonus: 25 % commission → 126,00 kr.
       expect(DemoRideCheckTrips.farDropoff.driverPayLabel, '126,00 kr');
       // 152,40 kr with a 40 kr Movera bonus in it: commission on 112,40 kr
@@ -217,14 +215,15 @@ void main() {
           earnings: offer.driverEarnings?.formatted,
         );
         expect(offer.driverPayLabel, card, reason: offer.id);
-        expect(offer.driverPay.minorUnits, lessThan(offer.fare.minorUnits));
-        expect(offer.driverPay.minorUnits, greaterThan(0));
+        expect(offer.driverPay!.minorUnits, lessThan(offer.fare.minorUnits));
+        expect(offer.driverPay!.minorUnits, greaterThan(0));
       }
     });
 
-    test('the commission rate admin sets is the one used', () {
+    test('the phone\'s commission rate never changes the earnings shown '
+        '(owner 2026-11-10)', () {
       DriverOfferRules.current = const DriverOfferRules(commissionRate: 0.2);
-      expect(DemoRideCheckTrips.farDropoff.driverPayLabel, '134,40 kr');
+      expect(DemoRideCheckTrips.farDropoff.driverPayLabel, '126,00 kr');
     });
 
     test('a reservation preview shows the share of its fare', () {

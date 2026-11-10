@@ -29,6 +29,7 @@ import '../../integration_test/headless_map_platform.dart';
 const _request = ReservationRequestPreview(
   category: 'Comfort',
   fare: '126.75 kr',
+  earnings: '95,06 kr',
   pickupLabel: 'Pickup today at 07:40',
   pickupAddress: 'Gamla vägen, Stockholm',
   dropoffAddress: 'Solna centrum, Solna',
@@ -49,6 +50,7 @@ const _request = ReservationRequestPreview(
 const _airportRequest = ReservationRequestPreview(
   category: 'Premium',
   fare: '248.40 kr',
+  earnings: '186,30 kr',
   pickupLabel: '',
   pickupAddress: 'Kungsholmstorg, Stockholm',
   dropoffAddress: 'Arlanda Terminal 5, Arlanda',
@@ -179,6 +181,7 @@ void main() {
     const late = ReservationRequestPreview(
       category: 'Comfort',
       fare: '1 kr',
+      earnings: '0,75 kr',
       pickupLabel: '',
       pickupAddress: '',
       dropoffAddress: '',
@@ -198,6 +201,7 @@ void main() {
     ReservationRequestPreview on(String day) => ReservationRequestPreview(
       category: 'Comfort',
       fare: '1 kr',
+      earnings: '0,75 kr',
       pickupLabel: '',
       pickupAddress: '',
       dropoffAddress: '',
@@ -464,6 +468,7 @@ void main() {
     const cash = ReservationRequestPreview(
       category: 'Comfort',
       fare: '126.75 kr',
+      earnings: '95,06 kr',
       pickupLabel: '',
       pickupAddress: 'Gamla vägen, Stockholm',
       dropoffAddress: 'Solna centrum, Solna',
@@ -495,6 +500,7 @@ void main() {
     const boosted = ReservationRequestPreview(
       category: 'Comfort',
       fare: '166.75 kr',
+      earnings: '125,06 kr',
       fareBoost: '+40 kr',
       pickupLabel: '',
       pickupAddress: 'Gamla vägen, Stockholm',

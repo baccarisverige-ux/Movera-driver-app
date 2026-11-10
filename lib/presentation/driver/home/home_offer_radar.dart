@@ -91,8 +91,8 @@ class _HomeDirectOffer {
   /// assign, or `kind: exclusive` / `assigned`): Accept is its claim.
   final bool dispatchExclusive;
 
-  /// The server's driver net and pickup pay (driver-r5-1); null for demo
-  /// offers.
+  /// The server's driver net and pickup pay (driver-r5-1); a demo offer
+  /// writes its sample earnings out.
   final String? driverEarnings;
   final Money? serverPickupPay;
 
@@ -100,9 +100,9 @@ class _HomeDirectOffer {
   bool get claimedViaDispatch => adminAssigned || dispatchExclusive;
 
   /// The driver's own money for the trip, the number its card shows
-  /// ([OfferCardDetails.fare]): the server's [driverEarnings], else the
-  /// demo share of [fare] after Movera's commission, the [driverBonus]
-  /// kept whole. The card's pickup pay is added at accept (driver-12).
+  /// ([OfferCardDetails.fare]): only [driverEarnings]; "—" without them,
+  /// never worked out on the phone (owner decision 2026-11-10). The
+  /// card's pickup pay is added at accept (driver-12).
   String get driverPay => DriverOfferRules.current.card.fare(
     fare,
     bonus: WaybillRecord.bonusLabel(driverBonus),

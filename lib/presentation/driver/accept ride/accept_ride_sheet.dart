@@ -425,7 +425,7 @@ class _NextTripRadarOffer {
   }
 
   /// The driver's own money for the trip ([OfferCardDetails.fare]):
-  /// [driverEarnings], else the demo share of [fare].
+  /// [driverEarnings]; "—" without them (owner decision 2026-11-10).
   String get driverPay =>
       DriverOfferRules.current.card.fare(fare, earnings: driverEarnings);
 

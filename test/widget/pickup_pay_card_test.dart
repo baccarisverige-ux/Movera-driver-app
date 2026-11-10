@@ -14,6 +14,7 @@ RadarOfferView _offer(PickupPayDisplay display) => RadarOfferView(
   payment: 'Card',
   rating: '4.96',
   fare: '120,70 kr',
+  driverEarnings: '90,52 kr',
   pickupMinutes: 9,
   pickupKm: 4.2,
   tripMinutes: 21,
@@ -85,9 +86,10 @@ void main() {
   }
 
   testWidgets('the driver share gets the pickup pay on top', (tester) async {
+    final offer0 = _offer(PickupPayDisplay.totalOnly);
     const details = OfferCardDetails(netFare: true);
-    final share = details.fare('120,70 kr');
-    final offer = _offer(PickupPayDisplay.totalOnly);
+    final share = details.fare('120,70 kr', earnings: offer0.driverEarnings);
+    final offer = offer0;
     await _pump(
       tester,
       RadarOfferCard(offer: offer, details: details, onMatch: () {}),

@@ -27,12 +27,15 @@ class DemoDestinationTrips {
     final path = route.length >= 2 ? route : <GeoPoint>[driver, destination];
     final corridor = corridorKm * 1000;
     final pickup = _offset(driver, _bearing(driver, destination) + 90, 600);
+    // Demo sample earnings are written out at each trip: the phone never
+    // works them out (owner 2026-11-10).
     RideOffer trip(
       String id,
       String rider,
       String dropoff,
       GeoPoint at,
-      Money fare, {
+      Money fare,
+      Money earnings, {
       required bool follows,
     }) {
       final km = pickup.distanceMetersTo(at) / 1000 * 1.25;
@@ -42,6 +45,7 @@ class DemoDestinationTrips {
         riderTrips: 40 + rider.length * 9,
         category: 'Comfort',
         fare: fare,
+        driverEarnings: earnings,
         rating: '4.95',
         pickupMinutes: 3,
         pickupKm: 0.8,
@@ -67,6 +71,7 @@ class DemoDestinationTrips {
         tr.demoNearPlace(destinationLabel ?? tr.demoYourDestination),
         _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)),
         Money(minorUnits: 24800, currency: 'SEK'),
+        Money(minorUnits: 18600, currency: 'SEK'),
         follows: true,
       ),
       trip(
@@ -75,6 +80,7 @@ class DemoDestinationTrips {
         tr.demoOnYourWayPercent(35),
         _offset(way1, way1Bearing + 90, corridor * 0.4),
         Money(minorUnits: 16450, currency: 'SEK'),
+        Money(minorUnits: 12337, currency: 'SEK'),
         follows: true,
       ),
       trip(
@@ -83,6 +89,7 @@ class DemoDestinationTrips {
         tr.demoOnYourWayPercent(60),
         _offset(way2, way2Bearing - 90, corridor * 0.5),
         Money(minorUnits: 19830, currency: 'SEK'),
+        Money(minorUnits: 14872, currency: 'SEK'),
         follows: true,
       ),
       trip(
@@ -91,6 +98,7 @@ class DemoDestinationTrips {
         tr.demoAwayFromRoute,
         _offset(mid, midBearing + 90, corridor * 3),
         Money(minorUnits: 15200, currency: 'SEK'),
+        Money(minorUnits: 11400, currency: 'SEK'),
         follows: false,
       ),
       trip(
@@ -99,6 +107,7 @@ class DemoDestinationTrips {
         tr.demoBehindYou,
         _offset(driver, _bearing(destination, driver), corridor * 1.5),
         Money(minorUnits: 12140, currency: 'SEK'),
+        Money(minorUnits: 9105, currency: 'SEK'),
         follows: false,
       ),
     ];

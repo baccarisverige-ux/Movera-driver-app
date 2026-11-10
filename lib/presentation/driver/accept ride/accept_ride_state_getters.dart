@@ -229,6 +229,7 @@ extension _AcceptRideStateGetters on _AcceptRideState {
     id: tripOccurrenceId('${widget.tripId}-next'),
     category: _AcceptRideState._demoNextTripOffer.category,
     fare: _AcceptRideState._demoNextTripOffer.fare,
+    driverEarnings: _AcceptRideState._demoNextTripOffer.driverEarnings,
     rating: _AcceptRideState._demoNextTripOffer.rating,
     pickupMinutes: _AcceptRideState._demoNextTripOffer.pickupMinutes,
     pickupKm: _AcceptRideState._demoNextTripOffer.pickupKm,

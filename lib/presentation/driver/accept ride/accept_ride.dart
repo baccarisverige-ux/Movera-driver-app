@@ -462,6 +462,8 @@ class _AcceptRideState extends State<AcceptRide>
     id: 'on-trip-radar-demo-1',
     category: 'Comfort',
     fare: '128,40 kr',
+    // Demo sample earnings, written out: the phone never works them out.
+    driverEarnings: '96,30 kr',
     rating: 4.94,
     pickupMinutes: 4,
     pickupKm: 1.6,
