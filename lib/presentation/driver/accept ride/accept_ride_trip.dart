@@ -371,28 +371,7 @@ extension _AcceptRideTrip on _AcceptRideState {
 
     switch (event.kind) {
       case DriverRealtimeKind.riderOnTheWay:
-        if (_rideLifecycle.terminal) {
-          return;
-        }
-        _rebuild(() => _riderOnTheWay = true);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text(
-              // The rider app sends its own English words ("I'm on the
-              // way"); they read in the driver's language.
-              event.message?.trim().isNotEmpty == true &&
-                      event.message!.trim() != riderOnTheWayMessage
-                  ? event.message!
-                  : tr.riderNameIsOnWay(_riderName),
-            ),
-            backgroundColor: _AcceptRideState._ink,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        );
+        _showRiderOnTheWay(event);
       // A rider cancel always goes through the projection drain above.
       case DriverRealtimeKind.riderCancelled:
       case DriverRealtimeKind.tripProjection:
