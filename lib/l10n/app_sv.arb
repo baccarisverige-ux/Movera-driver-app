@@ -1766,7 +1766,7 @@
   "stopOrdinal4": "fjärde",
   "stopOrdinal5": "femte",
   "stopOrdinalN": "{number}:e",
-  "holdToGoOffline": "Håll för att gå offline",
+  "holdToGoOffline": "Håll in för att gå offline",
   "tripOptions": "Resealternativ",
   "acceptTermsAndPrivacy": "Godkänn villkoren och integritetspolicyn",
   "rideTypeLabel": "Resetyp",
