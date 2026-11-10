@@ -1,6 +1,7 @@
 import 'package:movera/core/safety/emergency_numbers.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -66,8 +67,11 @@ class LiveDriverConfig extends ChangeNotifier {
     this.onReservationsChanged,
     DriverConfigCache? cache,
     this.retryAfter = const Duration(seconds: 5),
+    this.retryMax = const Duration(seconds: 60),
+    math.Random? random,
     this.requestTimeout = const Duration(seconds: 60),
-  }) : _client = client,
+  }) : _random = random ?? math.Random(),
+       _client = client,
        _base = apiBase,
        _token = accessToken,
        _cache = cache ?? const PrefsDriverConfigCache();
@@ -97,6 +101,27 @@ class LiveDriverConfig extends ChangeNotifier {
   /// opens, so a reconnect catches what was missed while it was down.
   final void Function()? onReservationsChanged;
   final Duration retryAfter;
+
+  /// Owner 2026-11-10: a refused stream waits [retryAfter] (5 s), then
+  /// doubles each failure (10, 20, 40) up to [retryMax] (60 s), with a
+  /// small random jitter (±10 %); a successful connect starts again at 5 s.
+  final Duration retryMax;
+  final math.Random _random;
+  int _failures = 0;
+
+  /// The wait before the next reconnect (counts one more failure).
+  Duration nextRetryWait() {
+    final doubled = retryAfter * math.pow(2, math.min(_failures, 16)).toInt();
+    _failures++;
+    final capped = doubled > retryMax ? retryMax : doubled;
+    final factor = 0.9 + 0.2 * _random.nextDouble();
+    final ms = (capped.inMilliseconds * factor).round().clamp(
+      retryAfter.inMilliseconds,
+      retryMax.inMilliseconds,
+    );
+    return Duration(milliseconds: ms);
+  }
+
   final Duration requestTimeout;
 
   DriverAppConfig? _current;
@@ -250,6 +275,7 @@ class LiveDriverConfig extends ChangeNotifier {
         return;
       }
       final data = StringBuffer();
+      _failures = 0;
       // §68: every (re)connect reads the booked rides again.
       onReservationsChanged?.call();
       _stream = response.stream
@@ -338,7 +364,7 @@ class LiveDriverConfig extends ChangeNotifier {
     _stream = null;
     if (_disposed || !_watching) return;
     _retry?.cancel();
-    _retry = Timer(retryAfter, () {
+    _retry = Timer(nextRetryWait(), () {
       unawaited(refresh());
       unawaited(_connect());
     });

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
@@ -18,6 +19,15 @@ class AirportQueueCard extends StatefulWidget {
   /// Reads GET /driver/airport-queue every 20 s (off in tests).
   final bool poll;
 
+  /// Owner 2026-11-10: the queue is read only while the driver is online
+  /// (the location sender runs) and in a queue or at/near an airport zone.
+  static bool wantedFor(LiveDriverServices live) => AirportQueue.wanted(
+    online: live.reporter.running,
+    inQueue: AirportQueue.instance.status?.inQueue ?? false,
+    point: live.reporter.lastKnownPoint,
+    zones: DriverZones.server,
+  );
+
   @override
   State<AirportQueueCard> createState() => _AirportQueueCardState();
 }
@@ -30,9 +40,12 @@ class _AirportQueueCardState extends State<AirportQueueCard> {
   void initState() {
     super.initState();
     _queue.addListener(_changed);
-    final api = LiveDriverServices.instance?.api;
-    if (widget.poll && api != null) {
-      _queue.startPolling(api);
+    final live = LiveDriverServices.instance;
+    if (widget.poll && live != null) {
+      _queue.startPolling(
+        live.api,
+        relevant: () => AirportQueueCard.wantedFor(live),
+      );
       _polling = true;
     }
   }

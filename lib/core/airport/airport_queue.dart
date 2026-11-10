@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/zones/driver_zone.dart';
 
 /// Fix job 9 (contract v0.18.36 §60, `contract.json#airportQueue`): the
 /// driver's place in an airport queue, as `GET /driver/airport-queue` sends
@@ -67,6 +69,37 @@ class AirportQueue extends ChangeNotifier {
   bool _leftNotice = false;
   Timer? _timer;
   int _pollers = 0;
+  bool Function()? _relevant;
+
+  /// How far around an airport zone's outline counts as near it
+  /// (about 2 km).
+  static const nearDegrees = 0.02;
+
+  /// Owner 2026-11-10 (step 62 request budgets): the queue is read only
+  /// when it can matter: the driver is [online] and either already in a
+  /// queue or at/near an airport zone of [zones] ([point] = his last fix).
+  static bool wanted({
+    required bool online,
+    required bool inQueue,
+    GeoPoint? point,
+    List<DriverZone>? zones,
+  }) {
+    if (!online) return false;
+    if (inQueue) return true;
+    if (point == null || zones == null) return false;
+    for (final zone in zones) {
+      if (!zone.isAirport) continue;
+      if (zone.contains(point.latitude, point.longitude)) return true;
+      final b = zone.bounds;
+      if (point.latitude >= b.south - nearDegrees &&
+          point.latitude <= b.north + nearDegrees &&
+          point.longitude >= b.west - nearDegrees &&
+          point.longitude <= b.east + nearDegrees) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   AirportQueueStatus? get status => _status;
 
@@ -100,11 +133,23 @@ class AirportQueue extends ChangeNotifier {
   }
 
   /// Starts reading every [every] (shared by every screen that polls).
-  void startPolling(ApiClient api) {
+  /// With [relevant], a tick asks the server only while it answers true;
+  /// otherwise the last place is dropped (he went offline or drove away).
+  void startPolling(ApiClient api, {bool Function()? relevant}) {
     _pollers++;
+    if (relevant != null) _relevant = relevant;
     if (_timer != null) return;
-    unawaited(refresh(api));
-    _timer = Timer.periodic(every, (_) => unawaited(refresh(api)));
+    _tick(api);
+    _timer = Timer.periodic(every, (_) => _tick(api));
+  }
+
+  void _tick(ApiClient api) {
+    final relevant = _relevant;
+    if (relevant == null || relevant()) {
+      unawaited(refresh(api));
+    } else if (_status != null) {
+      use(null);
+    }
   }
 
   void stopPolling() {
@@ -112,6 +157,7 @@ class AirportQueue extends ChangeNotifier {
     if (_pollers == 0) {
       _timer?.cancel();
       _timer = null;
+      _relevant = null;
     }
   }
 }

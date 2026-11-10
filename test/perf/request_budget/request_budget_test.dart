@@ -13,14 +13,12 @@ import 'request_budget_harness.dart';
 /// and says why (GLOBAL-SAFE-PLAN T3).
 const Map<DriverState, Map<String, double>> budgets = {
   DriverState.offline: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'GET /api/v1/driver/profile': 1.0,
     'GET /api/v1/notifications': 1.0,
     'GET /api/v1/driver/reminders': 1.0,
     'GET /api/v1/driver/onboarding/settings': 1.0,
   },
   DriverState.onlineIdle: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'GET /api/v1/driver/profile': 1.0,
     'GET /api/v1/notifications': 1.0,
     'GET /api/v1/driver/reminders': 1.0,
@@ -29,7 +27,6 @@ const Map<DriverState, Map<String, double>> budgets = {
     'GET /api/v1/driver/surge-map': 1.0,
   },
   DriverState.offerShown: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'GET /api/v1/driver/profile': 1.0,
     'GET /api/v1/notifications': 1.0,
     'GET /api/v1/driver/reminders': 1.0,
@@ -38,38 +35,25 @@ const Map<DriverState, Map<String, double>> budgets = {
     'GET /api/v1/driver/surge-map': 1.0,
   },
   DriverState.toPickup: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'POST /api/v1/driver/location': 6.0,
     'GET /api/v1/routes/driving/{coords}': 0.7,
   },
-  DriverState.atPickup: {
-    'GET /api/v1/driver/airport-queue': 3.0,
-    'POST /api/v1/driver/location': 6.0,
-  },
+  DriverState.atPickup: {'POST /api/v1/driver/location': 6.0},
   DriverState.onTrip: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'POST /api/v1/driver/location': 6.0,
     'GET /api/v1/routes/driving/{coords}': 0.7,
   },
-  DriverState.tripFinished: {
-    'GET /api/v1/driver/airport-queue': 3.0,
-    'POST /api/v1/driver/location': 6.0,
-  },
-  DriverState.background: {
-    'GET /api/v1/driver/airport-queue': 3.0,
-    'POST /api/v1/driver/location': 6.0,
-  },
+  DriverState.tripFinished: {'POST /api/v1/driver/location': 6.0},
+  DriverState.background: {'POST /api/v1/driver/location': 6.0},
   DriverState.offlineConfigStreamDown: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'GET /api/v1/driver/profile': 1.0,
     'GET /api/v1/notifications': 1.0,
     'GET /api/v1/driver/reminders': 1.0,
     'GET /api/v1/driver/onboarding/settings': 1.0,
-    'GET /api/v1/driver/config': 12.0,
-    'GET /api/v1/driver/config/stream (SSE open)': 12.0,
+    'GET /api/v1/driver/config': 1.1,
+    'GET /api/v1/driver/config/stream (SSE open)': 1.1,
   },
   DriverState.onlineOffersStreamDown: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'GET /api/v1/driver/profile': 1.0,
     'GET /api/v1/notifications': 1.0,
     'GET /api/v1/driver/reminders': 1.0,
@@ -79,7 +63,6 @@ const Map<DriverState, Map<String, double>> budgets = {
     'GET /api/v1/driver/offers/stream (SSE open)': 2.0,
   },
   DriverState.toPickupTripStreamDown: {
-    'GET /api/v1/driver/airport-queue': 3.0,
     'POST /api/v1/driver/location': 6.0,
     'GET /api/v1/routes/driving/{coords}': 0.7,
     'GET /api/v1/trips/{tripId}': 6.0,
@@ -142,7 +125,8 @@ void main() {
   });
 
   test('the check fails on one extra poll (Rule 35 guard)', () {
-    // An extra 30 s read of the airport queue on Home: +2 a minute.
+    // An extra 30 s read of the airport queue on Home (which is not read
+    // away from an airport): +2 a minute.
     final m = measure(
       DriverState.onlineIdle,
       extra: (LiveDriverServices live, stops) {

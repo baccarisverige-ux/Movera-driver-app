@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/airport/airport_queue.dart';
+import 'package:movera/presentation/driver/airport_queue/airport_queue_card.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -254,8 +255,12 @@ void _enter(
   }
 
   // Home stays mounted under every route; its AirportQueueCard polls
-  // while mounted (home_map_sheet.dart:1008, airport_queue_card.dart:35).
-  AirportQueue.instance.startPolling(live.api);
+  // while mounted, only when online and in a queue or near an airport
+  // (owner 2026-11-10; the phone here is far from any airport zone).
+  AirportQueue.instance.startPolling(
+    live.api,
+    relevant: () => AirportQueueCard.wantedFor(live),
+  );
   stops.add(AirportQueue.instance.stopPolling);
 
   final homeVisible = switch (state) {
