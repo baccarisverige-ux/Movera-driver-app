@@ -172,11 +172,7 @@ void main() {
         'expectedVersion': 9,
         'changeId': 'rc_1',
       });
-<<<<<<< HEAD
-      expect(requests.single.headers['X-Contract-Version'], '0.18.57');
-=======
       expect(requests.single.headers['X-Contract-Version'], '0.18.59');
->>>>>>> 897564f4 (Contract pins 0.18.59 (api client, transitions, docs, tests))
       expect(trips.versionOf('t1'), 10);
     });
 

@@ -42,20 +42,11 @@ void main() {
     }
   });
 
-<<<<<<< HEAD
-  test('the copy is contract v0.18.57', () {
-    expect(
-      File('contracts/contract.json').readAsStringSync(),
-      contains('"version": "0.18.57"'),
-    );
-    expect(TripTransitions.contractVersion, '0.18.57');
-=======
   test('the copy is contract v0.18.59', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
       contains('"version": "0.18.59"'),
     );
     expect(TripTransitions.contractVersion, '0.18.59');
->>>>>>> 897564f4 (Contract pins 0.18.59 (api client, transitions, docs, tests))
   });
 }
