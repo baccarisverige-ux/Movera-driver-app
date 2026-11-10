@@ -22,8 +22,20 @@ void main() {
       expect(panel, contains('extension _AcceptRidePanel on _AcceptRideState'));
       expect(panel, contains('Widget _buildRidePanel'));
       expect(panel, contains('Widget _buildRiderRow'));
+      // Owner Q84 (2026-11-10): the chat and call handling moved word for
+      // word into accept_ride_trip_chat.dart (no behaviour change).
+      final chat = File(
+        'lib/presentation/driver/accept ride/accept_ride_trip_chat.dart',
+      ).readAsStringSync();
+      expect(ride, contains("part 'accept_ride_trip_chat.dart';"));
+      expect(chat, contains("part of 'accept_ride.dart';"));
       expect(
-        panel,
+        chat,
+        contains('extension _AcceptRideTripChat on _AcceptRideState'),
+      );
+      expect(chat, isNot(contains('setState(')));
+      expect(
+        chat,
         // LT-4 (owner 2026-11-03): Chat now opens through its loader.
         contains(
           'chatScreen(riderDisplayName: _riderName, tripId: widget.tripId)',

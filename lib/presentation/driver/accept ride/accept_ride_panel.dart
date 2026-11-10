@@ -702,66 +702,6 @@ extension _AcceptRidePanel on _AcceptRideState {
     );
   }
 
-  /// Chat with the rider; a live build counts their unread messages on it.
-  Widget _chatButton() {
-    final chat = LiveDriverServices.instance?.chat;
-    TripRoundButton button(String tooltip) => TripRoundButton(
-      key: const ValueKey<String>('active-ride-message-rider'),
-      tooltip: tooltip,
-      onTap: _messageRider,
-      asset: AppAssets.solarChatRoundDots,
-    );
-    if (chat == null) {
-      return button(tr.messageRider);
-    }
-    return ListenableBuilder(
-      listenable: chat.thread(widget.tripId),
-      builder: (_, __) {
-        final unread = chat.unreadOf(widget.tripId);
-        return Badge.count(
-          key: const ValueKey<String>('active-ride-chat-unread'),
-          count: unread,
-          isLabelVisible: unread > 0,
-          backgroundColor: const Color(0xFFE0474C),
-          child: button(
-            unread == 0
-                ? tr.messageRider
-                : chat.thread(widget.tripId).unreadFromSupport > 0
-                ? tr.chatNewMessagesAny(unread)
-                : tr.chatNewMessages(unread),
-          ),
-        );
-      },
-    );
-  }
-
-  /// Contract v0.13.0 §22: a masked call, never the rider's number.
-  void _callRider() {
-    unawaited(
-      callRider(
-        context,
-        tripId: widget.tripId,
-        snackBar: (text) => SnackBar(
-          content: Text(text),
-          backgroundColor: _AcceptRideState._ink,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _messageRider() {
-    pushSingle(
-      context,
-      BottomToTopTransition(
-        chatScreen(riderDisplayName: _riderName, tripId: widget.tripId),
-      ),
-    );
-  }
-
   Widget _buildPrimaryAction() {
     final accent = switch (_stage) {
       ActiveRideStage.headingToPickup => const Color(0xFF1C242C),
