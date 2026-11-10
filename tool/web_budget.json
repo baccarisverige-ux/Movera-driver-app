@@ -1,0 +1,23 @@
+{
+  "_comment": "Driver web build size budget (START-HERE step 50 / plan U4, owner Q51 2026-11-09). Per variant: budget = main.dart.js measured on 2026-11-10 + 2 %, rounded up to the next KiB. Until warn_until a breach of the budget is a GitHub warning (exit 0); from that date on it fails the job (exit 1). hard_* is the older CI limit (Phase 7 baseline + ~10 %), which fails at once, warn window or not; the demo budget is capped at it so nothing is loosened. Raise a budget on purpose, in the change that needs the bytes, and write the new measurement here.",
+  "measured_on": "2026-11-10",
+  "warn_until": "2026-11-17",
+  "variants": {
+    "demo": {
+      "description": "flutter build web --release (verify job; the GitHub Pages demo)",
+      "measured_raw": 6066307,
+      "measured_gzip": 1725099,
+      "budget_raw": 6188032,
+      "budget_gzip": 1760256,
+      "hard_raw": 6200000,
+      "hard_gzip": 1760000
+    },
+    "live": {
+      "description": "flutter build web --release --wasm --dart-define=MOVERA_AUTH_REQUIRED=true ... (live-web job and the deploy workflow). About 94 KB raw / 25 KB gzip bigger than the demo: the define keeps the live-only code (session gate, live home, live accept-ride, live services in main.dart) that dart2js tree-shakes out of the demo; --wasm and the other defines do not change main.dart.js.",
+      "measured_raw": 6160823,
+      "measured_gzip": 1749781,
+      "budget_raw": 6284288,
+      "budget_gzip": 1784832
+    }
+  }
+}
