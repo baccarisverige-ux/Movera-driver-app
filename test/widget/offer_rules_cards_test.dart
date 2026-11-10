@@ -28,6 +28,7 @@ const _offer = RadarOfferView(
   payment: 'Cash',
   rating: '4.94',
   fare: '100,00 kr',
+  driverEarnings: '75,00 kr',
   pickupMinutes: 4,
   pickupKm: 1.6,
   tripMinutes: 19,
@@ -152,6 +153,7 @@ void main() {
       const request = ReservationRequestPreview(
         category: 'Comfort',
         fare: '126.75 kr',
+        earnings: '95,06 kr',
         paidByCash: true,
         pickupLabel: '',
         pickupAddress: 'Gamla vägen, Stockholm',

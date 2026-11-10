@@ -1,4 +1,5 @@
 import 'package:movera/core/money/money.dart';
+
 import 'dart:async';
 
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -22,6 +23,8 @@ class DemoRideCheckTrips {
     riderTrips: 27,
     category: 'Movera',
     fare: Money(minorUnits: 16800, currency: 'SEK'),
+    // Demo sample earnings, written out: the phone never works them out.
+    driverEarnings: Money(minorUnits: 12600, currency: 'SEK'),
     rating: '4.90',
     pickupMinutes: 2,
     pickupKm: 0.6,
@@ -41,6 +44,8 @@ class DemoRideCheckTrips {
     riderTrips: 51,
     category: 'Comfort',
     fare: Money(minorUnits: 13240, currency: 'SEK'),
+    // Demo sample earnings, written out: the phone never works them out.
+    driverEarnings: Money(minorUnits: 9930, currency: 'SEK'),
     rating: '4.94',
     pickupMinutes: 2,
     pickupKm: 0.5,
@@ -70,6 +75,8 @@ class DemoAdminOffers {
     // 112,40 kr trip + 40 kr Movera bonus.
     fare: Money(minorUnits: 15240, currency: 'SEK'),
     driverBonus: Money(minorUnits: 4000, currency: 'SEK'),
+    // Demo sample earnings, written out: the phone never works them out.
+    driverEarnings: Money(minorUnits: 12430, currency: 'SEK'),
     priority: true,
     source: OfferSource.admin,
     groupId: 'demo-radar-group-1',
@@ -97,6 +104,8 @@ class DemoAdminOffers {
     // 87,20 kr trip + 25 kr Movera bonus.
     fare: Money(minorUnits: 11220, currency: 'SEK'),
     driverBonus: Money(minorUnits: 2500, currency: 'SEK'),
+    // Demo sample earnings, written out: the phone never works them out.
+    driverEarnings: Money(minorUnits: 9040, currency: 'SEK'),
     priority: true,
     source: OfferSource.admin,
     groupId: 'demo-radar-group-2',
@@ -122,6 +131,8 @@ class DemoAdminOffers {
     // 98,60 kr trip + 30 kr Movera bonus.
     fare: Money(minorUnits: 12860, currency: 'SEK'),
     driverBonus: Money(minorUnits: 3000, currency: 'SEK'),
+    // Demo sample earnings, written out: the phone never works them out.
+    driverEarnings: Money(minorUnits: 10395, currency: 'SEK'),
     priority: true,
     source: OfferSource.admin,
     rating: '4.88',
@@ -274,6 +285,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 86,
       category: 'Comfort',
       fare: Money(minorUnits: 11102, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 8326, currency: 'SEK'),
       rating: '4.95',
       pickupMinutes: 7,
       pickupKm: 2.1,
@@ -293,6 +306,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 203,
       category: 'Movera',
       fare: Money(minorUnits: 9640, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 7230, currency: 'SEK'),
       rating: '4.91',
       pickupMinutes: 5,
       pickupKm: 1.4,
@@ -312,6 +327,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 57,
       category: 'Premium',
       fare: Money(minorUnits: 18460, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 13845, currency: 'SEK'),
       rating: '4.98',
       pickupMinutes: 9,
       pickupKm: 3.6,
@@ -335,6 +352,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 142,
       category: 'Priority',
       fare: Money(minorUnits: 12870, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 9652, currency: 'SEK'),
       rating: '4.93',
       pickupMinutes: 4,
       pickupKm: 1.1,
@@ -353,6 +372,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 31,
       category: 'Electric',
       fare: Money(minorUnits: 13920, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 10440, currency: 'SEK'),
       rating: '4.97',
       pickupMinutes: 8,
       pickupKm: 2.9,
@@ -375,6 +396,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 18,
       category: 'Movera',
       fare: Money(minorUnits: 20000, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 15000, currency: 'SEK'),
       cashToCollect: Money(minorUnits: 25000, currency: 'SEK'),
       rating: '4.89',
       pickupMinutes: 6,
@@ -397,6 +420,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 64,
       category: 'Comfort',
       fare: Money(minorUnits: 30000, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 22500, currency: 'SEK'),
       cashToCollect: Money(minorUnits: 20000, currency: 'SEK'),
       rating: '4.96',
       pickupMinutes: 5,
@@ -419,6 +444,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 40,
       category: 'Comfort',
       fare: Money(minorUnits: 15840, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 11880, currency: 'SEK'),
       cashToCollect: Money(minorUnits: 12000, currency: 'SEK'),
       rating: '4.92',
       pickupMinutes: 4,
@@ -440,6 +467,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 122,
       category: 'Premium',
       fare: Money(minorUnits: 21490, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 16117, currency: 'SEK'),
       cashToCollect: Money(minorUnits: 26000, currency: 'SEK'),
       rating: '4.97',
       pickupMinutes: 7,
@@ -461,6 +490,8 @@ class DemoDispatchRepository implements DispatchRepository {
       riderTrips: 9,
       category: 'Priority',
       fare: Money(minorUnits: 9600, currency: 'SEK'),
+      // Demo sample earnings, written out: the phone never works them out.
+      driverEarnings: Money(minorUnits: 7200, currency: 'SEK'),
       cashToCollect: Money(minorUnits: 13000, currency: 'SEK'),
       rating: '4.86',
       pickupMinutes: 3,

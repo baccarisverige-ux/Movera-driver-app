@@ -58,6 +58,7 @@ RadarOfferView _offer({bool priority = false}) => RadarOfferView(
   rating: '4.92',
   // The fare already has the Movera bonus in it.
   fare: '152,40 kr',
+  driverEarnings: '114,30 kr',
   pickupMinutes: 4,
   pickupKm: 1.3,
   tripMinutes: 16,

@@ -289,16 +289,15 @@ class ReservationRequestPreview {
   String get fareLabel => Money.parseLabel(fare)?.formatted ?? fare;
 
   /// The driver's own money for the ride, the number its sheet and the
-  /// Scheduled rides list show (owner decision 2026-10-26): [fare] after
-  /// Movera's commission ([OfferCardDetails.fare]); a preview carries no
-  /// server earnings, so it is the demo's share. Pickup pay, when the
-  /// ride has it, comes on top.
+  /// Scheduled rides list show (owner decision 2026-10-26): only
+  /// [earnings], never worked out on the phone; "—" without them (owner
+  /// decision 2026-11-10). Pickup pay, when the ride has it, comes on top.
   String get driverPayLabel =>
       DriverOfferRules.current.card.fare(fareLabel, earnings: earnings);
 
   /// Contract v0.18.17 (`DriverReservation.earnings`): the server's own
-  /// driver money for a booked ride from `GET /driver/reservations`; null
-  /// for a demo ride (then [driverPayLabel] is the demo's share).
+  /// driver money for a booked ride from `GET /driver/reservations`; for
+  /// a demo ride, its written-out sample earnings.
   final String? earnings;
 
   final String pickupLabel;
@@ -589,6 +588,8 @@ class _DemoReservationSet {
           riderName: 'Karin',
           riderTrips: 128,
           fare: '126.75 kr',
+          // Demo sample earnings, written out (owner 2026-11-10).
+          earnings: '95,06 kr',
           pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
           pickupAddress: 'Gamla vägen, Stockholm',
           dropoffAddress: 'Solna centrum, Solna',
@@ -612,6 +613,8 @@ class _DemoReservationSet {
         (time, day) => ReservationRequestPreview(
           category: 'Premium',
           fare: '249.25 kr',
+          // Demo sample earnings, written out (owner 2026-11-10).
+          earnings: '186,94 kr',
           fareBoost: '+40 kr',
           rating: '4.97',
           riderName: 'Anna',
@@ -643,6 +646,8 @@ class _DemoReservationSet {
                 riderName: 'Maja',
                 riderTrips: 73,
                 fare: '248.40 kr',
+                // Demo sample earnings, written out (owner 2026-11-10).
+                earnings: '186,30 kr',
                 pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
                 pickupAddress: 'Fridhemsplan, Stockholm',
                 dropoffAddress: 'Arlanda Terminal 5, Arlanda',
@@ -664,6 +669,8 @@ class _DemoReservationSet {
           riderName: 'Erik',
           riderTrips: 64,
           fare: '312.40 kr',
+          // Demo sample earnings, written out (owner 2026-11-10).
+          earnings: '234,30 kr',
           pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
           pickupAddress: 'Kungsholmstorg, Stockholm',
           dropoffAddress: 'Arlanda Terminal 5, Arlanda',

@@ -65,12 +65,12 @@ void main() {
       expect(ExclusiveReasons.text('unknown', edited), '');
     });
 
-    test('the card amount is the driver\'s share after the commission, '
-        'with or without the "Your share" caption (owner 2026-10-26)', () {
+    test('the card amount is only the server\'s driver earnings; without '
+        'them "—", never a share made up on the phone (owner 2026-11-10)', () {
       const card = OfferCardDetails(netFare: true);
-      expect(card.fare('100,00 kr'), '75,00 kr');
-      expect(card.fare('126,75 kr', commissionRate: 0.2), '101,40 kr');
-      expect(const OfferCardDetails().fare('126,75 kr'), '95,06 kr');
+      expect(card.fare('100,00 kr'), '—');
+      expect(card.fare('126,75 kr', commissionRate: 0.2), '—');
+      expect(const OfferCardDetails().fare('126,75 kr'), '—');
       expect(card.fare('—'), '—');
       // The server's earnings win over the local rule.
       expect(card.fare('200,00 kr', earnings: '170,00 kr'), '170,00 kr');

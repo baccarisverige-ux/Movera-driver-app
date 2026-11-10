@@ -1,10 +1,8 @@
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
-import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
-import 'package:movera/core/waybill/waybill.dart';
 
 enum ClaimOutcome {
   success,
@@ -127,7 +125,13 @@ class RideOffer {
           : _amount(reservation.cashToCollect, 'cashToCollect'),
       // The server's earnings + pickup pay + bonus, as the restore path
       // (`LiveActiveTrip.snapshotOf`): no commission taken on the phone.
-      driverEarnings: startedPay == null ? null : Money.parseLabel(startedPay),
+      // Else the reservation's own earnings (server, or demo written out);
+      // never a share worked out here (owner decision 2026-11-10).
+      driverEarnings: startedPay != null
+          ? Money.parseLabel(startedPay)
+          : reservation.earnings == null
+          ? null
+          : Money.parseLabel(reservation.earnings!),
       driverBonus: started?.driverBonus,
     );
   }
@@ -167,22 +171,17 @@ class RideOffer {
   /// The driver's own money for this trip, after Movera's commission
   /// (owner decision 2026-10-26, "price must be after commission that
   /// show to driver"): the server's [driverEarnings] (Movera's bonus in
-  /// it); for a demo offer without them, [fare] after the demo's
-  /// commission with the [driverBonus] kept whole
-  /// ([WaybillPayment.shareOf]), the same number the offer card shows
-  /// ([OfferCardDetails.fare]). Pickup pay is added on top of it
+  /// it; demo offers write theirs out). Null without them: the phone
+  /// never works out a share (owner decision 2026-11-10), and
+  /// [driverPayLabel] and the offer card show "—". Pickup pay is added on top of it
   /// (`PickupPayQuote.totalOf`): the driver's total is
   /// `driverEarnings + pickupPay`.
-  Money get driverPay =>
-      driverEarnings ??
-      WaybillPayment.shareOf(
-        fare,
-        bonus: driverBonus,
-        feeRate: DriverOfferRules.current.commissionRate,
-      );
+  Money? get driverPay => driverEarnings;
 
   /// Display form of [driverPay], e.g. `83,26 kr`.
-  String get driverPayLabel => driverPay.formatted;
+  /// "—" when the server sent no [driverEarnings] (owner decision
+  /// 2026-11-10: never show made-up earnings).
+  String get driverPayLabel => driverEarnings?.formatted ?? '—';
 
   /// On a cash trip, the cash the rider hands over: [cashToCollect] when
   /// dispatch sent one (R8-4), else [fare] without Movera's [driverBonus],

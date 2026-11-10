@@ -502,6 +502,7 @@ class _DriverHomeState extends State<DriverHome>
     riderName: 'Nils',
     riderTrips: 93,
     fare: '104,80 kr',
+    driverEarnings: '78,60 kr', // demo sample, written out
     rating: '4.96',
     pickupMinutes: 3,
     pickupKm: 0.9,
@@ -520,6 +521,7 @@ class _DriverHomeState extends State<DriverHome>
     riderName: 'Maja',
     riderTrips: 175,
     fare: '176,20 kr',
+    driverEarnings: '132,15 kr', // demo sample, written out
     rating: '4.98',
     pickupMinutes: 8,
     pickupKm: 3.3,
