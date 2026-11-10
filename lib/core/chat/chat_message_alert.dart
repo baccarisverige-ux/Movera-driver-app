@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/sound/app_tones.dart';
 import 'package:movera/core/sound/offer_alert.dart';
 
 import 'package:movera/core/chat/chat_speech_io.dart'
@@ -10,10 +12,12 @@ import 'package:movera/core/sound/device_sound_io.dart'
     if (dart.library.js_interop) 'package:movera/core/sound/device_sound_web.dart';
 
 /// Contract v0.18.56 §78 (G9-2.7, G9-2.9): what a new chat message from
-/// the rider does on the trip screen: a short sound (admin `chat.sound`),
+/// the rider does on the trip screen: a short sound (admin `chat.sound`;
+/// Movera's own `assets/sounds/chat_message.wav`),
 /// a vibration only while the driver's own Accessibility "Vibration" is
 /// on, and, while "Read rider messages" (Settings › Sound & voice) is on,
-/// the text read aloud in the app language (start value: admin
+/// the text read aloud in the app language (browser voice on web, the
+/// phone's text-to-speech on Android / iOS) (start value: admin
 /// `readAloudDefault`).
 abstract final class ChatMessageAlert {
   /// Tests see the alerts here instead of the device.
@@ -31,7 +35,7 @@ abstract final class ChatMessageAlert {
     required bool readAloudDefault,
     SettingsRepository? repository,
   }) async {
-    if (sound) _do('sound', () => SystemSound.play(SystemSoundType.alert));
+    if (sound) _do('sound', () => unawaited(AppTones.playChatMessage()));
     if (OfferAlertSettings.vibrate.value) {
       _do('vibrate', () => deviceVibrate(vibratePattern));
     }
