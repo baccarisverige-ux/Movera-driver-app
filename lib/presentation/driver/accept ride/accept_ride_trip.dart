@@ -777,7 +777,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     // Owner 2026-10-29 (live bug A, contract v0.18.1 §26): a live trip
     // shows the server's final price, never the booked cash: a finish more
-    // than 300 m before the drop-off is priced by what was driven.
+    // farther than the zone's counts-as-arrived limit (v0.18.58 §80) is an
+    // early end; the server decides, never a fixed distance here.
     final trips = _AcceptRideLive(this)._liveTrips;
     CompletePreview? preview = changed;
     if (trips != null && preview == null) {
@@ -810,19 +811,28 @@ extension _AcceptRideTrip on _AcceptRideState {
       riderName: _riderName,
       category: widget.category,
       recalculated: preview?.earlyEnd ?? false,
-      earlyEndNote: preview == null || !preview.earlyEnd
-          ? null
-          : switch (preview.repriced) {
-              true => tr.g8PricedForDriven,
-              false => tr.g8BookedPriceStands,
-              null => null,
-            },
+      earlyEndNote: _earlyEndNote(preview),
       breakdown: preview?.earningsBreakdown ?? const [],
     );
     if (!complete || !mounted || !_collectsCashNow) {
       return;
     }
     await _advanceRide();
+  }
+
+  /// v0.18.58 §80: "You are {m} m from the destination – the trip ends
+  /// early" (from the preview's distanceToDropoffMeters) above the G8 Q2
+  /// price note; null when the trip is not ending early.
+  String? _earlyEndNote(CompletePreview? preview) {
+    if (preview == null || !preview.earlyEnd) return null;
+    final far = preview.farFromDropoffMeters;
+    final price = switch (preview.repriced) {
+      true => tr.g8PricedForDriven,
+      false => tr.g8BookedPriceStands,
+      null => null,
+    };
+    final lines = [if (far != null) tr.arrivedFarWarning(far), ?price];
+    return lines.isEmpty ? null : lines.join('\n');
   }
 
   Future<void> _advanceRide() async {

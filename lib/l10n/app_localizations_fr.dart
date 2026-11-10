@@ -7001,6 +7001,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get waitingBeforePickup => 'Avant l’heure de prise en charge';
 
   @override
+  String arrivedFarWarning(int m) {
+    return 'Vous êtes à $m m de la destination – la course se termine plus tôt';
+  }
+
+  @override
   String get docInsuranceLetter => 'Attestation d’assurance';
 
   @override

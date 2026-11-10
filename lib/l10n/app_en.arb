@@ -5135,6 +5135,8 @@
   "@nextTripPopupBooked": {"description": "Fix job 5 (owner 2026-11-05): next trip card / popup after Complete.", "placeholders": {"time": {"type": "String"}, "pickup": {"type": "String"}}},
   "waitingBeforePickup": "Before the pickup time",
   "@waitingBeforePickup": {"description": "contract.json#bookedRide0_18_51.texts.beforePickup: label of the waiting timer while it counts down to a booked ride's pickup time."},
+  "arrivedFarWarning": "You are {m} m from the destination – the trip ends early",
+  "@arrivedFarWarning": {"description": "Contract v0.18.58 §80 (arrivedDistance.texts.driverFar): Collect cash sheet when the complete preview says earlyEnd; m = distanceToDropoffMeters.", "placeholders": {"m": {"type": "int"}}},
   "docInsuranceLetter": "Insurance letter",
   "docTaxiDriverLicense": "Taxi driver license",
   "docTaxiLicenseShort": "Taxi license",

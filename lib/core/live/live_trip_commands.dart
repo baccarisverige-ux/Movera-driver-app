@@ -21,9 +21,10 @@ class LiveTripOutcome {
 
 /// The server's final price before Collect cash (contract v0.18.1 §26):
 /// [total] the rider's fare, [cashDue] what the driver takes in cash
-/// (the fare less the wallet's part), [earlyEnd] when the driver is more
-/// than 300 m from the drop-off (owner decision 28: priced by what was
-/// driven, at least the category minimum).
+/// (the fare less the wallet's part), [earlyEnd] when the driver is farther
+/// from the drop-off than the zone's counts-as-arrived limit (contract
+/// v0.18.58 §80: [arrivedLimitMeters], larger at an airport; the server
+/// decides, the app never uses a fixed distance).
 class CompletePreview {
   const CompletePreview({
     this.previewId,
@@ -34,6 +35,8 @@ class CompletePreview {
     this.driverTotal,
     this.earningsBreakdown = const [],
     this.repriced,
+    this.arrivedLimitMeters,
+    this.distanceToDropoffMeters,
   });
 
   /// The answer's money, or null when it is not a `CompletePreview`.
@@ -47,6 +50,8 @@ class CompletePreview {
       final id = json['previewId'];
       final driverTotal = json['driverTotal'];
       final repriced = json['repriced'];
+      final limit = json['arrivedLimitMeters'];
+      final distance = json['distanceToDropoffMeters'];
       final parsed = CompletePreview(
         previewId: id is String && id.isNotEmpty ? id : null,
         total: Money.fromJson(Map<String, dynamic>.from(total)),
@@ -60,6 +65,8 @@ class CompletePreview {
             : null,
         earningsBreakdown: EarningsLine.parseList(json['earningsBreakdown']),
         repriced: repriced is bool ? repriced : null,
+        arrivedLimitMeters: limit is num ? limit.round() : null,
+        distanceToDropoffMeters: distance is num ? distance.round() : null,
       );
       return parsed.cashDue.currency == parsed.total.currency ? parsed : null;
     } on FormatException {
@@ -86,6 +93,18 @@ class CompletePreview {
   /// worked out again for the distance driven, false when the booked price
   /// stands; null from an older server.
   final bool? repriced;
+
+  /// v0.18.58 §80: the counts-as-arrived limit the server used (null from
+  /// an older server).
+  final int? arrivedLimitMeters;
+
+  /// v0.18.58 §80: the driver's latest fix to the drop-off; null with no
+  /// fix or from an older server.
+  final int? distanceToDropoffMeters;
+
+  /// v0.18.58 §80: the meters for "You are {m} m from the destination",
+  /// only when the server says the trip ends early.
+  int? get farFromDropoffMeters => earlyEnd ? distanceToDropoffMeters : null;
 
   /// The driver's money for the sheet: [driverTotal], else the older
   /// [driverEarnings].
