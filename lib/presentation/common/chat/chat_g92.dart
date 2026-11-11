@@ -140,3 +140,41 @@ String? translateNotice(TranslateResult result) => switch (result) {
   TranslateResult.off => tr.chatTranslationOff,
   TranslateResult.failed => tr.chatTranslationFailed,
 };
+
+/// §78: "120/2000" over the chat input, shown only in the last 10% of the
+/// country's chat max length (no new wording: numbers only).
+class ChatLengthCounter extends StatelessWidget {
+  const ChatLengthCounter({
+    super.key,
+    required this.controller,
+    required this.maxLength,
+  });
+
+  final TextEditingController controller;
+  final int maxLength;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: controller,
+    builder: (_, value, _) {
+      final length = value.text.characters.length;
+      if (length < maxLength * 0.9) return const SizedBox.shrink();
+      return Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 4, right: 12),
+          child: Text(
+            '$length/$maxLength',
+            key: const ValueKey<String>('chat-length-counter'),
+            style: TextStyle(
+              color: length >= maxLength
+                  ? const Color(0xFFB3261E)
+                  : const Color(0xFF5C656C),
+              fontSize: 12,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}

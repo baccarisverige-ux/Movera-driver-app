@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
@@ -33,6 +34,7 @@ Widget customTextfield({
   FocusNode? focusNode,
   bool readOnly = false,
   TextInputAction? textInputAction,
+  List<TextInputFormatter>? inputFormatters,
 }) {
   return TextFormField(
     focusNode: focusNode,
@@ -41,6 +43,7 @@ Widget customTextfield({
     enabled: enabled,
     validator: onValidator,
     textInputAction: textInputAction,
+    inputFormatters: inputFormatters,
     onChanged: (v) => onChanged?.call(v),
     maxLines: isobscure == true ? 1 : maxline,
     keyboardType: keyboardType,
