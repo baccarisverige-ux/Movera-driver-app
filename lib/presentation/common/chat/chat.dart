@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
@@ -404,6 +405,11 @@ class _ChatState extends State<Chat> {
                           ),
                         ),
                       ),
+                    ChatLengthCounter(
+                      controller: _messageController,
+                      maxLength: (thread?.options ?? TripChatOptions.defaults)
+                          .maxLength,
+                    ),
                     Row(
                       children: [
                         Expanded(
@@ -422,6 +428,14 @@ class _ChatState extends State<Chat> {
                             enabled: !closed,
                             textInputAction: TextInputAction.send,
                             onFieldSubmitted: (_) => _sendMessage(),
+                            // §78: the country's chat max length; the
+                            // server refuses longer messages.
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(
+                                (thread?.options ?? TripChatOptions.defaults)
+                                    .maxLength,
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 10),
