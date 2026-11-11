@@ -70,11 +70,30 @@ class LiveDriverConfig extends ChangeNotifier {
     this.retryMax = const Duration(seconds: 60),
     math.Random? random,
     this.requestTimeout = const Duration(seconds: 60),
-  }) : _random = random ?? math.Random(),
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
+       _random = random ?? math.Random(),
        _client = client,
        _base = apiBase,
        _token = accessToken,
        _cache = cache ?? const PrefsDriverConfigCache();
+
+  final DateTime Function() _now;
+
+  /// D12-5: when the open stream last sent a line (heartbeats every 15 s,
+  /// D12-7); null while no stream is open.
+  DateTime? _lastLine;
+
+  /// D12-5: a stream with a line this recent is alive; a resume keeps it.
+  static const freshFor = Duration(seconds: 20);
+
+  @visibleForTesting
+  bool get streamFresh {
+    final last = _lastLine;
+    return _stream != null &&
+        last != null &&
+        _now().difference(last) < freshFor;
+  }
 
   final http.Client _client;
   final Uri _base;
@@ -278,11 +297,14 @@ class LiveDriverConfig extends ChangeNotifier {
       _failures = 0;
       // §68: every (re)connect reads the booked rides again.
       onReservationsChanged?.call();
+      // D12-5: only a received line shows the stream is alive.
+      _lastLine = null;
       _stream = response.stream
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen(
             (line) {
+              _lastLine = _now();
               if (line.startsWith('data:')) {
                 data.write(line.substring(5).trim());
                 return;
@@ -339,6 +361,11 @@ class LiveDriverConfig extends ChangeNotifier {
   /// its stream may have died without a word); a followed stream opens
   /// again at once.
   Future<DriverAppConfig?> resumed() {
+    // D12-5: a stream that sent a line in the last [freshFor] missed
+    // nothing; keep it and skip the read (a short trip out of the app).
+    if (_watching && !_disposed && streamFresh) {
+      return Future<DriverAppConfig?>.value(current);
+    }
     if (_watching && !_disposed) {
       _retry?.cancel();
       _retry = null;

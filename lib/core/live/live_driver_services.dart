@@ -50,6 +50,7 @@ class LiveDriverServices {
     required ApiClient api,
     required DriverLocationRepository location,
     Duration locationEvery = LiveLocationReporter.defaultEvery,
+    @visibleForTesting DateTime Function()? now,
   }) : _client = client,
        _tokens = tokens,
        _api = api,
@@ -94,6 +95,7 @@ class LiveDriverServices {
       accessToken: tokens.readAccess,
       renewSession: api.renewAccess,
       onAccepted: trips.observe,
+      now: now,
     );
     presence = LivePresence(
       api: api,
@@ -107,7 +109,7 @@ class LiveDriverServices {
     );
     content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
     zones = LiveDriverZones(api: api);
-    events = LiveDriverEvents(api: api);
+    events = LiveDriverEvents(api: api, now: now);
     config = LiveDriverConfig(
       client: client,
       apiBase: apiBase,
@@ -117,6 +119,7 @@ class LiveDriverServices {
       onZonesPublished: () => unawaited(zones.refresh()),
       onEventsPublished: () => unawaited(events.refresh()),
       onReservationsChanged: () => onReservationsStale?.call(),
+      now: now,
     );
   }
 
@@ -268,7 +271,8 @@ class LiveDriverServices {
   void resumed() {
     presence.resumed();
     if (_signedInStarted) {
-      unawaited(events.refresh());
+      // D12-5: not again when read in the last minute.
+      unawaited(events.refreshIfStale());
       // Job 3 / L19: settings changed while the app was away apply now.
       unawaited(config.resumed());
     }
@@ -634,6 +638,9 @@ class LivePresence {
   void resumed() {
     if (!_feedOpen) return;
     unawaited(_reporter.sendNow());
+    // D12-5: a feed that sent a line (heartbeat) in the last 20 s is
+    // alive and missed nothing: keep it, no new feed, no new read.
+    if (_dispatch.feedFresh) return;
     unawaited(_dispatch.connect());
     _dispatch.refreshOffers();
   }

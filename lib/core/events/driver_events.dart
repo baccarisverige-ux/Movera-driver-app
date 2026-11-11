@@ -165,9 +165,30 @@ class DriverEvents extends ChangeNotifier {
 /// `events`; the answer goes to [events]. Never throws to its callers; a
 /// failed read keeps the last answer.
 class LiveDriverEvents {
-  LiveDriverEvents({required ApiClient api, DriverEvents? events})
-    : _api = api,
-      events = events ?? DriverEvents.instance;
+  LiveDriverEvents({
+    required ApiClient api,
+    DriverEvents? events,
+    DateTime Function()? now,
+  }) : _api = api,
+       _now = now ?? DateTime.now,
+       events = events ?? DriverEvents.instance;
+
+  final DateTime Function() _now;
+  DateTime? _readAt;
+
+  /// D12-5: a resume reads the events again only after this long (an
+  /// `events` publish on the settings stream still reads at once).
+  static const resumeAfter = Duration(seconds: 60);
+
+  /// D12-5: [refresh] unless the events were read in the last
+  /// [resumeAfter]; true when they are current.
+  Future<bool> refreshIfStale() {
+    final read = _readAt;
+    if (read != null && _now().difference(read) < resumeAfter) {
+      return Future<bool>.value(true);
+    }
+    return refresh();
+  }
 
   static const path = '/api/v1/driver/events';
 
@@ -194,6 +215,7 @@ class LiveDriverEvents {
       final list = parse(await _api.get(path));
       if (list == null) throw const FormatException('not an events answer');
       events.use(list);
+      _readAt = _now();
       return true;
     } catch (error) {
       DriverLog.warn('driver_events.fetch_failed: $error');
