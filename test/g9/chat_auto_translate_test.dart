@@ -290,7 +290,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester
-          .widget<Text>(find.byKey(const ValueKey('active-ride-chat-card-text')))
+          .widget<Text>(
+            find.byKey(const ValueKey('active-ride-chat-card-text')),
+          )
           .data,
       'Where are you parked?',
     );
