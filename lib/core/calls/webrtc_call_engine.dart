@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:movera/core/calls/call_engine.dart';
@@ -24,6 +26,12 @@ class WebRtcCallEngine implements CallEngine {
   MediaStream? _local;
   bool _remoteSet = false;
   final List<RTCIceCandidate> _pending = [];
+
+  /// 2026-11-11 owner phone test ("we cannot hear each other"): the other
+  /// phone's audio. A browser plays a remote stream only through a media
+  /// element, so the web build hands it to a renderer (its <audio>); a
+  /// native build plays it on its own. Its tracks are switched on.
+  RTCVideoRenderer? _player;
 
   @override
   void Function(Map<String, dynamic> candidate)? onCandidate;
@@ -52,6 +60,12 @@ class WebRtcCallEngine implements CallEngine {
         'sdpMLineIndex': c.sdpMLineIndex,
       });
     };
+    pc.onTrack = (event) {
+      if (event.track.kind != 'audio') return;
+      event.track.enabled = true;
+      if (event.streams.isEmpty) return;
+      unawaited(_play(event.streams.first));
+    };
     pc.onConnectionState = (state) {
       switch (state) {
         case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
@@ -62,6 +76,13 @@ class WebRtcCallEngine implements CallEngine {
           break;
       }
     };
+  }
+
+  Future<void> _play(MediaStream stream) async {
+    if (!_isWeb) return;
+    final player = _player ??= RTCVideoRenderer();
+    await player.initialize();
+    player.srcObject = stream;
   }
 
   @override
@@ -123,6 +144,12 @@ class WebRtcCallEngine implements CallEngine {
       await track.stop();
     }
     await _local?.dispose();
+    final player = _player;
+    _player = null;
+    if (player != null) {
+      player.srcObject = null;
+      await player.dispose();
+    }
     await _pc?.close();
     _local = null;
     _pc = null;
