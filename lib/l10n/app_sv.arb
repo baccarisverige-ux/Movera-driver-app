@@ -1140,6 +1140,7 @@
   "goingOfflineAfterTrip": "Går offline efter den här resan",
   "goingOfflineUndo": "Ångra",
   "offlineReasonAfterTrip": "Du gick offline efter din resa",
+  "nextTripsSwitchFailed": "Nästa resor kunde inte ändras. Försök igen.",
   "islandRadarOffers": "{count, plural, =1{1 erbjudande · radar} other{{count} erbjudanden · radar}}",
   "islandOnline": "Radar online",
   "islandOffline": "Radar offline",

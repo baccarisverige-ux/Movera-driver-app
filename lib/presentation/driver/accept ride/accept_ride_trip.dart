@@ -187,7 +187,11 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   void _restoreQueuedNextFromSnapshot() {
     // driver-u68: offers the driver held off stay off.
-    if (widget.restoredSnapshot?.nextOffersStopped == true) {
+    // v0.18.65 §86: or the server says so (Driver.nextTripsOff, live).
+    if (widget.restoredSnapshot?.nextOffersStopped == true ||
+        (widget.restoredSnapshot != null &&
+            LiveDriverServices.active &&
+            NextTripsSwitch.off.value)) {
       _onTripRadarState = _OnTripRadarState.stopped;
     }
     final next = widget.restoredSnapshot?.next;
@@ -1082,12 +1086,14 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     if (_onTripRadarOn) {
       _stopOnTripRadar();
+      unawaited(_serverNext.tellSwitch(on: false));
       return;
     }
     _onTripRadarDeclined = false;
     _rebuild(() => _onTripRadarState = _OnTripRadarState.off);
     _startOnTripRadar();
     unawaited(_rideLifecycle.persistNow());
+    unawaited(_serverNext.tellSwitch(on: true));
   }
 
   /// R10-2: no next-trip offer while the Ride check is open. One already

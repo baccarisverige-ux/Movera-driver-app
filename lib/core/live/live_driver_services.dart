@@ -22,6 +22,7 @@ import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/live/next_trips_switch.dart';
 import 'package:movera/core/live/offline_after_trips.dart';
 import 'package:movera/core/live/page_visibility.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
@@ -366,18 +367,50 @@ class LivePresence {
 
   /// v0.18.37 §61: Undo of "Going offline after this trip" (online while
   /// on the trip keeps him on it and clears the plan).
-  Future<String?> undoGoOffline() =>
-      _serial(() => OfflineAfterTrips.request(_api, offline: false));
+  Future<String?> undoGoOffline() => _serial(() async {
+    final failed = await OfflineAfterTrips.request(_api, offline: false);
+    // Owner phone test 2026-11-11: the app follows the server's plan.
+    if (failed == null && onTrip) _session?.setOnline(true);
+    return failed;
+  });
+
+  /// v0.18.65 §86: the trip sheet's radar stops (or starts) next-trip
+  /// offers on the server too ([NextTripsSwitch]). In order of the taps,
+  /// in a queue of its own: it never waits behind going online.
+  Future<String?> setNextTrips({required bool on}) {
+    final before = _nextTrips;
+    final result = before == null
+        ? NextTripsSwitch.request(_api, on: on)
+        : before.then((_) => NextTripsSwitch.request(_api, on: on));
+    _nextTrips = result.then((_) {}, onError: (Object _) {});
+    return result;
+  }
+
+  Future<void>? _nextTrips;
 
   void attach(DriverSessionController session) {
     detach();
     OfflineAfterTrips.undoAction = undoGoOffline;
+    OfflineAfterTrips.pending.addListener(_onPending);
     _session = session..addListener(_onSession);
+    _onPending();
   }
 
   void detach() {
+    OfflineAfterTrips.pending.removeListener(_onPending);
     _session?.removeListener(_onSession);
     _session = null;
+  }
+
+  /// Owner phone test 2026-11-11 ("when trip done the app still online"):
+  /// the server held the plan (`Driver.offlineAfterTrip`) but the app's
+  /// session never heard it, so its trip end went back online. Once the
+  /// server says he goes offline after the trip (the trip sheet's row, or
+  /// the profile after a restart), the session records it too, and its
+  /// trip end is offline. Only a true is followed: a false also comes when
+  /// the trip ends on the server first, and the Undo clears it itself.
+  void _onPending() {
+    if (OfflineAfterTrips.pending.value && onTrip) _session?.setOnline(false);
   }
 
   /// W2: the session's last status, to tell a trip that just ended.
@@ -394,9 +427,12 @@ class LivePresence {
         // server checks the pickup and the drop-off from them.
         _reporter.start();
       case DriverOnlineStatus.online:
+        // v0.18.65 §86: the server cleared next trips off with the trip.
+        if (was == DriverOnlineStatus.onTrip) NextTripsSwitch.off.value = false;
         if (serverOnline) _startOnline();
       case DriverOnlineStatus.offline || DriverOnlineStatus.suspended:
         OfflineAfterTrips.pending.value = false;
+        NextTripsSwitch.off.value = false;
         // §74 (owner Q14, 2026-11-09): the trip's sender stops the moment a
         // trip ends with the app offline. Before, the sender started by the
         // trip kept posting every 10 s with the driver "offline" (U17).
@@ -583,7 +619,12 @@ class LivePresence {
     // v0.18.37 §61: on a trip, Go offline = offline after all his trips;
     // the trip and its location go on, the server stops his offers.
     if (_session?.status == DriverOnlineStatus.onTrip) {
-      return _serial(() => OfflineAfterTrips.request(_api, offline: true));
+      return _serial(() async {
+        final failed = await OfflineAfterTrips.request(_api, offline: true);
+        // The session's trip end follows the server's plan (offline).
+        if (failed == null && onTrip) _session?.setOnline(false);
+        return failed;
+      });
     }
     _wantOnline = false;
     _onlineVersion = null;

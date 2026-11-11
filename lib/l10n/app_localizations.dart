@@ -6952,6 +6952,12 @@ abstract class AppLocalizations {
   /// **'You went offline after your trip'**
   String get offlineReasonAfterTrip;
 
+  /// v0.18.65 §86: the trip radar's stop / start of next trips did not reach the server; the radar goes back.
+  ///
+  /// In en, this message translates to:
+  /// **'Next trips could not be changed. Try again.'**
+  String get nextTripsSwitchFailed;
+
   /// No description provided for @islandRadarOffers.
   ///
   /// In en, this message translates to:

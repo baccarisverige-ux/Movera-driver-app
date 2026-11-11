@@ -118,6 +118,29 @@ class _ServerNextOffers {
     s._hideRideSheetForOffer();
   }
 
+  /// v0.18.65 §86 (owner phone test 2026-11-11): the trip radar's stop /
+  /// start reaches the server (`POST /driver/next-trips`), so it sends no
+  /// on-trip offers while it is off. If the server did not hear it, the
+  /// radar goes back and the driver is told.
+  Future<void> tellSwitch({required bool on}) async {
+    final presence = LiveDriverServices.instance?.presence;
+    if (presence == null) return;
+    final failed = await presence.setNextTrips(on: on);
+    final s = _s;
+    if (failed == null || !s.mounted || s._stage != ActiveRideStage.onTrip) {
+      return;
+    }
+    if (on) {
+      _AcceptRideTripNext(s)._stopOnTripRadar();
+    } else if (s._onTripRadarState == _OnTripRadarState.stopped) {
+      s._rebuild(() => s._onTripRadarState = _OnTripRadarState.off);
+      _AcceptRideTripNext(s)._startOnTripRadar();
+    }
+    ScaffoldMessenger.maybeOf(
+      s.context,
+    )?.showSnackBar(SnackBar(content: Text(failed)));
+  }
+
   /// The server offer on the demo's next-trip card.
   _NextTripRadarOffer _cardOf(RideOffer offer) => _NextTripRadarOffer(
     id: offer.tripId ?? offer.id,
