@@ -182,8 +182,8 @@ class RadarOfferCard extends StatelessWidget {
   final Color? contour;
 
   static const Color ink = Color(0xFF111518);
-  static const Color muted = Color(0xFF7C868D);
-  static const Color label = Color(0xFF8A9399);
+  static const Color muted = Color(0xFF667178);
+  static const Color label = Color(0xFF667178);
 
   /// Offer cards are pure white; the header keeps only its hairline.
   static const Color headerTint = Colors.white;

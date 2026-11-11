@@ -86,7 +86,7 @@ extension _HomeStartPosition on _DriverHomeState {
           Text(
             tr.findingYourLocation,
             style: TextStyle(
-              color: Color(0xFF6B747C),
+              color: Color(0xFF5F6B72),
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
