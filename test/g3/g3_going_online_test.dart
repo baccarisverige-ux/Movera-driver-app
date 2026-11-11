@@ -313,7 +313,11 @@ void main() {
         positions.add,
       );
       await pumpEventQueue();
-      expect(fake.opened.last, isNot(isA<AndroidSettings>()));
+      // D12-9: offline is AndroidSettings too, without the online notice.
+      expect(
+        (fake.opened.last as AndroidSettings).foregroundNotificationConfig,
+        isNull,
+      );
       await DriverLocationService.setOnlineBackground((
         title: 'Movera is online',
         text: 'x',
@@ -330,7 +334,11 @@ void main() {
       expect(positions, hasLength(1));
       await DriverLocationService.setOnlineBackground(null);
       await pumpEventQueue();
-      expect(fake.opened.last, isNot(isA<AndroidSettings>()));
+      // D12-9: offline is AndroidSettings too, without the online notice.
+      expect(
+        (fake.opened.last as AndroidSettings).foregroundNotificationConfig,
+        isNull,
+      );
       await sub.cancel();
     });
 

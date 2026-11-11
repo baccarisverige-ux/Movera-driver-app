@@ -87,12 +87,15 @@ extension _HomeOnlineGate on _DriverHomeState {
 
   /// From Go online: location off or not allowed keeps the driver offline
   /// (decision 2); otherwise the last refusal or notice goes, and battery
-  /// saver warns once.
+  /// saver warns once; Android 13+ asks for notifications once (D14-7).
   bool _blocksOnline() {
     if (_locationBlocksOnline()) return true;
     DriverSetOfflineNotice.instance.clear();
     _clearReason();
     unawaited(_warnBatterySaverOnce());
+    if (_driverLocationService is DriverLocationService) {
+      unawaited(DriverLocationService.requestNotificationsOnce());
+    }
     return false;
   }
 

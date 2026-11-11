@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/push/notification_permission.dart';
 
 class DriverLocationException implements Exception {
   const DriverLocationException(this.message);
@@ -58,6 +59,11 @@ class DriverLocationService implements DriverLocationRepository {
   /// The offline card's "Turn on" (checker MEDIUM 2): the one shared,
   /// guarded prompt (driver-r5-51), so Android never sees it twice; true
   /// when allowed. A "Don't allow" this session is not asked again.
+  /// D14-7: Go online asks Android 13+ once for notifications (the
+  /// "Movera is online" notice of the location service).
+  static Future<bool> requestNotificationsOnce() =>
+      NotificationPermission.instance.requestOnce();
+
   static Future<bool> requestPermissionOnce() async {
     try {
       var permission = await Geolocator.checkPermission();
@@ -181,6 +187,26 @@ class DriverLocationService implements DriverLocationRepository {
   static DriverLocation? vetCachedFix(DriverLocation? fix, DateTime now) =>
       fix != null && fix.isUsableAt(now) ? fix : null;
 
+  /// D12-9: the offline Home map on a phone (not online, not navigating):
+  /// balanced accuracy, a fix about every 20 s and after 20 m, to save the
+  /// battery. Online and navigation keep their own settings.
+  @visibleForTesting
+  static LocationSettings offlineSettings({required TargetPlatform platform}) {
+    const accuracy = LocationAccuracy.medium; // Android: balanced power.
+    const distance = 20;
+    if (platform == TargetPlatform.android) {
+      return AndroidSettings(
+        accuracy: accuracy,
+        distanceFilter: distance,
+        intervalDuration: const Duration(seconds: 20),
+      );
+    }
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      return AppleSettings(accuracy: accuracy, distanceFilter: distance);
+    }
+    return const LocationSettings(accuracy: accuracy, distanceFilter: distance);
+  }
+
   LocationSettings _streamSettings(int distanceFilterMeters) {
     final navigation = distanceFilterMeters == 0;
     final online = _online;
@@ -192,14 +218,13 @@ class DriverLocationService implements DriverLocationRepository {
         navigation: navigation,
       );
     }
-    if (kIsWeb || !navigation) {
+    if (kIsWeb) {
       return LocationSettings(
-        accuracy: kIsWeb
-            ? LocationAccuracy.high
-            : LocationAccuracy.bestForNavigation,
+        accuracy: LocationAccuracy.high,
         distanceFilter: distanceFilterMeters,
       );
     }
+    if (!navigation) return offlineSettings(platform: defaultTargetPlatform);
     if (defaultTargetPlatform == TargetPlatform.android) {
       return AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,

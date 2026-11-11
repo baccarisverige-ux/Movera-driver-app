@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
+import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
@@ -76,8 +76,7 @@ class ApiDriverRealtime implements DriverRealtime {
   Timer? _idle;
   DateTime? _lastLineAt;
 
-  static Duration _backoff(int attempt) =>
-      Duration(seconds: math.min(30, 1 << math.min(attempt, 5)));
+  static Duration _backoff(int attempt) => reconnectBackoff(attempt);
 
   /// True while the stream is open.
   bool get connected => _open;

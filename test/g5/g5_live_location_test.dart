@@ -38,6 +38,44 @@ void main() {
 
   setUp(() => sent = []);
 
+  for (final status in [429, 503]) {
+    test('D12-8: $status with Retry-After waits (capped at 60 s) before the '
+        'next send', () async {
+      var now = DateTime.utc(2026, 11, 1, 12);
+      var posts = 0;
+      final reporter = LiveLocationReporter(
+        api: ApiClient(
+          client: MockClient((request) async {
+            posts++;
+            return http.Response(
+              jsonEncode({'code': 'rate_limited', 'message': 'slow down'}),
+              status,
+              headers: {
+                'content-type': 'application/json',
+                'retry-after': '120',
+              },
+            );
+          }),
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+        ),
+        location: _StillGps(answers: true),
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: false,
+      );
+      expect(await reporter.sendNow(fresh: true), isFalse);
+      final first = posts;
+      expect(first, greaterThan(0));
+      now = now.add(const Duration(seconds: 30));
+      expect(await reporter.sendNow(fresh: true), isFalse);
+      expect(posts, first, reason: 'inside Retry-After nothing is sent');
+      now = now.add(const Duration(seconds: 31));
+      await reporter.sendNow(fresh: true);
+      expect(posts, greaterThan(first), reason: 'capped at 60 s');
+    });
+  }
+
   test('the Go online fix is sent at once, even when the GPS gives '
       'nothing new', () async {
     final reporter = LiveLocationReporter(

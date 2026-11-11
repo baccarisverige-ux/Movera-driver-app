@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:movera/core/push/push_config.dart';
 import 'package:movera/core/push/push_platform.dart';
 
@@ -12,7 +13,8 @@ class UnsupportedPushPlatform implements PushPlatform {
   bool get supported => false;
 
   @override
-  String get platformName => 'android';
+  String get platformName =>
+      defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
 
   @override
   Future<String> permission() async => 'denied';
