@@ -326,7 +326,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(TripCallScreen), findsOneWidget);
       expect(find.text(tr.callCalling), findsOneWidget);
-      expect(find.text(tr.callUnavailableUseChat), findsNothing);
+      for (final old in const [
+        'Calls coming soon – use the chat',
+        'Appels bientôt disponibles – utilisez le chat',
+        'Samtal kommer snart – använd chatten',
+      ]) {
+        expect(find.text(old), findsNothing);
+      }
       expect(dialled, isEmpty);
     });
 

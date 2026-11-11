@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5387,10 +5388,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get helpCenter => 'Centre d’aide';
-
-  @override
-  String get callUnavailableUseChat =>
-      'Appels bientôt disponibles – utilisez le chat';
 
   @override
   String get chatClosedAfterTrip => 'Le chat est fermé après la course';
