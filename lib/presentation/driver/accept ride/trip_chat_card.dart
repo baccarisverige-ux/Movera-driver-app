@@ -131,7 +131,9 @@ class TripChatCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              message.text,
+                              // v0.18.64 §85: the same text as the chat
+                              // (the translation once it is here).
+                              alerts.thread.shownText(message),
                               key: const ValueKey<String>(
                                 'active-ride-chat-card-text',
                               ),

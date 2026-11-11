@@ -127,6 +127,7 @@ class RealtimeMessage {
     this.at,
     this.quickReplyId,
     this.auto,
+    this.lang,
   });
 
   factory RealtimeMessage.fromJson(Map<String, dynamic> json) =>
@@ -139,7 +140,11 @@ class RealtimeMessage {
             : null,
         quickReplyId: json['quickReplyId'] as String?,
         auto: json['auto'] as String?,
+        lang: json['lang'] as String?,
       );
+
+  /// v0.18.64 §85: the language the text was written in (sv / fr / en).
+  final String? lang;
 
   /// v0.18.56 §78: the quick-reply chip it was sent from, if any.
   final String? quickReplyId;

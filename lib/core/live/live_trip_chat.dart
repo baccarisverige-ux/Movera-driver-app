@@ -8,6 +8,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/live/trip_chat_options.dart';
+import 'package:movera/core/live/trip_chat_translations.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 
@@ -26,6 +27,7 @@ class TripChatMessage {
     this.state = TripChatSendState.sent,
     this.quickReplyId,
     this.auto,
+    this.lang,
   });
 
   factory TripChatMessage.fromJson(Map<String, dynamic> json) =>
@@ -36,6 +38,7 @@ class TripChatMessage {
         at: DateTime.parse(json['at'] as String).toUtc(),
         quickReplyId: json['quickReplyId'] as String?,
         auto: json['auto'] as String?,
+        lang: json['lang'] as String?,
       );
 
   factory TripChatMessage.fromRealtime(RealtimeMessage message) =>
@@ -46,6 +49,7 @@ class TripChatMessage {
         at: message.at ?? DateTime.now().toUtc(),
         quickReplyId: message.quickReplyId,
         auto: message.auto,
+        lang: message.lang,
       );
 
   /// The server's id; this phone's own copy carries its `Idempotency-Key`
@@ -65,6 +69,10 @@ class TripChatMessage {
   /// v0.18.56 §78: written by the server, not typed: `arrived` (the
   /// driver's "I've arrived") or `on_my_way` (the rider's "I'm on my way").
   final String? auto;
+
+  /// v0.18.64 §85: the language the text was written in (sv / fr / en);
+  /// exact for chips and automatic messages, a hint for typed text.
+  final String? lang;
 
   /// Shown marked "Automatic".
   bool get automatic => auto != null;
@@ -86,6 +94,7 @@ class TripChatMessage {
     state: state,
     quickReplyId: quickReplyId,
     auto: auto,
+    lang: lang,
   );
 }
 
@@ -109,6 +118,16 @@ class TripChatThread extends ChangeNotifier {
   /// v0.18.56 §78: the trip's chat options (defaults until read).
   TripChatOptions get options => _options;
 
+  /// v0.18.64 §85: the translations of this chat (while the trip is open).
+  final TripChatTranslations translations = TripChatTranslations();
+
+  /// What a message shows: its translation once it is here (unless "See
+  /// original" was tapped), else the text as written. Own messages always
+  /// show as written.
+  String shownText(TripChatMessage message) => message.own
+      ? message.text
+      : translations.shown(message.messageId, message.text);
+
   /// Messages from the rider (or support) the stream brought, counted
   /// whether Chat shows the thread or not (the trip sheet's card, its
   /// auto-open and the sound follow it). History reads do not count.
@@ -131,6 +150,7 @@ class TripChatThread extends ChangeNotifier {
     _unread = 0;
     _unreadSupport = 0;
     _lastIncoming = null;
+    translations.clear();
     _loaded = true;
     _closed = true;
     notifyListeners();
@@ -213,6 +233,8 @@ class TripChatThread extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void _changed() => notifyListeners();
 
   void _markLoadedOptions() {
     _optionsRead = true;
@@ -298,6 +320,7 @@ class LiveTripChat {
         }
       }
       thread._markLoaded();
+      _autoTranslate(thread);
       return true;
     } on ApiError catch (error) {
       DriverLog.warn(
@@ -344,6 +367,7 @@ class LiveTripChat {
       incoming = _ownText(incoming, prior);
     }
     thread._add(incoming, replacing: copy, live: true);
+    _autoTranslate(thread);
   }
 
   /// v0.18.56 §78: `GET /trips/{tripId}/messages/options`, read once per
@@ -356,6 +380,7 @@ class LiveTripChat {
       thread._options = TripChatOptions.fromJson(answer);
       thread._optionsRead = true;
       thread._markLoadedOptions();
+      _autoTranslate(thread);
     } on ApiError catch (error) {
       DriverLog.warn(
         'trip $tripId chat options not read: ${error.code}',
@@ -397,12 +422,21 @@ class LiveTripChat {
 
   /// v0.18.56 §78: `POST /trips/{tripId}/messages/translate`. 503
   /// `coming_soon` until the server has a provider; 403 `translation_off`
-  /// when the admin turned it off. Nothing is kept.
-  Future<TranslateOutcome> translate(String tripId, String messageId) async {
+  /// when the admin turned it off (v0.18.64 §85: `auto_translate_off` for
+  /// the app's own request, [auto]). Nothing is kept after the trip.
+  Future<TranslateOutcome> translate(
+    String tripId,
+    String messageId, {
+    bool auto = false,
+  }) async {
     try {
       final answer = await _api.post(
         '${_path(tripId)}/translate',
-        body: {'messageId': messageId, 'to': translateTarget},
+        body: {
+          'messageId': messageId,
+          'to': translateTarget,
+          if (auto) 'auto': true,
+        },
         idempotencyKey: ApiClient.randomKey(),
       );
       final text = answer['text'];
@@ -414,7 +448,8 @@ class LiveTripChat {
       if (error.reason == 'coming_soon' || error.statusCode == 503) {
         return const TranslateOutcome(TranslateResult.comingSoon);
       }
-      if (error.reason == 'translation_off') {
+      if (error.reason == 'translation_off' ||
+          error.reason == 'auto_translate_off') {
         return const TranslateOutcome(TranslateResult.off);
       }
       DriverLog.warn('translate refused: ${error.code}', name: 'live');
@@ -422,6 +457,107 @@ class LiveTripChat {
     } on TypeError {
       return const TranslateOutcome(TranslateResult.failed);
     }
+  }
+
+  /// v0.18.64 §85 (owner 2026-11-11): each message from the rider (or
+  /// support) is translated into the driver's language once, as it
+  /// arrives, when the trip's options say so (read first) and it is not
+  /// already in that language. A failure leaves the original, quietly;
+  /// `coming_soon` / `translation_off` / `auto_translate_off` stop it for
+  /// the trip.
+  void _autoTranslate(TripChatThread thread) {
+    final t = thread.translations;
+    if (!thread._optionsRead ||
+        !thread._options.translatesByItself ||
+        t.autoStopped ||
+        thread.closed) {
+      return;
+    }
+    final target = translateTarget;
+    for (final message in List.of(thread._messages)) {
+      final id = message.messageId;
+      if (message.own || message.local || t.autoTried(id) || t.has(id)) {
+        continue;
+      }
+      t.markAutoTried(id);
+      if (message.lang == target || !t.start(id)) continue;
+      unawaited(_translateInto(thread, id, auto: true));
+    }
+  }
+
+  Future<TranslateOutcome> _translateInto(
+    TripChatThread thread,
+    String messageId, {
+    required bool auto,
+  }) async {
+    final outcome = await translate(thread.tripId, messageId, auto: auto);
+    final t = thread.translations;
+    // The trip may have ended meanwhile: nothing is kept then.
+    if (thread.closed) return outcome;
+    t.done(messageId, outcome.text);
+    if (auto &&
+        (outcome.result == TranslateResult.comingSoon ||
+            outcome.result == TranslateResult.off)) {
+      t.stopAuto();
+    }
+    thread._changed();
+    return outcome;
+  }
+
+  /// The link under a message from the rider: "See original" shows the
+  /// text as written, "Translate to (language)" the translation again (or
+  /// asks for it). The answer of a request, for the screen's one-line
+  /// notice; null when nothing was asked.
+  Future<TranslateOutcome?> toggleTranslation(
+    String tripId,
+    TripChatMessage message,
+  ) async {
+    final thread = this.thread(tripId);
+    final t = thread.translations;
+    final id = message.messageId;
+    if (t.showsTranslation(id)) {
+      t.showOriginal(id);
+      thread._changed();
+      return null;
+    }
+    if (t.has(id)) {
+      t.showTranslation(id);
+      thread._changed();
+      return null;
+    }
+    if (!t.start(id)) return null;
+    thread._changed();
+    return _translateInto(thread, id, auto: false);
+  }
+
+  /// What the driver's read aloud says for [message]: its translation when
+  /// it arrives within [wait] (§85), else the text as written.
+  Future<String> spokenText(
+    String tripId,
+    TripChatMessage message, {
+    Duration wait = const Duration(seconds: 3),
+  }) async {
+    // The stream's message reaches the alert before its translation is
+    // asked for ([receive] asks right after): let that happen first.
+    await Future<void>.delayed(Duration.zero);
+    final thread = this.thread(tripId);
+    final t = thread.translations;
+    final id = message.messageId;
+    if (t.has(id) || !t.busy(id)) return thread.shownText(message);
+    final done = Completer<String>();
+    late final VoidCallback check;
+    void finish() {
+      if (done.isCompleted) return;
+      thread.removeListener(check);
+      done.complete(thread.shownText(message));
+    }
+
+    check = () {
+      if (!t.busy(id)) finish();
+    };
+    thread.addListener(check);
+    Timer(wait, finish);
+    return done.future;
   }
 
   /// `POST /trips/{tripId}/messages`: the message shows at once as this
