@@ -13,6 +13,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/live/offline_after_trips.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/contracts/trip_status.dart';
@@ -335,6 +336,104 @@ void main() {
       expect(body(requests[1])['onlineStatus'], 'offline');
       presence.detach();
       session.dispose();
+    });
+  });
+
+  group('go offline after the trip (owner phone test 2026-11-11)', () {
+    late _FakeDispatch dispatch;
+    late LivePresence presence;
+    late LiveLocationReporter reporter;
+    late DriverSessionController session;
+
+    setUp(() async {
+      final client = api();
+      dispatch = _FakeDispatch();
+      reporter = LiveLocationReporter(
+        api: client,
+        location: _FixedLocation(),
+        every: const Duration(hours: 1),
+      );
+      presence = LivePresence(
+        api: client,
+        dispatch: dispatch,
+        reporter: reporter,
+      );
+      session = DriverSessionController();
+      presence.attach(session);
+      answers
+        ..add((_) => json(200, {'onlineStatus': 'offline', 'version': 1}))
+        ..add((_) => json(200, {'onlineStatus': 'online', 'version': 2}))
+        ..add((_) => json(200, {'accepted': 1}));
+      session.beginGoingOnline();
+      await presence.goOnline();
+      session.completeGoingOnline();
+      session.beginTrip('t1');
+      await pumpEventQueue();
+      requests.clear();
+      answers.clear();
+    });
+
+    tearDown(() {
+      presence.detach();
+      session.dispose();
+      reporter.stop();
+      OfflineAfterTrips.pending.value = false;
+    });
+
+    void answerAvailability(bool flag) => answers
+      ..add(
+        (_) => json(200, {
+          'onlineStatus': 'on_trip',
+          'offlineAfterTrip': !flag,
+          'version': 3,
+        }),
+      )
+      ..add(
+        (_) => json(200, {
+          'onlineStatus': 'on_trip',
+          'offlineAfterTrip': flag,
+          'version': 4,
+        }),
+      );
+
+    test('the trip sheet\'s Go offline: when the trip ends the app is '
+        'offline too (feed closed, server told)', () async {
+      answerAvailability(true);
+      expect(await presence.goOffline(), isNull);
+      expect(body(requests[1])['onlineStatus'], 'offline');
+      expect(OfflineAfterTrips.pending.value, isTrue);
+      expect(session.availableAfterTrip, isFalse);
+      // The trip ends; the server has already set him offline.
+      answers.add((_) => json(200, {'onlineStatus': 'offline', 'version': 5}));
+      session.endTrip();
+      await pumpEventQueue();
+      expect(session.status, DriverOnlineStatus.offline);
+      expect(session.isOnline, isFalse);
+      expect(dispatch.disconnects, greaterThan(0));
+      expect(reporter.running, isFalse);
+    });
+
+    test('after a restart the server\'s plan (profile) is the app\'s '
+        'too', () async {
+      OfflineAfterTrips.observe({
+        'onlineStatus': 'on_trip',
+        'offlineAfterTrip': true,
+      });
+      answers.add((_) => json(200, {'onlineStatus': 'offline', 'version': 5}));
+      session.endTrip();
+      await pumpEventQueue();
+      expect(session.status, DriverOnlineStatus.offline);
+    });
+
+    test('Undo: he stays online after the trip', () async {
+      answerAvailability(true);
+      await presence.goOffline();
+      answerAvailability(false);
+      expect(await presence.undoGoOffline(), isNull);
+      expect(OfflineAfterTrips.pending.value, isFalse);
+      session.endTrip();
+      await pumpEventQueue();
+      expect(session.status, DriverOnlineStatus.online);
     });
   });
 

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -4029,6 +4028,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get offlineReasonAfterTrip =>
       'Vous êtes passé hors ligne après votre course';
+
+  @override
+  String get nextTripsSwitchFailed =>
+      'Impossible de modifier les courses suivantes. Réessayez.';
 
   @override
   String islandRadarOffers(int count) {

@@ -2895,6 +2895,10 @@
   "@offlineReasonAfterTrip": {
     "description": "v0.18.37 §61: contract.json driverHome.setOffline.reasons.after_trip."
   },
+  "nextTripsSwitchFailed": "Next trips could not be changed. Try again.",
+  "@nextTripsSwitchFailed": {
+    "description": "v0.18.65 §86: the trip radar's stop / start of next trips did not reach the server; the radar goes back."
+  },
   "islandRadarOffers": "{count, plural, =1{1 offer · radar} other{{count} offers · radar}}",
   "@islandRadarOffers": {
     "placeholders": {

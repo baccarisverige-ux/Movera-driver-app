@@ -1140,6 +1140,7 @@
   "goingOfflineAfterTrip": "Hors ligne après cette course",
   "goingOfflineUndo": "Annuler",
   "offlineReasonAfterTrip": "Vous êtes passé hors ligne après votre course",
+  "nextTripsSwitchFailed": "Impossible de modifier les courses suivantes. Réessayez.",
   "islandRadarOffers": "{count, plural, =1{1 offre · radar} other{{count} offres · radar}}",
   "islandOnline": "Radar en ligne",
   "islandOffline": "Radar hors ligne",
