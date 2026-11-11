@@ -28,7 +28,7 @@ class WalletScreen extends StatelessWidget {
   static const Color _tile = Color(0xFFF4F5F6);
   static const Color _text = Color(0xFF1F2933);
   static const Color _subtle = Color(0xFF5F6B72);
-  static const Color _muted = Color(0xFF7C868D);
+  static const Color _muted = Color(0xFF667178);
   static const Color _dot = Color(0xFF9AA3A8);
   static const Color _line = Color(0xFFECEEF0);
 
@@ -82,10 +82,17 @@ class WalletScreen extends StatelessWidget {
                 key: const ValueKey<String>('wallet-back'),
                 onTap: () => popOwned(context),
                 customBorder: const CircleBorder(),
-                child: SizedBox(
-                  height: 42,
-                  width: 42,
-                  child: Center(child: _solarIcon(AppAssets.solarAltArrowLeft)),
+                // D6: named for screen readers, a 48 px target.
+                child: Semantics(
+                  label: tr.back,
+                  button: true,
+                  child: SizedBox(
+                    height: 48,
+                    width: 48,
+                    child: Center(
+                      child: _solarIcon(AppAssets.solarAltArrowLeft),
+                    ),
+                  ),
                 ),
               ),
             ),
