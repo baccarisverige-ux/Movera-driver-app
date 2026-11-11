@@ -42,5 +42,9 @@
   "callEnded": "Call ended",
   "@callEnded": {
     "description": "v0.18.38 §62 in-app call screen (fix job 8)."
+  },
+  "callConnectFailedHint": "Couldn't connect. Check your network or use chat.",
+  "@callConnectFailedHint": {
+    "description": "v0.18.66 §87 (owner 2026-11-11 'Add hint'): under 'Call failed' when the call could not connect within the connect time limit (inAppCalls.texts.connectFailedHint)."
   }
 }

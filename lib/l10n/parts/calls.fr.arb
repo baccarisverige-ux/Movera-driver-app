@@ -9,5 +9,6 @@
   "callEnd": "Raccrocher",
   "callMute": "Muet",
   "callSpeaker": "Haut-parleur",
-  "callEnded": "Appel terminé"
+  "callEnded": "Appel terminé",
+  "callConnectFailedHint": "Connexion impossible. Vérifiez votre réseau ou utilisez le chat."
 }

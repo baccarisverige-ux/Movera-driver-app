@@ -8,7 +8,8 @@ import 'package:movera/core/sound/app_tones.dart';
 /// v0.18.38 §62 (fix job 8, owner G15 2026-11-05 "In-app calls only",
 /// "Just 'Call failed'"): the in-app call with the rider. Calling… →
 /// In call (mute, speaker, end); an incoming call shows Answer / Decline.
-/// A failure shows only "Call failed" and the screen closes. An incoming
+/// A failure shows only "Call failed" and the screen closes; when the
+/// connect time limit ran out, a hint under it (v0.18.66 §87). An incoming
 /// call rings (Movera's `call_ring.wav`, looped) until it is answered,
 /// declined, missed or failed.
 class TripCallScreen extends StatefulWidget {
@@ -272,6 +273,23 @@ class _TripCallScreenState extends State<TripCallScreen> {
                                   fontSize: 17,
                                 ),
                               ),
+                              // v0.18.66 §87 (owner 2026-11-11 "Add hint"):
+                              // only when the connect time limit ran out.
+                              if (_s.state == TripCallState.failed &&
+                                  _s.connectTimedOut) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  tr.callConnectFailedHint,
+                                  key: const ValueKey<String>(
+                                    'call-failed-hint',
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                           SizedBox(height: short ? 24 : 48),

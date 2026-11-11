@@ -286,5 +286,26 @@
   },
   "@contactChangeTooMany": {
     "description": "429 change_too_many on phone/e-mail change."
+  },
+  "appVersionLine": "Version {version} ({build})",
+  "@appVersionLine": {
+    "description": "Owner 2026-11-11 (v0.18.66 §87, app only): bottom line of the Account screen, app version and build number, e.g. Version 1.0.0 (583).",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "appVersionOnly": "Version {version}",
+  "@appVersionOnly": {
+    "description": "Owner 2026-11-11 (v0.18.66 §87): the Account version line when the build has no build number.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
   }
 }

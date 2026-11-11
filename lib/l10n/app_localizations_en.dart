@@ -546,6 +546,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactChangeTooMany => 'Too many changes — try again in an hour';
 
   @override
+  String appVersionLine(String version, String build) {
+    return 'Version $version ($build)';
+  }
+
+  @override
+  String appVersionOnly(String version) {
+    return 'Version $version';
+  }
+
+  @override
   String get airportQueueTitle => 'Airport queue';
 
   @override
@@ -885,6 +895,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callEnded => 'Call ended';
+
+  @override
+  String get callConnectFailedHint =>
+      'Couldn\'t connect. Check your network or use chat.';
 
   @override
   String get cancelNextTripQuestion => 'Cancel the next trip?';

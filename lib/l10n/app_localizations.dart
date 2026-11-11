@@ -1048,6 +1048,18 @@ abstract class AppLocalizations {
   /// **'Too many changes — try again in an hour'**
   String get contactChangeTooMany;
 
+  /// Owner 2026-11-11 (v0.18.66 §87, app only): bottom line of the Account screen, app version and build number, e.g. Version 1.0.0 (583).
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({build})'**
+  String appVersionLine(String version, String build);
+
+  /// Owner 2026-11-11 (v0.18.66 §87): the Account version line when the build has no build number.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String appVersionOnly(String version);
+
   /// No description provided for @airportQueueTitle.
   ///
   /// In en, this message translates to:
@@ -1617,6 +1629,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Call ended'**
   String get callEnded;
+
+  /// v0.18.66 §87 (owner 2026-11-11 'Add hint'): under 'Call failed' when the call could not connect within the connect time limit (inAppCalls.texts.connectFailedHint).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect. Check your network or use chat.'**
+  String get callConnectFailedHint;
 
   /// No description provided for @cancelNextTripQuestion.
   ///
