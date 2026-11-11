@@ -65,13 +65,6 @@ class _ChatState extends State<Chat> {
   Timer? _callNoticeTimer;
   int _shown = 0;
 
-  /// v0.18.56 §78 translate link: the translations read (never stored
-  /// beyond this screen), which of them show now, and which are on the
-  /// way. The original text is always kept.
-  final Map<String, String> _translated = {};
-  final Set<String> _showingTranslation = {};
-  final Set<String> _translating = {};
-
   @override
   void initState() {
     super.initState();
@@ -153,30 +146,15 @@ class _ChatState extends State<Chat> {
     if (mounted && !ok) setState(() => _historyFailed = true);
   }
 
-  /// "Translate" ↔ "See original" under a message from the other side.
+  /// "See original" ↔ "Translate" under a message from the other side.
+  /// v0.18.64 §85: the thread keeps the translations (messages arrive
+  /// translated); only a tap that asked and got nothing says so.
   Future<void> _toggleTranslation(TripChatMessage message) async {
-    final id = message.messageId;
-    if (_showingTranslation.remove(id)) {
-      setState(() {});
-      return;
-    }
-    if (_translated.containsKey(id)) {
-      setState(() => _showingTranslation.add(id));
-      return;
-    }
     final live = _live;
     final tripId = widget.tripId;
-    if (live == null || tripId == null || !_translating.add(id)) return;
-    setState(() {});
-    final outcome = await live.translate(tripId, id);
-    if (!mounted) return;
-    setState(() {
-      _translating.remove(id);
-      if (outcome.text case final text?) {
-        _translated[id] = text;
-        _showingTranslation.add(id);
-      }
-    });
+    if (live == null || tripId == null) return;
+    final outcome = await live.toggleTranslation(tripId, message);
+    if (!mounted || outcome == null) return;
     if (translateNotice(outcome.result) case final notice?) {
       _showCallNotice(notice);
     }
@@ -276,16 +254,16 @@ class _ChatState extends State<Chat> {
   Widget _liveMessage(TripChatMessage message) {
     if (!message.own) {
       final id = message.messageId;
-      final showing = _showingTranslation.contains(id);
-      final translation = _thread?.options.translation ?? true;
+      final thread = _thread!;
+      final translations = thread.translations;
       return RiderMessage(
         sender: message.fromSupport ? tr.chatSupportSender : null,
-        text: showing ? _translated[id]! : message.text,
+        text: thread.shownText(message),
         label: _timeLabel(message, DriverDates.time(message.at.toLocal())),
-        footer: translation
+        footer: thread.options.translation
             ? ChatTranslateLink(
-                showingTranslation: showing,
-                busy: _translating.contains(id),
+                showingTranslation: translations.showsTranslation(id),
+                busy: translations.busy(id),
                 onTap: () => unawaited(_toggleTranslation(message)),
               )
             : null,

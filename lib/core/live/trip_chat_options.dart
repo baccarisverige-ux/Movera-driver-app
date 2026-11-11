@@ -36,6 +36,7 @@ class TripChatOptions {
     this.sheetAutoOpen = 'new_message',
     this.readAloudDefault = false,
     this.translation = true,
+    this.autoTranslate = true,
     this.headerLine = const {},
   });
 
@@ -55,6 +56,8 @@ class TripChatOptions {
       sheetAutoOpen: json['sheetAutoOpen'] as String? ?? 'new_message',
       readAloudDefault: json['readAloudDefault'] == true,
       translation: json['translation'] != false,
+      // v0.18.64 §85: absent (an older server) = off.
+      autoTranslate: json['autoTranslate'] == true,
       headerLine: {
         if (header is Map)
           for (final entry in header.entries)
@@ -75,6 +78,13 @@ class TripChatOptions {
   final String sheetAutoOpen;
   final bool readAloudDefault;
   final bool translation;
+
+  /// v0.18.64 §85: messages from the rider arrive translated into the
+  /// driver's language ("See original" under them).
+  final bool autoTranslate;
+
+  /// The app translates by itself (both switches on).
+  bool get translatesByItself => translation && autoTranslate;
 
   /// "Problem? Use Support or SOS" from the server (Q81), by language.
   final Map<String, String> headerLine;

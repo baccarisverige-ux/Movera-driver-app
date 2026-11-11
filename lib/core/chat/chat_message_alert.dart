@@ -28,9 +28,10 @@ abstract final class ChatMessageAlert {
   static const List<int> vibratePattern = <int>[120];
 
   /// One alert for [text]; [sound] and [readAloudDefault] from the
-  /// trip's chat options.
+  /// trip's chat options. v0.18.64 §85: [text] may still be on its way
+  /// (the translation); the sound does not wait for it.
   static Future<void> forMessage(
-    String text, {
+    FutureOr<String> text, {
     required bool sound,
     required bool readAloudDefault,
     SettingsRepository? repository,
@@ -40,7 +41,8 @@ abstract final class ChatMessageAlert {
       _do('vibrate', () => deviceVibrate(vibratePattern));
     }
     if (await readAloud(readAloudDefault, repository: repository)) {
-      _do('speak:$text', () => deviceSpeak(text, DriverAppTexts.language));
+      final spoken = await text;
+      _do('speak:$spoken', () => deviceSpeak(spoken, DriverAppTexts.language));
     }
   }
 

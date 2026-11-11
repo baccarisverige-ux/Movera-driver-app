@@ -25,9 +25,12 @@ extension _AcceptRideTripChat on _AcceptRideState {
         _ridePanelController.panelPosition < _rideSnapPoint(context) - 0.02) {
       _showRideMiddle();
     }
+    final chat = LiveDriverServices.instance?.chat;
     unawaited(
       ChatMessageAlert.forMessage(
-        message.text,
+        // v0.18.64 §85: read aloud in the driver's language when the
+        // translation comes within 3 s, else as written.
+        chat?.spokenText(widget.tripId, message) ?? message.text,
         sound: options.sound,
         readAloudDefault: options.readAloudDefault,
       ),
