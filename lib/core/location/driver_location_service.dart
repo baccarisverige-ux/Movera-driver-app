@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -90,6 +91,7 @@ class DriverLocationService implements DriverLocationRepository {
     _prompt = null;
     _declined = false;
     _online = null;
+    appResumed = _bindingResumed;
   }
 
   static const Duration _oneShotLimit = Duration(seconds: 8);
@@ -207,10 +209,76 @@ class DriverLocationService implements DriverLocationRepository {
     return const LocationSettings(accuracy: accuracy, distanceFilter: distance);
   }
 
-  LocationSettings _streamSettings(int distanceFilterMeters) {
+  /// D14-17: whether the app is in the foreground. Android 12+ refuses to
+  /// start a foreground service from the background
+  /// (ForegroundServiceStartNotAllowedException, thrown on the plugin's
+  /// platform thread where Dart cannot catch it), so the online settings
+  /// (which start the location service) are used only while resumed; a
+  /// stream opened in the background waits with the plain settings and is
+  /// re-opened by [handleAppLifecycle] on resume. Tests replace it.
+  @visibleForTesting
+  static bool Function() appResumed = _bindingResumed;
+
+  static bool _bindingResumed() {
+    try {
+      final state = WidgetsBinding.instance.lifecycleState;
+      return state == null || state == AppLifecycleState.resumed;
+    } catch (_) {
+      return true; // No binding (a plain test or tool): nothing to wait for.
+    }
+  }
+
+  static _LifecycleObserver? _observer;
+
+  static void _observeLifecycle() {
+    if (_observer != null) return;
+    try {
+      WidgetsBinding.instance.addObserver(_observer = _LifecycleObserver());
+    } catch (error) {
+      DriverLog.warn('No app lifecycle for the location service: $error');
+    }
+  }
+
+  /// D14-17: on resume, re-open every stream that is online but was
+  /// opened without the location service (it was asked for in the
+  /// background).
+  @visibleForTesting
+  static void handleAppLifecycle(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || _online == null) return;
+    for (final watch in _watches.toList()) {
+      if (!watch.foregroundService && watch.isOpen) {
+        unawaited(
+          watch.pause().then((_) {
+            if (_watches.contains(watch)) watch.resume();
+          }),
+        );
+      }
+    }
+  }
+
+  /// Whether a stream may start the Android location service now: in the
+  /// foreground, or when another open stream already runs it (Android
+  /// shares one native stream, so no new start).
+  static bool _serviceStartAllowed(_PositionWatch self) =>
+      kIsWeb ||
+      defaultTargetPlatform != TargetPlatform.android ||
+      appResumed() ||
+      _watches.any((w) => w != self && w.isOpen && w.foregroundService);
+
+  LocationSettings _streamSettings(
+    int distanceFilterMeters, [
+    _PositionWatch? watch,
+  ]) {
     final navigation = distanceFilterMeters == 0;
     final online = _online;
-    if (online != null && !kIsWeb) {
+    if (online != null &&
+        !kIsWeb &&
+        (watch == null || !_serviceStartAllowed(watch))) {
+      DriverLog.warn(
+        'Location service start deferred until the app is in front.',
+      );
+      _observeLifecycle();
+    } else if (online != null && !kIsWeb) {
       return onlineSettings(
         platform: defaultTargetPlatform,
         notificationTitle: online.title,
@@ -281,8 +349,9 @@ class DriverLocationService implements DriverLocationRepository {
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) async* {
     await _ensurePermission();
-    final watch = _PositionWatch(
-      () => _streamSettings(distanceFilterMeters),
+    late final _PositionWatch watch;
+    watch = _PositionWatch(
+      () => _streamSettings(distanceFilterMeters, watch),
       _toDriverLocation,
     );
     _watches.add(watch);
@@ -460,17 +529,45 @@ class _PositionWatch {
       StreamController<DriverLocation>();
   StreamSubscription<Position>? _inner;
 
+  /// Whether the open stream runs the Android location service.
+  bool foregroundService = false;
+
+  bool get isOpen => _inner != null;
+
   void resume() {
     if (_inner != null || output.isClosed) return;
-    _inner = Geolocator.getPositionStream(locationSettings: _settings()).listen(
-      (position) => output.add(_map(position)),
-      onError: output.addError,
-    );
+    final settings = _settings();
+    foregroundService =
+        settings is AndroidSettings &&
+        settings.foregroundNotificationConfig != null;
+    try {
+      _inner = Geolocator.getPositionStream(locationSettings: settings).listen(
+        (position) => output.add(_map(position)),
+        onError: (Object error, StackTrace stack) {
+          // D14-17: a refused service start must never crash the app.
+          if (foregroundService) {
+            DriverLog.warn('Location service stream failed: $error');
+          }
+          output.addError(error, stack);
+        },
+      );
+    } catch (error, stack) {
+      DriverLog.warn('Location stream could not start: $error');
+      foregroundService = false;
+      output.addError(error, stack);
+    }
   }
 
   Future<void> pause() async {
     final inner = _inner;
     _inner = null;
+    foregroundService = false;
     await inner?.cancel();
   }
+}
+
+class _LifecycleObserver with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) =>
+      DriverLocationService.handleAppLifecycle(state);
 }
