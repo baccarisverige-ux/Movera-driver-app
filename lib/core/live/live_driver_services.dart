@@ -722,6 +722,12 @@ class LiveLocationReporter {
   Timer? _timer;
   bool _sending = false;
 
+  /// D12-8: after a 429/503 with Retry-After nothing is sent before this.
+  DateTime? _pausedUntil;
+
+  /// The longest Retry-After the sender honours.
+  static const maxRetryAfter = Duration(seconds: 60);
+
   /// The last fix sent, as the contract's `GeoFix`.
   LiveFix? lastFix;
 
@@ -884,6 +890,8 @@ class LiveLocationReporter {
     // A hidden web tab sends nothing, so the server's auto-offline works.
     if (_restamp && !_pageVisible) return false;
     if (_sending) return false;
+    final paused = _pausedUntil;
+    if (paused != null && _now().isBefore(paused)) return false;
     _sending = true;
     try {
       var fix = first ?? (fresh ? null : _heldFix());
@@ -912,6 +920,15 @@ class LiveLocationReporter {
       return true;
     } catch (error) {
       DriverLog.warn('location not sent: ${error.runtimeType}', name: 'live');
+      if (error is ApiError &&
+          (error.statusCode == 429 || error.statusCode == 503)) {
+        final wait = error.retryAfter;
+        if (wait != null) {
+          _pausedUntil = _now().add(
+            wait > maxRetryAfter ? maxRetryAfter : wait,
+          );
+        }
+      }
       return false;
     } finally {
       _sending = false;
