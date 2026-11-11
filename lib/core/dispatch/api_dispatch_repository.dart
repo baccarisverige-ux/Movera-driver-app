@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
+import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
@@ -327,9 +328,8 @@ class ApiDispatchRepository implements DispatchRepository {
   /// leaving Home "Matching" until the OS gives up on the socket.
   static const requestTimeout = Duration(seconds: 10);
 
-  /// 1 s, 2 s, 4 s … up to 30 s between tries.
-  static Duration _backoff(int attempt) =>
-      Duration(seconds: math.min(30, 1 << math.min(attempt, 5)));
+  /// 1 s, 2 s, 4 s … up to 30 s between tries, ±10 % jitter (D12-6).
+  static Duration _backoff(int attempt) => reconnectBackoff(attempt);
 
   /// True while the offer feed is open. When it is not, the offer list
   /// is the last one known and may be stale; it reconnects by itself.
