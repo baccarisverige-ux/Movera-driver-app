@@ -294,6 +294,15 @@ class DriverLocationService implements DriverLocationRepository {
     yield* watch.output.stream;
   }
 
+  /// D14-18: the monochrome status-bar icon of the "Movera is online"
+  /// notification (`res/drawable/ic_stat_online.xml`); without it the
+  /// plugin falls back to the full-colour launcher icon, a grey square.
+  @visibleForTesting
+  static const statusBarIcon = AndroidResource(
+    name: 'ic_stat_online',
+    defType: 'drawable',
+  );
+
   /// Owner decision 1 (driver group 3): the stream settings while online
   /// for [platform] (null: the web). Android runs geolocator's location
   /// foreground service with the persistent [notificationTitle]
@@ -328,6 +337,7 @@ class DriverLocationService implements DriverLocationRepository {
           notificationTitle: notificationTitle,
           notificationText: notificationText,
           notificationChannelName: notificationTitle,
+          notificationIcon: statusBarIcon,
           setOngoing: true,
           enableWakeLock: true,
         ),

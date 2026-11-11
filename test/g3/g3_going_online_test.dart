@@ -290,6 +290,16 @@ void main() {
         'Movera is online',
       );
       expect(android.foregroundNotificationConfig?.setOngoing, isTrue);
+      // D14-18: the monochrome status-bar icon, not the launcher icon.
+      final icon = android.foregroundNotificationConfig!.notificationIcon;
+      expect(icon.name, 'ic_stat_online');
+      expect(icon.defType, 'drawable');
+      expect(
+        File(
+          'android/app/src/main/res/drawable/ic_stat_online.xml',
+        ).existsSync(),
+        isTrue,
+      );
     });
 
     test('iOS: background updates on, with the blue indicator', () {
