@@ -212,3 +212,9 @@ What runs in each state (the code the harness drives):
   (profile + availability), trip steps, chat and calls, resume bursts
   (`LiveDriverServices.resumed`), Documents screen 60 s refresh
   (`live_documents_screen.dart:61`, only while that screen is open).
+- Resume burst (D12-5, `test/perf/request_budget/resume_burst_test.dart`):
+  a feed or settings stream with a line (heartbeat) in the last 20 s is kept
+  and not read again; events are read again only after 60 s, Home's badges
+  only after 60 s. Online with live streams a resume sends the position only
+  (plus events after 60 s, plus Home's 4 badge reads after 60 s); with dead
+  streams it reopens both, reads config + offers + events as before.

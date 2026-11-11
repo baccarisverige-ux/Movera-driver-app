@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -290,6 +291,16 @@ void main() {
         'Movera is online',
       );
       expect(android.foregroundNotificationConfig?.setOngoing, isTrue);
+      // D14-18: the monochrome status-bar icon, not the launcher icon.
+      final icon = android.foregroundNotificationConfig!.notificationIcon;
+      expect(icon.name, 'ic_stat_online');
+      expect(icon.defType, 'drawable');
+      expect(
+        File(
+          'android/app/src/main/res/drawable/ic_stat_online.xml',
+        ).existsSync(),
+        isTrue,
+      );
     });
 
     test('iOS: background updates on, with the blue indicator', () {
@@ -339,6 +350,47 @@ void main() {
         (fake.opened.last as AndroidSettings).foregroundNotificationConfig,
         isNull,
       );
+      await sub.cancel();
+    });
+
+    test('D14-17: going online in the background does not start the '
+        'location service until the app is resumed', () async {
+      var resumed = false;
+      DriverLocationService.appResumed = () => resumed;
+      final sub = const DriverLocationService().watchPosition().listen((_) {});
+      await pumpEventQueue();
+      await DriverLocationService.setOnlineBackground((
+        title: 'Movera is online',
+        text: 'x',
+      ));
+      await pumpEventQueue();
+      expect(
+        fake.opened.whereType<AndroidSettings>().where(
+          (s) => s.foregroundNotificationConfig != null,
+        ),
+        isEmpty,
+      );
+      // Still in the background: nothing changes.
+      DriverLocationService.handleAppLifecycle(AppLifecycleState.paused);
+      await pumpEventQueue();
+      expect(
+        (fake.opened.last as AndroidSettings).foregroundNotificationConfig,
+        isNull,
+      );
+      resumed = true;
+      DriverLocationService.handleAppLifecycle(AppLifecycleState.resumed);
+      await pumpEventQueue();
+      expect(
+        (fake.opened.last as AndroidSettings)
+            .foregroundNotificationConfig
+            ?.notificationTitle,
+        'Movera is online',
+      );
+      final opens = fake.opened.length;
+      // A second resume does not re-open a stream that runs the service.
+      DriverLocationService.handleAppLifecycle(AppLifecycleState.resumed);
+      await pumpEventQueue();
+      expect(fake.opened, hasLength(opens));
       await sub.cancel();
     });
 

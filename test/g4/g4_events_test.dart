@@ -224,7 +224,9 @@ void main() {
         return http.Response('', 503);
       });
       final tokens = MemoryTokenStore()..save(access: 'a', refresh: 'r');
+      var clock = DateTime.utc(2026, 11, 11, 9);
       final live = LiveDriverServices(
+        now: () => clock,
         client: client,
         origin: Uri.parse('https://api.test.movera.se'),
         tokens: tokens,
@@ -244,6 +246,12 @@ void main() {
       await pumpEventQueue();
       expect(reads(), 1);
       expect(DriverEvents.instance.visible(), hasLength(1));
+      // D12-5: back within a minute of the read: not read again.
+      clock = clock.add(const Duration(seconds: 30));
+      live.resumed();
+      await pumpEventQueue();
+      expect(reads(), 1);
+      clock = clock.add(const Duration(seconds: 30));
       live.resumed();
       await pumpEventQueue();
       expect(reads(), 2);

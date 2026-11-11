@@ -293,6 +293,23 @@ class ApiDispatchRepository implements DispatchRepository {
   final Set<String> _cameDuringLoad = <String>{};
   StreamSubscription<String>? _feed;
   Timer? _feedIdle;
+
+  /// D12-5: when the open feed last sent a line (a heartbeat counts).
+  DateTime? _lastLine;
+
+  /// D12-5: a feed with a line this recent is alive; a resume keeps it.
+  static const freshFor = Duration(seconds: 20);
+
+  /// D12-5: the feed is open, live and sent a line in the last
+  /// [freshFor], so a resume needs neither a new feed nor a fresh read.
+  bool get feedFresh {
+    final last = _lastLine;
+    return _feed != null &&
+        _feedLive &&
+        last != null &&
+        _now().difference(last) < freshFor;
+  }
+
   final StreamController<bool> _live = StreamController<bool>.broadcast();
   bool _feedLive = false;
   int _reconnects = 0;
@@ -533,6 +550,8 @@ class ApiDispatchRepository implements DispatchRepository {
 
     _feedIdle?.cancel();
     _feedIdle = Timer(feedIdleTimeout, quiet);
+    // D12-5: only a received line shows the feed is alive.
+    _lastLine = null;
     int? blockId;
     _feed = response.stream
         .transform(utf8.decoder)
@@ -540,6 +559,7 @@ class ApiDispatchRepository implements DispatchRepository {
         .listen(
           (line) {
             // Any line, the heartbeat comment too, shows the feed is alive.
+            _lastLine = _now();
             _feedIdle?.cancel();
             _feedIdle = Timer(feedIdleTimeout, quiet);
             if (line.startsWith('data:')) {

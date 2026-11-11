@@ -239,7 +239,7 @@ class _DriverHomeState extends State<DriverHome>
         state == AppLifecycleState.inactive;
     if (state == AppLifecycleState.resumed) {
       _HomeRecovery(this)._rearmWallClockTimers();
-      _HomeAccount(this)._refreshLiveBadges();
+      _HomeAccount(this)._refreshLiveBadgesOnResume();
     }
     if (_liveVisible) {
       _HomeUpdates(this)._resumeHomeUpdates();

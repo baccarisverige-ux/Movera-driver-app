@@ -62,6 +62,9 @@ class _HomeAccountState {
 /// The Home states whose badges were requested once (extensions carry no fields).
 final Set<int> _badgesRequested = <int>{};
 
+/// D12-5: when each Home last asked for its badges.
+final Expando<DateTime> _badgesReadAt = Expando<DateTime>('badgesReadAt');
+
 extension _HomeAccount on _DriverHomeState {
   DrivingTimeClock get _drivingClock => DrivingTimeClock.instance;
   DriverNotificationFeed get _feed => DriverNotificationFeed.instance;
@@ -510,6 +513,13 @@ extension _HomeAccount on _DriverHomeState {
 
   /// The profile (the invitation count) and the unread count, when Home
   /// opens, comes back on top or the app returns; nothing in the demo.
+  /// D12-5: the app came back; the badges only when [badgesDueOnResume].
+  void _refreshLiveBadgesOnResume() {
+    if (badgesDueOnResume(_badgesReadAt[this], DateTime.now())) {
+      _refreshLiveBadges();
+    }
+  }
+
   void _refreshLiveBadges() {
     if (!mounted || !DriverRuntimeConfig.current.authRequired) {
       return;
@@ -518,6 +528,7 @@ extension _HomeAccount on _DriverHomeState {
     if (session == null) {
       return;
     }
+    _badgesReadAt[this] = DateTime.now();
     unawaited(
       session.refreshBadges().then((_) {
         if (mounted) {

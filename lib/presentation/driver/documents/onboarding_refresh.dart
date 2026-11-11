@@ -9,6 +9,13 @@ import 'package:movera/core/onboarding/onboarding_settings.dart';
 /// often, besides when it comes back on top or the app returns.
 const Duration onboardingRefreshEvery = Duration(seconds: 60);
 
+/// D12-5: whether a return to the app reads Home's badges again (profile,
+/// unread count, reminders, onboarding settings): not when they were read
+/// less than [onboardingRefreshEvery] ago, so a short trip out of the app
+/// sends no burst; the 60 s refresh goes on as before.
+bool badgesDueOnResume(DateTime? lastRead, DateTime now) =>
+    lastRead == null || now.difference(lastRead) >= onboardingRefreshEvery;
+
 /// The admin's onboarding settings of the driver's country (contract
 /// v0.17.0), read into [OnboardingSettingsStore.instance].
 Future<OnboardingSettings> refreshOnboardingSettings(
