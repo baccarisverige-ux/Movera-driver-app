@@ -201,18 +201,6 @@ void main() {
 
   test('the decided call text and the capitalised hint in sv, fr and en', () {
     expect(
-      lookupAppLocalizations(const Locale('sv')).callUnavailableUseChat,
-      'Samtal kommer snart – använd chatten',
-    );
-    expect(
-      lookupAppLocalizations(const Locale('fr')).callUnavailableUseChat,
-      'Appels bientôt disponibles – utilisez le chat',
-    );
-    expect(
-      lookupAppLocalizations(const Locale('en')).callUnavailableUseChat,
-      'Calls coming soon – use the chat',
-    );
-    expect(
       lookupAppLocalizations(const Locale('sv')).chatSendMessageHint,
       'Skicka meddelande…',
     );

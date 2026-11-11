@@ -4061,7 +4061,6 @@
   "supportWriteLocalDraft": "Write a local draft",
   "supportSaveLocalReply": "Save local reply",
   "helpCenter": "Help center",
-  "callUnavailableUseChat": "Calls coming soon – use the chat",
   "chatClosedAfterTrip": "The chat is closed after the trip",
   "chatLocalDemo": "Local demo chat · messages are not sent to the rider.",
   "chatSendMessageHint": "Send message…",

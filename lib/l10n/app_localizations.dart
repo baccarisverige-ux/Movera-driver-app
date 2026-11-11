@@ -9106,12 +9106,6 @@ abstract class AppLocalizations {
   /// **'Help center'**
   String get helpCenter;
 
-  /// No description provided for @callUnavailableUseChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Calls coming soon – use the chat'**
-  String get callUnavailableUseChat;
-
   /// No description provided for @chatClosedAfterTrip.
   ///
   /// In en, this message translates to:
