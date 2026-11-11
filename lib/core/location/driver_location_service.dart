@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/push/notification_permission.dart';
 
 class DriverLocationException implements Exception {
   const DriverLocationException(this.message);
@@ -58,6 +59,11 @@ class DriverLocationService implements DriverLocationRepository {
   /// The offline card's "Turn on" (checker MEDIUM 2): the one shared,
   /// guarded prompt (driver-r5-51), so Android never sees it twice; true
   /// when allowed. A "Don't allow" this session is not asked again.
+  /// D14-7: Go online asks Android 13+ once for notifications (the
+  /// "Movera is online" notice of the location service).
+  static Future<bool> requestNotificationsOnce() =>
+      NotificationPermission.instance.requestOnce();
+
   static Future<bool> requestPermissionOnce() async {
     try {
       var permission = await Geolocator.checkPermission();
