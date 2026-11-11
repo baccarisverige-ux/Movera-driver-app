@@ -1,8 +1,15 @@
+import 'dart:async';
+import 'dart:js_interop';
+
 import 'package:movera/core/phone/browser_online_web.dart';
-import 'package:movera/core/web/web_reload.dart' show webReloadGuard;
+import 'package:movera/core/web/web_reload.dart';
 import 'package:web/web.dart' as web;
 
 const _key = 'movera_part_reload_at';
+
+/// True while a reload waits for the fresh app shell, so a second tap or a
+/// second failing screen does not start another one.
+bool _reloading = false;
 
 /// A web publish overwrites the screen parts (`main.dart.js_N.part.js`) under
 /// the same names. A page opened before the publish still runs the old
@@ -11,6 +18,7 @@ const _key = 'movera_part_reload_at';
 /// so a part that keeps failing for another reason cannot loop.
 bool webReloadPageOnce() {
   try {
+    if (_reloading) return true;
     final now = DateTime.now().millisecondsSinceEpoch;
     final last = int.tryParse(web.window.sessionStorage.getItem(_key) ?? '');
     if (last != null && now - last < webReloadGuard.inMilliseconds) {
@@ -27,6 +35,7 @@ bool webReloadPageOnce() {
 
 bool webReloadPageNow() {
   try {
+    if (_reloading) return true;
     if (browserOnline() == false) return false;
     return _reload(DateTime.now().millisecondsSinceEpoch);
   } catch (_) {
@@ -34,11 +43,51 @@ bool webReloadPageNow() {
   }
 }
 
-/// The query string defeats a cached index.html; the app ignores it.
+/// First downloads the app shell fresh (`cache: 'reload'` writes it into the
+/// browser cache), so the reloaded page runs the new bundle and not the
+/// cached one (GitHub Pages: `max-age=600`). Then reloads; the query string
+/// defeats a cached index.html; the app ignores it.
 bool _reload(int now) {
-  final url = Uri.parse(web.window.location.href);
-  final query = Map<String, String>.of(url.queryParameters)
-    ..['reload'] = '$now';
-  web.window.location.replace(url.replace(queryParameters: query).toString());
+  _reloading = true;
+  unawaited(
+    refreshThenReload(
+      refresh: _refreshAppShell,
+      reload: () {
+        final url = Uri.parse(web.window.location.href);
+        final query = Map<String, String>.of(url.queryParameters)
+          ..['reload'] = '$now';
+        web.window.location.replace(
+          url.replace(queryParameters: query).toString(),
+        );
+      },
+    ),
+  );
   return true;
+}
+
+Future<void> _refreshAppShell() async {
+  final base = Uri.parse(web.document.baseURI);
+  final urls = webAppShellUrls(base, loaded: _loadedResources());
+  await Future.wait([
+    for (final url in urls)
+      web.window
+          .fetch(url.toString().toJS, web.RequestInit(cache: 'reload'))
+          .toDart
+          // Read the body so the whole file lands in the cache.
+          .then((response) => response.arrayBuffer().toDart),
+  ]);
+}
+
+/// The URLs this page downloaded (Resource Timing), to refresh only the
+/// bundle it ran (wasm or JavaScript). Empty when the browser hides them.
+List<String> _loadedResources() {
+  try {
+    return [
+      for (final entry
+          in web.window.performance.getEntriesByType('resource').toDart)
+        entry.name,
+    ];
+  } catch (_) {
+    return const [];
+  }
 }
