@@ -330,7 +330,10 @@ jobs:
           DIR: ${{ steps.run.outputs.dir }}
         run: |
           set -uo pipefail
-          gsutil -m -q cp -r "gs://$BUCKET/$DIR" testlab-results/ || echo "::warning::results download failed"
+          # The APKs are skipped: the app bundles the contract copy, which holds the staging
+          # test sign-in code, so the fail-safe re-scan would (rightly) refuse the upload.
+          mkdir -p "testlab-results/$(basename "$DIR")"
+          gsutil -m -q rsync -r -x '.*\.apk$' "gs://$BUCKET/$DIR" "testlab-results/$(basename "$DIR")" || echo "::warning::results download failed"
           find testlab-results -type f | sed 's/^/  /' | head -80
       # Fail-safe: scrub exits 1 when the value list is missing or empty, and
       # re-scans every file after scrubbing (exit 1 and the results folder is

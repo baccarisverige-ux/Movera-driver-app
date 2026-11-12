@@ -269,9 +269,11 @@ def scrub_or_fail(root, secrets):
     changed = scrub(root, secrets)
     left = leftovers(root, secrets)
     if left:
+        # File names only (relative paths), never contents or values.
+        names = ", ".join(os.path.relpath(p, root) for p in left[:10])
         shutil.rmtree(root, ignore_errors=True)
-        return 1, ("::error::%d file(s) still held the test number or code after scrubbing; "
-                   "the results folder was deleted and nothing is uploaded" % len(left))
+        return 1, ("::error::%d file(s) still held the test number or code after scrubbing (%s); "
+                   "the results folder was deleted and nothing is uploaded" % (len(left), names))
     return 0, "scrubbed %d file(s); re-scan clean" % changed
 
 
