@@ -177,6 +177,18 @@ class TestlabSummaryTest(unittest.TestCase):
         self.assertIn('failures=1', text)
         self.assertNotIn('MOVERA-TL CHECK', text.split('Crash / error lines')[1])
 
+    def test_fail_rows_keep_the_missed_key_and_more_detail(self):
+        (self.root / 'driver-device' / 'oriole-33-en_US-portrait' / 'summary.json').write_text(json.dumps([
+            {'id': 'ARRIVE', 'title': 'at the pickup', 'outcome': 'fail',
+             'detail': 'MISSED: "active-ride-arrived-button" not tappable -- ' + 'x' * 600 + 'END'},
+            {'id': 'G24', 'title': 'sends', 'outcome': 'pass', 'detail': 'y' * 600 + 'END'},
+        ]))
+        text = testlab_summary.summary_text(str(self.root))
+        self.assertIn('MISSED: "active-ride-arrived-button" not tappable -- ', text)
+        self.assertIn('x' * 600 + 'END', text)
+        self.assertNotIn('y' * 600, text)
+        self.assertIn('y' * 400, text)
+
     def test_summary_json_wins_over_logcat(self):
         (self.root / 'summary.json').write_text(json.dumps([
             {'id': 'G17', 'title': 'SOS numbers', 'outcome': 'pass', 'detail': 'zone=Z001'},

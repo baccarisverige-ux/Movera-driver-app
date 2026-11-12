@@ -44,6 +44,18 @@ class CheckLog {
   bool _surfaceConverted = false;
   int _shotNumber = 0;
 
+  /// What the UI steps since the last check line could not find or tap
+  /// (a key, a route, a dialog). The next FAIL line starts with it, so
+  /// the next diagnosis does not need the code; any check line clears it.
+  /// Keys and routes only: never a value typed or read.
+  static String? missed;
+
+  /// Notes a miss for the next FAIL line and says it in the log at once.
+  static void miss(String what) {
+    missed = missed == null ? what : '$missed; $what';
+    say('STEP missed: $what');
+  }
+
   static void say(String line) {
     // ignore: avoid_print
     print('$prefix $line');
@@ -54,13 +66,23 @@ class CheckLog {
   void pass(String id, String title, String detail) =>
       _add(CheckResult(id, title, CheckOutcome.pass, detail));
 
-  void fail(String id, String title, String detail) =>
-      _add(CheckResult(id, title, CheckOutcome.fail, detail));
+  void fail(String id, String title, String detail) {
+    final miss = missed;
+    _add(
+      CheckResult(
+        id,
+        title,
+        CheckOutcome.fail,
+        miss == null ? detail : 'MISSED: $miss -- $detail',
+      ),
+    );
+  }
 
   void skip(String id, String title, String detail) =>
       _add(CheckResult(id, title, CheckOutcome.skip, detail));
 
   void _add(CheckResult result) {
+    missed = null;
     results.add(result);
     say(
       'CHECK ${result.id} ${result.outcome.name.toUpperCase()} '

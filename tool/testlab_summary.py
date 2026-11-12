@@ -480,7 +480,10 @@ def summary_text(root):
         out.append("| Check | Result | Detail |")
         out.append("|---|---|---|")
         for c in checks:
-            detail = str(c.get("detail", "")).replace("|", "/")[:400]
+            # A FAIL keeps more: its line starts with what the test missed
+            # (key / route), which the next diagnosis needs first.
+            limit = 800 if str(c.get("outcome", "")).lower() == "fail" else 400
+            detail = str(c.get("detail", "")).replace("|", "/")[:limit]
             title = c.get("title") or ""
             out.append("| %s %s | %s | %s |" % (c.get("id"), title, str(c.get("outcome", "")).upper(), detail))
         out += ["", "(from %s)" % source]

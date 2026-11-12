@@ -199,28 +199,68 @@ Future<bool> tapGoOnline(WidgetTester tester) async {
   return true;
 }
 
-/// Holds the online radar, then confirms "Go offline?".
+/// Taps [finder] only where a tap really lands on it (hit-testable, not
+/// offstage or covered). A tap that would miss is logged as a miss
+/// (named [what]) instead of being sent blind. Returns whether it tapped.
+Future<bool> tapHit(WidgetTester tester, Finder finder, String what) async {
+  final hit = finder.hitTestable();
+  if (!tester.any(hit)) {
+    CheckLog.miss(
+      shows(finder)
+          ? '$what is in the tree but not tappable (offstage or covered)'
+          : '$what not in the tree',
+    );
+    return false;
+  }
+  await tester.tap(hit.first, warnIfMissed: false);
+  return true;
+}
+
+/// Goes offline the app's way, then confirms "Go offline?". With the Home
+/// sheet open the online radar is a 1 s hold (`home-radar-hold-off`);
+/// with the sheet closed it is a long press on `home-radar-long-press`
+/// (home_map_panels.dart). Both open the same `go-offline-yes` dialog.
 Future<bool> goOffline(WidgetTester tester) async {
-  final radar = byKey('home-radar-hold-off');
+  final hold = byKey('home-radar-hold-off');
+  final long = byKey('home-radar-long-press');
   final ready = await pumpUntil(
     tester,
-    () => shows(radar),
+    () => tester.any(hold.hitTestable()) || tester.any(long.hitTestable()),
     timeout: const Duration(seconds: 20),
   );
-  if (!ready) return false;
-  final gesture = await tester.startGesture(tester.getCenter(radar.first));
-  for (var i = 0; i < 8; i++) {
-    await tester.pump(const Duration(milliseconds: 250));
+  if (!ready) {
+    CheckLog.miss(
+      'neither "home-radar-hold-off" nor "home-radar-long-press" tappable '
+      'in 20 s (in tree: ${shows(hold)}/${shows(long)})',
+    );
+    return false;
   }
-  await gesture.up();
+  if (tester.any(hold.hitTestable())) {
+    CheckLog.say('STEP go offline: 1 s hold on home-radar-hold-off');
+    final gesture = await tester.startGesture(
+      tester.getCenter(hold.hitTestable().first),
+    );
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    await gesture.up();
+  } else {
+    CheckLog.say('STEP go offline: long press on home-radar-long-press');
+    await tester.longPress(long.hitTestable().first, warnIfMissed: false);
+  }
   final asked = await pumpUntil(
     tester,
     () => shows(byKey('go-offline-yes')),
     timeout: const Duration(seconds: 5),
     dismiss: false,
   );
-  if (!asked) return false;
-  await tester.tap(byKey('go-offline-yes'), warnIfMissed: false);
+  if (!asked) {
+    CheckLog.miss('"go-offline-yes" (go-offline-confirm dialog) did not open');
+    return false;
+  }
+  if (!await tapHit(tester, byKey('go-offline-yes'), '"go-offline-yes"')) {
+    return false;
+  }
   await tester.pump(const Duration(milliseconds: 500));
   return true;
 }

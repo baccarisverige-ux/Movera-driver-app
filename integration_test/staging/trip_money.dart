@@ -15,35 +15,91 @@ extension _TripMoney on TripRun {
     return cards.isEmpty ? null : [for (final c in cards) ...textsUnder(c)];
   }
 
+  /// The amount the Exclusive offer card shows, from its fare key
+  /// `exclusive-fare` (home_offer_sheet.dart: the big fare =
+  /// offer.shownFare = driverEarnings + pickupPay, never the rider's
+  /// fare). Null when it does not show (the radar card: its texts are
+  /// used instead).
+  (String, String)? _offerFareText() {
+    for (final key in const ['exclusive-fare']) {
+      final f = byKey(key);
+      if (!shows(f)) continue;
+      final w = f.evaluate().first.widget;
+      final text = w is Text ? (w.data ?? w.textSpan?.toPlainText()) : null;
+      if (text != null) return (key, text);
+    }
+    return null;
+  }
+
+  /// The offer id the app accepted: from its own recorded
+  /// `POST /offers/{offerId}/accept` (api_dispatch_repository.dart).
+  String? _acceptedOfferId() {
+    final accept = RegExp(r'^/api/v1/offers/([^/]+)/accept$');
+    for (final c in rec.calls.reversed) {
+      if (c.method != 'POST') continue;
+      final m = accept.firstMatch(c.path);
+      if (m != null) return Uri.decodeComponent(m.group(1)!);
+    }
+    return null;
+  }
+
   /// OFFER money (owner 2026-11-12 ~16:05 UTC): the card ([card], read
-  /// while the offer was up) shows what the driver gets = the server's
-  /// offer driverEarnings (with its pickupPay added, the card's one
-  /// total), and NOT the rider's fare (nor a cash to collect). The server
-  /// offer is read after the accept, so the check never delays it.
+  /// while the offer was up; [fareText] = its fare key and text) shows
+  /// what the driver gets = the server's offer driverEarnings (with its
+  /// pickupPay added, the card's one total), and NOT the rider's fare
+  /// (nor a cash to collect). The server offer is read after the accept,
+  /// so the check never delays it: `GET /driver/offers/{offerId}`
+  /// (OfferCheck {offer, trip?}) with the offerId of the app's own accept
+  /// call; fallback `GET /driver/offers?status=claimed` (after the accept
+  /// the server marks it claimed; there is no "accepted" status).
   /// Returns (ok, detail); a server field that is missing is not ok.
-  Future<(bool, String)> _offerMoney(List<String>? card) async {
+  Future<(bool, String)> _offerMoney(
+    List<String>? card,
+    (String, String)? fareText,
+  ) async {
     final texts = card ?? const <String>[];
-    bool has(Money m) => texts.any(
+    bool hasIn(Iterable<String> list, Money m) => list.any(
       (t) => t.contains(m.formatted) || t.contains(TripRun.short(m)),
     );
-    // GET /driver/offers lists one status (open by default): the accepted
-    // offer first, else (accept not taken) the still open one.
+    bool has(Money m) => hasIn(texts, m);
     Map? offer;
-    final statuses = <String>[];
-    for (final want in const ['accepted', 'open']) {
+    final asked = <String>[];
+    final offerId = _acceptedOfferId();
+    if (offerId == null) {
+      CheckLog.miss(
+        'no recorded POST /api/v1/offers/{offerId}/accept (no offerId)',
+      );
+    } else {
+      final (status, body) = await ask(
+        '/api/v1/driver/offers/${Uri.encodeComponent(offerId)}',
+      );
+      asked.add('GET /driver/offers/{offerId} $status');
+      final o = body is Map ? body['offer'] : null;
+      if (o is Map) offer = o;
+    }
+    if (offer == null) {
       final (status, page) = await ask('/api/v1/driver/offers', {
-        'status': want,
+        'status': 'claimed',
         'limit': '50',
       });
-      statuses.add('$want $status');
+      asked.add('GET /driver/offers?status=claimed $status');
       final items = page is Map ? page['items'] : null;
       offer = items is List
           ? items
                 .whereType<Map>()
-                .where((o) => o['tripId'] == tripId)
+                .where(
+                  (o) =>
+                      (offerId != null && o['offerId'] == offerId) ||
+                      o['tripId'] == tripId,
+                )
                 .firstOrNull
           : null;
-      if (offer != null) break;
+    }
+    if (offer == null) {
+      CheckLog.miss('server offer not found (${asked.join(', ')})');
+    }
+    if (card != null && fareText == null) {
+      CheckLog.miss('"exclusive-fare" not on the card: card texts used');
     }
     Money? money(Object? json) =>
         json is Map ? Money.fromJson(Map<String, dynamic>.from(json)) : null;
@@ -54,7 +110,9 @@ extension _TripMoney on TripRun {
     final problems = <String>[
       if (card == null) 'no offer card on screen',
       if (offer == null)
-        'server offer for the trip not found (offers ${statuses.join(', ')})',
+        'server offer for the trip not found (${asked.join(', ')})',
+      if (offer != null && offer['tripId'] != null && offer['tripId'] != tripId)
+        'server offer ${offer['offerId']} is for another trip',
       if (offer != null && earnings == null)
         'server offer has no driverEarnings',
       if (fare == null) 'server sent no rider fare',
@@ -64,7 +122,12 @@ extension _TripMoney on TripRun {
         : pickupPay == null || pickupPay.isZero
         ? earnings
         : earnings + pickupPay;
-    final shown = total != null && (has(total) || has(earnings!));
+    // The card's amount is its fare key; the other card texts only when
+    // that key is not there (a radar card; noted as a miss above).
+    final amountTexts = fareText == null ? texts : <String>[fareText.$2];
+    final shown =
+        total != null &&
+        (hasIn(amountTexts, total) || hasIn(amountTexts, earnings!));
     if (total != null && !shown) {
       problems.add('driver amount ${total.formatted} not on the card');
     }
@@ -88,11 +151,12 @@ extension _TripMoney on TripRun {
       problems.add('to-collect ${cash.formatted} IS on the card');
     }
     final detail =
-        'card driver amount=${total?.formatted} (server driverEarnings='
-        '${earnings?.formatted} pickupPay=${pickupPay?.formatted}) shown=$shown; '
-        'rider fare ${fare?.formatted} shown=$fareShown'
-        '${fare != null && (fare == total || fare == earnings) ? ' (same as the driver amount: not told apart)' : ''}'
-        '${problems.isEmpty ? '' : '; problems: ${problems.join('; ')}'}';
+        '${problems.isEmpty ? '' : 'problems: ${problems.join('; ')}; '}'
+        'card ${fareText?.$1 ?? 'fare key'}="${fareText?.$2}" driver amount='
+        '${total?.formatted} (server driverEarnings=${earnings?.formatted} '
+        'pickupPay=${pickupPay?.formatted}, via ${asked.join(', ')}) '
+        'shown=$shown; rider fare ${fare?.formatted} shown=$fareShown'
+        '${fare != null && (fare == total || fare == earnings) ? ' (same as the driver amount: not told apart)' : ''}';
     return (problems.isEmpty, detail);
   }
 
@@ -160,6 +224,72 @@ extension _TripMoney on TripRun {
     if (rideCompletedShown()) await log.screenshot(tester, 'ride-completed');
   }
 
+  /// Opens the current trip's waybill during the trip, as a driver can:
+  /// 1. the island's route cue (`island-route-cue` -> Route & options,
+  ///    accept_ride.dart onRoute) then `current-trip-waybill-option`;
+  /// 2. else the full sheet's trip card: `current-waybill-shortcut`, then
+  ///    `current-trip-more` -> `current-trip-waybill-option`.
+  /// Returns what it tried, for the FAIL line.
+  Future<List<String>> _openWaybillDuring(Finder sheet) async {
+    final tried = <String>[];
+    final cue = byKey('island-route-cue');
+    final option = byKey('current-trip-waybill-option');
+    Future<bool> pickOption(String via) async {
+      final open = await pumpUntil(
+        tester,
+        () => tester.any(option.hitTestable()),
+        timeout: const Duration(seconds: 5),
+      );
+      if (!open) {
+        CheckLog.miss('"current-trip-waybill-option" not shown after $via');
+        return false;
+      }
+      return tapHit(tester, option, '"current-trip-waybill-option"');
+    }
+
+    Future<bool> opened() => pumpUntil(
+      tester,
+      () => shows(sheet),
+      timeout: const Duration(seconds: 5),
+    );
+    // The island's route face comes back 2 s after a touch.
+    await pumpUntil(
+      tester,
+      () => tester.any(cue.hitTestable()),
+      timeout: const Duration(seconds: 4),
+    );
+    tried.add('island-route-cue');
+    if (await tapHit(tester, cue, '"island-route-cue" (island route face)') &&
+        await pickOption('island-route-cue') &&
+        await opened()) {
+      return tried;
+    }
+    if (_tripOptionsOpen()) await systemBack(tester);
+    tried.add('current-waybill-shortcut (full face)');
+    if (await tapTripControl(
+          tester,
+          'current-waybill-shortcut',
+          face: 'full',
+          timeout: const Duration(seconds: 8),
+        ) &&
+        await opened()) {
+      return tried;
+    }
+    tried.add('current-trip-more (full face)');
+    if (await tapTripControl(
+          tester,
+          'current-trip-more',
+          face: 'full',
+          timeout: const Duration(seconds: 8),
+        ) &&
+        await pickOption('current-trip-more')) {
+      await opened();
+    }
+    return tried;
+  }
+
+  bool _tripOptionsOpen() => shows(byKey('trip-options-scroll'));
+
   /// The waybill: trip id, pickup, drop-off, driver name; after the trip
   /// all the money (owner 2026-11-12 ~16:05 UTC): the rider's fare,
   /// Movera's commission, what the driver gets and the payment method,
@@ -172,29 +302,18 @@ extension _TripMoney on TripRun {
         : 'waybill during the trip = server';
     if (late) return log.skip(id, title, 'not run: time limit near');
     final sheet = byKey('waybill-$tripId');
+    final tried = <String>[];
     await watch.run(after ? 'waybill-after' : 'waybill-during', () async {
       if (after) {
-        if (shows(byKey('ride-completed-waybill'))) {
-          await tester.ensureVisible(byKey('ride-completed-waybill').first);
-          await tester.tap(
-            byKey('ride-completed-waybill').first,
-            warnIfMissed: false,
-          );
+        tried.add('ride-completed-waybill');
+        final button = byKey('ride-completed-waybill');
+        if (shows(button)) {
+          await tester.ensureVisible(button.first);
+          await tester.pump(const Duration(milliseconds: 300));
         }
-      } else if (shows(byKey('current-waybill-shortcut'))) {
-        await tapTripControl(tester, 'current-waybill-shortcut');
-      } else if (await tapTripControl(tester, 'current-trip-more')) {
-        await pumpUntil(
-          tester,
-          () => shows(byKey('current-trip-waybill-option')),
-          timeout: const Duration(seconds: 5),
-        );
-        if (shows(byKey('current-trip-waybill-option'))) {
-          await tester.tap(
-            byKey('current-trip-waybill-option').first,
-            warnIfMissed: false,
-          );
-        }
+        await tapHit(tester, button, '"ride-completed-waybill"');
+      } else {
+        tried.addAll(await _openWaybillDuring(sheet));
       }
       await pumpUntil(
         tester,
@@ -203,7 +322,12 @@ extension _TripMoney on TripRun {
       );
     });
     if (!shows(sheet)) {
-      log.fail(id, title, 'the waybill did not open');
+      log.fail(
+        id,
+        title,
+        'the waybill "waybill-$tripId" did not open'
+        '; tried: ${tried.join(' | ')}',
+      );
       return;
     }
     final texts = textsUnder(sheet);

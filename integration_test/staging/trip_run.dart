@@ -127,6 +127,7 @@ class TripRun extends StagingSession {
       return log.skip(id, title, 'not run: hard time limit (clean-up next)');
     }
     log.step(id);
+    CheckLog.missed = null;
     try {
       await body();
     } catch (error, stack) {
@@ -413,6 +414,7 @@ class TripRun extends StagingSession {
       return;
     }
     final card = _offerCardTexts();
+    final fareText = _offerFareText();
     final offerDetail =
         '$control after ${DateTime.now().difference(sent).inSeconds} s; '
         'server trip ${view?['status']}';
@@ -425,7 +427,7 @@ class TripRun extends StagingSession {
       'accepted',
       'driver_to_pickup',
     }, const Duration(seconds: 30));
-    final (moneyOk, money) = await _offerMoney(card);
+    final (moneyOk, money) = await _offerMoney(card, fareText);
     moneyOk
         ? log.pass('OFFER', title, '$offerDetail; $money')
         : log.fail('OFFER', title, '$offerDetail; $money');
@@ -468,7 +470,7 @@ class TripRun extends StagingSession {
       status = await waitStatus({'arrived'}, const Duration(seconds: 40));
       return true;
     });
-    final detail = 'button=$tapped server=$status';
+    final detail = 'Arrived tapped=$tapped server=$status';
     status == 'arrived'
         ? log.pass('ARRIVE', title, detail)
         : log.fail(
