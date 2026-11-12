@@ -199,6 +199,7 @@ class DriverAccount {
     this.offlineNote,
     this.offlineAt,
     this.drivingTime,
+    this.activeTripId,
   });
 
   factory DriverAccount.fromJson(Map<String, dynamic> json) {
@@ -231,6 +232,7 @@ class DriverAccount {
       offlineReason: _text(json['offlineReason']),
       offlineNote: _text(json['offlineNote']),
       offlineAt: _time(json['offlineAt']),
+      activeTripId: _text(json['activeTripId']),
       drivingTime: json['drivingTime'] is Map
           ? DriverDrivingTime.fromJson(_map(json['drivingTime']))
           : null,
@@ -241,6 +243,10 @@ class DriverAccount {
   }
 
   final String driverId;
+
+  /// `Driver.activeTripId`: the trip the server holds for this driver
+  /// (D-3), or null.
+  final String? activeTripId;
 
   /// `pending` (no details yet), `on_hold`, `active`, `suspended`.
   final String accountStatus;

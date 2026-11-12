@@ -109,6 +109,16 @@ extension _HomeOfferRules on _DriverHomeState {
       _radarListClaiming.value ||
       _HomeExclusive(this)._exclusiveClaiming;
 
+  /// The offer or booked ride whose Match or Accept is in flight, so a
+  /// "Matching…" about it is tagged with it (null for the full Radar
+  /// list's own Match, which has no id here).
+  String? get _claimInFlightId =>
+      _homeRadarMatchingOfferId ??
+      _claimedHomeOffer?.id ??
+      _exclusive.claimingId ??
+      _reservation.claimingId ??
+      _scheduled.claimingId;
+
   /// Decision 3 ("the accept wins"): a rule takes the driver offline
   /// (the driving limit, the row of missed Exclusive offers). With a
   /// Match or Accept with dispatch the app waits for its answer: won,

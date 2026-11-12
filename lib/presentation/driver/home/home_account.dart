@@ -515,7 +515,18 @@ extension _HomeAccount on _DriverHomeState {
   /// opens, comes back on top or the app returns; nothing in the demo.
   /// D12-5: the app came back; the badges only when [badgesDueOnResume].
   void _refreshLiveBadgesOnResume() {
-    if (badgesDueOnResume(_badgesReadAt[this], DateTime.now())) {
+    if (badgesDueOnResume(_badgesReadAt[this], badgesClock())) {
+      _refreshLiveBadges();
+    }
+  }
+
+  /// G27: a page, sheet or dialog over Home closed: the badges by the
+  /// same 60 s rule as a resume, but at once after a trip (its end changed
+  /// the account). Notifications, a reminder fix and an invitation answer
+  /// read them again themselves when they close.
+  void _refreshLiveBadgesOnBack() {
+    if (_coveredByTrip ||
+        badgesDueOnResume(_badgesReadAt[this], badgesClock())) {
       _refreshLiveBadges();
     }
   }
@@ -528,7 +539,7 @@ extension _HomeAccount on _DriverHomeState {
     if (session == null) {
       return;
     }
-    _badgesReadAt[this] = DateTime.now();
+    _badgesReadAt[this] = badgesClock();
     unawaited(
       session.refreshBadges().then((_) {
         if (mounted) {

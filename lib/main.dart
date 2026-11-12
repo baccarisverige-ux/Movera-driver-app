@@ -36,6 +36,7 @@ import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/live/driver_app_resume.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/reservations_refresh.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -317,10 +318,7 @@ class _MoveraAppState extends State<MoveraApp> {
       final legal = DriverLegal.instance..api = _api;
       unawaited(legal.start(country: defaultPhoneCountry().iso));
       _lifecycle = AppLifecycleListener(
-        onResume: () {
-          live.resumed();
-          unawaited(legal.refresh());
-        },
+        onResume: () => driverAppResumed(live: live, legal: legal),
       );
       _dispatch = live.dispatch;
     } else {

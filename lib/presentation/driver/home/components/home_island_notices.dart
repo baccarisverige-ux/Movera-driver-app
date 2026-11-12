@@ -90,6 +90,10 @@ class HomeIslandNotices {
     return ' · ${driverText(DriverTexts.islandCancelFee, {'amount': amount})}';
   }
 
+  /// G27: the groups of an offer's own notices (its arrival, its accept),
+  /// dropped from the queue when its trip opens.
+  static const offerGroups = {'radar-match', 'exclusive'};
+
   static IslandMessage get matching => IslandMessage(
     title: driverText(DriverTexts.islandMatching),
     priority: IslandPriority.low,

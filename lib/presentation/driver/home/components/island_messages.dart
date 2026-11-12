@@ -32,6 +32,7 @@ class IslandMessage {
     this.live = false,
     this.group,
     this.icon,
+    this.ride,
   });
 
   /// A few essential words, e.g. "Rider cancelled" or "Radar online".
@@ -46,12 +47,36 @@ class IslandMessage {
   final bool live;
 
   /// Messages of one group replace each other at once: "Matching trip"
-  /// gives way to "Trip matched" without waiting out its time.
+  /// gives way to "Trip matched" without waiting out its time. A message
+  /// about a [ride] replaces only one about the same ride.
   final String? group;
 
   /// Drawn instead of the tone's own icon, in the tone's colour, e.g. a
   /// bolt for "Exclusive ride".
   final IconData? icon;
+
+  /// The offer or booked ride this message is about (its id), or null for
+  /// a state of the driver (online, cash, a hold).
+  final String? ride;
+
+  /// This message about [id].
+  IslandMessage forRide(String? id) => IslandMessage(
+    title: title,
+    tone: tone,
+    priority: priority,
+    onTap: onTap,
+    live: live,
+    group: group,
+    icon: icon,
+    ride: id,
+  );
+
+  /// Owner 2026-11-12 "Keep both": this message is a newer word of
+  /// [other], which it replaces: same group and, when either is about a
+  /// ride, the same ride. Two reminders about different booked rides are
+  /// both shown.
+  bool replaces(IslandMessage other) =>
+      group != null && group == other.group && ride == other.ride;
 }
 
 /// Messages waiting for the Home island. Any screen can post one; the
@@ -82,6 +107,10 @@ class IslandMessages {
     if (posted.length > maxPosted) {
       posted.removeRange(0, posted.length - maxPosted);
     }
+    // G27: as the group's doc says, the newer message replaces a waiting
+    // one of its group ("Accepting…" gives way to "Trip matched"), only
+    // about the same ride (owner 2026-11-12 "Keep both").
+    _queue.removeWhere(message.replaces);
     if (message.priority == IslandPriority.high) {
       final at = _queue.indexWhere(
         (queued) => queued.priority != IslandPriority.high,
@@ -98,6 +127,20 @@ class IslandMessages {
 
   /// Next message to show, removed from the queue.
   static IslandMessage? take() => _queue.isEmpty ? null : _queue.removeAt(0);
+
+  /// G27: drops the waiting messages of [groups] about offer [offerId]
+  /// (or about no ride). A won offer's trip opened: its accept notices
+  /// ("Accepting…", "Trip matched") and the offer's own ("Exclusive
+  /// ride") would only be shown after the trip, about a state that no
+  /// longer exists. One about another offer (an "Assigned by Movera"
+  /// still to answer) stays.
+  static void dropOffer(String offerId, Set<String> groups) {
+    _queue.removeWhere(
+      (queued) =>
+          groups.contains(queued.group) &&
+          (queued.ride == null || queued.ride == offerId),
+    );
+  }
 
   /// Drops every waiting message (logout, driver-r5-27): each may hold a
   /// closure over the departing driver's Home, and the next driver must

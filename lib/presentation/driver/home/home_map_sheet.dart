@@ -1123,17 +1123,14 @@ extension _HomeMapSheet on _DriverHomeState {
   }
 
   /// A posted message: show it now if the screen is free, or replace an
-  /// outdated one of the same group.
+  /// outdated one of the same group and ride.
   void _onIslandMessagesChanged() {
     if (!mounted) {
       return;
     }
     final current = _islandMessage;
     final next = IslandMessages.peek();
-    if (current != null &&
-        next != null &&
-        current.group != null &&
-        current.group == next.group) {
+    if (current != null && next != null && next.replaces(current)) {
       _islandMessageTimer?.cancel();
       _islandMessage = null;
     }

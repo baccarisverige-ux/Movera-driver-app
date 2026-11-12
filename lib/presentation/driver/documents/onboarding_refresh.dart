@@ -9,6 +9,9 @@ import 'package:movera/core/onboarding/onboarding_settings.dart';
 /// often, besides when it comes back on top or the app returns.
 const Duration onboardingRefreshEvery = Duration(seconds: 60);
 
+/// The clock Home's badge gate reads (a test sets a fake one).
+DateTime Function() badgesClock = DateTime.now;
+
 /// D12-5: whether a return to the app reads Home's badges again (profile,
 /// unread count, reminders, onboarding settings): not when they were read
 /// less than [onboardingRefreshEvery] ago, so a short trip out of the app

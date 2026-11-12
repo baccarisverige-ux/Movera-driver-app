@@ -115,7 +115,7 @@ class LiveDriverServices {
           : null,
     );
     content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
-    zones = LiveDriverZones(api: api)
+    zones = LiveDriverZones(api: api, now: now)
       // G17: with the zone list the position's zone is known.
       ..addListener(_onMoved);
     reporter.onSent = _onMoved;

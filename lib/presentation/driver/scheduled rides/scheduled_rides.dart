@@ -353,7 +353,9 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // by the real clock), never right after Accept.
       final time = ride.route?.pickupTime;
       if (time != null) {
-        IslandMessages.show(HomeIslandNotices.reservationAcceptedAt(time));
+        IslandMessages.show(
+          HomeIslandNotices.reservationAcceptedAt(time).forRide(ride.id),
+        );
       }
       if (!mounted) return;
       setState(() => _selectedTab = 1);

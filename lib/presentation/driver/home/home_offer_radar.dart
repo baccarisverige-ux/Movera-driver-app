@@ -368,11 +368,12 @@ extension _HomeOfferRadar on _DriverHomeState {
     _HomeExclusive(this)._raiseExclusive(offer, lifetime);
     // The island says it too while the card arrives.
     IslandMessages.show(
-      offer.assigned
-          ? HomeIslandNotices.assignedRide
-          : offer.reservation
-          ? HomeIslandNotices.exclusiveReservation
-          : HomeIslandNotices.exclusiveRide,
+      (offer.assigned
+              ? HomeIslandNotices.assignedRide
+              : offer.reservation
+              ? HomeIslandNotices.exclusiveReservation
+              : HomeIslandNotices.exclusiveRide)
+          .forRide(offer.id),
     );
     // And it is in Notifications (Q31, N1).
     final feed = DriverNotificationFeed.instance;
@@ -699,7 +700,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       _homeRadarMatchingOfferId = offer.id;
       _homeRadarMatchStates[offer.id] = _HomeRadarMatchState.resolving;
     });
-    IslandMessages.show(HomeIslandNotices.matching);
+    IslandMessages.show(HomeIslandNotices.matching.forRide(offer.id));
 
     unawaited(_claimHomeRadarOffer(offer));
   }
@@ -924,6 +925,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     String? tripId,
   }) {
     _cancelAllOfferTimers();
+    // G27: the offer's notices still waiting are over once its trip opens.
+    IslandMessages.dropOffer(offer.id, HomeIslandNotices.offerGroups);
     // An Exclusive card slides back down behind the trip.
     _HomeExclusive(this)._sinkExclusive();
     _expandedDirectOfferTimer?.cancel();

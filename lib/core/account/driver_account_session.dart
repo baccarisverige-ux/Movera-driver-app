@@ -47,8 +47,23 @@ class DriverAccountSession extends ChangeNotifier {
   }
 
   /// Round 4b: `GET /notifications?unreadOnly=true`, counted; quiet on
-  /// failure (the bell keeps its last count).
-  Future<int> refreshUnread() async {
+  /// failure (the bell keeps its last count). G27: one request at a time
+  /// (a second caller while one is out shares its answer); the next call
+  /// after it answered asks again.
+  Future<int> refreshUnread() {
+    final active = _unreadLoading;
+    if (active != null) return active;
+    final pending = _readUnread();
+    _unreadLoading = pending;
+    pending.whenComplete(() {
+      if (identical(_unreadLoading, pending)) _unreadLoading = null;
+    }).ignore();
+    return pending;
+  }
+
+  Future<int>? _unreadLoading;
+
+  Future<int> _readUnread() async {
     try {
       final unread = await _repository.notifications(unreadOnly: true);
       unreadNotifications.value = unread.length;

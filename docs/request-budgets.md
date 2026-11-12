@@ -218,3 +218,15 @@ What runs in each state (the code the harness drives):
   only after 60 s. Online with live streams a resume sends the position only
   (plus events after 60 s, plus Home's 4 badge reads after 60 s); with dead
   streams it reopens both, reads config + offers + events as before.
+- G27 (screen-switch audit 2026-11-12): the resume burst runs main.dart's
+  listener (`driver_app_resume.dart`) and `LiveDriverZones.watchResume` on a
+  real lifecycle change; `GET /legal/{country}` and `GET /driver/zones` are
+  read again only after 60 s (was every resume).
+- Back-press burst (G27, `test/perf/request_budget/back_press_burst_test.dart`):
+  closing a page over Home reads the 4 badges only after 60 s (as a resume),
+  at once after a trip page; the server trip (`activeTripId`) is asked only
+  after a trip page and through the account's shared profile read, so the
+  profile is read at most once per back press (was 5 requests with the
+  profile twice; 6 after Notifications). Notifications, a reminder fix and
+  an invitation answer still read the badges when they close; two unread
+  reads at once share one request.

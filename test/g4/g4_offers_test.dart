@@ -16,6 +16,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/push/offer_push.dart';
 import 'package:movera/core/push/push_platform.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/sound/device_sound_io.dart';
@@ -229,8 +230,13 @@ Future<void> _until(WidgetTester tester, Finder finder, Duration limit) async {
   }
 }
 
-/// Home with [dispatch], online.
-Future<void> _online(WidgetTester tester, DispatchRepository dispatch) async {
+/// Home with [dispatch], online. [observe]: the app's route observer, so
+/// a trip screen covers Home as in the app.
+Future<void> _online(
+  WidgetTester tester,
+  DispatchRepository dispatch, {
+  bool observe = false,
+}) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
@@ -244,6 +250,7 @@ Future<void> _online(WidgetTester tester, DispatchRepository dispatch) async {
         splitScreenMode: true,
         useInheritedMediaQuery: true,
         builder: (_, _) => MaterialApp(
+          navigatorObservers: [if (observe) driverRouteObserver],
           home: DriverHome(
             sessionController: DriverSessionController(),
             dispatchRepository: dispatch,
@@ -915,6 +922,76 @@ void main() {
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _closeHome(tester);
     });
+  });
+
+  testWidgets('G27: accept notices of a won offer are not shown on Home '
+      'after its trip ("Accepting…", "Trip matched" waited behind it)', (
+    tester,
+  ) async {
+    ExclusiveAnswers.instance.reset();
+    final offer = OfferWire.parse(_wire(id: 'x7'));
+    final dispatch = _Dispatch([offer]);
+    await _online(tester, dispatch, observe: true);
+    await _until(
+      tester,
+      find.byKey(const ValueKey<String>('exclusive-offer-card-x7')),
+      const Duration(seconds: 5),
+    );
+    for (var i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('Exclusive ride'), findsWidgets);
+    // Accept within the 3 s of "Exclusive ride" on the island: the
+    // accept notices wait in the queue behind it.
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+    );
+    await tester.pump(const Duration(milliseconds: 50));
+    dispatch.claim.complete(ClaimResult.success(offer));
+    await _until(tester, find.byType(AcceptRide), const Duration(seconds: 3));
+    expect(find.byType(AcceptRide), findsOneWidget);
+    // The trip ends: back on Home.
+    tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+    var stale = <String>[];
+    for (var i = 0; i < 50; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      for (final text in ['Accepting…', 'Trip matched']) {
+        if (find.text(text).evaluate().isNotEmpty && !stale.contains(text)) {
+          stale = [...stale, text];
+        }
+      }
+    }
+    expect(stale, isEmpty);
+    await _closeHome(tester);
+  });
+
+  test('G27: show() replaces a queued message of the same group', () {
+    IslandMessages.reset();
+    IslandMessages.show(const IslandMessage(title: 'held', group: 'x'));
+    // "held" is on the island (taken); A and B wait, both of group g.
+    expect(IslandMessages.take()?.title, 'held');
+    IslandMessages.show(const IslandMessage(title: 'A', group: 'g'));
+    IslandMessages.show(const IslandMessage(title: 'other'));
+    IslandMessages.show(const IslandMessage(title: 'B', group: 'g'));
+    expect(IslandMessages.take()?.title, 'other');
+    expect(IslandMessages.take()?.title, 'B');
+    expect(IslandMessages.take(), isNull);
+  });
+
+  test('G27: a won offer\'s waiting messages can be dropped', () {
+    IslandMessages.reset();
+    IslandMessages.show(const IslandMessage(title: 'A', group: 'radar-match'));
+    IslandMessages.show(
+      const IslandMessage(title: 'E', group: 'exclusive', ride: 'o1'),
+    );
+    IslandMessages.show(
+      const IslandMessage(title: 'other offer', group: 'exclusive', ride: 'o2'),
+    );
+    IslandMessages.show(const IslandMessage(title: 'kept'));
+    IslandMessages.dropOffer('o1', const {'radar-match', 'exclusive'});
+    expect(IslandMessages.take()?.title, 'other offer');
+    expect(IslandMessages.take()?.title, 'kept');
+    expect(IslandMessages.take(), isNull);
   });
 
   group('decision 7: no warning before auto-offline', () {
