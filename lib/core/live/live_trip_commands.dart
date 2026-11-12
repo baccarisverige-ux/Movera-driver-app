@@ -244,7 +244,8 @@ class LiveTripCommands {
     onObserved?.call();
   }
 
-  /// contract.json `tripStatus.driverAssigned`.
+  /// contract.json `tripStatus.driverAssigned`: the statuses of an active
+  /// trip in contract v0.18.72 §89 `driverConfigZone.app`.
   static const driverAssigned = {
     'accepted',
     'driver_to_pickup',
