@@ -1,9 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:movera/core/live/live_driver_config.dart';
+import 'package:movera/core/money/money.dart';
+import 'package:movera/core/safety/driver_sos.dart';
+import 'package:movera/core/safety/emergency_numbers.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
@@ -212,6 +219,61 @@ Future<void> _denyOnTripOffer(WidgetTester tester) async {
     await tester.tap(deny);
     await _frames(tester);
   }
+}
+
+/// G17: the driver's settings as a live build reads them for the zone it
+/// is in. The server answers the Tunis document (Police 197, SAMU 190)
+/// only when the call names `zoneId=TN-TUN`; any other call gets the
+/// driver's account zone, Sweden (112).
+Future<LiveDriverConfig> _tunisConfig(WidgetTester tester) async {
+  Map<String, dynamic> doc(bool tunis) => {
+    'version': tunis ? 3 : 9,
+    'zoneId': tunis ? 'TN-TUN' : 'Z001',
+    'currency': tunis ? 'TND' : 'SEK',
+    'emergencyNumbers': tunis
+        ? [
+            {
+              'kind': 'police',
+              'number': '197',
+              'label': {'sv': 'Polis', 'fr': 'Police', 'en': 'Police'},
+            },
+            {
+              'kind': 'ambulance',
+              'number': '190',
+              'label': {
+                'sv': 'Ambulans (SAMU)',
+                'fr': 'SAMU (ambulance)',
+                'en': 'Ambulance (SAMU)',
+              },
+            },
+          ]
+        : [
+            {
+              'kind': 'general',
+              'number': '112',
+              'label': {'sv': 'Larm', 'fr': 'Urgences', 'en': 'Emergency'},
+            },
+          ],
+  };
+  final config = LiveDriverConfig(
+    client: MockClient(
+      (request) async => http.Response(
+        jsonEncode(doc(request.url.queryParameters['zoneId'] == 'TN-TUN')),
+        200,
+      ),
+    ),
+    apiBase: Uri.parse('https://api.movera.invalid/api/v1'),
+    accessToken: () async => 'token-1',
+    zoneId: () => 'TN-TUN',
+    cache: MemoryDriverConfigCache(),
+  );
+  addTearDown(() {
+    config.dispose();
+    EmergencyNumbers.reset();
+    Money.forgetZone();
+  });
+  await tester.runAsync(config.start);
+  return config;
 }
 
 void main() {
@@ -1202,5 +1264,56 @@ void main() {
     expect(find.text('Demo: long stop'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);
+  });
+
+  group('G17: a driver on a trip in Tunis', () {
+    testWidgets('the ride check card offers Call Police 197 and SAMU 190', (
+      tester,
+    ) async {
+      await _tunisConfig(tester);
+      final kit = _Kit();
+      final controller = await _card(tester, kit);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('ride-check-call-112')),
+          matching: find.text('Call Police 197', findRichText: true),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('ride-check-call-190')), findsOneWidget);
+      expect(find.textContaining('112', findRichText: true), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('ride-check-call-112')));
+      await tester.pumpAndSettle();
+      expect(kit.dialed.map((uri) => uri.toString()), contains('tel:197'));
+      await _end(tester, controller);
+    });
+
+    testWidgets('the SOS of the safety toolkit dials 197', (tester) async {
+      await _tunisConfig(tester);
+      _phone(tester);
+      final dialed = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SafetyToolKits(
+              duringTrip: true,
+              dialNumber: (number) async {
+                dialed.add(number);
+                return true;
+              },
+              sendSos: () async => DriverSosOutcome.sent,
+              web: false,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('safety-sos')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('safety-sos-send')));
+      await tester.pumpAndSettle();
+      expect(dialed, ['197']);
+      expect(find.byKey(const ValueKey('sos-call-190')), findsOneWidget);
+    });
   });
 }

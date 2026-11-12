@@ -26,6 +26,10 @@ class DriverStartPosition {
   /// The position already known in this run, without waiting.
   static GeoPoint? get cached => _memory;
 
+  /// G17: told when [cached] is set (a live build's settings follow the
+  /// zone of the position).
+  static void Function()? onMoved;
+
   /// Saved position first, then the platform's last known fix.
   static Future<GeoPoint?> load({
     Future<SharedPreferences> Function()? prefs,
@@ -38,13 +42,13 @@ class DriverStartPosition {
         key,
       );
       final saved = _decode(raw);
-      if (saved != null) return _memory = saved;
+      if (saved != null) return _remember(saved);
     } catch (_) {
       // Unreadable storage: fall through to the platform fix.
     }
     try {
       final platform = await (platformLastKnown ?? _platformLastKnown)();
-      if (platform != null && platform.isValid) return _memory = platform;
+      if (platform != null && platform.isValid) return _remember(platform);
     } catch (_) {
       // No platform fix; Home waits for live GPS.
     }
@@ -60,7 +64,7 @@ class DriverStartPosition {
     Future<SharedPreferences> Function()? prefs,
   }) async {
     if (!point.isValid || LocalWriteSession.clearing) return;
-    _memory = point;
+    _remember(point);
     final at = now ?? DateTime.now();
     final last = _lastSave;
     if (last != null && at.difference(last) < saveEvery) return;
@@ -76,6 +80,12 @@ class DriverStartPosition {
     } catch (_) {
       // Best effort: the next start just waits for GPS.
     }
+  }
+
+  static GeoPoint _remember(GeoPoint point) {
+    _memory = point;
+    onMoved?.call();
+    return point;
   }
 
   /// Forgets the in-memory position (logout, tests).
