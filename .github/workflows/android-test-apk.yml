@@ -13,6 +13,9 @@ on:
       new_ref:
         description: Branch/commit for APK 2 (installed over APK 1)
         default: main
+      testlab_device:
+        description: 'Firebase Test Lab: run a Robo test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
+        default: ''
 
 permissions:
   contents: read
@@ -110,3 +113,28 @@ jobs:
           path: out/*.apk
           retention-days: 7
           if-no-files-found: error
+      # Firebase Test Lab (owner 2026-11-12: free Spark plan, 5 real-phone runs a day).
+      # Needs the repo secret FIREBASE_TESTLAB_KEY (service account with Firebase Test Lab Admin)
+      # and the Cloud Testing + Cloud Tool Results APIs on the movera-200b2 project.
+      - name: Test Lab login
+        if: inputs.testlab_device != ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+      - name: Set up gcloud
+        if: inputs.testlab_device != ''
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Robo test on a real phone (Firebase Test Lab)
+        if: inputs.testlab_device != ''
+        env:
+          DEVICE: ${{ inputs.testlab_device }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$DEVICE" | grep -Eq '^model=[A-Za-z0-9_.-]+,version=[0-9]+$'; then
+            echo "::error::testlab_device must look like model=oriole,version=33"; exit 1
+          fi
+          apk="out/driver-test.apk"; [ -f "$apk" ] || apk="out/2-install-second-new.apk"
+          gcloud firebase test android run --type robo --app "$apk" \
+            --device "$DEVICE" --timeout 5m --results-history-name driver-robo \
+            --format=json | tee testlab.json
+
