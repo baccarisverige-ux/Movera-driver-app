@@ -27,6 +27,11 @@ android {
         versionName = flutter.versionName
         manifestPlaceholders["googleMapsApiKey"] =
             System.getenv("GOOGLE_MAPS_API_KEY") ?: ""
+        // Owner 2026-11-12 (Test Lab device test): the on-phone checks in
+        // integration_test/ run through Flutter's JUnit runner
+        // (android/app/src/androidTest). Only the androidTest APK uses it;
+        // the app APK is unchanged.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -93,4 +98,11 @@ gradle.taskGraph.whenReady {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Test APK only (assembleAndroidTest); never packed into the app.
+    androidTestImplementation("androidx.test:runner:1.2.0")
+    androidTestImplementation("androidx.test:rules:1.2.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
 }
