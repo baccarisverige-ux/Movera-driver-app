@@ -556,6 +556,34 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String contactEmailVerified(String email) {
+    return '$email · Verifierad';
+  }
+
+  @override
+  String contactEmailNotVerified(String email) {
+    return '$email · Inte verifierad';
+  }
+
+  @override
+  String get contactEmailNone => 'Ingen e-post';
+
+  @override
+  String get contactVerifyEmail => 'Verifiera e-post';
+
+  @override
+  String contactCodeSentTo(String email) {
+    return 'Vi har skickat en kod till $email.';
+  }
+
+  @override
+  String get contactCodeNotSentYet =>
+      'E-postkoder kan inte skickas än. Försök igen senare.';
+
+  @override
+  String get contactEmailVerifiedDone => 'E-postadressen är verifierad';
+
+  @override
   String get airportQueueTitle => 'Flygplatskö';
 
   @override
@@ -5015,6 +5043,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String leaveNowTimeToDriveName(String name) {
     return 'Dags att köra till upphämtningen · $name';
   }
+
+  @override
+  String get remEmailNotVerified =>
+      'Din e-post är inte verifierad. Tryck för att verifiera den.';
+
+  @override
+  String get remEmailNotVerifiedApproval =>
+      'Din e-post är inte verifierad. Det behövs för att bli godkänd. Tryck för att verifiera den.';
 
   @override
   String get safetyToolkit => 'Säkerhetsverktyg';

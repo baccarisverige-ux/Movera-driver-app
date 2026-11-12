@@ -182,6 +182,7 @@ class DriverAccount {
     this.lastName,
     this.dateOfBirth,
     this.email,
+    this.emailVerifiedAt,
     this.country,
     this.cityId,
     this.language,
@@ -213,6 +214,7 @@ class DriverAccount {
       lastName: _text(json['lastName']),
       dateOfBirth: _text(json['dateOfBirth']),
       email: _text(json['email']),
+      emailVerifiedAt: _time(json['emailVerifiedAt']),
       country: _text(json['country']),
       cityId: _text(json['cityId']),
       language: _text(json['language']),
@@ -260,6 +262,14 @@ class DriverAccount {
   /// `YYYY-MM-DD`.
   final String? dateOfBirth;
   final String? email;
+
+  /// Contract v0.18.76 (G30) `Driver.emailVerifiedAt`: when the CURRENT
+  /// e-mail was proven by a code (or by Apple / Google). Absent = Not
+  /// verified (`contract.json#emailVerified.field`).
+  final DateTime? emailVerifiedAt;
+
+  /// G30: an e-mail with a proof; a date without an address proves nothing.
+  bool get emailVerified => email != null && emailVerifiedAt != null;
   final String? country;
   final String? cityId;
   final String? language;

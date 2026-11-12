@@ -292,14 +292,7 @@ class _DriverProfileState extends State<DriverProfile> {
                     kind: ContactKind.phone,
                   ),
                 ),
-                _item(
-                  Icons.alternate_email_rounded,
-                  tr.contactChangeEmail,
-                  ContactChangeScreen(
-                    account: _liveSession!,
-                    kind: ContactKind.email,
-                  ),
-                ),
+                _emailItem(_liveSession!),
               ],
               if (_liveSession != null)
                 _item(
@@ -443,6 +436,7 @@ class _DriverProfileState extends State<DriverProfile> {
         children: [
           for (final item in items)
             InkWell(
+              key: item.key,
               onTap: _logoutBusy ? null : () => _openPage(context, item.page),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
@@ -451,13 +445,29 @@ class _DriverProfileState extends State<DriverProfile> {
                     Icon(item.icon, color: _ink, size: 18),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        item.title,
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.title,
+                            style: const TextStyle(
+                              color: _ink,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (item.detail case final detail?) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              detail,
+                              style: TextStyle(
+                                color: item.detailColor ?? _muted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     if (item.badge > 0)
@@ -487,6 +497,35 @@ class _DriverProfileState extends State<DriverProfile> {
   }) {
     return _ProfileItem(icon, title, page, badge: badge);
   }
+
+  /// G30 (contract v0.18.76 `emailVerified.apps.driver`, owner Q2 "Keep,
+  /// show Not verified"): "E-mail" with the address and Verified / Not
+  /// verified ("No e-mail" without one). A Not verified address opens the
+  /// code check with it filled; otherwise the normal change.
+  _ProfileItem _emailItem(DriverAccountSession session) {
+    final account = session.account;
+    final email = account?.email;
+    final verified = account?.emailVerified == true;
+    return _ProfileItem(
+      Icons.alternate_email_rounded,
+      tr.acctEmail,
+      ContactChangeScreen(
+        account: session,
+        kind: ContactKind.email,
+        verifyCurrent: email != null && !verified ? email : null,
+      ),
+      key: const ValueKey('profile-email'),
+      detail: email == null
+          ? tr.contactEmailNone
+          : verified
+          ? tr.contactEmailVerified(email)
+          : tr.contactEmailNotVerified(email),
+      detailColor: email != null && !verified ? _notVerified : null,
+    );
+  }
+
+  /// G30: the "Not verified" detail (the reminders' orange).
+  static const Color _notVerified = Color(0xFFE08A00);
 
   Future<void> _confirmLogout(BuildContext context) async {
     if (_logoutBusy || !mounted || ModalRoute.of(context)?.isCurrent == false) {
@@ -554,10 +593,25 @@ class _DriverProfileState extends State<DriverProfile> {
 }
 
 class _ProfileItem {
-  const _ProfileItem(this.icon, this.title, this.page, {this.badge = 0});
+  const _ProfileItem(
+    this.icon,
+    this.title,
+    this.page, {
+    this.badge = 0,
+    this.key,
+    this.detail,
+    this.detailColor,
+  });
   final IconData icon;
   final String title;
   final Widget page;
+
+  /// G30: the row's key (`profile-email`).
+  final Key? key;
+
+  /// G30: a second line under the title (the e-mail and its state).
+  final String? detail;
+  final Color? detailColor;
 
   /// Round 4b: invitations waiting in My fleet.
   final int badge;

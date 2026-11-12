@@ -567,6 +567,34 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String contactEmailVerified(String email) {
+    return '$email · Vérifié';
+  }
+
+  @override
+  String contactEmailNotVerified(String email) {
+    return '$email · Non vérifié';
+  }
+
+  @override
+  String get contactEmailNone => 'Aucun e-mail';
+
+  @override
+  String get contactVerifyEmail => 'Vérifier l’e-mail';
+
+  @override
+  String contactCodeSentTo(String email) {
+    return 'Nous avons envoyé un code à $email.';
+  }
+
+  @override
+  String get contactCodeNotSentYet =>
+      'Les codes par e-mail ne peuvent pas encore être envoyés. Réessayez plus tard.';
+
+  @override
+  String get contactEmailVerifiedDone => 'E-mail vérifié';
+
+  @override
   String get airportQueueTitle => 'File de l\'aéroport';
 
   @override
@@ -5101,6 +5129,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String leaveNowTimeToDriveName(String name) {
     return 'C\'est l\'heure d\'aller à la prise en charge · $name';
   }
+
+  @override
+  String get remEmailNotVerified =>
+      'Votre e-mail n’est pas vérifié. Appuyez pour le vérifier.';
+
+  @override
+  String get remEmailNotVerifiedApproval =>
+      'Votre e-mail n’est pas vérifié. C’est nécessaire pour l’approbation. Appuyez pour le vérifier.';
 
   @override
   String get safetyToolkit => 'Outils de sécurité';

@@ -220,8 +220,8 @@ extension _HomeAccount on _DriverHomeState {
     unawaited(_springPanelTo(1));
   }
 
-  /// A tap on a reminder line: the upload guide, "How to book", My fleet
-  /// or the car list (`ReminderFix.target`).
+  /// A tap on a reminder line: the upload guide, "How to book", My fleet,
+  /// the car list or the e-mail check (`ReminderFix.target`).
   Future<void> _fixReminder(
     DriverReminder reminder, [
     ReminderFix? action,
@@ -231,7 +231,6 @@ extension _HomeAccount on _DriverHomeState {
     if (!mounted || session == null || fix == null) {
       return;
     }
-    final me = session.account;
     // Contract v0.18.5 (G2-D5.6): Accept / Decline answer the invitation
     // here, on Home.
     if (fix.target == ReminderFixTarget.acceptInvitation ||
@@ -245,27 +244,8 @@ extension _HomeAccount on _DriverHomeState {
       );
       return;
     }
-    final Widget page = switch (fix.target) {
-      ReminderFixTarget.document => UploadGuideScreen(
-        account: session,
-        type: fix.documentType ?? reminder.documentType ?? '',
-        ownerId: fix.vehicleId ?? me?.driverId ?? '',
-        isCar: fix.vehicleId != null,
-        country: me?.country ?? DriverAccountRules.current.country,
-        status: reminder.status,
-        expiresAt: reminder.expiresAt,
-      ),
-      ReminderFixTarget.infoSession => InfoSessionScreen(
-        status: reminder.status ?? 'waiting_for_movera',
-      ),
-      ReminderFixTarget.fleetVehicles => MyFleetScreen(account: session),
-      ReminderFixTarget.pickVehicle => LiveVehiclesScreen(account: session),
-      // Contract v0.18.3 (R4): the no_fleet line's two buttons.
-      ReminderFixTarget.joinFleet => JoinFleetScreen(account: session),
-      ReminderFixTarget.startCompany => StartCompanyScreen(account: session),
-      ReminderFixTarget.acceptInvitation ||
-      ReminderFixTarget.declineInvitation => MyFleetScreen(account: session),
-    };
+    // G30: the mapping lives in reminder_fix_page.dart (tested there).
+    final page = reminderFixPage(session, reminder, fix);
     await pushSingle(context, MaterialPageRoute<void>(builder: (_) => page));
     if (mounted) {
       _refreshLiveBadges();

@@ -414,5 +414,13 @@
     }
   },
   "leaveNowTimeToDriveName": "Time to drive to pickup · {name}",
-  "@leaveNowTimeToDriveName": {"description": "v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).", "placeholders": {"name": {"type": "String"}}}
+  "@leaveNowTimeToDriveName": {"description": "v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).", "placeholders": {"name": {"type": "String"}}},
+  "remEmailNotVerified": "Your e-mail is not verified. Tap to verify it.",
+  "@remEmailNotVerified": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): Home reminder email_not_verified, orange (due_soon); = contract reminders.texts.email_not_verified."
+  },
+  "remEmailNotVerifiedApproval": "Your e-mail is not verified. It is needed for approval. Tap to verify it.",
+  "@remEmailNotVerifiedApproval": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12) S2: Home reminder email_not_verified, red (blocks_online) \"needed for approval\"; = contract reminders.texts.email_not_verified_approval."
+  }
 }

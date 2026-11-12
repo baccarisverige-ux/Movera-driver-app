@@ -101,5 +101,7 @@
   "schedLeaveNowTitle": "Partez maintenant vers la prise en charge",
   "schedLeaveArrive": "Arrivez {early} min avant {time}.",
   "schedBookedBadge": "Course programmée · {time}",
-  "leaveNowTimeToDriveName": "C'est l'heure d'aller à la prise en charge · {name}"
+  "leaveNowTimeToDriveName": "C'est l'heure d'aller à la prise en charge · {name}",
+  "remEmailNotVerified": "Votre e-mail n’est pas vérifié. Appuyez pour le vérifier.",
+  "remEmailNotVerifiedApproval": "Votre e-mail n’est pas vérifié. C’est nécessaire pour l’approbation. Appuyez pour le vérifier."
 }

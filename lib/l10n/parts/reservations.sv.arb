@@ -101,5 +101,7 @@
   "schedLeaveNowTitle": "Starta nu mot upphämtningen",
   "schedLeaveArrive": "Var framme {early} min före kl. {time}.",
   "schedBookedBadge": "Bokad resa · {time}",
-  "leaveNowTimeToDriveName": "Dags att köra till upphämtningen · {name}"
+  "leaveNowTimeToDriveName": "Dags att köra till upphämtningen · {name}",
+  "remEmailNotVerified": "Din e-post är inte verifierad. Tryck för att verifiera den.",
+  "remEmailNotVerifiedApproval": "Din e-post är inte verifierad. Det behövs för att bli godkänd. Tryck för att verifiera den."
 }

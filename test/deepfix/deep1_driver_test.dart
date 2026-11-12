@@ -386,7 +386,9 @@ void main() {
           return {
             'challengeId': 'ch_1',
             'expiresAt': '2026-11-02T12:05:00Z',
-            'delivery': 'pending_provider',
+            // G30 (Rule 35): only `sent` reaches the code step; the
+            // pending_provider answer is in test/g30.
+            'delivery': 'sent',
           };
         }
         if (r.url.path.endsWith('/email/verify')) {

@@ -158,5 +158,12 @@
   "contactReauthRequired": "Logga in igen först och ändra sedan ditt nummer/din e-post",
   "contactChangeTooMany": "För många ändringar – försök igen om en timme",
   "appVersionLine": "Version {version} ({build})",
-  "appVersionOnly": "Version {version}"
+  "appVersionOnly": "Version {version}",
+  "contactEmailVerified": "{email} · Verifierad",
+  "contactEmailNotVerified": "{email} · Inte verifierad",
+  "contactEmailNone": "Ingen e-post",
+  "contactVerifyEmail": "Verifiera e-post",
+  "contactCodeSentTo": "Vi har skickat en kod till {email}.",
+  "contactCodeNotSentYet": "E-postkoder kan inte skickas än. Försök igen senare.",
+  "contactEmailVerifiedDone": "E-postadressen är verifierad"
 }

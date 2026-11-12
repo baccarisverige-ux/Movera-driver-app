@@ -55,7 +55,11 @@ enum ReminderFixTarget {
   acceptInvitation,
 
   /// Contract v0.18.5 (G2-D5.6): decline it (`…/decline`).
-  declineInvitation;
+  declineInvitation,
+
+  /// Contract v0.18.76 (G30): Account › E-mail, the code check with his
+  /// address filled (`reminders.kinds.email_not_verified`).
+  verifyEmail;
 
   static ReminderFixTarget? of(Object? wire) => switch (wire) {
     'document' => document,
@@ -66,6 +70,7 @@ enum ReminderFixTarget {
     'start_company' => startCompany,
     'accept_invitation' => acceptInvitation,
     'decline_invitation' => declineInvitation,
+    'verify_email' => verifyEmail,
     _ => null,
   };
 }
@@ -306,6 +311,7 @@ String reminderActionLabel(ReminderFixTarget target) => switch (target) {
   ReminderFixTarget.pickVehicle => tr.fleetChooseCar,
   ReminderFixTarget.acceptInvitation => tr.remActionAcceptInvitation,
   ReminderFixTarget.declineInvitation => tr.remActionDeclineInvitation,
+  ReminderFixTarget.verifyEmail => tr.contactVerifyEmail,
 };
 
 /// R10 (owner 2026-10-30, "Bank details were rejected"): an English name
@@ -419,6 +425,15 @@ ReminderWords reminderWords(
       action: reminder.actions.isEmpty && reminder.fix != null
           ? tr.remActionJoinFleet
           : null,
+    ),
+    // Contract v0.18.76 (G30, owner Q3 + S2): the server picks the level;
+    // red (blocks_online) only while his country needs a verified e-mail
+    // for approval and he was never active: "needed for approval".
+    'email_not_verified' => ReminderWords(
+      reminder.blocksOnline
+          ? tr.remEmailNotVerifiedApproval
+          : tr.remEmailNotVerified,
+      action: reminder.fix == null ? null : tr.contactVerifyEmail,
     ),
     _ => ReminderWords(
       document,
