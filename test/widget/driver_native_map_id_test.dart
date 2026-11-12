@@ -67,7 +67,10 @@ void main() {
     expect(apk, contains("grep -Eq '^[A-Za-z0-9]+\$'"));
     expect(apk, contains('::warning::No DRIVER_MAP_ID'));
     final apkBuilds = 'flutter build apk'.allMatches(apk).length;
-    expect(apkBuilds, 1, reason: 'one build() makes both APKs');
+    // One build() makes both upgrade APKs; the device-checks job builds the
+    // app under test once more (debug, for the on-phone tests). Every build
+    // passes the Map ID.
+    expect(apkBuilds, 2, reason: 'test APKs + device-checks app under test');
     expect(define.allMatches(apk).length, apkBuilds);
 
     for (final (path, command) in [

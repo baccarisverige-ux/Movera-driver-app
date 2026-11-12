@@ -14,8 +14,17 @@ on:
         description: Branch/commit for APK 2 (installed over APK 1)
         default: main
       testlab_device:
-        description: 'Firebase Test Lab: run a Robo test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
+        description: 'Firebase Test Lab: run a test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
         default: ''
+      testlab_test:
+        description: 'Test Lab kind: robo (taps around, no sign-in); staging-checks (one test driver from the MOVERA_TEST_NUMBERS secret: online, G24, G17, G27, offline); trip-lifecycle (driver app on the phone + a test rider over HTTP: one whole live cash trip, chat, call, SOS, ride check, every screen change); trip-scheduled (the same with a booked-for-later ride and its cancel case)'
+        type: choice
+        options:
+          - robo
+          - staging-checks
+          - trip-lifecycle
+          - trip-scheduled
+        default: robo
 
 permissions:
   contents: read
@@ -117,15 +126,15 @@ jobs:
       # Needs the repo secret FIREBASE_TESTLAB_KEY (service account with Firebase Test Lab Admin)
       # and the Cloud Testing + Cloud Tool Results APIs on the movera-200b2 project.
       - name: Test Lab login
-        if: inputs.testlab_device != ''
+        if: inputs.testlab_device != '' && inputs.testlab_test == 'robo'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
       - name: Set up gcloud
-        if: inputs.testlab_device != ''
+        if: inputs.testlab_device != '' && inputs.testlab_test == 'robo'
         uses: google-github-actions/setup-gcloud@v2
       - name: Robo test on a real phone (Firebase Test Lab)
-        if: inputs.testlab_device != ''
+        if: inputs.testlab_device != '' && inputs.testlab_test == 'robo'
         env:
           DEVICE: ${{ inputs.testlab_device }}
         run: |
@@ -138,3 +147,238 @@ jobs:
             --device "$DEVICE" --timeout 5m --results-history-name driver-robo \
             --format=json | tee testlab.json
 
+
+  # Owner 2026-11-12 ("U need find problems! So whats the point of test"): the
+  # Robo run could not sign in, so it proved nothing. This job runs the on-phone
+  # checks of integration_test/staging_device_test.dart on one real Test Lab
+  # phone against the staging server: sign in with ONE test driver, go online,
+  # position sends taken (G24), SOS numbers = the zone's (G17), Home -> pages ->
+  # Back without failed calls or re-reads (G27), go offline.
+  # The test number and code are passed ONLY at run time (Test Lab
+  # --environment-variables -> instrumentation arguments); nothing is built into
+  # either APK (test/widget/a12_no_test_numbers_test.dart). One device, one run
+  # (free quota: 5 a day), manual only.
+  #
+  # trip-lifecycle / trip-scheduled (owner 2026-11-12, "U can't make all trip
+  # lifecycle test on firebase?"): the same job runs
+  # integration_test/trip_lifecycle_test.dart; the test also plays ONE
+  # big-test rider over HTTP (se.r35, else se.r36), passed the same way as
+  # the driver (run time only, masked, scrubbed in every spelling).
+  #
+  # One device-check run at a time (supervisor 2026-11-12): every kind signs in
+  # the shared big-test driver se.d38 (signing its other phone out) and the trip
+  # kinds cancel any open trip of rider se.r35, the same pair the 5x5 screen
+  # runs use. A second dispatch waits here instead of running alongside; never
+  # dispatch while a 5x5 screen run is going (that runs outside this group).
+  device-checks:
+    if: inputs.testlab_device != '' && inputs.testlab_test != 'robo'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    concurrency:
+      group: movera-device-checks-d38-r35
+      cancel-in-progress: false
+    env:
+      LIVE_API: https://movera-server.onrender.com
+      GOOGLE_MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY || secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY }}
+      DRIVER_MAP_ID: ${{ vars.DRIVER_MAP_ID }}
+      DEVICE: ${{ inputs.testlab_device }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.new_ref }}
+      - name: Test driver for this run (from secrets, never built in)
+        id: driver
+        env:
+          TL_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
+          TL_CODE: ${{ secrets.MOVERA_TEST_SIGNIN_CODE }}
+          TL_TEST: ${{ inputs.testlab_test }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$DEVICE" | grep -Eq '^model=[A-Za-z0-9_.-]+,version=[0-9]+(,locale=[A-Za-z_]+)?(,orientation=(portrait|landscape))?$'; then
+            echo "::error::testlab_device must look like model=oriole,version=33"; exit 1
+          fi
+          if [ -z "${TL_NUMBERS:-}" ]; then
+            echo "::warning::NOT CHECKED: the MOVERA_TEST_NUMBERS secret is not set in this repo, so the device test cannot sign in. No Test Lab run was used."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          install -m 700 -d "$RUNNER_TEMP/tl"
+          # ONE driver number (se.d38, the dedicated big-test driver; else
+          # browser.SE.driver) normalised to E.164 and checked, and the staging
+          # sign-in code (secret MOVERA_TEST_SIGNIN_CODE, else the contract's
+          # auth.testSignIn.code) checked as 4-8 digits. Every spelling is
+          # masked first; values only in $RUNNER_TEMP/tl (mode 600), never printed.
+          # trip-*: also ONE test rider (se.r35, else se.r36) -> rider_phone;
+          # both numbers' spellings are masked and listed for the scrub.
+          case "$TL_TEST" in
+            staging-checks) mode=driver; target=integration_test/staging_device_test.dart; tl_timeout=9m; scenario="" ;;
+            # trip-*: Test Lab's 25m must always come after the test's own
+            # stops (run 6): hard stop 15m -> watchdog 15m45s -> clean-up done
+            # ~17m30s -> test timeout 18m -> Test Lab 25m (install/start ~1m).
+            trip-lifecycle) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=live ;;
+            trip-scheduled) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=scheduled ;;
+            *) echo "::error::unknown testlab_test"; exit 1 ;;
+          esac
+          python3 -I tool/testlab_summary.py "$mode" "$RUNNER_TEMP/tl"
+          {
+            echo "ready=true"
+            echo "target=$target"
+            echo "tl_timeout=$tl_timeout"
+            echo "scenario=$scenario"
+          } >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        if: steps.driver.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        if: steps.driver.outputs.ready == 'true'
+        with:
+          channel: stable
+          flutter-version: '3.47.6'
+          cache: true
+      - name: Build the app (live staging, test entry) and the androidTest APK
+        if: steps.driver.outputs.ready == 'true'
+        env:
+          TARGET: ${{ steps.driver.outputs.target }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GOOGLE_MAPS_API_KEY:-}" ]; then
+            echo '::warning::No Google Maps key secret: the map will be grey (the checks do not need it).'
+            export GOOGLE_MAPS_API_KEY=TEST_BUILD_NO_MAP
+          fi
+          if [ -n "${DRIVER_MAP_ID:-}" ] && ! printf '%s' "$DRIVER_MAP_ID" | grep -Eq '^[A-Za-z0-9]+$'; then
+            echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."; exit 1
+          fi
+          flutter pub get --enforce-lockfile
+          app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"; app_version="${app_version%%+*}+${GITHUB_RUN_NUMBER}"
+          # Debug: Flutter's JUnit runner tests the debug variant. Same live
+          # dart-defines as the test APK above; no test number in them.
+          flutter build apk --debug \
+            -t "$TARGET" \
+            --dart-define=MOVERA_AUTH_REQUIRED=true \
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
+            --dart-define=MOVERA_APP_VERSION="$app_version" \
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-debug.apk out/app-debug.apk
+          (cd android && ./gradlew app:assembleAndroidTest --no-daemon -q)
+          cp build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk out/app-debug-androidTest.apk
+          ls -la out
+      - name: Wake the staging server (it sleeps when idle)
+        if: steps.driver.outputs.ready == 'true'
+        run: curl -sS -o /dev/null -w 'staging /healthz %{http_code}\n' -m 90 "$LIVE_API/healthz" || true
+      - name: Test Lab login
+        if: steps.driver.outputs.ready == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+      - name: Set up gcloud
+        if: steps.driver.outputs.ready == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Device checks on a real phone (Firebase Test Lab)
+        id: run
+        if: steps.driver.outputs.ready == 'true'
+        env:
+          RESULTS_BUCKET: ${{ vars.TESTLAB_RESULTS_BUCKET }}
+          TL_TIMEOUT: ${{ steps.driver.outputs.tl_timeout }}
+          SCENARIO: ${{ steps.driver.outputs.scenario }}
+          TL_TEST: ${{ inputs.testlab_test }}
+        run: |
+          set -uo pipefail
+          device="$DEVICE"
+          case "$device" in *locale=*) ;; *) device="$device,locale=en_US" ;; esac
+          case "$device" in *orientation=*) ;; *) device="$device,orientation=portrait" ;; esac
+          dir="driver-device/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          bucket_flag=()
+          if [ -n "${RESULTS_BUCKET:-}" ]; then bucket_flag=(--results-bucket "$RESULTS_BUCKET"); fi
+          phone="$(cat "$RUNNER_TEMP/tl/phone")"; code="$(cat "$RUNNER_TEMP/tl/code")"
+          trip_vars=""
+          if [ -n "$SCENARIO" ]; then
+            # Checked by testlab_summary.py as + and 8-15 digits: no "~" or "=".
+            rider="$(cat "$RUNNER_TEMP/tl/rider_phone")"
+            trip_vars="~movera_tl_rider_phone=${rider}~movera_tl_scenario=${SCENARIO}"
+            unset rider
+          fi
+          mkdir -p testlab-results
+          # ^~^ = "~" separates the variables (gcloud topic escaping). They become
+          # `am instrument -e` arguments, read by MainActivityTest at run time.
+          # bash -e is the default shell: without +e a failing test (exit 10) would end
+          # this step before rc, bucket and dir are written, and the results would never
+          # be downloaded (seen in run 43245270538).
+          set +e
+          gcloud firebase test android run --type instrumentation \
+            --app out/app-debug.apk --test out/app-debug-androidTest.apk \
+            --device "$device" --timeout "$TL_TIMEOUT" --no-record-video --no-performance-metrics \
+            --results-history-name "driver-$TL_TEST" --results-dir "$dir" "${bucket_flag[@]}" \
+            --directories-to-pull /sdcard/Android/data/se.movera.driver/files/tl \
+            --environment-variables "^~^movera_tl_phone=${phone}~movera_tl_code=${code}~movera_tl_shots=1${trip_vars}" \
+            --format=json > testlab-results/testlab.json 2> testlab-results/gcloud.txt
+          rc=$?
+          unset phone code trip_vars
+          echo "Test Lab exit code: $rc (0 = passed, 10 = a test failed, 15 = inconclusive)"
+          bucket="${RESULTS_BUCKET:-}"
+          if [ -z "$bucket" ]; then
+            bucket="$(grep -oE 'storage/browser/[^/]+' testlab-results/gcloud.txt | head -1 | cut -d/ -f3 || true)"
+          fi
+          {
+            echo "rc=$rc"
+            echo "bucket=${bucket#gs://}"
+            echo "dir=$dir"
+          } >> "$GITHUB_OUTPUT"
+      - name: Download the results (logcat, JUnit XML, screenshots)
+        if: always() && steps.run.outputs.bucket != ''
+        env:
+          BUCKET: ${{ steps.run.outputs.bucket }}
+          DIR: ${{ steps.run.outputs.dir }}
+        run: |
+          set -uo pipefail
+          # The APKs are skipped: the app bundles the contract copy, which holds the staging
+          # test sign-in code, so the fail-safe re-scan would (rightly) refuse the upload.
+          mkdir -p "testlab-results/$(basename "$DIR")"
+          gsutil -m -q rsync -r -x '.*\.apk$' "gs://$BUCKET/$DIR" "testlab-results/$(basename "$DIR")" || echo "::warning::results download failed"
+          find testlab-results -type f | sed 's/^/  /' | head -80
+      # Fail-safe: scrub exits 1 when the value list is missing or empty, and
+      # re-scans every file after scrubbing (exit 1 and the results folder is
+      # deleted on any hit). The upload below runs only when this step passed.
+      - name: Remove test number and code from the results, then summarise
+        id: scrub
+        if: always() && steps.driver.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p testlab-results
+          if [ ! -s "$RUNNER_TEMP/tl/scrub" ]; then
+            echo "::error::the test driver value list is missing; nothing is uploaded"
+            rm -rf testlab-results
+            exit 1
+          fi
+          TL_SCRUB="$(cat "$RUNNER_TEMP/tl/scrub")" python3 -I tool/testlab_summary.py scrub testlab-results
+          python3 -I tool/testlab_summary.py summary testlab-results
+          # Test Lab's own verdict lines (already scrubbed above).
+          if [ -f testlab-results/gcloud.txt ]; then
+            echo "Test Lab output (scrubbed):"
+            { grep -iE 'outcome|passed|failed|inconclusive|error|crash|timed out|test details' testlab-results/gcloud.txt | tail -25; } && echo '(end)' || echo '(no verdict lines)'
+          fi
+      - name: Remove the test driver file
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/tl"
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.driver.outputs.ready == 'true' && steps.scrub.outcome == 'success'
+        with:
+          name: testlab-results
+          path: testlab-results/
+          retention-days: 7
+          if-no-files-found: warn
+      # Run 6 (2026-11-12) false pass: gcloud exit 0 and "Passed" while the
+      # test hung and JUnit had 0 tests. The verdict reads the SCRUBBED
+      # results (this step runs only after the scrub step passed and the
+      # upload) and fails on: exit != 0, JUnit 0 tests, no END / SUMMARY-JSON
+      # line (unless SKIP), any CHECK FAIL, "Test timed out after",
+      # "non-retryable error", testlab.json outcome != Passed.
+      - name: Result
+        if: steps.driver.outputs.ready == 'true'
+        env:
+          RC: ${{ steps.run.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python3 -I tool/testlab_summary.py verdict testlab-results
