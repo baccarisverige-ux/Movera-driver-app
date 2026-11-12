@@ -14,8 +14,15 @@ on:
         description: Branch/commit for APK 2 (installed over APK 1)
         default: main
       testlab_device:
-        description: 'Firebase Test Lab: run a Robo test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
+        description: 'Firebase Test Lab: run a test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
         default: ''
+      testlab_test:
+        description: 'Test Lab kind: robo (taps around, no sign-in) or staging-checks (signs in with one test driver from the MOVERA_TEST_NUMBERS secret and checks online, G24, G17, G27, offline)'
+        type: choice
+        options:
+          - robo
+          - staging-checks
+        default: robo
 
 permissions:
   contents: read
@@ -117,15 +124,15 @@ jobs:
       # Needs the repo secret FIREBASE_TESTLAB_KEY (service account with Firebase Test Lab Admin)
       # and the Cloud Testing + Cloud Tool Results APIs on the movera-200b2 project.
       - name: Test Lab login
-        if: inputs.testlab_device != ''
+        if: inputs.testlab_device != '' && inputs.testlab_test == 'robo'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
       - name: Set up gcloud
-        if: inputs.testlab_device != ''
+        if: inputs.testlab_device != '' && inputs.testlab_test == 'robo'
         uses: google-github-actions/setup-gcloud@v2
       - name: Robo test on a real phone (Firebase Test Lab)
-        if: inputs.testlab_device != ''
+        if: inputs.testlab_device != '' && inputs.testlab_test == 'robo'
         env:
           DEVICE: ${{ inputs.testlab_device }}
         run: |
@@ -138,3 +145,209 @@ jobs:
             --device "$DEVICE" --timeout 5m --results-history-name driver-robo \
             --format=json | tee testlab.json
 
+
+  # Owner 2026-11-12 ("U need find problems! So whats the point of test"): the
+  # Robo run could not sign in, so it proved nothing. This job runs the on-phone
+  # checks of integration_test/staging_device_test.dart on one real Test Lab
+  # phone against the staging server: sign in with ONE test driver, go online,
+  # position sends taken (G24), SOS numbers = the zone's (G17), Home -> pages ->
+  # Back without failed calls or re-reads (G27), go offline.
+  # The test number and code are passed ONLY at run time (Test Lab
+  # --environment-variables -> instrumentation arguments); nothing is built into
+  # either APK (test/widget/a12_no_test_numbers_test.dart). One device, one run
+  # (free quota: 5 a day), manual only.
+  device-checks:
+    if: inputs.testlab_device != '' && inputs.testlab_test == 'staging-checks'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      LIVE_API: https://movera-server.onrender.com
+      GOOGLE_MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY || secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY }}
+      DRIVER_MAP_ID: ${{ vars.DRIVER_MAP_ID }}
+      DEVICE: ${{ inputs.testlab_device }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.new_ref }}
+      - name: Test driver for this run (from secrets, never built in)
+        id: driver
+        env:
+          TL_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
+          TL_CODE: ${{ secrets.MOVERA_TEST_SIGNIN_CODE }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$DEVICE" | grep -Eq '^model=[A-Za-z0-9_.-]+,version=[0-9]+(,locale=[A-Za-z_]+)?(,orientation=(portrait|landscape))?$'; then
+            echo "::error::testlab_device must look like model=oriole,version=33"; exit 1
+          fi
+          if [ -z "${TL_NUMBERS:-}" ]; then
+            echo "::warning::NOT CHECKED: the MOVERA_TEST_NUMBERS secret is not set in this repo, so the device test cannot sign in. No Test Lab run was used."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          install -m 700 -d "$RUNNER_TEMP/tl"
+          # One driver number (browser.SE.driver, else se.d38) in E.164 and the
+          # staging sign-in code (secret MOVERA_TEST_SIGNIN_CODE, else the
+          # contract's auth.testSignIn.code). Masked first; values only in
+          # $RUNNER_TEMP/tl (mode 600), never printed.
+          python3 -I - "$RUNNER_TEMP/tl" <<'PY'
+          import json, os, sys
+          out = sys.argv[1]
+          try:
+              numbers = json.loads(os.environ["TL_NUMBERS"])
+          except ValueError:
+              print("::error::the MOVERA_TEST_NUMBERS secret is not JSON (same value as the cloud environment variable)")
+              sys.exit(1)
+          raw = None
+          for path in (("browser", "SE", "driver"), ("se", "d38")):
+              value = numbers
+              for key in path:
+                  value = value.get(key) if isinstance(value, dict) else None
+              if isinstance(value, str) and value.strip():
+                  raw = value.strip().replace(" ", "")
+                  break
+          if raw is None:
+              print("::error::the MOVERA_TEST_NUMBERS secret has no browser.SE.driver or se.d38 entry")
+              sys.exit(1)
+          if raw.startswith("+"):
+              e164, national = raw, raw[3:]
+          else:
+              national = raw.lstrip("0")
+              e164 = "+46" + national
+          code = os.environ.get("TL_CODE", "").strip()
+          if not code:
+              with open("contracts/contract.json", encoding="utf-8") as fh:
+                  code = str(json.load(fh)["auth"]["testSignIn"]["code"]).strip()
+          secrets = [e164, national, "0" + national, "46" + national, code]
+          for value in secrets:
+              print("::add-mask::" + value)
+          sys.stdout.flush()
+          def write(name, text):
+              fd = os.open(os.path.join(out, name), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+              with os.fdopen(fd, "w") as fh:
+                  fh.write(text)
+          write("phone", e164)
+          write("code", code)
+          write("scrub", "\n".join(secrets) + "\n")
+          print("test driver ready (number and code masked)")
+          PY
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        if: steps.driver.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        if: steps.driver.outputs.ready == 'true'
+        with:
+          channel: stable
+          flutter-version: '3.47.6'
+          cache: true
+      - name: Build the app (live staging, test entry) and the androidTest APK
+        if: steps.driver.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          if [ -z "${GOOGLE_MAPS_API_KEY:-}" ]; then
+            echo '::warning::No Google Maps key secret: the map will be grey (the checks do not need it).'
+            export GOOGLE_MAPS_API_KEY=TEST_BUILD_NO_MAP
+          fi
+          if [ -n "${DRIVER_MAP_ID:-}" ] && ! printf '%s' "$DRIVER_MAP_ID" | grep -Eq '^[A-Za-z0-9]+$'; then
+            echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."; exit 1
+          fi
+          flutter pub get --enforce-lockfile
+          app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"; app_version="${app_version%%+*}+${GITHUB_RUN_NUMBER}"
+          # Debug: Flutter's JUnit runner tests the debug variant. Same live
+          # dart-defines as the test APK above; no test number in them.
+          flutter build apk --debug \
+            -t integration_test/staging_device_test.dart \
+            --dart-define=MOVERA_AUTH_REQUIRED=true \
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
+            --dart-define=MOVERA_APP_VERSION="$app_version" \
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-debug.apk out/app-debug.apk
+          (cd android && ./gradlew app:assembleAndroidTest --no-daemon -q)
+          cp build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk out/app-debug-androidTest.apk
+          ls -la out
+      - name: Wake the staging server (it sleeps when idle)
+        if: steps.driver.outputs.ready == 'true'
+        run: curl -sS -o /dev/null -w 'staging /healthz %{http_code}\n' -m 90 "$LIVE_API/healthz" || true
+      - name: Test Lab login
+        if: steps.driver.outputs.ready == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+      - name: Set up gcloud
+        if: steps.driver.outputs.ready == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Device checks on a real phone (Firebase Test Lab)
+        id: run
+        if: steps.driver.outputs.ready == 'true'
+        env:
+          RESULTS_BUCKET: ${{ vars.TESTLAB_RESULTS_BUCKET }}
+        run: |
+          set -uo pipefail
+          device="$DEVICE"
+          case "$device" in *locale=*) ;; *) device="$device,locale=en_US" ;; esac
+          case "$device" in *orientation=*) ;; *) device="$device,orientation=portrait" ;; esac
+          dir="driver-device/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          bucket_flag=()
+          if [ -n "${RESULTS_BUCKET:-}" ]; then bucket_flag=(--results-bucket "$RESULTS_BUCKET"); fi
+          phone="$(cat "$RUNNER_TEMP/tl/phone")"; code="$(cat "$RUNNER_TEMP/tl/code")"
+          mkdir -p testlab-results
+          # ^~^ = "~" separates the variables (gcloud topic escaping). They become
+          # `am instrument -e` arguments, read by MainActivityTest at run time.
+          gcloud firebase test android run --type instrumentation \
+            --app out/app-debug.apk --test out/app-debug-androidTest.apk \
+            --device "$device" --timeout 9m --no-record-video --no-performance-metrics \
+            --results-history-name driver-device-checks --results-dir "$dir" "${bucket_flag[@]}" \
+            --directories-to-pull /sdcard/Android/data/se.movera.driver/files/tl \
+            --environment-variables "^~^movera_tl_phone=${phone}~movera_tl_code=${code}~movera_tl_shots=1" \
+            --format=json > testlab-results/testlab.json 2> testlab-results/gcloud.txt
+          rc=$?
+          unset phone code
+          echo "Test Lab exit code: $rc (0 = passed, 10 = a test failed, 15 = inconclusive)"
+          bucket="${RESULTS_BUCKET:-}"
+          if [ -z "$bucket" ]; then
+            bucket="$(grep -oE 'storage/browser/[^/]+' testlab-results/gcloud.txt | head -1 | cut -d/ -f3 || true)"
+          fi
+          {
+            echo "rc=$rc"
+            echo "bucket=${bucket#gs://}"
+            echo "dir=$dir"
+          } >> "$GITHUB_OUTPUT"
+      - name: Download the results (logcat, JUnit XML, screenshots)
+        if: always() && steps.run.outputs.bucket != ''
+        env:
+          BUCKET: ${{ steps.run.outputs.bucket }}
+          DIR: ${{ steps.run.outputs.dir }}
+        run: |
+          set -uo pipefail
+          gsutil -m -q cp -r "gs://$BUCKET/$DIR" testlab-results/ || echo "::warning::results download failed"
+          find testlab-results -type f | sed 's/^/  /' | head -80
+      - name: Remove test number and code from the results, then summarise
+        if: always() && steps.driver.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p testlab-results
+          TL_SCRUB="$(cat "$RUNNER_TEMP/tl/scrub" 2>/dev/null || true)" python3 tool/testlab_summary.py scrub testlab-results
+          python3 tool/testlab_summary.py summary testlab-results
+      - name: Remove the test driver file
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/tl"
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.driver.outputs.ready == 'true'
+        with:
+          name: testlab-results
+          path: testlab-results/
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Result
+        if: steps.driver.outputs.ready == 'true'
+        env:
+          RC: ${{ steps.run.outputs.rc }}
+        run: |
+          if [ "${RC:-1}" != "0" ]; then
+            echo "::error::Device checks did not pass on Test Lab (exit ${RC:-none}); see the summary above and the testlab-results artifact."
+            exit 1
+          fi
+          echo "Device checks passed on Test Lab."
