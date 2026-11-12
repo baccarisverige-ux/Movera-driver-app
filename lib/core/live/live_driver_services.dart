@@ -1,4 +1,6 @@
 import 'package:movera/core/live/live_reservations.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 
 import 'dart:async';
 
@@ -82,6 +84,8 @@ class LiveDriverServices {
       lastFix: () => reporter.lastFix,
       freshFix: reporter.freshFix,
       onEnded: chat.markClosed,
+      // G17: a trip in another zone reads that zone's settings.
+      onObserved: () => unawaited(config.zoneChanged()),
     );
     places = LiveAddressLookup(api: api);
     activeTrip = LiveActiveTrip(api: api);
@@ -109,7 +113,11 @@ class LiveDriverServices {
           : null,
     );
     content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
-    zones = LiveDriverZones(api: api);
+    zones = LiveDriverZones(api: api)
+      // G17: with the zone list the position's zone is known.
+      ..addListener(() => unawaited(config.zoneChanged()));
+    reporter.onSent = () => unawaited(config.zoneChanged());
+    DriverStartPosition.onMoved = _onMoved;
     events = LiveDriverEvents(api: api, now: now);
     config = LiveDriverConfig(
       client: client,
@@ -120,8 +128,31 @@ class LiveDriverServices {
       onZonesPublished: () => unawaited(zones.refresh()),
       onEventsPublished: () => unawaited(events.refresh()),
       onReservationsChanged: () => onReservationsStale?.call(),
+      // G17: the settings follow the zone the driver is in.
+      zoneId: zoneNow,
+      onZoneChanged: () => unawaited(content.refresh()),
       now: now,
     );
+  }
+
+  void _onMoved() => unawaited(config.zoneChanged());
+
+  /// G17 (owner 2026-11-12), contract v0.18.72 §89 `driverConfigZone.app`:
+  /// the zone named on `GET /driver/config` and its stream: the active
+  /// trip's `TripProjection.zoneId` ([LiveTripCommands.activeZoneId]),
+  /// else the open zone of `GET /driver/zones` whose outline holds the
+  /// current position ([DriverZones.zoneAt]; the position sent while
+  /// online, else the one Home last saw). `DriverLocationAck` carries no
+  /// zone. Null with neither: no zoneId, the server picks.
+  String? zoneNow() {
+    final trip = trips.activeZoneId;
+    if (trip != null) return trip;
+    final point =
+        (reporter.running ? reporter.lastKnownPoint : null) ??
+        DriverStartPosition.cached ??
+        reporter.lastKnownPoint;
+    if (point == null) return null;
+    return DriverZones.zoneAt(point.latitude, point.longitude)?.id;
   }
 
   /// Set by the app root (L-a Q7, contract v0.18.45 §68): the booked rides
@@ -280,6 +311,9 @@ class LiveDriverServices {
   }
 
   Future<void> dispose() async {
+    if (DriverStartPosition.onMoved == _onMoved) {
+      DriverStartPosition.onMoved = null;
+    }
     presence.detach();
     reporter.stop();
     config.dispose();
@@ -755,6 +789,9 @@ class LiveLocationReporter {
   /// (decision 1: the background location mode follows it).
   final void Function(bool running)? onRunning;
 
+  /// G17: told after each position the server took ([lastFix] is new).
+  void Function()? onSent;
+
   StreamSubscription<DriverLocation>? _watch;
   DriverLocation? _held;
   static const locationPath = '/api/v1/driver/location';
@@ -963,6 +1000,7 @@ class LiveLocationReporter {
         },
       );
       lastFix = fix;
+      onSent?.call();
       // G3-R2: "You are not eligible to drive in this area" once per entry.
       DriverAreaWatch.instance.observe(ack);
       return true;

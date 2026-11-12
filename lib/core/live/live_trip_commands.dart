@@ -130,6 +130,7 @@ class LiveTripCommands {
     LiveFix? Function()? lastFix,
     Future<LiveFix?> Function()? freshFix,
     this.onEnded,
+    this.onObserved,
   }) : _api = api,
        _lastFix = lastFix ?? (() => null),
        _freshFix = freshFix;
@@ -144,6 +145,10 @@ class LiveTripCommands {
   /// Told when a projection says the trip is over (contract.json
   /// `tripStatus.terminal`): the chat closes at drop-off (v0.13.0 §22).
   final void Function(String tripId)? onEnded;
+
+  /// G17: told after each projection taken in (the trip's zone may now be
+  /// another one: [activeZoneId]).
+  final void Function()? onObserved;
 
   /// contract.json `tripStatus.terminal`.
   static const terminal = {
@@ -236,6 +241,34 @@ class LiveTripCommands {
     if (known != null && version.toInt() < known) return;
     _trips[id] = {...?_trips[id], ...projection};
     if (terminal.contains(projection['status'])) onEnded?.call(id);
+    onObserved?.call();
+  }
+
+  /// contract.json `tripStatus.driverAssigned`.
+  static const driverAssigned = {
+    'accepted',
+    'driver_to_pickup',
+    'arrived',
+    'rider_onboard',
+    'in_trip',
+    'approaching_dropoff',
+  };
+
+  /// G17, contract v0.18.72 §89 `driverConfigZone.app`: the zone
+  /// (`TripProjection.zoneId`) of the active trip, a trip in
+  /// `tripStatus.driverAssigned` that is not a held booked ride (kind
+  /// `scheduled`, still `accepted`) and not a queued next trip
+  /// (`nextAfterTripId`). Null with none.
+  String? get activeZoneId {
+    for (final trip in _trips.values) {
+      final status = trip['status'];
+      if (!driverAssigned.contains(status)) continue;
+      if (trip['kind'] == 'scheduled' && status == 'accepted') continue;
+      if (trip['nextAfterTripId'] != null) continue;
+      final zone = trip['zoneId'];
+      if (zone is String && zone.trim().isNotEmpty) return zone.trim();
+    }
+    return null;
   }
 
   /// True when [status] is where one of this phone's own commands took
