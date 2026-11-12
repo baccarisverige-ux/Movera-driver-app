@@ -20,6 +20,7 @@ import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
+import 'package:movera/presentation/driver/profile/app_version_line.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
 import 'package:movera/presentation/driver/vehicles/vehicles.dart';
 import 'package:movera/widgets/navigation_transition.dart';
@@ -366,6 +367,7 @@ class _DriverProfileState extends State<DriverProfile> {
                 ),
               ),
             ),
+            const AppVersionLine(),
           ],
         ),
       ),

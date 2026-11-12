@@ -9,5 +9,6 @@
   "callEnd": "Avsluta",
   "callMute": "Ljud av",
   "callSpeaker": "Högtalare",
-  "callEnded": "Samtalet avslutat"
+  "callEnded": "Samtalet avslutat",
+  "callConnectFailedHint": "Kunde inte ansluta. Kontrollera nätverket eller använd chatten."
 }

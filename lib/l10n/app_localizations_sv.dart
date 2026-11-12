@@ -546,6 +546,16 @@ class AppLocalizationsSv extends AppLocalizations {
       'För många ändringar – försök igen om en timme';
 
   @override
+  String appVersionLine(String version, String build) {
+    return 'Version $version ($build)';
+  }
+
+  @override
+  String appVersionOnly(String version) {
+    return 'Version $version';
+  }
+
+  @override
   String get airportQueueTitle => 'Flygplatskö';
 
   @override
@@ -886,6 +896,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get callEnded => 'Samtalet avslutat';
+
+  @override
+  String get callConnectFailedHint =>
+      'Kunde inte ansluta. Kontrollera nätverket eller använd chatten.';
 
   @override
   String get cancelNextTripQuestion => 'Avboka nästa resa?';

@@ -287,6 +287,27 @@
   "@contactChangeTooMany": {
     "description": "429 change_too_many on phone/e-mail change."
   },
+  "appVersionLine": "Version {version} ({build})",
+  "@appVersionLine": {
+    "description": "Owner 2026-11-11 (v0.18.66 §87, app only): bottom line of the Account screen, app version and build number, e.g. Version 1.0.0 (583).",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "appVersionOnly": "Version {version}",
+  "@appVersionOnly": {
+    "description": "Owner 2026-11-11 (v0.18.66 §87): the Account version line when the build has no build number.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "airportQueueTitle": "Airport queue",
   "airportQueuePlace": "You are number {place} in line",
   "@airportQueuePlace": {
@@ -562,6 +583,10 @@
   "callEnded": "Call ended",
   "@callEnded": {
     "description": "v0.18.38 §62 in-app call screen (fix job 8)."
+  },
+  "callConnectFailedHint": "Couldn't connect. Check your network or use chat.",
+  "@callConnectFailedHint": {
+    "description": "v0.18.66 §87 (owner 2026-11-11 'Add hint'): under 'Call failed' when the call could not connect within the connect time limit (inAppCalls.texts.connectFailedHint)."
   },
   "cancelNextTripQuestion": "Cancel the next trip?",
   "cancelThisTripQuestion": "Cancel this trip?",

@@ -557,6 +557,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trop de modifications — réessayez dans une heure';
 
   @override
+  String appVersionLine(String version, String build) {
+    return 'Version $version ($build)';
+  }
+
+  @override
+  String appVersionOnly(String version) {
+    return 'Version $version';
+  }
+
+  @override
   String get airportQueueTitle => 'File de l\'aéroport';
 
   @override
@@ -902,6 +912,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callEnded => 'Appel terminé';
+
+  @override
+  String get callConnectFailedHint =>
+      'Connexion impossible. Vérifiez votre réseau ou utilisez le chat.';
 
   @override
   String get cancelNextTripQuestion => 'Annuler la prochaine course ?';
