@@ -82,6 +82,10 @@ class IslandMessages {
     if (posted.length > maxPosted) {
       posted.removeRange(0, posted.length - maxPosted);
     }
+    // G27: as the group's doc says, the newer message replaces a waiting
+    // one of its group ("Accepting…" gives way to "Trip matched").
+    final group = message.group;
+    if (group != null) _queue.removeWhere((queued) => queued.group == group);
     if (message.priority == IslandPriority.high) {
       final at = _queue.indexWhere(
         (queued) => queued.priority != IslandPriority.high,
@@ -98,6 +102,14 @@ class IslandMessages {
 
   /// Next message to show, removed from the queue.
   static IslandMessage? take() => _queue.isEmpty ? null : _queue.removeAt(0);
+
+  /// G27: drops the waiting messages of [groups]. A won offer's trip
+  /// opened: its accept notices ("Accepting…", "Trip matched") and the
+  /// offer's own ("Exclusive ride") would only be shown after the trip,
+  /// about a state that no longer exists.
+  static void dropGroups(Set<String> groups) {
+    _queue.removeWhere((queued) => groups.contains(queued.group));
+  }
 
   /// Drops every waiting message (logout, driver-r5-27): each may hold a
   /// closure over the departing driver's Home, and the next driver must

@@ -24,11 +24,18 @@ class LiveActiveTrip {
   /// The trip the server holds for this driver, as a restorable snapshot;
   /// null when there is none, it is not a stage the trip screen runs, or
   /// the server could not be asked (the app then stays as before).
-  Future<({PersistedActiveRide ride, Map<String, dynamic> projection})?>
-  fetch() async {
+  ///
+  /// G27: [activeTripId] reads `Driver.activeTripId` through the app's
+  /// shared profile read (Home: `DriverAccountSession.refresh`, which
+  /// shares a read already out), so a back press does not read the
+  /// profile twice; without it the profile is read here.
+  Future<({PersistedActiveRide ride, Map<String, dynamic> projection})?> fetch({
+    Future<String?> Function()? activeTripId,
+  }) async {
     try {
-      final profile = await _api.get(profilePath);
-      final id = profile['activeTripId'];
+      final Object? id = activeTripId != null
+          ? await activeTripId()
+          : (await _api.get(profilePath))['activeTripId'];
       if (id is! String || id.trim().isEmpty) return null;
       final trip = await _api.get('$tripsPath/${Uri.encodeComponent(id)}');
       final ride = snapshotOf(trip);

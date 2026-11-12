@@ -96,12 +96,35 @@ void main() {
   });
 
   testWidgets('Android back leaves the call screen', (tester) async {
-    final s = _outgoing(FakeApi());
+    final api = FakeApi();
+    final s = _outgoing(api);
     await tester.runAsync(s.start);
     await _host(tester, s, const Size(390, 844));
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.byType(TripCallScreen), findsNothing);
+    // G27 (c): the call is ended on the server, not left running hidden.
+    expect(api.sent, contains('end:cll_1:hangup'));
+  });
+
+  testWidgets('G27: Android back on a ringing incoming call declines it', (
+    tester,
+  ) async {
+    final api = FakeApi();
+    final s = TripCallSession.incoming(
+      api: api,
+      engine: FakeEngine(),
+      call: const IncomingCall(callId: 'cll_1', tripId: 't1', from: 'rider'),
+      side: 'driver',
+      ice: const [],
+    );
+    await _host(tester, s, const Size(390, 844));
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(TripCallScreen), findsNothing);
+    // Admin Trip › Calls "how it ended": declined, not hangup.
+    expect(api.sent, contains('end:cll_1:declined'));
+    expect(api.sent, isNot(contains('end:cll_1:hangup')));
   });
 
   testWidgets('a screen opened on a call already over closes by itself', (

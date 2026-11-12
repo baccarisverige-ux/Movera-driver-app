@@ -788,6 +788,40 @@ void main() {
       expect(numbers(), ['197', '190']);
     });
 
+    test('G29 N1 (F1 offline probe): the server is down while start() '
+        'reads the saved copy and the zone becomes known: the TN numbers '
+        'stay, the older SE read is never put back', () async {
+      final gate = Completer<void>();
+      final cache = _SlowCache(gate.future);
+      // Both saved; SE last (the copy read with no zone known).
+      await cache.write(tn(), zoneId: tunis);
+      await cache.write(se(), zoneId: 'Z001');
+      final client = MockClient((_) async => http.Response('', 503));
+      String? zone;
+      final config = LiveDriverConfig(
+        client: client,
+        apiBase: base,
+        accessToken: () async => 'token-1',
+        zoneId: () => zone,
+        cache: cache,
+      );
+      addTearDown(config.dispose);
+      final started = config.start();
+      await settle();
+      zone = tunis;
+      await config.zoneChanged();
+      await settle();
+      expect(numbers(), ['197', '190']);
+      gate.complete();
+      await started;
+      await settle();
+      // No server answer can repair it: only start()'s zone check keeps
+      // the late SE read out.
+      expect(config.zoneId, tunis);
+      expect(config.current?.zoneId, tunis);
+      expect(numbers(), ['197', '190']);
+    });
+
     test('gap b: an answer for the zone left while it was asked is '
         'dropped', () async {
       final answers = <String?, Completer<void>>{
@@ -916,6 +950,22 @@ void main() {
         expect(live.config.zoneId, 'Z001');
         expect(gets.last, 'Z001');
         expect(numbers(), ['112', '11414']);
+      });
+
+      test('G29 N4: the hold is 15 s: 2 positions 14 s apart are not '
+          'enough, 15 s are', () async {
+        clock = clock.add(const Duration(seconds: 1));
+        await DriverStartPosition.save(inStockholm);
+        await settle();
+        clock = clock.add(const Duration(seconds: 14));
+        await DriverStartPosition.save(inStockholm);
+        await settle();
+        expect(live.config.zoneId, tunis, reason: '14 s: not yet');
+        expect(gets, [tunis]);
+        clock = clock.add(const Duration(seconds: 1));
+        await DriverStartPosition.save(inStockholm);
+        await settle();
+        expect(live.config.zoneId, 'Z001', reason: '15 s: applied');
       });
 
       test("a trip's zone applies at once", () async {

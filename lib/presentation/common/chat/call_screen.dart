@@ -99,8 +99,9 @@ class _TripCallScreenState extends State<TripCallScreen> {
     _ring?.dispose();
     _close?.cancel();
     _tick?.cancel();
-    // Leaving the screen (back) hangs up a call still going on.
-    if (!_s.over) unawaited(_s.hangUp());
+    // Leaving the screen (back) hangs up a call still going on; G27: a
+    // rider's call still ringing is declined (admin "how it ended").
+    if (!_s.over) unawaited(_ringing ? _s.decline() : _s.hangUp());
     super.dispose();
   }
 

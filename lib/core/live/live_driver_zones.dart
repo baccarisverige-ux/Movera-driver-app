@@ -57,9 +57,13 @@ class LiveDriverZones extends ChangeNotifier {
     required ApiClient api,
     DriverZonesCache? cache,
     List<Duration>? retryDelays,
+    DateTime Function()? now,
   }) : _api = api,
        _cache = cache ?? const PrefsDriverZonesCache(),
-       retryDelays = retryDelays ?? defaultRetryDelays;
+       retryDelays = retryDelays ?? defaultRetryDelays,
+       _now = now ?? DateTime.now;
+
+  final DateTime Function() _now;
 
   /// Owner 2026-11-10: a failed read while a kept list is in use is tried
   /// again after each of these delays (bounded: 3 more tries).
@@ -71,12 +75,15 @@ class LiveDriverZones extends ChangeNotifier {
 
   final List<Duration> retryDelays;
 
-  /// Owner 2026-11-10 (§21): reads the list again when the app comes back.
-  /// Called once per session (after [start]); [dispose] stops it.
+  /// Owner 2026-11-10 (§21): reads the list again when the app comes back
+  /// (G27: [refreshIfStale]). Called once per session (after [start]);
+  /// [dispose] stops it.
   void watchResume() {
     if (_resume != null) return;
     try {
-      _resume = AppLifecycleListener(onResume: () => unawaited(refresh()));
+      _resume = AppLifecycleListener(
+        onResume: () => unawaited(refreshIfStale()),
+      );
     } on FlutterError catch (error) {
       // No Flutter binding (a pure Dart harness): nothing comes back.
       DriverLog.warn('driver_zones.resume_watch_skipped: $error');
@@ -116,6 +123,23 @@ class LiveDriverZones extends ChangeNotifier {
     await refresh();
   }
 
+  /// G27: a resume reads the list again only after this long (a `zones`
+  /// publish on the settings stream still reads at once).
+  static const resumeAfter = Duration(seconds: 60);
+
+  /// The last answered read.
+  DateTime? _readAt;
+
+  /// G27: [refresh] unless the list was read in the last [resumeAfter] (a
+  /// failed read does not count); true when it is current.
+  Future<bool> refreshIfStale() {
+    final read = _readAt;
+    if (read != null && _now().difference(read) < resumeAfter) {
+      return Future<bool>.value(true);
+    }
+    return refresh();
+  }
+
   /// Asks the server; concurrent calls share one request. True when read.
   Future<bool> refresh() =>
       _inFlight ??= _fetch().whenComplete(() => _inFlight = null);
@@ -124,6 +148,7 @@ class LiveDriverZones extends ChangeNotifier {
     try {
       final zones = parse(await _api.get(path));
       if (zones == null) throw const FormatException('not a zones answer');
+      _readAt = _now();
       _use(zones);
       _retryTimer?.cancel();
       _retryTimer = null;

@@ -134,7 +134,14 @@ extension _HomeBack on _DriverHomeState {
 /// Exclusive offer brings Home back to the front (one watch per Home).
 final _coverOfferWatches = Expando<StreamSubscription<List<RideOffer>>>();
 
+/// G27: the full screen over Home is a trip (or its summary); its close
+/// reads the badges and the server's trip at once.
+final _coveredByTrips = Expando<bool>('coveredByTrip');
+
 extension _HomeRoutes on _DriverHomeState {
+  bool get _coveredByTrip => _coveredByTrips[this] ?? false;
+  set _coveredByTrip(bool value) => _coveredByTrips[this] = value;
+
   void _stopCoverWatch() {
     _coverOfferWatches[this]?.cancel();
     _coverOfferWatches[this] = null;
@@ -147,7 +154,9 @@ extension _HomeRoutes on _DriverHomeState {
     // begun; it, and the summary that replaces it, never close for a new
     // offer. The trip's routes are the only ones of these kinds over Home.
     final cover = driverRouteObserver.pages.lastPushed;
-    if (cover is ActiveRideTransition || cover is BottomToTopTransition) {
+    _coveredByTrip =
+        cover is ActiveRideTransition || cover is BottomToTopTransition;
+    if (_coveredByTrip) {
       _stopCoverWatch();
       return;
     }
@@ -201,10 +210,14 @@ extension _HomeRoutes on _DriverHomeState {
     _HomeMapSheet(this)._adoptSessionDestination(); // driver-u65
     // A covering ride may have handed storage to a queued trip before it
     // closed. Re-check ownership so a persisted trip is never hidden behind
-    // an available Home.
+    // an available Home. G27: the server is asked only after a trip; a menu
+    // page changes no trip (the saved one is still read).
+    final afterTrip = _coveredByTrip;
+    _coveredByTrip = false;
     if (_recoveryResolved && _driverSession.activeTripId == null) {
       _didAttemptActiveRideRestore = false;
-      unawaited(_restoreActiveRideIfNeeded());
+      // askServer false: the saved trip only.
+      unawaited(_restoreActiveRideIfNeeded(askServer: afterTrip));
     }
     _backOnTop(); // what waited for Home on top goes on, as after a sheet
   }

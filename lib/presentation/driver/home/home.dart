@@ -228,7 +228,7 @@ class _DriverHomeState extends State<DriverHome>
   @override
   void didPopNext() {
     _HomeRoutes(this)._backOnTop();
-    _HomeAccount(this)._refreshLiveBadges();
+    _HomeAccount(this)._refreshLiveBadgesOnBack();
   }
 
   @override
@@ -617,7 +617,7 @@ class _DriverHomeState extends State<DriverHome>
   bool _didAttemptActiveRideRestore = false;
   bool _recoveryResolved = false;
 
-  Future<void> _restoreActiveRideIfNeeded() async {
+  Future<void> _restoreActiveRideIfNeeded({bool askServer = true}) async {
     if (_didAttemptActiveRideRestore) {
       return;
     }
@@ -640,7 +640,7 @@ class _DriverHomeState extends State<DriverHome>
       }
       snapshot =
           await _HomeLive(this)._savedTripUnlessOver(repo) ??
-          await _HomeLive(this)._serverActiveTrip();
+          (askServer ? await _HomeLive(this)._serverActiveTrip() : null);
     } on ActiveRideStorageUnavailable {
       // driver-u112: blocked storage holds no trip to recover; going online
       // stays possible, and Retry reads again.

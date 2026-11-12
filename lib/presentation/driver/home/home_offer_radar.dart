@@ -924,6 +924,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     String? tripId,
   }) {
     _cancelAllOfferTimers();
+    // G27: the offer's notices still waiting are over once its trip opens.
+    IslandMessages.dropGroups(HomeIslandNotices.offerGroups);
     // An Exclusive card slides back down behind the trip.
     _HomeExclusive(this)._sinkExclusive();
     _expandedDirectOfferTimer?.cancel();

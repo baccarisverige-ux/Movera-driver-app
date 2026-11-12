@@ -147,9 +147,15 @@ class MemoryDriverLegalCache implements DriverLegalCache {
 /// a trip) until the driver accepts it (`POST /account/legal/accept`);
 /// until then the server refuses going online (`terms_not_accepted`).
 class DriverLegal extends ChangeNotifier {
-  DriverLegal({ApiClient? api, DriverLegalCache? cache})
-    : _api = api,
-      _cache = cache ?? const PrefsDriverLegalCache();
+  DriverLegal({
+    ApiClient? api,
+    DriverLegalCache? cache,
+    DateTime Function()? now,
+  }) : _api = api,
+       _cache = cache ?? const PrefsDriverLegalCache(),
+       _now = now ?? DateTime.now;
+
+  final DateTime Function() _now;
 
   /// The app's legal texts (main.dart gives the live build its API).
   static DriverLegal instance = DriverLegal();
@@ -314,6 +320,24 @@ class DriverLegal extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// G27: a resume reads the texts again only after this long; a changed
+  /// country and a refused go-online (`terms_not_accepted`) still read at
+  /// once.
+  static const resumeAfter = Duration(seconds: 60);
+
+  /// When each country's texts were last read (answered).
+  final Map<String, DateTime> _readAt = {};
+
+  /// G27: [refresh] unless the shown country's texts were read in the last
+  /// [resumeAfter] (a failed read does not count).
+  Future<LegalTexts?> refreshIfStale() {
+    final read = _readAt[_country];
+    if (read != null && _now().difference(read) < resumeAfter) {
+      return Future<LegalTexts?>.value(current);
+    }
+    return refresh();
+  }
+
   /// `GET /legal/{country}` (no token). Concurrent calls share one.
   Future<LegalTexts?> refresh() {
     final country = _country;
@@ -331,6 +355,7 @@ class DriverLegal extends ChangeNotifier {
       final answer = await api.get(pathOf(country), authenticated: false);
       final texts = LegalTexts.fromJson(answer);
       _texts[country] = texts;
+      _readAt[country] = _now();
       _failed = false;
       _checkAtStart();
       notifyListeners();

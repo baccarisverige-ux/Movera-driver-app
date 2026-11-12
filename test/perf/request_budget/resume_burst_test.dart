@@ -3,19 +3,26 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/legal/driver_legal.dart';
+import 'package:movera/core/live/driver_app_resume.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'request_budget_harness.dart';
 
 /// D12-5: the requests `LiveDriverServices.resumed` sends (main.dart's
-/// AppLifecycleListener) when the app comes back.
+/// AppLifecycleListener) when the app comes back. G27: the burst runs the
+/// app's own listeners on a real lifecycle change: main.dart's
+/// ([driverAppResumed]: the live services and the legal texts) and the
+/// zones' own ([LiveDriverZones.watchResume], started by `signedIn`).
 class _Client extends CountingClient {
   /// SSE streams opened while true never send a line (a dead socket).
   bool silent = false;
@@ -30,6 +37,14 @@ class _Client extends CountingClient {
       sent.add((at: now(), key: endpointKey(request)));
       return http.StreamedResponse(
         Stream.value(utf8.encode('{"items": []}')),
+        200,
+        headers: const {'content-type': 'application/json'},
+      );
+    }
+    if (request.url.path == '/api/v1/driver/zones') {
+      sent.add((at: now(), key: endpointKey(request)));
+      return http.StreamedResponse(
+        Stream.value(utf8.encode('{"zones": []}')),
         200,
         headers: const {'content-type': 'application/json'},
       );
@@ -79,21 +94,54 @@ Map<String, int> burst({
       ..silent = streamsSilent;
     final tokens = MemoryTokenStore()..save(access: 'a', refresh: 'r');
     final origin = Uri.parse('https://budget.invalid');
+    DateTime clock() => DateTime.utc(2026, 11, 11).add(async.elapsed);
+    final api = ApiClient(client: client, baseUri: origin, tokens: tokens);
     final live = LiveDriverServices(
       client: client,
       origin: origin,
       tokens: tokens,
-      api: ApiClient(client: client, baseUri: origin, tokens: tokens),
+      api: api,
       location: _Phone(),
-      now: () => DateTime.utc(2026, 11, 11).add(async.elapsed),
+      now: clock,
+    );
+    // main.dart: the legal texts on start, and its resume listener.
+    final legal = DriverLegal(
+      api: api,
+      cache: MemoryDriverLegalCache(),
+      now: clock,
+    );
+    unawaited(legal.start(country: 'SE'));
+    final listener = AppLifecycleListener(
+      onResume: () => driverAppResumed(live: live, legal: legal),
     );
     live.signedIn();
     client.onlineStatus = 'online';
     unawaited(live.presence.goOnline());
+    // The phone goes away and comes back, one state at a time (as the
+    // platform reports it).
+    final binding = WidgetsBinding.instance;
+    void walk(List<AppLifecycleState> states) {
+      for (final state in states) {
+        binding.handleAppLifecycleStateChanged(state);
+      }
+    }
+
+    walk(const [
+      AppLifecycleState.resumed,
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]);
     async.elapse(away);
     final from = client.sent.length;
-    live.resumed();
+    walk(const [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]);
     async.elapse(const Duration(seconds: 5));
+    listener.dispose();
+    live.zones.dispose();
     result = <String, int>{};
     for (final r in client.sent.skip(from)) {
       result[r.key] = (result[r.key] ?? 0) + 1;
@@ -106,6 +154,9 @@ Map<String, int> burst({
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   // Before D12-5 a resume sent all six below even with healthy streams.
   const full = {
     'POST /api/v1/driver/location': 1,
@@ -114,6 +165,9 @@ void main() {
     'GET /api/v1/driver/config/stream (SSE open)': 1,
     'GET /api/v1/driver/config': 1,
     'GET /api/v1/driver/events': 1,
+    // G27: read 5 minutes ago, so due again.
+    'GET /api/v1/driver/zones': 1,
+    'GET /api/v1/legal/SE': 1,
   };
 
   test('D12-5: a resume with live streams keeps them: the position and '
@@ -121,6 +175,9 @@ void main() {
     expect(burst(streamsSilent: false), {
       'POST /api/v1/driver/location': 1,
       'GET /api/v1/driver/events': 1,
+      // G27: the zones and the legal texts, read 5 minutes ago.
+      'GET /api/v1/driver/zones': 1,
+      'GET /api/v1/legal/SE': 1,
     });
     // Away 30 s: the events too were read less than a minute ago.
     expect(burst(streamsSilent: false, away: const Duration(seconds: 30)), {
@@ -153,5 +210,20 @@ void main() {
       badgesDueOnResume(t.subtract(const Duration(seconds: 60)), t),
       isTrue,
     );
+  });
+
+  test('G27: a resume 30 s after the last read sends no legal or zones '
+      'read (main.dart\'s listener and zones.watchResume)', () {
+    final sent = burst(streamsSilent: false, away: const Duration(seconds: 30));
+    expect(sent.keys.where((k) => k.startsWith('GET /api/v1/legal/')), isEmpty);
+    expect(sent.containsKey('GET /api/v1/driver/zones'), isFalse);
+    expect(sent, {'POST /api/v1/driver/location': 1});
+  });
+
+  test('G27: a resume 60 s or more after the last read reads the legal '
+      'texts and the zones again', () {
+    final sent = burst(streamsSilent: false, away: const Duration(seconds: 61));
+    expect(sent['GET /api/v1/legal/SE'], 1);
+    expect(sent['GET /api/v1/driver/zones'], 1);
   });
 }

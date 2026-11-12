@@ -17,7 +17,14 @@ extension _HomeLive on _DriverHomeState {
   Future<PersistedActiveRide?> _serverActiveTrip() async {
     final live = LiveDriverServices.instance;
     if (live == null) return null;
-    final found = await live.activeTrip.fetch();
+    // G27: through the account's shared profile read (the badges' read of
+    // the same back press is shared, not sent twice).
+    final account = mounted ? accountSessionOf(context) : null;
+    final found = await live.activeTrip.fetch(
+      activeTripId: account == null
+          ? null
+          : () async => (await account.refresh()).activeTripId,
+    );
     if (found == null) return null;
     live.trips.observe(found.projection);
     // Audit 2026-11-07 B2: a server slower than this phone still names a
