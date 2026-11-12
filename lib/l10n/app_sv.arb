@@ -1906,6 +1906,7 @@
   "liveTripFailed": "Movera kunde inte registrera det här steget. Försök igen.",
   "rcTripTotal": "Resans totalpris",
   "rcMoveraCommission": "Moveras provision",
+  "waybillMoveraCommission": "Moveras provision",
   "rcYouGet": "Du får",
   "liveOnlineDocumentsExpired": "Ett dokument har gått ut: {documents}. Ladda upp det nya för att gå online.",
   "tipFlatDarkSurface": "Lägg det plant på ett mörkt bord",

@@ -27,6 +27,7 @@ class WaybillRecord {
     this.tip,
     this.debtCollected,
     this.endedEarlyBy,
+    this.commission,
   });
 
   final String tripId;
@@ -78,6 +79,18 @@ class WaybillRecord {
   /// `rider | driver` when the trip ended before the drop-off; null when
   /// it did not.
   final String? endedEarlyBy;
+
+  /// G32 (owner 2026-11-12, "all details in waybill"): Movera's commission
+  /// as the server sent it (`TripProjection.commission`), e.g. "28,20 kr";
+  /// null when not known. The waybill shows [commissionText].
+  final String? commission;
+
+  /// Movera's commission for the waybill: the server's [commission] only
+  /// (supervisor G32: a figure worked out on the phone is wrong after an
+  /// admin pay change, an offline finish with a waiting fee, or an old
+  /// unpaid fee in the offer fare); null, so no row, without it. A bonus
+  /// larger than the commission makes it negative: "−5,00 kr".
+  String? get commissionText => commission;
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.
@@ -197,6 +210,8 @@ class WaybillRecord {
     bool clearTip = false,
     bool clearDebtCollected = false,
     bool clearEndedEarlyBy = false,
+    String? commission,
+    bool clearCommission = false,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -224,6 +239,7 @@ class WaybillRecord {
       endedEarlyBy: clearEndedEarlyBy
           ? null
           : endedEarlyBy ?? this.endedEarlyBy,
+      commission: clearCommission ? null : commission ?? this.commission,
     );
   }
 }

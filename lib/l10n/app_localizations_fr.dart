@@ -6843,6 +6843,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rcMoveraCommission => 'Commission Movera';
 
   @override
+  String get waybillMoveraCommission => 'Commission Movera';
+
+  @override
   String get rcYouGet => 'Vous recevez';
 
   @override

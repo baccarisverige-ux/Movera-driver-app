@@ -296,6 +296,9 @@ extension _AcceptRideTrip on _AcceptRideState {
             ? money.finish?.endedBy ?? 'driver'
             : null,
         clearEndedEarlyBy: money.finish?.endedEarly != true,
+        // G32: the server's commission for the waybill.
+        commission: money.commission?.formatted,
+        clearCommission: money.commission == null,
       );
 
   WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {
