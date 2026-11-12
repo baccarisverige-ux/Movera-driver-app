@@ -1060,6 +1060,48 @@ abstract class AppLocalizations {
   /// **'Version {version}'**
   String appVersionOnly(String version);
 
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, a verified address (texts.verified).
+  ///
+  /// In en, this message translates to:
+  /// **'{email} · Verified'**
+  String contactEmailVerified(String email);
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, an address without a code check (texts.notVerified).
+  ///
+  /// In en, this message translates to:
+  /// **'{email} · Not verified'**
+  String contactEmailNotVerified(String email);
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row without an address.
+  ///
+  /// In en, this message translates to:
+  /// **'No e-mail'**
+  String get contactEmailNone;
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): title and button of the check of the current address; the Home line's button.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify e-mail'**
+  String get contactVerifyEmail;
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): shown only when the server answered delivery sent (Rule 35).
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to {email}.'**
+  String contactCodeSentTo(String email);
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): delivery pending_provider (owner S1 "Codes can't be sent yet"); = contract emailVerified.texts.codeNotSentYet.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail codes cannot be sent yet. Try again later.'**
+  String get contactCodeNotSentYet;
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): snackbar after the current address was verified.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail verified'**
+  String get contactEmailVerifiedDone;
+
   /// No description provided for @airportQueueTitle.
   ///
   /// In en, this message translates to:
@@ -8613,6 +8655,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time to drive to pickup · {name}'**
   String leaveNowTimeToDriveName(String name);
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): Home reminder email_not_verified, orange (due_soon); = contract reminders.texts.email_not_verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your e-mail is not verified. Tap to verify it.'**
+  String get remEmailNotVerified;
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12) S2: Home reminder email_not_verified, red (blocks_online) "needed for approval"; = contract reminders.texts.email_not_verified_approval.
+  ///
+  /// In en, this message translates to:
+  /// **'Your e-mail is not verified. It is needed for approval. Tap to verify it.'**
+  String get remEmailNotVerifiedApproval;
 
   /// No description provided for @safetyToolkit.
   ///

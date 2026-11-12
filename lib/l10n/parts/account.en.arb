@@ -307,5 +307,48 @@
         "type": "String"
       }
     }
+  },
+  "contactEmailVerified": "{email} · Verified",
+  "@contactEmailVerified": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, a verified address (texts.verified).",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "contactEmailNotVerified": "{email} · Not verified",
+  "@contactEmailNotVerified": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, an address without a code check (texts.notVerified).",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "contactEmailNone": "No e-mail",
+  "@contactEmailNone": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row without an address."
+  },
+  "contactVerifyEmail": "Verify e-mail",
+  "@contactVerifyEmail": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): title and button of the check of the current address; the Home line's button."
+  },
+  "contactCodeSentTo": "We sent a code to {email}.",
+  "@contactCodeSentTo": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): shown only when the server answered delivery sent (Rule 35).",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "contactCodeNotSentYet": "E-mail codes cannot be sent yet. Try again later.",
+  "@contactCodeNotSentYet": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): delivery pending_provider (owner S1 \"Codes can't be sent yet\"); = contract emailVerified.texts.codeNotSentYet."
+  },
+  "contactEmailVerifiedDone": "E-mail verified",
+  "@contactEmailVerifiedDone": {
+    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): snackbar after the current address was verified."
   }
 }

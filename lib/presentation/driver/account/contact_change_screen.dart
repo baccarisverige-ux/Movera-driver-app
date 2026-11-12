@@ -12,15 +12,27 @@ enum ContactKind { phone, email }
 /// (`POST /account/phone/change` or `/account/email/change`); step 2: the
 /// code sent to it (`…/verify`); then saved, and the account read again.
 /// Contract v0.18.14 `deepFix1.accountChange`.
+///
+/// G30 (contract v0.18.76 / v0.18.77 `contract.json#emailVerified`): the
+/// e-mail start answers `delivery`; only `sent` means a code went out (Rule
+/// 35). Anything else (`pending_provider`, or no `delivery` from an older
+/// server) says `texts.codeNotSentYet` and shows no code field. With
+/// [verifyCurrent] the screen checks the driver's own current address.
 class ContactChangeScreen extends StatefulWidget {
   const ContactChangeScreen({
     super.key,
     required this.account,
     required this.kind,
+    this.verifyCurrent,
   });
 
   final DriverAccountSession account;
   final ContactKind kind;
+
+  /// G30 `emailVerified.verifyCurrent`: the driver's current, Not verified
+  /// e-mail. The field is filled with it and read-only; "Change e-mail"
+  /// switches to the normal change.
+  final String? verifyCurrent;
 
   @override
   State<ContactChangeScreen> createState() => _ContactChangeScreenState();
@@ -33,7 +45,28 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
   String? _error;
   bool _busy = false;
 
+  /// G30: the last e-mail start was not sent (`delivery` not `sent`).
+  bool _notSent = false;
+
+  /// G30: checking the current address (until "Change e-mail" is tapped).
+  late bool _verifyCurrent;
+
   bool get _phone => widget.kind == ContactKind.phone;
+
+  @override
+  void initState() {
+    super.initState();
+    final current = widget.verifyCurrent?.trim() ?? '';
+    _verifyCurrent = !_phone && current.isNotEmpty;
+    if (_verifyCurrent) _value.text = current;
+  }
+
+  void _changeInstead() => setState(() {
+    _verifyCurrent = false;
+    _notSent = false;
+    _error = null;
+    _value.clear();
+  });
 
   @override
   void dispose() {
@@ -51,10 +84,14 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
           return tr.contactEmailTaken;
         case 'invalid_otp_code' || 'invalid_otp':
           return tr.authErrWrongCode;
-        case 'otp_expired' || 'invalid_otp_session':
+        case 'otp_expired' ||
+            'invalid_otp_session' ||
+            'invalid_email_challenge':
           return tr.authCodeExpired;
         case 'invalid_phone':
           return tr.authInvalidMobileNumber;
+        case 'invalid_email':
+          return tr.acctInvalidEmail;
         case 'reauth_required':
           return tr.contactReauthRequired;
         case 'change_too_many':
@@ -70,14 +107,26 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
     setState(() {
       _busy = true;
       _error = null;
+      _notSent = false;
     });
     final repo = widget.account.repository;
     try {
-      final id = _phone
-          ? await repo.changePhone(value)
-          : await repo.changeEmail(value);
+      if (_phone) {
+        final id = await repo.changePhone(value);
+        if (!mounted) return;
+        setState(() => _challenge = id);
+        return;
+      }
+      final started = await repo.changeEmail(value);
       if (!mounted) return;
-      setState(() => _challenge = id);
+      // G30 (Rule 35): only `delivery: sent` means a code went out.
+      setState(() {
+        if (started.sent) {
+          _challenge = started.challengeId;
+        } else {
+          _notSent = true;
+        }
+      });
     } catch (error) {
       if (mounted) setState(() => _error = _message(error));
     } finally {
@@ -112,7 +161,13 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_phone ? tr.contactPhoneSaved : tr.contactEmailSaved),
+          content: Text(
+            _phone
+                ? tr.contactPhoneSaved
+                : _verifyCurrent
+                ? tr.contactEmailVerifiedDone
+                : tr.contactEmailSaved,
+          ),
         ),
       );
       Navigator.of(context).maybePop();
@@ -130,7 +185,13 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
     final sent = _challenge != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_phone ? tr.contactChangePhone : tr.contactChangeEmail),
+        title: Text(
+          _phone
+              ? tr.contactChangePhone
+              : _verifyCurrent
+              ? tr.contactVerifyEmail
+              : tr.contactChangeEmail,
+        ),
       ),
       body: SafeArea(
         child: ListView(
@@ -140,16 +201,41 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
               key: const ValueKey('contact-value'),
               controller: _value,
               enabled: !sent && !_busy,
+              readOnly: _verifyCurrent,
               keyboardType: _phone
                   ? TextInputType.phone
                   : TextInputType.emailAddress,
               decoration: InputDecoration(
-                labelText: _phone ? tr.contactNewPhone : tr.contactNewEmail,
+                labelText: _phone
+                    ? tr.contactNewPhone
+                    : _verifyCurrent
+                    ? tr.acctEmail
+                    : tr.contactNewEmail,
               ),
             ),
+            if (_verifyCurrent && !sent)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  key: const ValueKey('contact-change-instead'),
+                  onPressed: _busy ? null : _changeInstead,
+                  child: Text(tr.contactChangeEmail),
+                ),
+              ),
+            if (_notSent && !sent) ...[
+              const SizedBox(height: 12),
+              Text(
+                tr.contactCodeNotSentYet,
+                key: const ValueKey('contact-not-sent'),
+              ),
+            ],
             if (sent) ...[
               const SizedBox(height: 12),
-              Text(_phone ? tr.contactCodeSentPhone : tr.contactCodeSentEmail),
+              Text(
+                _phone
+                    ? tr.contactCodeSentPhone
+                    : tr.contactCodeSentTo(_value.text.trim()),
+              ),
               const SizedBox(height: 8),
               TextField(
                 key: const ValueKey('contact-code'),

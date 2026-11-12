@@ -65,18 +65,26 @@ class DriverAccountRepository {
     return '${answer['phone'] ?? phone}';
   }
 
-  /// The new e-mail address gets a code (once an e-mail provider is
-  /// connected: `delivery: pending_provider`). Returns the challenge id.
-  Future<String> changeEmail(String email) async {
+  /// `POST /account/email/change`: the address gets a code. G30 (contract
+  /// v0.18.76 `emailVerified.delivery`, Rule 35): [sent] only when the
+  /// server says `delivery: sent` (the e-mail service accepted it);
+  /// `pending_provider` or no `delivery` (an older server) = no code went
+  /// out. The driver's own current address starts a check of it
+  /// (`emailVerified.verifyCurrent`).
+  Future<({String challengeId, bool sent})> changeEmail(String email) async {
     final answer = await _api.post(
       '/api/v1/account/email/change',
       body: {'email': email},
     );
-    return '${answer['challengeId']}';
+    return (
+      challengeId: '${answer['challengeId']}',
+      sent: answer['delivery'] == 'sent',
+    );
   }
 
-  /// The code sent to the new address; the saved address.
-  Future<String> verifyEmail({
+  /// The code sent to the address; the saved address and (G30) when it
+  /// was verified (null from an older server).
+  Future<({String email, DateTime? verifiedAt})> verifyEmail({
     required String challengeId,
     required String code,
   }) async {
@@ -84,7 +92,11 @@ class DriverAccountRepository {
       '/api/v1/account/email/verify',
       body: {'challengeId': challengeId, 'code': code},
     );
-    return '${answer['email'] ?? ''}';
+    final at = answer['emailVerifiedAt'];
+    return (
+      email: '${answer['email'] ?? ''}',
+      verifiedAt: at is String ? DateTime.tryParse(at)?.toUtc() : null,
+    );
   }
 
   /// `GET /driver/profile`.
