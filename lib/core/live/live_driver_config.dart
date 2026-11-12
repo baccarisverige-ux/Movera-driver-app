@@ -147,6 +147,10 @@ class LiveDriverConfig extends ChangeNotifier {
 
   bool _started = false;
 
+  /// F1: counts the zone changes, so a read started before one is not put
+  /// in use after it.
+  int _zoneEpoch = 0;
+
   /// D12-5: when the open stream last sent a line (heartbeats every 15 s,
   /// D12-7); null while no stream is open.
   DateTime? _lastLine;
@@ -243,14 +247,21 @@ class LiveDriverConfig extends ChangeNotifier {
   Future<void> start() async {
     _started = true;
     final zone = _zoneSource();
+    _zone = zone;
+    final epoch = _zoneEpoch;
+    Map<String, dynamic>? cached;
     try {
-      final cached = await _cache.read(zone);
-      _zone = zone;
-      if (cached != null) _take(cached);
+      cached = await _cache.read(zone);
     } catch (error) {
-      _zone = zone;
       DriverLog.warn('driver_config.cache_read_failed: $error');
     }
+    // F1: [zoneChanged] ran while the copy was read: its zone and its
+    // document stay; this older read is not put back.
+    if (epoch != _zoneEpoch || _disposed) {
+      await refresh();
+      return;
+    }
+    if (cached != null) _take(cached);
     await refresh();
   }
 
@@ -265,6 +276,7 @@ class LiveDriverConfig extends ChangeNotifier {
     final zone = _zoneSource();
     if (zone == _zone) return;
     _zone = zone;
+    final epoch = ++_zoneEpoch;
     Map<String, dynamic>? cached;
     try {
       // §89: no zone known: the server picks; the document stays until
@@ -273,7 +285,7 @@ class LiveDriverConfig extends ChangeNotifier {
     } catch (error) {
       DriverLog.warn('driver_config.cache_read_failed: $error');
     }
-    if (_zone != zone || _disposed) return;
+    if (epoch != _zoneEpoch || _disposed) return;
     if (zone == null) {
       // Nothing to show first.
     } else if (cached != null) {

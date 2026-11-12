@@ -34,6 +34,18 @@ class _NoGps implements DriverLocationRepository {
       const Stream<DriverLocation>.empty();
 }
 
+/// A cache whose read of the last document waits for [gate].
+class _SlowCache extends MemoryDriverConfigCache {
+  _SlowCache(this.gate);
+  final Future<void> gate;
+
+  @override
+  Future<Map<String, dynamic>?> read([String? zoneId]) async {
+    if (zoneId == null) await gate;
+    return super.read(zoneId);
+  }
+}
+
 /// Owner 2026-10-27 (settings flow, contract v0.8.0): the driver app reads
 /// its settings from the server, puts each newer document in use at once,
 /// keeps the last good one, and follows the auto-offline rule.
@@ -452,8 +464,9 @@ void main() {
     test('a restart in Tunis shows the saved TN numbers first, never SE '
         '(one saved copy per zone)', () async {
       final cache = MemoryDriverConfigCache();
-      await cache.write(se(), zoneId: 'Z001');
+      // TN saved first, SE last: only a copy per zone gives TN back.
       await cache.write(tn(), zoneId: tunis);
+      await cache.write(se(), zoneId: 'Z001');
       final hold = Completer<void>();
       final fake = server(hold: hold.future);
       final config = LiveDriverConfig(
@@ -743,6 +756,179 @@ void main() {
       expect(numbers(), ['197', '190']);
       await live.dispose();
       expect(DriverStartPosition.onMoved, isNull);
+    });
+
+    test('F1: a zone change while start() reads the saved copy is kept '
+        '(never put back to no zone and the SE numbers)', () async {
+      final gate = Completer<void>();
+      final cache = _SlowCache(gate.future);
+      await cache.write(se(), zoneId: 'Z001');
+      final fake = server();
+      String? zone;
+      final config = LiveDriverConfig(
+        client: fake.client,
+        apiBase: base,
+        accessToken: () async => 'token-1',
+        zoneId: () => zone,
+        cache: cache,
+      );
+      addTearDown(config.dispose);
+      final started = config.start();
+      await settle();
+      // The zone list and the position arrive while the read waits.
+      zone = tunis;
+      await config.zoneChanged();
+      await settle();
+      expect(numbers(), ['197', '190']);
+      gate.complete();
+      await started;
+      await settle();
+      expect(config.zoneId, tunis);
+      expect(config.current?.zoneId, tunis);
+      expect(numbers(), ['197', '190']);
+    });
+
+    test('gap b: an answer for the zone left while it was asked is '
+        'dropped', () async {
+      final answers = <String?, Completer<void>>{
+        'Z001': Completer<void>(),
+        tunis: Completer<void>(),
+      };
+      final client = MockClient((request) async {
+        final zone = request.url.queryParameters['zoneId'];
+        await answers[zone]!.future;
+        return http.Response(jsonEncode(zone == tunis ? tn() : se()), 200);
+      });
+      String? zone = 'Z001';
+      final config = LiveDriverConfig(
+        client: client,
+        apiBase: base,
+        accessToken: () async => 'token-1',
+        zoneId: () => zone,
+        cache: MemoryDriverConfigCache(),
+      );
+      addTearDown(config.dispose);
+      final started = config.start();
+      await settle();
+      zone = tunis;
+      final changed = config.zoneChanged();
+      await settle();
+      answers[tunis]!.complete();
+      await changed;
+      expect(numbers(), ['197', '190']);
+      // The Stockholm answer comes late: it is not put in use.
+      answers['Z001']!.complete();
+      await started;
+      await settle();
+      expect(config.current?.zoneId, tunis);
+      expect(numbers(), ['197', '190']);
+    });
+
+    group('F2: a zone from the POSITION holds before it is used', () {
+      late DateTime clock;
+      late List<String?> gets;
+      late LiveDriverServices live;
+      const inTunis = GeoPoint(36.8, 10.18);
+      const inStockholm = GeoPoint(59.33, 18.06);
+
+      setUp(() async {
+        SharedPreferences.setMockInitialValues({});
+        DriverStartPosition.clearMemory();
+        DriverZones.useServer([
+          const DriverZone(
+            id: tunis,
+            country: 'TN',
+            polygon: [
+              [36.6, 10.0],
+              [36.6, 10.4],
+              [37.0, 10.4],
+              [37.0, 10.0],
+            ],
+          ),
+          const DriverZone(
+            id: 'Z001',
+            country: 'SE',
+            polygon: [
+              [59.0, 17.5],
+              [59.0, 18.5],
+              [59.6, 18.5],
+              [59.6, 17.5],
+            ],
+          ),
+        ]);
+        clock = DateTime.utc(2026, 11, 12, 10);
+        gets = [];
+        final client = MockClient((request) async {
+          if (request.url.path == '/api/v1/driver/config') {
+            final zone = request.url.queryParameters['zoneId'];
+            gets.add(zone);
+            return http.Response(jsonEncode(zone == tunis ? tn() : se()), 200);
+          }
+          return http.Response('', 503);
+        });
+        final tokens = MemoryTokenStore()..save(access: 'a', refresh: 'r');
+        live = LiveDriverServices(
+          now: () => clock,
+          client: client,
+          origin: Uri.parse('https://api.test.movera.se'),
+          tokens: tokens,
+          api: ApiClient(
+            client: client,
+            baseUri: Uri.parse('https://api.test.movera.se'),
+            tokens: tokens,
+          ),
+          location: _NoGps(),
+          locationEvery: const Duration(hours: 1),
+        );
+        await DriverStartPosition.save(inTunis);
+        await live.config.start();
+        await settle();
+      });
+      tearDown(() async {
+        await live.dispose();
+        DriverZones.forget();
+        DriverStartPosition.clearMemory();
+      });
+
+      test('the first zone applies at once', () {
+        expect(gets, [tunis]);
+        expect(numbers(), ['197', '190']);
+      });
+
+      test('10 flips on a zone line within the hold: at most 1 read', () async {
+        for (var i = 0; i < 10; i++) {
+          clock = clock.add(const Duration(seconds: 1));
+          await DriverStartPosition.save(i.isEven ? inStockholm : inTunis);
+          await settle();
+        }
+        expect(gets.length - 1, lessThanOrEqualTo(1));
+        expect(live.config.zoneId, tunis);
+      });
+
+      test('a zone that holds 2 positions and 15 s is applied', () async {
+        clock = clock.add(const Duration(seconds: 1));
+        await DriverStartPosition.save(inStockholm);
+        await settle();
+        expect(live.config.zoneId, tunis, reason: 'not yet');
+        clock = clock.add(const Duration(seconds: 15));
+        await DriverStartPosition.save(inStockholm);
+        await settle();
+        expect(live.config.zoneId, 'Z001');
+        expect(gets.last, 'Z001');
+        expect(numbers(), ['112', '11414']);
+      });
+
+      test("a trip's zone applies at once", () async {
+        live.trips.observe({
+          'tripId': 'trp_9',
+          'version': 1,
+          'status': 'driver_to_pickup',
+          'zoneId': 'Z001',
+        });
+        await settle();
+        expect(live.config.zoneId, 'Z001');
+        expect(gets.last, 'Z001');
+      });
     });
   });
 }
