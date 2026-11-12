@@ -98,7 +98,14 @@ class CheckLog {
   }
 
   /// Writes summary.json and the request log next to the screenshots.
-  Future<void> write({required List<String> requestLog}) async {
+  ///
+  /// [extra] are more JSON files (name -> list of rows, e.g. the trip
+  /// test's `transitions.json`); each also goes to logcat as one
+  /// `<NAME>-JSON` line, so the summary has it even when no file is pulled.
+  Future<void> write({
+    required List<String> requestLog,
+    Map<String, List<Map<String, Object?>>> extra = const {},
+  }) async {
     final passed = results.where((r) => r.outcome == CheckOutcome.pass);
     final skipped = results.where((r) => r.outcome == CheckOutcome.skip);
     say(
@@ -106,9 +113,18 @@ class CheckLog {
       'skipped=${skipped.length}',
     );
     say('SUMMARY-JSON ${jsonEncode([for (final r in results) r.toJson()])}');
+    for (final MapEntry(:key, :value) in extra.entries) {
+      say('${key.toUpperCase()}-JSON ${jsonEncode(value)}');
+    }
     final dir = outDir;
     if (dir == null) return;
     try {
+      for (final MapEntry(:key, :value) in extra.entries) {
+        await File('$dir/$key.json').writeAsString(
+          const JsonEncoder.withIndent('  ').convert(value),
+          flush: true,
+        );
+      }
       await File('$dir/summary.json').writeAsString(
         const JsonEncoder.withIndent(
           '  ',

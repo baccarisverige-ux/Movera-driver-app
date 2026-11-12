@@ -17,11 +17,13 @@ on:
         description: 'Firebase Test Lab: run a test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
         default: ''
       testlab_test:
-        description: 'Test Lab kind: robo (taps around, no sign-in) or staging-checks (signs in with one test driver from the MOVERA_TEST_NUMBERS secret and checks online, G24, G17, G27, offline)'
+        description: 'Test Lab kind: robo (taps around, no sign-in); staging-checks (one test driver from the MOVERA_TEST_NUMBERS secret: online, G24, G17, G27, offline); trip-lifecycle (driver app on the phone + a test rider over HTTP: one whole live cash trip, chat, call, SOS, ride check, every screen change); trip-scheduled (the same with a booked-for-later ride and its cancel case)'
         type: choice
         options:
           - robo
           - staging-checks
+          - trip-lifecycle
+          - trip-scheduled
         default: robo
 
 permissions:
@@ -156,10 +158,16 @@ jobs:
   # --environment-variables -> instrumentation arguments); nothing is built into
   # either APK (test/widget/a12_no_test_numbers_test.dart). One device, one run
   # (free quota: 5 a day), manual only.
+  #
+  # trip-lifecycle / trip-scheduled (owner 2026-11-12, "U can't make all trip
+  # lifecycle test on firebase?"): the same job runs
+  # integration_test/trip_lifecycle_test.dart; the test also plays ONE
+  # big-test rider over HTTP (se.r35, else se.r36), passed the same way as
+  # the driver (run time only, masked, scrubbed in every spelling).
   device-checks:
-    if: inputs.testlab_device != '' && inputs.testlab_test == 'staging-checks'
+    if: inputs.testlab_device != '' && inputs.testlab_test != 'robo'
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       LIVE_API: https://movera-server.onrender.com
       GOOGLE_MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY || secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY }}
@@ -174,6 +182,7 @@ jobs:
         env:
           TL_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
           TL_CODE: ${{ secrets.MOVERA_TEST_SIGNIN_CODE }}
+          TL_TEST: ${{ inputs.testlab_test }}
         run: |
           set -euo pipefail
           if ! printf '%s' "$DEVICE" | grep -Eq '^model=[A-Za-z0-9_.-]+,version=[0-9]+(,locale=[A-Za-z_]+)?(,orientation=(portrait|landscape))?$'; then
@@ -190,8 +199,21 @@ jobs:
           # sign-in code (secret MOVERA_TEST_SIGNIN_CODE, else the contract's
           # auth.testSignIn.code) checked as 4-8 digits. Every spelling is
           # masked first; values only in $RUNNER_TEMP/tl (mode 600), never printed.
-          python3 -I tool/testlab_summary.py driver "$RUNNER_TEMP/tl"
-          echo "ready=true" >> "$GITHUB_OUTPUT"
+          # trip-*: also ONE test rider (se.r35, else se.r36) -> rider_phone;
+          # both numbers' spellings are masked and listed for the scrub.
+          case "$TL_TEST" in
+            staging-checks) mode=driver; target=integration_test/staging_device_test.dart; tl_timeout=9m; scenario="" ;;
+            trip-lifecycle) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=20m; scenario=live ;;
+            trip-scheduled) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=20m; scenario=scheduled ;;
+            *) echo "::error::unknown testlab_test"; exit 1 ;;
+          esac
+          python3 -I tool/testlab_summary.py "$mode" "$RUNNER_TEMP/tl"
+          {
+            echo "ready=true"
+            echo "target=$target"
+            echo "tl_timeout=$tl_timeout"
+            echo "scenario=$scenario"
+          } >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v4
         if: steps.driver.outputs.ready == 'true'
         with:
@@ -205,6 +227,8 @@ jobs:
           cache: true
       - name: Build the app (live staging, test entry) and the androidTest APK
         if: steps.driver.outputs.ready == 'true'
+        env:
+          TARGET: ${{ steps.driver.outputs.target }}
         run: |
           set -euo pipefail
           if [ -z "${GOOGLE_MAPS_API_KEY:-}" ]; then
@@ -219,7 +243,7 @@ jobs:
           # Debug: Flutter's JUnit runner tests the debug variant. Same live
           # dart-defines as the test APK above; no test number in them.
           flutter build apk --debug \
-            -t integration_test/staging_device_test.dart \
+            -t "$TARGET" \
             --dart-define=MOVERA_AUTH_REQUIRED=true \
             --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
             --dart-define=MOVERA_APP_VERSION="$app_version" \
@@ -245,6 +269,9 @@ jobs:
         if: steps.driver.outputs.ready == 'true'
         env:
           RESULTS_BUCKET: ${{ vars.TESTLAB_RESULTS_BUCKET }}
+          TL_TIMEOUT: ${{ steps.driver.outputs.tl_timeout }}
+          SCENARIO: ${{ steps.driver.outputs.scenario }}
+          TL_TEST: ${{ inputs.testlab_test }}
         run: |
           set -uo pipefail
           device="$DEVICE"
@@ -254,18 +281,25 @@ jobs:
           bucket_flag=()
           if [ -n "${RESULTS_BUCKET:-}" ]; then bucket_flag=(--results-bucket "$RESULTS_BUCKET"); fi
           phone="$(cat "$RUNNER_TEMP/tl/phone")"; code="$(cat "$RUNNER_TEMP/tl/code")"
+          trip_vars=""
+          if [ -n "$SCENARIO" ]; then
+            # Checked by testlab_summary.py as + and 8-15 digits: no "~" or "=".
+            rider="$(cat "$RUNNER_TEMP/tl/rider_phone")"
+            trip_vars="~movera_tl_rider_phone=${rider}~movera_tl_scenario=${SCENARIO}"
+            unset rider
+          fi
           mkdir -p testlab-results
           # ^~^ = "~" separates the variables (gcloud topic escaping). They become
           # `am instrument -e` arguments, read by MainActivityTest at run time.
           gcloud firebase test android run --type instrumentation \
             --app out/app-debug.apk --test out/app-debug-androidTest.apk \
-            --device "$device" --timeout 9m --no-record-video --no-performance-metrics \
-            --results-history-name driver-device-checks --results-dir "$dir" "${bucket_flag[@]}" \
+            --device "$device" --timeout "$TL_TIMEOUT" --no-record-video --no-performance-metrics \
+            --results-history-name "driver-$TL_TEST" --results-dir "$dir" "${bucket_flag[@]}" \
             --directories-to-pull /sdcard/Android/data/se.movera.driver/files/tl \
-            --environment-variables "^~^movera_tl_phone=${phone}~movera_tl_code=${code}~movera_tl_shots=1" \
+            --environment-variables "^~^movera_tl_phone=${phone}~movera_tl_code=${code}~movera_tl_shots=1${trip_vars}" \
             --format=json > testlab-results/testlab.json 2> testlab-results/gcloud.txt
           rc=$?
-          unset phone code
+          unset phone code trip_vars
           echo "Test Lab exit code: $rc (0 = passed, 10 = a test failed, 15 = inconclusive)"
           bucket="${RESULTS_BUCKET:-}"
           if [ -z "$bucket" ]; then

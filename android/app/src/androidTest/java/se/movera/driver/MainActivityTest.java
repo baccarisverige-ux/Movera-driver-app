@@ -46,6 +46,9 @@ public class MainActivityTest {
   private static final String[][] ARGS = {
     {"movera_tl_phone", "MOVERA_TL_PHONE"},
     {"movera_tl_code", "MOVERA_TL_CODE"},
+    // Trip lifecycle test: the rider played over HTTP, and which scenario.
+    {"movera_tl_rider_phone", "MOVERA_TL_RIDER_PHONE"},
+    {"movera_tl_scenario", "MOVERA_TL_SCENARIO"},
     {"movera_tl_lat", "MOVERA_TL_LAT"},
     {"movera_tl_lng", "MOVERA_TL_LNG"},
     {"movera_tl_shots", "MOVERA_TL_SHOTS"},
@@ -99,9 +102,21 @@ public class MainActivityTest {
     }
 
     if (!"0".equals(args.getString("movera_tl_mock_location"))) {
-      double lat = parse(args.getString("movera_tl_lat"), DEFAULT_LAT);
-      double lng = parse(args.getString("movera_tl_lng"), DEFAULT_LNG);
-      startMockLocation(instrumentation, app, lat, lng);
+      targetLat = parse(args.getString("movera_tl_lat"), DEFAULT_LAT);
+      targetLng = parse(args.getString("movera_tl_lng"), DEFAULT_LNG);
+      // The Dart test moves the mock position at run time by writing
+      // "lat,lng" into this file (app-private; coordinates only).
+      File target = new File(app.getFilesDir(), "tl-mock-target");
+      if (target.exists() && !target.delete()) {
+        Log.w(TAG, "old mock target not removed");
+      }
+      targetFile = target;
+      try {
+        Os.setenv("MOVERA_TL_MOCK_FILE", target.getAbsolutePath(), true);
+      } catch (Exception e) {
+        Log.w(TAG, "no mock target file: " + e.getClass().getSimpleName());
+      }
+      startMockLocation(instrumentation, app);
     }
   }
 
@@ -132,8 +147,48 @@ public class MainActivityTest {
     }
   }
 
-  private static void startMockLocation(
-      Instrumentation instrumentation, Context app, double lat, double lng) {
+  // Where the mock fixes go now; moved by the Dart test through targetFile.
+  // No initializers: prepare() runs from the static block above, before
+  // field initializers further down, and an initializer here would reset
+  // what it set.
+  private static volatile double targetLat;
+
+  private static volatile double targetLng;
+
+  private static File targetFile;
+
+  private static long targetStamp;
+
+  /** Reads a new "lat,lng" from [targetFile] when it changed; bad text is ignored. */
+  private static void readTarget() {
+    File file = targetFile;
+    if (file == null || !file.exists()) return;
+    long stamp = file.lastModified() ^ file.length();
+    if (stamp == targetStamp) return;
+    targetStamp = stamp;
+    byte[] buffer = new byte[64];
+    int n;
+    try (InputStream in = new FileInputStream(file)) {
+      n = in.read(buffer);
+    } catch (IOException e) {
+      return;
+    }
+    if (n <= 0) return;
+    String[] parts = new String(buffer, 0, n, java.nio.charset.StandardCharsets.US_ASCII)
+        .trim().split(",");
+    if (parts.length != 2) return;
+    double lat = parse(parts[0], Double.NaN);
+    double lng = parse(parts[1], Double.NaN);
+    if (Double.isNaN(lat) || Double.isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return;
+    }
+    targetLat = lat;
+    targetLng = lng;
+    // Coordinates are not personal data; logged so a run shows the moves.
+    Log.i(TAG, "mock target moved");
+  }
+
+  private static void startMockLocation(Instrumentation instrumentation, Context app) {
     shell(instrumentation, "appops set " + app.getPackageName() + " android:mock_location allow");
     final LocationManager manager =
         (LocationManager) app.getSystemService(Context.LOCATION_SERVICE);
@@ -159,6 +214,9 @@ public class MainActivityTest {
         new Thread(
             () -> {
               while (true) {
+                readTarget();
+                final double lat = targetLat;
+                final double lng = targetLng;
                 for (String provider : providers) {
                   try {
                     manager.setTestProviderLocation(provider, fix(provider, lat, lng));

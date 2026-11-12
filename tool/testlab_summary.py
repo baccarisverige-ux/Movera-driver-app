@@ -12,6 +12,10 @@ Usage (from .github/workflows/android-test-apk.yml, plain Python 3):
       browser.SE.driver), normalise it to E.164, check number and code,
       ::add-mask:: every spelling, write OUT/phone, OUT/code, OUT/scrub
       (mode 600). Never prints a value; exit 1 on any problem.
+  TL_NUMBERS=<secret> TL_CODE=<secret> python3 -I tool/testlab_summary.py trip OUT
+      as `driver`, plus ONE big-test rider for the trip lifecycle test
+      (se.r35, else se.r36; never a base number), written to OUT/rider_phone;
+      every spelling of both numbers is masked and goes into OUT/scrub.
   TL_SCRUB="<value>\\n<value>" python3 tool/testlab_summary.py scrub DIR
       replace every listed value (phone number in any spelling: E.164,
       national, spaced, dashed, bracketed; sign-in code) with [REDACTED] in
@@ -63,6 +67,10 @@ CODE_RE = re.compile(r"^\d{4,8}$")
 # real phone by the owner) only as fallback: a new sign-in signs the other
 # phone out (one-phone rule, decisions/driver-g1.md).
 DRIVER_PATHS = (("se", "d38"), ("browser", "SE", "driver"))
+# The rider the trip lifecycle test plays over HTTP: a dedicated big-test
+# rider (r35 is d38's pair in the 5x5 screen runs). No base number: a new
+# sign-in would sign the owner's own phone out.
+RIDER_PATHS = (("se", "r35"), ("se", "r36"))
 
 
 class DriverError(Exception):
@@ -155,9 +163,9 @@ def parse_numbers(raw):
             % (len(raw), kind(raw[:1] or " "), kind(raw[-1:] or " "), getattr(err, "pos", "?")))
 
 
-def pick_driver(numbers):
-    """(E.164 number, path name) of ONE test driver; se.d38 first."""
-    for path in DRIVER_PATHS:
+def pick_driver(numbers, paths=DRIVER_PATHS, who="driver"):
+    """(E.164 number, path name) of ONE test account; the first path wins."""
+    for path in paths:
         value = numbers
         for key in path:
             value = value.get(key) if isinstance(value, dict) else None
@@ -166,7 +174,12 @@ def pick_driver(numbers):
             if not NUMBER_RE.match(e164):
                 raise DriverError("the %s entry is not a phone number (needs 8-15 digits)" % ".".join(path))
             return e164, ".".join(path)
-    raise DriverError("the MOVERA_TEST_NUMBERS secret has no se.d38 or browser.SE.driver entry")
+    raise DriverError("the MOVERA_TEST_NUMBERS secret has no %s entry (the test %s)"
+                      % (" or ".join(".".join(p) for p in paths), who))
+
+
+def pick_rider(numbers):
+    return pick_driver(numbers, RIDER_PATHS, "rider")
 
 
 def check_code(code):
@@ -262,11 +275,16 @@ def scrub_or_fail(root, secrets):
     return 0, "scrubbed %d file(s); re-scan clean" % changed
 
 
-def write_driver(out, env):
-    """The `driver` command; returns an exit code. Prints no value."""
+def write_driver(out, env, with_rider=False):
+    """The `driver` / `trip` command; returns an exit code. Prints no value."""
+    rider = rider_path = None
     try:
         numbers = parse_numbers(env.get("TL_NUMBERS", ""))
         e164, path = pick_driver(numbers)
+        if with_rider:
+            rider, rider_path = pick_rider(numbers)
+            if rider == e164:
+                raise DriverError("the rider and the driver entry are the same number")
         code = env.get("TL_CODE", "").strip()
         if not code:
             with open("contracts/contract.json", encoding="utf-8") as fh:
@@ -276,6 +294,8 @@ def write_driver(out, env):
         print("::error::" + str(err))
         return 1
     values = secret_values(e164, code)
+    if rider:
+        values += [f for f in display_forms(rider) if f not in values]
     for value in values:
         print("::add-mask::" + value)
     sys.stdout.flush()
@@ -287,8 +307,12 @@ def write_driver(out, env):
 
     write("phone", e164)
     write("code", code)
+    if rider:
+        write("rider_phone", rider)
     write("scrub", "\n".join(values) + "\n")
     print("test driver ready: %s (number and code masked)" % path)
+    if rider:
+        print("test rider ready: %s (number masked)" % rider_path)
     return 0
 
 
@@ -385,6 +409,54 @@ def crash_lines(root):
     return seen
 
 
+def transitions_from(root):
+    """Rows of the trip test's transitions.json (or its logcat line)."""
+    for path in sorted(glob.glob(os.path.join(root, "**", "transitions.json"), recursive=True)):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+            if isinstance(data, list):
+                return data
+        except (OSError, ValueError):
+            continue
+    marker = PREFIX + "TRANSITIONS-JSON "
+    for path in _logcat_files(root):
+        for line in _lines(path):
+            at = line.find(marker)
+            if at >= 0:
+                try:
+                    data = json.loads(line[at + len(marker):])
+                    if isinstance(data, list):
+                        return data
+                except ValueError:
+                    pass
+    return []
+
+
+def transitions_text(rows):
+    if not rows:
+        return []
+    out = ["", "### Screen changes (FAIL: a frame > 200 ms, > 20% missed frames with >= 10 frames, "
+           "a map created again, a full-screen loader or blank frame, a failed call or exception)", "",
+           "| Change | Frames | Missed | Worst ms | GET reads | Maps re-created | Loader/blank | Errors | Result |",
+           "|---|---|---|---|---|---|---|---|---|"]
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        bad = [k for k, v in (("FREEZE", not r.get("smooth", True)), ("RELOAD", r.get("reload")),
+                              ("ERRORS", r.get("errors"))) if v]
+        errors = list(r.get("failedCalls") or []) + list(r.get("exceptions") or [])
+        out.append("| %s | %s | %s | %s | %s | %s | %s/%s | %s | %s |" % (
+            str(r.get("name", "?")).replace("|", "/"), r.get("frames"), r.get("missed"), r.get("worstMs"),
+            r.get("gets"), ", ".join(r.get("recreatedMaps") or []) or "-", r.get("loaderSamples"),
+            r.get("blankSamples"), "; ".join(str(e) for e in errors).replace("|", "/")[:200] or "-",
+            "FAIL " + " ".join(bad) if bad else "PASS"))
+    build = next((r.get("build") for r in rows if isinstance(r, dict) and r.get("build")), None)
+    if build:
+        out += ["", "Frame numbers: %s." % build]
+    return out
+
+
 def summary_text(root):
     checks, source = checks_from(root)
     totals, failed_cases = junit_from(root)
@@ -403,6 +475,7 @@ def summary_text(root):
         out += ["", "(from %s)" % source]
     elif not skipped:
         out.append("NOT CHECKED: no check results found (the test did not start or its output was not pulled).")
+    out += transitions_text(transitions_from(root))
     out += ["", "JUnit: tests=%(tests)d failures=%(failures)d errors=%(errors)d skipped=%(skipped)d" % totals]
     if failed_cases:
         out.append("Failed JUnit cases: " + ", ".join(failed_cases))
@@ -415,12 +488,12 @@ def summary_text(root):
 
 
 def main(argv):
-    if len(argv) != 3 or argv[1] not in ("driver", "scrub", "summary"):
+    if len(argv) != 3 or argv[1] not in ("driver", "trip", "scrub", "summary"):
         print(__doc__)
         return 2
     root = argv[2]
-    if argv[1] == "driver":
-        return write_driver(root, os.environ)
+    if argv[1] in ("driver", "trip"):
+        return write_driver(root, os.environ, with_rider=argv[1] == "trip")
     if argv[1] == "scrub":
         secrets = os.environ.get("TL_SCRUB", "").splitlines()
         rc, message = scrub_or_fail(root, secrets)

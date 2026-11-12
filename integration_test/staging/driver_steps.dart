@@ -17,6 +17,10 @@ Finder byKey(String key) => find.byKey(ValueKey<String>(key));
 
 bool shows(Finder finder) => finder.evaluate().isNotEmpty;
 
+/// Called after every pump of [pumpUntil] (the trip test samples the
+/// screen there: blank frames, full-screen loaders). Null = nothing.
+void Function()? pumpProbe;
+
 /// Pumps until [done] or [timeout]; taps known one-off prompts meanwhile.
 Future<bool> pumpUntil(
   WidgetTester tester,
@@ -28,6 +32,7 @@ Future<bool> pumpUntil(
   final end = DateTime.now().add(timeout);
   while (DateTime.now().isBefore(end)) {
     await tester.pump(step);
+    pumpProbe?.call();
     if (done()) return true;
     if (dismiss) await dismissPrompts(tester);
   }

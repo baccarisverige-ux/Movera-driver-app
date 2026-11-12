@@ -76,6 +76,17 @@ class RecordingClient extends http.BaseClient {
     '/api/v1/driver/location',
   };
 
+  /// Kept too: the trip test's money and call checks (the preview the
+  /// cash screen shows, the server's answer to the app's own call, the
+  /// trip itself, the earnings report).
+  static bool keeps(String path) =>
+      kept.contains(path) ||
+      path == '/api/v1/driver/earnings' ||
+      path.endsWith('/complete-preview') ||
+      (path.startsWith('/api/v1/trips/') &&
+          (path.endsWith('/call') || path.endsWith('/rating'))) ||
+      path.startsWith('/api/v1/offers/');
+
   final Map<String, Object?> lastAnswer = <String, Object?>{};
 
   /// The session's `Authorization` header, in memory only (never logged),
@@ -120,7 +131,7 @@ class RecordingClient extends http.BaseClient {
     final type = response.headers['content-type'] ?? '';
     final keep =
         url.host == apiHost &&
-        kept.contains(url.path) &&
+        keeps(url.path) &&
         type.contains('json') &&
         (response.contentLength ?? 0) < 1 << 20;
     if (!keep) return response;

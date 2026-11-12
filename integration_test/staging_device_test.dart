@@ -1,22 +1,15 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
 import 'package:integration_test/integration_test.dart';
-import 'package:movera/core/auth/phone_country_default.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
-import 'package:movera/main.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 
 import 'staging/check_log.dart';
 import 'staging/driver_steps.dart';
-import 'staging/recording_client.dart';
+import 'staging/session.dart';
 
 /// Owner 2026-11-12 ("U need find problems! So whats the point of test"):
 /// a real-phone run of the LIVE staging build (Firebase Test Lab,
@@ -49,20 +42,10 @@ const Duration _settleAfterBack = Duration(seconds: 4);
 /// G24: how long the phone stays online before the server is asked.
 const Duration _onlineWindow = Duration(seconds: 35);
 
-/// Central Stockholm (zone Z001) unless the run names another point; the
-/// same default as MainActivityTest's mock position.
-const double _defaultLat = 59.3326;
-const double _defaultLng = 18.0649;
-
-String? _env(String name) {
-  final value = Platform.environment[name]?.trim();
-  return value == null || value.isEmpty ? null : value;
-}
-
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  final phone = _env('MOVERA_TL_PHONE');
-  final code = _env('MOVERA_TL_CODE');
+  final phone = tlEnv('MOVERA_TL_PHONE');
+  final code = tlEnv('MOVERA_TL_CODE');
   final live = DriverRuntimeConfig.current.authRequired;
 
   final String? skipReason = !live
@@ -84,8 +67,8 @@ void main() {
     (tester) async {
       final log = CheckLog(
         binding: binding,
-        outDir: _env('MOVERA_TL_OUT'),
-        shots: _env('MOVERA_TL_SHOTS') != '0',
+        outDir: tlEnv('MOVERA_TL_OUT'),
+        shots: tlEnv('MOVERA_TL_SHOTS') != '0',
       );
       final run = _Run(tester, log);
       try {
@@ -107,49 +90,12 @@ void main() {
   );
 }
 
-class _Run {
-  _Run(this.tester, this.log)
-    : base = DriverRuntimeConfig.current.apiBaseUri,
-      rec = RecordingClient(
-        http.Client(),
-        apiHost: DriverRuntimeConfig.current.apiBaseUri.host,
-      );
-
-  final WidgetTester tester;
-  final CheckLog log;
-  final Uri base;
-  final RecordingClient rec;
-  final http.Client _own = http.Client();
-
-  final double lat =
-      double.tryParse(_env('MOVERA_TL_LAT') ?? '') ?? _defaultLat;
-  final double lng =
-      double.tryParse(_env('MOVERA_TL_LNG') ?? '') ?? _defaultLng;
-
-  bool _online = false;
-
-  /// The same start as lib/main.dart (language and phone country), with
-  /// the recording client injected; the device's own GPS stack and token
-  /// store are used.
-  Future<void> start() async {
-    try {
-      await StartCountryHints.load().timeout(const Duration(seconds: 2));
-    } catch (_) {}
-    DriverLanguage.applyDevice(
-      phoneLanguage: deviceLanguage(),
-      startCountry: defaultPhoneCountry().iso,
-    );
-    DriverLanguage.followDevice(deviceLanguage);
-    try {
-      await DriverLanguage.restore().timeout(const Duration(seconds: 2));
-    } catch (_) {}
-    await tester.pumpWidget(MoveraApp(httpClient: rec));
-    await tester.pump();
-  }
+class _Run extends StagingSession {
+  _Run(super.tester, super.log);
 
   Future<void> all({required String phone, required String code}) async {
     log.step('sign in (server ${base.host})');
-    final signInError = await _guard(
+    final signInError = await guard(
       () => signIn(tester, phone: phone, code: code),
     );
     if (signInError != null) {
@@ -164,8 +110,8 @@ class _Run {
     await log.screenshot(tester, 'home-offline');
 
     try {
-      await _goOnline();
-      if (_online) {
+      await goOnline();
+      if (online) {
         await _checkLocation();
       } else {
         log.skip('G24', 'position sends', 'not run: not online');
@@ -176,107 +122,15 @@ class _Run {
       log.fail('RUN', 'checks ran to the end', 'stopped by $error');
       CheckLog.say('STACK ${stack.toString().split('\n').take(6).join(' | ')}');
     } finally {
-      await _goOfflineAtEnd();
+      await goOfflineAtEnd();
     }
   }
-
-  /// Runs [body]; an exception is a failure text, not a crash of the run.
-  Future<String?> _guard(Future<String?> Function() body) async {
-    try {
-      return await body();
-    } catch (error) {
-      return 'stopped by ${error.runtimeType}: $error';
-    }
-  }
-
-  Iterable<RecordedCall> _calls(String path, {String? method, int from = 0}) =>
-      rec
-          .since(from)
-          .where(
-            (c) => c.path == path && (method == null || c.method == method),
-          );
-
-  /// GET [path] with the app's own session, asked by the test itself.
-  Future<(int, Object?)> _ask(String path, [Map<String, String>? query]) async {
-    final auth = rec.authorization;
-    if (auth == null) return (0, null);
-    final uri = base.replace(path: path, queryParameters: query);
-    final response = await _own
-        .get(
-          uri,
-          headers: {
-            'Accept': 'application/json',
-            'X-Api-Version': '0.5',
-            'Authorization': auth,
-          },
-        )
-        .timeout(const Duration(seconds: 60));
-    Object? body;
-    try {
-      body = jsonDecode(response.body);
-    } catch (_) {}
-    return (response.statusCode, body);
-  }
-
-  Future<void> _goOnline() async {
-    log.step('go online');
-    final mark = rec.length;
-    if (!await tapGoOnline(tester)) {
-      log.fail('ONLINE', 'Go online is taken', 'no go-online control on Home');
-      return;
-    }
-    bool taken() =>
-        _calls('/api/v1/driver/availability', method: 'POST', from: mark).any(
-          (c) =>
-              _status(c.answer) == 'online' || _status(c.answer) == 'on_trip',
-        );
-    bool refused() =>
-        _calls(
-          '/api/v1/driver/availability',
-          method: 'POST',
-          from: mark,
-        ).any((c) => c.failed) ||
-        homeReasons().isNotEmpty;
-    await pumpUntil(
-      tester,
-      () => taken() || refused(),
-      timeout: const Duration(seconds: 120),
-    );
-    // A profile read that already says online also counts (no POST sent).
-    final profileOnline = _calls(
-      '/api/v1/driver/profile',
-      method: 'GET',
-      from: mark,
-    ).any((c) => _status(c.answer) == 'online');
-    if (taken() || profileOnline) {
-      _online = true;
-      log.pass('ONLINE', 'Go online is taken', 'server answered online');
-      await wait(tester, const Duration(seconds: 2));
-      await log.screenshot(tester, 'home-online');
-      return;
-    }
-    final posts = _calls(
-      '/api/v1/driver/availability',
-      method: 'POST',
-      from: mark,
-    ).toList();
-    log.fail(
-      'ONLINE',
-      'Go online is taken',
-      'availability calls=${posts.map((c) => c.status ?? c.error).toList()} '
-          'home reasons=${homeReasons()} '
-          '(no POST at all = the app had no fresh position: G24)',
-    );
-  }
-
-  static String? _status(Object? answer) =>
-      answer is Map ? answer['onlineStatus'] as String? : null;
 
   Future<void> _checkLocation() async {
     log.step('stay online ${_onlineWindow.inSeconds} s (G24)');
     final mark = rec.length;
     await wait(tester, _onlineWindow);
-    final sends = _calls(
+    final sends = calls(
       '/api/v1/driver/location',
       method: 'POST',
       from: mark,
@@ -295,7 +149,7 @@ class _Run {
         if (a['outsideArea'] == true) outside = true;
       }
     }
-    final (status, profile) = await _ask('/api/v1/driver/profile');
+    final (status, profile) = await ask('/api/v1/driver/profile');
     final lastFix = profile is Map
         ? DateTime.tryParse('${profile['lastFixAt']}')
         : null;
@@ -345,7 +199,7 @@ class _Run {
     log.step('safety screen (G17)');
     var zone = _zoneHere();
     if (zone == null) {
-      final (_, z) = await _ask('/api/v1/driver/zones');
+      final (_, z) = await ask('/api/v1/driver/zones');
       rec.lastAnswer['/api/v1/driver/zones'] = z;
       zone = _zoneHere();
     }
@@ -353,7 +207,7 @@ class _Run {
       log.fail('G17', title, 'no server zone holds the test position');
       return;
     }
-    final (status, config) = await _ask('/api/v1/driver/config', {
+    final (status, config) = await ask('/api/v1/driver/config', {
       'zoneId': zone,
     });
     final served = <String>[
@@ -361,7 +215,7 @@ class _Run {
         for (final row in config['emergencyNumbers'] as List)
           if (row is Map && row['number'] is String) row['number'] as String,
     ];
-    final askedZones = _calls(
+    final askedZones = calls(
       '/api/v1/driver/config',
       method: 'GET',
     ).map((c) => c.zoneId).toSet();
@@ -539,56 +393,5 @@ class _Run {
     await tester.tap(target.first, warnIfMissed: false);
     await tester.pump(const Duration(milliseconds: 600));
     return true;
-  }
-
-  Future<void> _goOfflineAtEnd() async {
-    if (!_online) {
-      // Go online may have thrown or timed out after the tap while the
-      // server did go online: ask the server, so the shared test driver is
-      // never left online on staging.
-      String? before;
-      try {
-        final (_, profile) = await _ask('/api/v1/driver/profile');
-        before = _status(profile);
-      } catch (_) {
-        before = null;
-      }
-      if (before != 'online' && before != 'on_trip') {
-        log.skip(
-          'OFFLINE',
-          'Go offline is taken',
-          'not online (server says ${before ?? 'unknown'})',
-        );
-        _own.close();
-        return;
-      }
-    }
-    log.step('go offline');
-    await backToHome(tester);
-    final mark = rec.length;
-    final held = await goOffline(tester);
-    await pumpUntil(
-      tester,
-      () => _calls(
-        '/api/v1/driver/availability',
-        method: 'POST',
-        from: mark,
-      ).any((c) => c.status != null || c.error != null),
-      timeout: const Duration(seconds: 60),
-    );
-    final (status, profile) = await _ask('/api/v1/driver/profile');
-    final now = _status(profile);
-    if (held && status == 200 && now == 'offline') {
-      log.pass('OFFLINE', 'Go offline is taken', 'server says offline');
-      await log.screenshot(tester, 'home-offline-end');
-    } else {
-      log.fail(
-        'OFFLINE',
-        'Go offline is taken',
-        'hold+confirm=$held profile=$status onlineStatus=$now '
-            '(the test driver may still be online on staging)',
-      );
-    }
-    _own.close();
   }
 }

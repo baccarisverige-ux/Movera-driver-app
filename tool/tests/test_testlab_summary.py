@@ -19,6 +19,8 @@ FAKE_CODE = '0000'
 # (national part starts with 0: no real Swedish number looks like this).
 FAKE_SPELLED = '+46000097531'
 FAKE_SPELLED_CODE = '9876'
+# Made-up rider number (national part starts with 0: not a real one).
+FAKE_RIDER = '+46000086420'
 
 
 class TestlabSummaryTest(unittest.TestCase):
@@ -198,7 +200,8 @@ class TestlabSummaryTest(unittest.TestCase):
         job = text.split('  device-checks:', 1)[1]
         self.assertIn('--type instrumentation', job)
         self.assertIn('--environment-variables', job)
-        self.assertIn('testlab_summary.py driver', job)
+        self.assertIn('testlab_summary.py "$mode"', job)
+        self.assertIn('mode=driver', job)
         tool = (pathlib.Path(__file__).resolve().parents[1] / 'testlab_summary.py').read_text()
         self.assertIn('::add-mask::', tool)
         self.assertIn('testlab_summary.py scrub', job)
@@ -211,7 +214,9 @@ class TestlabSummaryTest(unittest.TestCase):
         # a12: no "NAME=" literal of the secret in any workflow.
         self.assertNotIn('MOVERA_TEST_NUMBERS' + '=', text)
         self.assertIn('name: testlab-results', job)
-        self.assertIn('--timeout 9m', job)
+        self.assertIn('--timeout "$TL_TIMEOUT"', job)
+        self.assertIn('tl_timeout=9m', job)
+        self.assertIn('tl_timeout=20m', job)
         # The build lines carry no test number or code.
         build = job.split('flutter build apk --debug', 1)[1].split('mkdir -p out', 1)[0]
         self.assertNotIn('tl/phone', build)
@@ -219,6 +224,96 @@ class TestlabSummaryTest(unittest.TestCase):
         on = text.split('jobs:', 1)[0]
         self.assertNotIn('pull_request', on)
         self.assertNotIn('push:', on)
+
+    def _trip(self, numbers, code=FAKE_SPELLED_CODE):
+        out = tempfile.TemporaryDirectory()
+        self.addCleanup(out.cleanup)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = testlab_summary.write_driver(out.name, {'TL_NUMBERS': numbers, 'TL_CODE': code},
+                                              with_rider=True)
+        return rc, buf.getvalue(), pathlib.Path(out.name)
+
+    def test_trip_picks_big_test_rider_and_masks_every_spelling(self):
+        doc = json.dumps({'browser': {'SE': {'rider': FAKE_PHONE, 'driver': FAKE_PHONE}},
+                          'se': {'d38': FAKE_SPELLED, 'r35': '+46 00-008 64 20', 'r36': FAKE_PHONE}})
+        rc, printed, out = self._trip(doc)
+        self.assertEqual(rc, 0, printed)
+        self.assertEqual((out / 'rider_phone').read_text(), FAKE_RIDER)
+        self.assertEqual((out / 'phone').read_text(), FAKE_SPELLED)
+        self.assertIn('se.r35', printed)
+        scrub = (out / 'scrub').read_text().splitlines()
+        for f in ('+46 00 008 64 20', '000-008 64 20', '0000086420', FAKE_RIDER, '+46 00 009 75 31'):
+            self.assertIn(f, scrub)
+        masked = [l[len('::add-mask::'):] for l in printed.splitlines() if l.startswith('::add-mask::')]
+        self.assertEqual(sorted(masked), sorted(scrub))
+        for line in printed.splitlines():
+            if not line.startswith('::add-mask::'):
+                digits = ''.join(c for c in line if c.isdigit())
+                self.assertNotIn('86420', digits)
+                self.assertNotIn('97531', digits)
+
+    def test_trip_rider_fallback_and_never_a_base_number(self):
+        rc, printed, out = self._trip(json.dumps({'se': {'d38': FAKE_SPELLED, 'r36': FAKE_RIDER}}))
+        self.assertEqual(rc, 0, printed)
+        self.assertIn('se.r36', printed)
+        rc, printed, out = self._trip(json.dumps(
+            {'se': {'d38': FAKE_SPELLED}, 'browser': {'SE': {'rider': FAKE_RIDER}}}))
+        self.assertEqual(rc, 1)
+        self.assertIn('no se.r35 or se.r36 entry', printed)
+        self.assertNotIn('::add-mask::', printed)
+        self.assertFalse((out / 'rider_phone').exists())
+        rc, printed, _ = self._trip(json.dumps({'se': {'d38': FAKE_SPELLED, 'r35': FAKE_SPELLED}}))
+        self.assertEqual(rc, 1)
+        self.assertIn('same number', printed)
+        self.assertNotIn('97531', printed)
+
+    def test_scrub_removes_rider_spellings_and_fails_safe_on_leftover(self):
+        self.logcat.write_text('E flutter : rider +46 00 008 64 20 / 000-008 64 20 / %s\n' % FAKE_RIDER)
+        values = testlab_summary.secret_values(FAKE_SPELLED, FAKE_SPELLED_CODE) + \
+            testlab_summary.display_forms(FAKE_RIDER)
+        rc, message = testlab_summary.scrub_or_fail(str(self.root), values)
+        self.assertEqual(rc, 0, message)
+        self.assertNotIn('86420', ''.join(c for c in self.logcat.read_text() if c.isdigit()))
+        self.shot.write_bytes(b'\x89PNG\0\0' + FAKE_RIDER.encode())
+        rc, _ = testlab_summary.scrub_or_fail(str(self.root), values)
+        self.assertEqual(rc, 1)
+        self.assertFalse(self.root.exists())
+
+    def test_summary_shows_transitions_table(self):
+        rows = [
+            {'name': 'offer->trip', 'frames': 40, 'missed': 2, 'worstMs': 31.5, 'gets': 3,
+             'recreatedMaps': [], 'loaderSamples': 0, 'blankSamples': 0, 'failedCalls': [],
+             'exceptions': [], 'smooth': True, 'reload': False, 'errors': False,
+             'build': 'debug build, indicative'},
+            {'name': 'done->home', 'frames': 12, 'missed': 9, 'worstMs': 250.0, 'gets': 6,
+             'recreatedMaps': ['home (Home came back with a new map)'], 'loaderSamples': 1,
+             'blankSamples': 0, 'failedCalls': ['GET /api/v1/x -> 500'], 'exceptions': [],
+             'smooth': False, 'reload': True, 'errors': True, 'build': 'debug build, indicative'},
+        ]
+        (self.root / 'transitions.json').write_text(json.dumps(rows))
+        text = testlab_summary.summary_text(str(self.root))
+        self.assertIn('### Screen changes', text)
+        self.assertIn('| offer->trip | 40 | 2 | 31.5 | 3 | - | 0/0 | - | PASS |', text)
+        self.assertIn('FAIL FREEZE RELOAD ERRORS', text)
+        self.assertIn('debug build, indicative', text)
+        (self.root / 'transitions.json').unlink()
+        self.logcat.write_text('I flutter : MOVERA-TL TRANSITIONS-JSON %s\n' % json.dumps(rows[:1]))
+        self.assertIn('| offer->trip |', testlab_summary.summary_text(str(self.root)))
+
+    def test_workflow_trip_passes_rider_only_at_run_time(self):
+        workflow = pathlib.Path(__file__).resolve().parents[2] / '.github/workflows/android-test-apk.yml'
+        job = workflow.read_text().split('  device-checks:', 1)[1]
+        self.assertIn('- trip-lifecycle', workflow.read_text())
+        self.assertIn('- trip-scheduled', workflow.read_text())
+        self.assertIn('testlab_summary.py "$mode"', job)
+        self.assertIn('movera_tl_rider_phone=${rider}', job)
+        self.assertIn('integration_test/trip_lifecycle_test.dart', job)
+        build = job.split('flutter build apk --debug', 1)[1].split('mkdir -p out', 1)[0]
+        self.assertNotIn('rider_phone', build)
+        java = (pathlib.Path(__file__).resolve().parents[2] /
+                'android/app/src/androidTest/java/se/movera/driver/MainActivityTest.java').read_text()
+        self.assertIn('{"movera_tl_rider_phone", "MOVERA_TL_RIDER_PHONE"}', java)
 
 
 if __name__ == '__main__':
