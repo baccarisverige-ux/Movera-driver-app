@@ -291,6 +291,10 @@ jobs:
           mkdir -p testlab-results
           # ^~^ = "~" separates the variables (gcloud topic escaping). They become
           # `am instrument -e` arguments, read by MainActivityTest at run time.
+          # bash -e is the default shell: without +e a failing test (exit 10) would end
+          # this step before rc, bucket and dir are written, and the results would never
+          # be downloaded (seen in run 43245270538).
+          set +e
           gcloud firebase test android run --type instrumentation \
             --app out/app-debug.apk --test out/app-debug-androidTest.apk \
             --device "$device" --timeout "$TL_TIMEOUT" --no-record-video --no-performance-metrics \
@@ -335,6 +339,11 @@ jobs:
           fi
           TL_SCRUB="$(cat "$RUNNER_TEMP/tl/scrub")" python3 -I tool/testlab_summary.py scrub testlab-results
           python3 -I tool/testlab_summary.py summary testlab-results
+          # Test Lab's own verdict lines (already scrubbed above).
+          if [ -f testlab-results/gcloud.txt ]; then
+            echo "Test Lab output (scrubbed):"
+            { grep -iE 'outcome|passed|failed|inconclusive|error|crash|timed out|test details' testlab-results/gcloud.txt | tail -25; } && echo '(end)' || echo '(no verdict lines)'
+          fi
       - name: Remove the test driver file
         if: always()
         run: rm -rf "$RUNNER_TEMP/tl"
