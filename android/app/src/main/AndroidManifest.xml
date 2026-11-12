@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- G24 (Pixel 8 logcat 2026-11-12): the location service holds a partial
+         wake lock (ForegroundNotificationConfig.enableWakeLock); without this
+         going online threw SecurityException and no position went out. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Ride check "Record audio": the recording stays on this phone. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- v0.18.38 §62 (fix job 8): in-app calls (WebRTC audio, speaker switch). -->
