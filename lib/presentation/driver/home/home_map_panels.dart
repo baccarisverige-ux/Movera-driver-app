@@ -175,7 +175,11 @@ extension _HomeMapPanels on _DriverHomeState {
     // opens; the driver can go offline after that (driver-u131: the
     // island's long press reaches here with an Exclusive Accept out).
     if (_HomeOfferRules(this)._claimInFlight) {
-      IslandMessages.show(HomeIslandNotices.matching);
+      IslandMessages.show(
+        HomeIslandNotices.matching.forRide(
+          _HomeOfferRules(this)._claimInFlightId,
+        ),
+      );
       return;
     }
     if (!await showGoOfflineConfirm(context)) {

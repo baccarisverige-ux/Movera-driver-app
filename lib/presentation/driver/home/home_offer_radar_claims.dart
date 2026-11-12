@@ -233,7 +233,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
         reason == _RadarOfferGone.takenElsewhere) {
       IslandMessages.show(HomeIslandNotices.takenByOther.forRide(offer.id));
     } else if (wasMatching || wasFront) {
-      _showTripUnavailableUnlessOfferedAgain(offer.tripId);
+      _showTripUnavailableUnlessOfferedAgain(offer.id, offer.tripId);
     }
 
     // Each lost offer leaves on its own timer: two lost together both go.
@@ -391,15 +391,16 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
   /// again every round (the old offer leaves, a new one comes at once), and
   /// an admin exclusive replaces the automatic offer. That is not "Trip not
   /// available": the island says so only when no offer for the trip came
-  /// back within a moment.
-  void _showTripUnavailableUnlessOfferedAgain(String? tripId) {
+  /// back within a moment. Tagged with the gone [offerId] so it replaces
+  /// that offer's own "Matching…" at once (owner "Keep both" rule).
+  void _showTripUnavailableUnlessOfferedAgain(String offerId, String? tripId) {
     if (tripId == null) {
-      IslandMessages.show(HomeIslandNotices.tripUnavailable);
+      IslandMessages.show(HomeIslandNotices.tripUnavailable.forRide(offerId));
       return;
     }
     Timer(const Duration(milliseconds: 1500), () {
       if (!mounted || !_isOnline || _hasOfferForTrip(tripId)) return;
-      IslandMessages.show(HomeIslandNotices.tripUnavailable);
+      IslandMessages.show(HomeIslandNotices.tripUnavailable.forRide(offerId));
     });
   }
 
@@ -432,7 +433,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
       if (taken) {
         IslandMessages.show(HomeIslandNotices.takenByOther.forRide(up.id));
       } else {
-        _showTripUnavailableUnlessOfferedAgain(gone.tripId);
+        _showTripUnavailableUnlessOfferedAgain(up.id, gone.tripId);
       }
       _dismissOutsideRadarOffer();
       return;
