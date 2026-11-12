@@ -212,8 +212,11 @@ jobs:
           # both numbers' spellings are masked and listed for the scrub.
           case "$TL_TEST" in
             staging-checks) mode=driver; target=integration_test/staging_device_test.dart; tl_timeout=9m; scenario="" ;;
-            trip-lifecycle) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=20m; scenario=live ;;
-            trip-scheduled) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=20m; scenario=scheduled ;;
+            # trip-*: Test Lab's 25m must always come after the test's own
+            # stops (run 6): hard stop 15m -> watchdog 15m45s -> clean-up done
+            # ~17m30s -> test timeout 18m -> Test Lab 25m (install/start ~1m).
+            trip-lifecycle) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=live ;;
+            trip-scheduled) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=scheduled ;;
             *) echo "::error::unknown testlab_test"; exit 1 ;;
           esac
           python3 -I tool/testlab_summary.py "$mode" "$RUNNER_TEMP/tl"
@@ -366,13 +369,16 @@ jobs:
           path: testlab-results/
           retention-days: 7
           if-no-files-found: warn
+      # Run 6 (2026-11-12) false pass: gcloud exit 0 and "Passed" while the
+      # test hung and JUnit had 0 tests. The verdict reads the SCRUBBED
+      # results (this step runs only after the scrub step passed and the
+      # upload) and fails on: exit != 0, JUnit 0 tests, no END / SUMMARY-JSON
+      # line (unless SKIP), any CHECK FAIL, "Test timed out after",
+      # "non-retryable error", testlab.json outcome != Passed.
       - name: Result
         if: steps.driver.outputs.ready == 'true'
         env:
           RC: ${{ steps.run.outputs.rc }}
         run: |
-          if [ "${RC:-1}" != "0" ]; then
-            echo "::error::Device checks did not pass on Test Lab (exit ${RC:-none}); see the summary above and the testlab-results artifact."
-            exit 1
-          fi
-          echo "Device checks passed on Test Lab."
+          set -euo pipefail
+          python3 -I tool/testlab_summary.py verdict testlab-results

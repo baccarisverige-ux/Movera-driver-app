@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -87,19 +88,47 @@ class TripRun extends StagingSession {
 
   /// Every step stops here (supervisor 2026-11-12): no new step starts and
   /// the running one ends within seconds ([stepsHardStop]); CLEANUP and
-  /// OFFLINE then run in the time left before the test's own limit
-  /// ([testLimit], above this plus [cleanupBudget]) and Test Lab's 20 min.
+  /// OFFLINE then run in the time left before the test's own limit.
+  ///
+  /// The order of the stops (run 6, 2026-11-12), counted from [startedAt]:
+  /// hard stop 15 min ([hardAfter]) -> watchdog 15 min 45 s ([watchAfter],
+  /// only when a pump never returned) -> clean-up done by about 17 min 30 s
+  /// ([cleanupBudget], cut 1 min 20 s before [testLimit]) -> the test's own
+  /// timeout 18 min ([testLimit]) -> Test Lab's --timeout 25 min
+  /// (android-test-apk.yml `tl_timeout`, which also counts install and
+  /// start, ~1 min).
   late final DateTime hardDeadline = startedAt.add(hardAfter);
 
   static const Duration softAfter = Duration(minutes: 13);
   static const Duration hardAfter = Duration(minutes: 15);
 
+  /// Run 6: a `tester.pump` that never returns cannot see [stepsHardStop].
+  /// At this point, when the steps have not ended, a plain [Timer] (no
+  /// pump) writes `CHECK RUN FAIL hung`, closes the booked trips over HTTP,
+  /// sets the driver offline through the API, and writes the results and
+  /// the END line ([_hung]).
+  static const Duration watchAfter = Duration(minutes: 15, seconds: 45);
+
   /// The most CLEANUP + OFFLINE may take after [hardDeadline].
   static const Duration cleanupBudget = Duration(minutes: 2, seconds: 30);
 
   /// The test's own timeout (trip_lifecycle_test.dart): hard stop + clean-up
-  /// + room, under Test Lab's 20 min (which also counts install and start).
+  /// + room, well under Test Lab's 25 min (which also counts install and
+  /// start).
   static const Duration testLimit = Duration(minutes: 18);
+
+  /// The steps are over (the `finally` of [all] began): the watchdog then
+  /// does nothing.
+  bool stepsDone = false;
+
+  /// CLEANUP + OFFLINE ran (or are running) once: from [all]'s `finally`
+  /// or from the watchdog, never both.
+  bool cleanedUp = false;
+
+  bool _written = false;
+
+  /// The step that is running (for the `hung` line).
+  String currentStep = 'start';
 
   bool get late => DateTime.now().isAfter(softDeadline);
 
@@ -127,6 +156,7 @@ class TripRun extends StagingSession {
       return log.skip(id, title, 'not run: hard time limit (clean-up next)');
     }
     log.step(id);
+    currentStep = id;
     CheckLog.missed = null;
     try {
       await body();
@@ -183,11 +213,18 @@ class TripRun extends StagingSession {
     required String riderPhone,
   }) async {
     stepsHardStop = hardDeadline;
+    final watchdog = Timer(
+      startedAt.add(watchAfter).difference(DateTime.now()),
+      () => unawaited(_hung()),
+    );
     log.step('sign in (server ${base.host})');
+    currentStep = 'SIGN-IN';
     final signInError = await guard(
       () => signIn(tester, phone: phone, code: code),
     );
     if (signInError != null) {
+      stepsDone = true;
+      watchdog.cancel();
       log.fail('SIGN-IN', 'test driver reaches Home', signInError);
       log.skip('TRIP', 'trip lifecycle', 'not run: sign-in failed');
       stepsHardStop = null;
@@ -229,6 +266,8 @@ class TripRun extends StagingSession {
       // The steps are over (or stopped at the hard limit): the clean-up
       // may pump again, and goes offline through the API when the time
       // left is short.
+      stepsDone = true;
+      watchdog.cancel();
       stepsHardStop = null;
       if (stopped) {
         CheckLog.say(
@@ -246,12 +285,64 @@ class TripRun extends StagingSession {
       var cleanupEnd = DateTime.now().add(TripRun.cleanupBudget);
       final latest = testEnd.subtract(const Duration(minutes: 1));
       if (latest.isBefore(cleanupEnd)) cleanupEnd = latest;
-      await _cleanup(until: cleanupEnd);
-      final short =
-          testEnd.difference(DateTime.now()) < const Duration(minutes: 2);
-      await goOfflineAtEnd(apiOnly: short);
-      rider.close();
+      if (!cleanedUp) {
+        cleanedUp = true;
+        await _cleanup(until: cleanupEnd);
+        final short =
+            testEnd.difference(DateTime.now()) < const Duration(minutes: 2);
+        await goOfflineAtEnd(apiOnly: short);
+        rider.close();
+      }
     }
+  }
+
+  /// The watchdog ([watchAfter]): no pump here, HTTP only, so it runs
+  /// while the test is stuck in a `tester.pump` that never returns.
+  Future<void> _hung() async {
+    if (stepsDone || cleanedUp) return;
+    cleanedUp = true;
+    log.fail(
+      'RUN',
+      'hung',
+      'no pump returned in $currentStep (watchdog at '
+          '${watchAfter.inMinutes} min ${watchAfter.inSeconds % 60} s)',
+    );
+    try {
+      final until = DateTime.now().add(const Duration(minutes: 1));
+      await _closeTrips(until: until).timeout(
+        const Duration(seconds: 75),
+        onTimeout: () => log.fail(
+          'CLEANUP',
+          'no open test trip is left',
+          'watchdog: trips not closed in 75 s',
+        ),
+      );
+      await goOfflineAtEnd(apiOnly: true).timeout(
+        const Duration(seconds: 45),
+        onTimeout: () => log.fail(
+          'OFFLINE',
+          'Go offline is taken',
+          'watchdog: offline through the API took over 45 s',
+        ),
+      );
+    } catch (error) {
+      log.fail('RUN', 'watchdog clean-up', 'stopped by ${error.runtimeType}');
+    } finally {
+      rider.close();
+      await writeResults();
+    }
+  }
+
+  /// summary.json / SUMMARY / SUMMARY-JSON / transitions, then the END
+  /// line; once only (the test's `finally` and the watchdog both call it).
+  Future<void> writeResults() async {
+    if (_written) return;
+    _written = true;
+    await log.write(
+      requestLog: [for (final c in rec.calls) '$c'],
+      extra: {'transitions': watch.rows},
+    );
+    log.end();
   }
 
   /// The trip from "on the way to the pickup" to the end, the same for a

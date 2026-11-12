@@ -25,8 +25,18 @@ Usage (from .github/workflows/android-test-apk.yml, plain Python 3):
       never from the command line.
   python3 tool/testlab_summary.py summary DIR
       print passed/failed per check, JUnit totals and crash lines from
-      logcat; also into $GITHUB_STEP_SUMMARY when set. Exit 0 (the Test Lab
-      outcome decides the job).
+      logcat; also into $GITHUB_STEP_SUMMARY when set. Exit 0 (the
+      `verdict` below decides the job).
+  RC=<gcloud exit code> python3 -I tool/testlab_summary.py verdict DIR
+      the job's pass/fail, run on the SCRUBBED results after the upload.
+      Run 6 (2026-11-12) was a false pass: gcloud exit 0 and Test Lab
+      "Passed" while the test hung, timed out, and JUnit had 0 tests. So
+      exit 1 with one ::error:: per reason when ANY of: RC is not 0; JUnit
+      has 0 tests; no "MOVERA-TL END" line, or no SUMMARY-JSON line and no
+      summary.json (unless a "MOVERA-TL SKIP" line explains it); any
+      "MOVERA-TL CHECK <id> FAIL" line; logcat has "Test timed out after";
+      gcloud.txt has "non-retryable error"; the testlab.json outcome is not
+      "Passed". Prints no value (check ids only; the files are scrubbed).
 """
 import glob
 import json
@@ -502,8 +512,79 @@ def summary_text(root):
     return "\n".join(out) + "\n"
 
 
+_CHECK_FAIL_RE = re.compile(re.escape(PREFIX) + r"CHECK (\S+) FAIL\b")
+
+
+def _logcat_has(root, needle):
+    return any(needle in line for path in _logcat_files(root) for line in _lines(path))
+
+
+def _outcomes(root):
+    """Every `outcome` in testlab.json (gcloud --format=json); [] = none."""
+    out = []
+    for path in glob.glob(os.path.join(root, "**", "testlab.json"), recursive=True):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        rows = data if isinstance(data, list) else [data]
+        out += [str(r.get("outcome")) for r in rows if isinstance(r, dict) and "outcome" in r]
+    return out
+
+
+def verdict_reasons(root, rc):
+    """Why the device run did NOT pass; [] = passed. Never a value."""
+    reasons = []
+    if str(rc).strip() != "0":
+        reasons.append("Test Lab exit code %s (0 = passed, 10 = a test failed, 15 = inconclusive)"
+                       % (str(rc).strip() or "missing"))
+    totals, _ = junit_from(root)
+    if totals["tests"] == 0:
+        reasons.append("JUnit has 0 tests: the test never reported (timed out or hung; run 6)")
+    skipped = skipped_from(root)
+    if not skipped:
+        if not _logcat_has(root, PREFIX + "END "):
+            reasons.append("no MOVERA-TL END line: the test did not reach its end (results, clean-up, offline)")
+        has_json = bool(glob.glob(os.path.join(root, "**", "summary.json"), recursive=True))
+        if not has_json and not _logcat_has(root, PREFIX + "SUMMARY-JSON "):
+            reasons.append("no SUMMARY-JSON line and no summary.json: the check results were never written")
+    failed = []
+    for path in _logcat_files(root):
+        for line in _lines(path):
+            m = _CHECK_FAIL_RE.search(line)
+            if m and m.group(1) not in failed:
+                failed.append(m.group(1))
+    if failed:
+        reasons.append("%d check(s) FAIL: %s" % (len(failed), ", ".join(failed[:20])))
+    if _logcat_has(root, "Test timed out after"):
+        reasons.append("logcat: \"Test timed out after\" (the test's own time limit ended it)")
+    gcloud = os.path.join(root, "gcloud.txt")
+    if os.path.isfile(gcloud) and any("non-retryable error" in line for line in _lines(gcloud)):
+        reasons.append("gcloud.txt: \"non-retryable error\" (Test Lab had a problem with the run)")
+    outcomes = _outcomes(root)
+    if not outcomes:
+        reasons.append("testlab.json: no outcome (missing or not readable)")
+    elif any(o != "Passed" for o in outcomes):
+        reasons.append("testlab.json outcome: %s (not Passed)" % ", ".join(sorted(set(outcomes))))
+    return reasons
+
+
+def verdict(root, rc):
+    """The `verdict` command; returns an exit code."""
+    reasons = verdict_reasons(root, rc)
+    for reason in reasons:
+        print("::error::Device checks did not pass: " + reason)
+    if reasons:
+        print("Device checks FAILED (%d reason(s)); see the summary above and the "
+              "testlab-results artifact." % len(reasons))
+        return 1
+    print("Device checks passed on Test Lab (exit 0, JUnit tests, END line, no FAIL, outcome Passed).")
+    return 0
+
+
 def main(argv):
-    if len(argv) != 3 or argv[1] not in ("driver", "trip", "scrub", "summary"):
+    if len(argv) != 3 or argv[1] not in ("driver", "trip", "scrub", "summary", "verdict"):
         print(__doc__)
         return 2
     root = argv[2]
@@ -514,6 +595,8 @@ def main(argv):
         rc, message = scrub_or_fail(root, secrets)
         print(message)
         return rc
+    if argv[1] == "verdict":
+        return verdict(root, os.environ.get("RC", ""))
     text = summary_text(root)
     print(text)
     step = os.environ.get("GITHUB_STEP_SUMMARY")

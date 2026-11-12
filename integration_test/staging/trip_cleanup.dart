@@ -7,6 +7,13 @@ extension _TripCleanup on TripRun {
   /// [until]: the clean-up's own time box (the run's hard limit has
   /// passed or the steps are over); each server call is cut at it.
   Future<void> _cleanup({required DateTime until}) async {
+    await _closeTrips(until: until);
+    await _backHome(until: until);
+  }
+
+  /// The HTTP-only half of the clean-up (no pump): the run 6 watchdog
+  /// ([TripRun.watchAfter]) runs it when a pump never returned.
+  Future<void> _closeTrips({required DateTime until}) async {
     const title = 'no open test trip is left';
     Future<ApiAnswer> boxed(Future<ApiAnswer> call) {
       var left = until.difference(DateTime.now());
@@ -61,6 +68,9 @@ extension _TripCleanup on TripRun {
           ? log.pass('CLEANUP', title, lines.join('; '))
           : log.fail('CLEANUP', title, lines.join('; '));
     }
+  }
+
+  Future<void> _backHome({required DateTime until}) async {
     // Back to Home through whatever the trip left on screen.
     for (final key in const [
       'trip-outcome-acknowledge',

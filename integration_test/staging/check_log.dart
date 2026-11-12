@@ -93,6 +93,24 @@ class CheckLog {
   List<CheckResult> get failures =>
       results.where((r) => r.outcome == CheckOutcome.fail).toList();
 
+  /// The run's last line, written only after [write] (run 6: no END line =
+  /// the test never reached its end; tool/testlab_summary.py `verdict`
+  /// fails the run then). cleanup/offline: the last CLEANUP / OFFLINE
+  /// line's outcome, `none` when there was none.
+  void end() {
+    String last(String id) {
+      for (final r in results.reversed) {
+        if (r.id == id) return r.outcome.name;
+      }
+      return 'none';
+    }
+
+    say(
+      'END checks=${results.length} failed=${failures.length} '
+      'cleanup=${last('CLEANUP')} offline=${last('OFFLINE')}',
+    );
+  }
+
   /// A PNG of the screen into the output folder. Never call it on a
   /// screen that shows the phone number (sign-in, code, profile).
   Future<void> screenshot(WidgetTester tester, String name) async {

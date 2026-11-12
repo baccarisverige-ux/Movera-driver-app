@@ -228,7 +228,7 @@ class TestlabSummaryTest(unittest.TestCase):
         self.assertIn('name: testlab-results', job)
         self.assertIn('--timeout "$TL_TIMEOUT"', job)
         self.assertIn('tl_timeout=9m', job)
-        self.assertIn('tl_timeout=20m', job)
+        self.assertIn('tl_timeout=25m', job)  # run 6: Test Lab after the test's own 18m
         # The build lines carry no test number or code.
         build = job.split('flutter build apk --debug', 1)[1].split('mkdir -p out', 1)[0]
         self.assertNotIn('tl/phone', build)
@@ -339,6 +339,138 @@ class TestlabSummaryTest(unittest.TestCase):
                 'android/app/src/androidTest/java/se/movera/driver/MainActivityTest.java').read_text()
         self.assertIn('{"movera_tl_rider_phone", "MOVERA_TL_RIDER_PHONE"}', java)
 
+    # --- verdict (run 6, 2026-11-12: a FALSE PASS) -------------------------
+
+    def _run_dir(self, logcat_lines, junit_tests, gcloud='', outcome='Passed', summary_json=False):
+        """A results folder in the shape Test Lab + the workflow leave it."""
+        run = tempfile.TemporaryDirectory()
+        self.addCleanup(run.cleanup)
+        root = pathlib.Path(run.name)
+        device = root / '43292982501-1' / 'oriole-33-en_US-portrait'
+        device.mkdir(parents=True)
+        (device / 'logcat').write_text('\n'.join(logcat_lines) + '\n')
+        cases = ''.join('<testcase name="t%d"/>' % i for i in range(junit_tests))
+        (device / 'test_result_1.xml').write_text(
+            '<testsuites><testsuite name="" tests="%d" failures="0" errors="0" skipped="0">%s'
+            '</testsuite></testsuites>' % (junit_tests, cases))
+        if summary_json:
+            (device / 'summary.json').write_text('[]')
+        (root / 'gcloud.txt').write_text(gcloud)
+        (root / 'testlab.json').write_text(json.dumps([
+            {'axis_value': 'oriole-33-en_US-portrait', 'outcome': outcome, 'test_details': '--'}]))
+        return root
+
+    RUN6_LOGCAT = [
+        'I flutter : MOVERA-TL CHECK SIGN-IN PASS test driver reaches Home: Home is open',
+        'I flutter : MOVERA-TL CHECK TRANSITION:home->offer:SMOOTH FAIL frames: worst 210 ms',
+        'I flutter : MOVERA-TL CHECK TRANSITION:offer->trip:SMOOTH FAIL frames: worst 593 ms',
+        'I flutter : MOVERA-TL CHECK TRANSITION:menu-back-1:SMOOTH PASS frames ok',
+        'I flutter : 18:00 +0: trip lifecycle [E]  TimeoutException after 0:18:00.000000: '
+        'Test timed out after 18 minutes.',
+        'I TestRunner: run finished: 0 tests, 0 failed, 0 ignored',
+    ]
+    RUN6_GCLOUD = ('Test is Running\nStarting attempt 1.\nA non-retryable error occurred.\n'
+                   'Test is Pending\nInstrumentation testing complete.\n')
+
+    def test_verdict_fails_run6_false_pass_with_one_error_per_reason(self):
+        root = self._run_dir(self.RUN6_LOGCAT, 0, gcloud=self.RUN6_GCLOUD)
+        # The old Result step looked only at the gcloud exit code: run 6 had 0.
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = testlab_summary.verdict(str(root), '0')
+        self.assertEqual(rc, 1)
+        errors = [l for l in out.getvalue().splitlines() if l.startswith('::error::')]
+        text = '\n'.join(errors)
+        self.assertIn('JUnit has 0 tests', text)
+        self.assertIn('no MOVERA-TL END line', text)
+        self.assertIn('no SUMMARY-JSON line', text)
+        self.assertIn('TRANSITION:home->offer:SMOOTH', text)
+        self.assertIn('TRANSITION:offer->trip:SMOOTH', text)
+        self.assertNotIn('menu-back-1', text)
+        self.assertIn('Test timed out after', text)
+        self.assertIn('non-retryable error', text)
+        self.assertNotIn('exit code', text)
+        self.assertNotIn('outcome', text)
+        self.assertEqual(len(errors), 6)
+
+    def test_verdict_main_reads_rc_from_env_and_fails_run6(self):
+        root = self._run_dir(self.RUN6_LOGCAT, 0, gcloud=self.RUN6_GCLOUD)
+        with unittest.mock.patch.dict(os.environ, {'RC': '0'}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(testlab_summary.main(['x', 'verdict', str(root)]), 1)
+
+    GOOD_LOGCAT = [
+        'I flutter : MOVERA-TL CHECK SIGN-IN PASS test driver reaches Home: Home is open',
+        'I flutter : MOVERA-TL CHECK OFFLINE PASS Go offline is taken: server says offline',
+        'I flutter : MOVERA-TL SUMMARY passed=2 failed=0 skipped=0',
+        'I flutter : MOVERA-TL SUMMARY-JSON []',
+        'I flutter : MOVERA-TL END checks=2 failed=0 cleanup=none offline=pass',
+    ]
+
+    def test_verdict_passes_a_clean_run(self):
+        root = self._run_dir(self.GOOD_LOGCAT, 1, gcloud='Instrumentation testing complete.\n')
+        self.assertEqual(testlab_summary.verdict_reasons(str(root), '0'), [])
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(testlab_summary.verdict(str(root), '0'), 0)
+
+    def test_verdict_each_reason_alone(self):
+        cases = {
+            'exit code 10': dict(rc='10'),
+            'exit code missing': dict(rc=''),
+            'JUnit has 0 tests': dict(tests=0),
+            'no MOVERA-TL END line': dict(drop='END '),
+            'no SUMMARY-JSON line': dict(drop='SUMMARY-JSON '),
+            'check(s) FAIL: RUN': dict(add='I flutter : MOVERA-TL CHECK RUN FAIL hung: no pump returned in SWITCH-1'),
+            'Test timed out after': dict(add='I flutter : Test timed out after 18 minutes.'),
+            'non-retryable error': dict(gcloud='A non-retryable error occurred.\n'),
+            'outcome: Inconclusive': dict(outcome='Inconclusive'),
+        }
+        for want, c in cases.items():
+            with self.subTest(want):
+                lines = [l for l in self.GOOD_LOGCAT if not (c.get('drop') and c['drop'] in l)]
+                if c.get('add'):
+                    lines.append(c['add'])
+                root = self._run_dir(lines, c.get('tests', 1), gcloud=c.get('gcloud', ''),
+                                     outcome=c.get('outcome', 'Passed'))
+                reasons = testlab_summary.verdict_reasons(str(root), c.get('rc', '0'))
+                self.assertEqual(len(reasons), 1, reasons)
+                self.assertIn(want, reasons[0])
+
+    def test_verdict_summary_json_file_counts_and_skip_explains_no_end(self):
+        lines = [l for l in self.GOOD_LOGCAT if 'SUMMARY-JSON' not in l]
+        root = self._run_dir(lines, 1, summary_json=True)
+        self.assertEqual(testlab_summary.verdict_reasons(str(root), '0'), [])
+        skip = self._run_dir(['I flutter : MOVERA-TL SKIP all checks: no test number at run time'], 1)
+        self.assertEqual(testlab_summary.verdict_reasons(str(skip), '0'), [])
+
+    def test_verdict_missing_testlab_json_fails(self):
+        root = self._run_dir(self.GOOD_LOGCAT, 1)
+        (root / 'testlab.json').unlink()
+        reasons = testlab_summary.verdict_reasons(str(root), '0')
+        self.assertEqual(len(reasons), 1)
+        self.assertIn('testlab.json: no outcome', reasons[0])
+
+    def test_workflow_result_runs_verdict_after_scrub_and_upload(self):
+        workflow = pathlib.Path(__file__).resolve().parents[2] / '.github/workflows/android-test-apk.yml'
+        job = workflow.read_text().split('  device-checks:', 1)[1]
+        scrub = job.index('testlab_summary.py scrub testlab-results')
+        upload = job.index('actions/upload-artifact@v4')
+        result = job.index('- name: Result')
+        verdict = job.index('testlab_summary.py verdict testlab-results')
+        self.assertLess(scrub, upload)
+        self.assertLess(upload, result)
+        self.assertLess(result, verdict)
+        step = job[result:]
+        self.assertNotIn('Device checks passed on Test Lab', step)
+        self.assertIn('RC: ${{ steps.run.outputs.rc }}', step)
+        self.assertNotIn('always()', step.split('run:', 1)[0])
+
+    def test_workflow_test_lab_timeout_beats_the_trip_test_timeout(self):
+        workflow = pathlib.Path(__file__).resolve().parents[2] / '.github/workflows/android-test-apk.yml'
+        text = workflow.read_text()
+        for name in ('trip-lifecycle', 'trip-scheduled'):
+            line = next(l for l in text.splitlines() if l.strip().startswith(name + ')'))
+            self.assertIn('tl_timeout=25m', line)
 
 if __name__ == '__main__':
     unittest.main()

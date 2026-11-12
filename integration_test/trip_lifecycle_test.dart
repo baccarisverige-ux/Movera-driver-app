@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/common.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 
@@ -34,6 +35,23 @@ void main() {
   final riderPhone = tlEnv('MOVERA_TL_RIDER_PHONE');
   final scheduled = tlEnv('MOVERA_TL_SCENARIO') == 'scheduled';
   final live = DriverRuntimeConfig.current.authRequired;
+  final name = scheduled ? 'booked ride lifecycle' : 'trip lifecycle';
+
+  // Run 6 (2026-11-12): a test that times out (or hangs) is recorded
+  // nowhere by the integration_test binding, so JUnit said "OK (0 tests)"
+  // and Test Lab "Passed". Tear-downs run last-in-first-out, so this one
+  // (registered after ensureInitialized) runs before the binding's own
+  // `allTestsFinished`: JUnit then shows 1 test, 1 failure.
+  var bodyDone = false;
+  var bodyStarted = false;
+  tearDownAll(() {
+    if (bodyStarted && !bodyDone && binding.results[name] is! Failure) {
+      binding.results[name] = Failure(
+        name,
+        'test body did not finish (timeout or hang)',
+      );
+    }
+  });
 
   final String? skipReason = !live
       ? 'not a live build (MOVERA_AUTH_REQUIRED is off)'
@@ -50,8 +68,9 @@ void main() {
   }
 
   testWidgets(
-    scheduled ? 'booked ride lifecycle' : 'trip lifecycle',
+    name,
     (tester) async {
+      bodyStarted = true;
       final log = CheckLog(
         binding: binding,
         outDir: tlEnv('MOVERA_TL_OUT'),
@@ -62,10 +81,9 @@ void main() {
         await run.start();
         await run.all(phone: phone!, code: code!, riderPhone: riderPhone!);
       } finally {
-        await log.write(
-          requestLog: [for (final c in run.rec.calls) '$c'],
-          extra: {'transitions': run.watch.rows},
-        );
+        // SUMMARY / SUMMARY-JSON / summary.json, then the END line (once:
+        // the watchdog may have written them already).
+        await run.writeResults();
       }
       final failed = log.failures;
       expect(
@@ -75,10 +93,13 @@ void main() {
           for (final f in failed) '${f.id} (${f.title}): ${f.detail}',
         ].join('\n'),
       );
+      bodyDone = true;
     },
-    // Test Lab --timeout is 20m (install and start count too). The steps
-    // stop at TripRun.hardAfter (15 min); CLEANUP + OFFLINE then have
-    // TripRun.cleanupBudget, and this limit is above both.
+    // The order of the stops (run 6): hard stop 15 min (TripRun.hardAfter)
+    // -> watchdog 15 min 45 s (TripRun.watchAfter, only when a pump hung)
+    // -> clean-up done by about 17 min 30 s (TripRun.cleanupBudget) -> this
+    // test timeout 18 min (TripRun.testLimit) -> Test Lab --timeout 25 min
+    // (install and start count too, ~1 min).
     timeout: const Timeout(TripRun.testLimit),
   );
 }

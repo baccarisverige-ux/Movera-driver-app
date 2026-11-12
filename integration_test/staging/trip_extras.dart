@@ -15,24 +15,24 @@ extension _TripExtras on TripRun {
       () => menuPageAndBack(tester, tr.rideHistory),
     );
     await watch.run('background-resume-$n', () async {
+      // Run 6 (2026-11-12): `hidden` and `paused` turn frames off
+      // (SchedulerBinding.framesEnabled = false), and the live binding's
+      // `tester.pump` then waits for a frame that never comes: the test
+      // hung for 17 min. So: NEVER pump (nor [wait]) while the fake
+      // lifecycle is hidden/paused; only plain time passes then.
       final binding = tester.binding;
-      for (final state in const [
-        AppLifecycleState.inactive,
-        AppLifecycleState.hidden,
-        AppLifecycleState.paused,
-      ]) {
-        binding.handleAppLifecycleStateChanged(state);
-        await tester.pump(const Duration(milliseconds: 300));
-      }
-      await wait(tester, const Duration(seconds: 3));
-      for (final state in const [
-        AppLifecycleState.hidden,
-        AppLifecycleState.inactive,
-        AppLifecycleState.resumed,
-      ]) {
-        binding.handleAppLifecycleStateChanged(state);
-        await tester.pump(const Duration(milliseconds: 300));
-      }
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump(const Duration(milliseconds: 300));
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      CheckLog.say('STEP background (frames off, no pump) 3 s');
+      await Future<void>.delayed(const Duration(seconds: 3));
+      // `inactive` turns frames back on and schedules one; only then pump.
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      CheckLog.say('STEP resumed (frames on)');
+      await tester.pump(const Duration(milliseconds: 300));
       await wait(tester, const Duration(seconds: 3));
     });
     await rideCheckGate();

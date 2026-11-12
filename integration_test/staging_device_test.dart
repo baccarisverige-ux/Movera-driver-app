@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/common.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
@@ -47,6 +48,23 @@ void main() {
   final phone = tlEnv('MOVERA_TL_PHONE');
   final code = tlEnv('MOVERA_TL_CODE');
   final live = DriverRuntimeConfig.current.authRequired;
+  const name =
+      'staging device checks (sign-in, online, G24, G17, G27, offline)';
+
+  // Run 6 (2026-11-12): a test that times out (or hangs) is recorded
+  // nowhere by the integration_test binding (JUnit "OK (0 tests)"). This
+  // tear-down runs before the binding's own (last-in-first-out) and makes
+  // it 1 test, 1 failure.
+  var bodyDone = false;
+  var bodyStarted = false;
+  tearDownAll(() {
+    if (bodyStarted && !bodyDone && binding.results[name] is! Failure) {
+      binding.results[name] = Failure(
+        name,
+        'test body did not finish (timeout or hang)',
+      );
+    }
+  });
 
   final String? skipReason = !live
       ? 'not a live build (MOVERA_AUTH_REQUIRED is off)'
@@ -62,32 +80,31 @@ void main() {
     return;
   }
 
-  testWidgets(
-    'staging device checks (sign-in, online, G24, G17, G27, offline)',
-    (tester) async {
-      final log = CheckLog(
-        binding: binding,
-        outDir: tlEnv('MOVERA_TL_OUT'),
-        shots: tlEnv('MOVERA_TL_SHOTS') != '0',
-      );
-      final run = _Run(tester, log);
-      try {
-        await run.start();
-        await run.all(phone: phone!, code: code!);
-      } finally {
-        await log.write(requestLog: [for (final c in run.rec.calls) '$c']);
-      }
-      final failed = log.failures;
-      expect(
-        failed,
-        isEmpty,
-        reason: [
-          for (final f in failed) '${f.id} (${f.title}): ${f.detail}',
-        ].join('\n'),
-      );
-    },
-    timeout: const Timeout(Duration(minutes: 8)),
-  );
+  testWidgets(name, (tester) async {
+    bodyStarted = true;
+    final log = CheckLog(
+      binding: binding,
+      outDir: tlEnv('MOVERA_TL_OUT'),
+      shots: tlEnv('MOVERA_TL_SHOTS') != '0',
+    );
+    final run = _Run(tester, log);
+    try {
+      await run.start();
+      await run.all(phone: phone!, code: code!);
+    } finally {
+      await log.write(requestLog: [for (final c in run.rec.calls) '$c']);
+      log.end();
+    }
+    final failed = log.failures;
+    expect(
+      failed,
+      isEmpty,
+      reason: [
+        for (final f in failed) '${f.id} (${f.title}): ${f.detail}',
+      ].join('\n'),
+    );
+    bodyDone = true;
+  }, timeout: const Timeout(Duration(minutes: 8)));
 }
 
 class _Run extends StagingSession {
