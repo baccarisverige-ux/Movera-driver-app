@@ -91,20 +91,17 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     _readServerTotals();
   }
 
-  /// The selected period as instants: today from the phone's midnight,
-  /// "last 7 days" from now − 7 days, the month from its 1st; up to now.
-  static ({DateTime from, DateTime to}) rangeOf(
-    _HistoryPeriod period,
-    DateTime now,
-  ) {
-    final from = switch (period) {
-      _HistoryPeriod.today => DateTime(now.year, now.month, now.day),
-      _HistoryPeriod.week => now.subtract(const Duration(days: 7)),
-      _HistoryPeriod.month => DateTime(now.year, now.month),
-    };
-    // The server counts up to `to`, excluded: now included.
-    return (from: from, to: now.add(const Duration(milliseconds: 1)));
-  }
+  /// The selected period's start: today from the phone's midnight,
+  /// "last 7 days" from now − 7 days, the month from its 1st. Every period
+  /// ends now, so no `to` is sent: the server counts up to its own now,
+  /// included (G28 fix F1: a phone clock behind the server's cut off a
+  /// trip just finished).
+  static DateTime startOf(_HistoryPeriod period, DateTime now) =>
+      switch (period) {
+        _HistoryPeriod.today => DateTime(now.year, now.month, now.day),
+        _HistoryPeriod.week => now.subtract(const Duration(days: 7)),
+        _HistoryPeriod.month => DateTime(now.year, now.month),
+      };
 
   Future<void> _readServerTotals() async {
     final live = _live;
@@ -114,14 +111,15 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       _serverTotals = null;
       _serverFailed = false;
     });
-    final range = rangeOf(_period, DateTime.now());
+    final from = startOf(_period, DateTime.now());
     EarningsTotals? totals;
     try {
       totals = await live.earnings.range(
-        from: range.from,
-        to: range.to,
+        from: from,
         // The driver's zone currency, as the wallet opens on (owner
-        // 2026-11-10); the server's default until a zone is known.
+        // 2026-11-10); the server's default until a zone is known. One
+        // currency is right: one account per country (owner), so no
+        // kr / € switch here (G28 review F2).
         currency: Money.zoneKnown ? Money.zoneCurrency : null,
       );
     } catch (_) {
@@ -181,6 +179,13 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  /// Retry: the phone's archive and, on a live build, the server's
+  /// totals (G28 fix F4: the totals stayed "Unavailable").
+  void _retry() {
+    _loadHistory();
+    _readServerTotals();
   }
 
   List<_HistoryRide> get _periodRidesList {
@@ -253,6 +258,10 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       .length;
 
   static const String _pending = '—';
+
+  /// The total's label: on a live build the server's earnings (owner
+  /// 2026-11-12: "Earnings"); else the fares this phone recorded.
+  String get _totalLabel => _live != null ? tr.earnings : tr.recordedFares;
 
   String get _periodHours => '—';
 
@@ -347,7 +356,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         Center(
           child: TextButton(
             key: const ValueKey<String>('history-retry'),
-            onPressed: _loadHistory,
+            onPressed: _retry,
             child: Text(tr.retry),
           ),
         ),
@@ -695,7 +704,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    tr.recordedFares,
+                    _totalLabel,
                     style: TextStyle(
                       color: _subtle,
                       fontSize: 10.5,
@@ -733,14 +742,21 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       child: Column(
         children: [
           _BreakdownRow(
-            label: tr.recordedFares,
+            label: _totalLabel,
             value: _periodEarnings,
             strong: true,
           ),
           const SizedBox(height: 10),
           _buildOtherEarningsRow(),
-          const SizedBox(height: 10),
-          _BreakdownRow(label: tr.tipsAndFees, value: tr.notAvailable),
+          // G28 fix F3: a live total holds tips and fees; the server's sum
+          // of them, the row hidden while it is not known.
+          if (_live == null) ...[
+            const SizedBox(height: 10),
+            _BreakdownRow(label: tr.tipsAndFees, value: tr.notAvailable),
+          ] else if (_serverTotals?.tipsAndFees case final tipsAndFees?) ...[
+            const SizedBox(height: 10),
+            _BreakdownRow(label: tr.tipsAndFees, value: tipsAndFees.formatted),
+          ],
         ],
       ),
     );
