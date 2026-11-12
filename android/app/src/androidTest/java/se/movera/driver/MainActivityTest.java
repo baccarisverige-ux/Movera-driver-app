@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
@@ -167,12 +168,14 @@ public class MainActivityTest {
                 }
                 if (fused != null) {
                   try {
-                    Method set = fused.getClass().getMethod("setMockLocation", Location.class);
+                    Method set =
+                        Class.forName(FUSED_CLIENT).getMethod("setMockLocation", Location.class);
                     set.invoke(fused, fix("fused", lat, lng));
                   } catch (Exception e) {
                     // Play services refused one fix; the next second tries again.
                   }
                 }
+                round++;
                 SystemClock.sleep(1000);
               }
             },
@@ -181,13 +184,19 @@ public class MainActivityTest {
     feeder.start();
   }
 
+  private static final String FUSED_CLIENT =
+      "com.google.android.gms.location.FusedLocationProviderClient";
+
   /** Google Play services' fused provider in mock mode, without a compile dependency. */
   private static Object fusedClient(Context app) {
     try {
       Class<?> services = Class.forName("com.google.android.gms.location.LocationServices");
       Object client =
           services.getMethod("getFusedLocationProviderClient", Context.class).invoke(null, app);
-      client.getClass().getMethod("setMockMode", boolean.class).invoke(client, true);
+      // Look the methods up on the public interface: the implementation class
+      // may not be public, and invoking through it would throw
+      // IllegalAccessException (fused mocking silently off).
+      Class.forName(FUSED_CLIENT).getMethod("setMockMode", boolean.class).invoke(client, true);
       return client;
     } catch (Exception e) {
       Log.w(TAG, "fused mock: " + e.getClass().getSimpleName());
@@ -195,10 +204,23 @@ public class MainActivityTest {
     }
   }
 
+  /** About 10 m in degrees of latitude (1 degree is about 111 km). */
+  private static final double JITTER_DEG = 10.0 / 111_000.0;
+
+  private static final Random JITTER = new Random();
+
+  /** Feeder rounds so far (one per second); picks the jitter side. */
+  private static volatile int round = 0;
+
   private static Location fix(String provider, double lat, double lng) {
     Location location = new Location(provider);
-    location.setLatitude(lat);
-    location.setLongitude(lng);
+    // +/-10 m jitter, north and south of the point in turn (5-10 m each
+    // way, so two rounds are >= 10 m apart): the app's 8 m distance filter
+    // sees movement, and a G24 FAIL cannot come from a stationary mock.
+    double side = (round % 2 == 0) ? 1 : -1;
+    location.setLatitude(lat + side * (0.5 + 0.5 * JITTER.nextDouble()) * JITTER_DEG);
+    location.setLongitude(
+        lng + (JITTER.nextDouble() * 2 - 1) * JITTER_DEG / Math.cos(Math.toRadians(lat)));
     location.setAccuracy(5f);
     location.setAltitude(20);
     location.setSpeed(0f);

@@ -7,10 +7,18 @@ line per check to logcat ("MOVERA-TL CHECK <id> PASS|FAIL|SKIP ...") and
 writes summary.json into the app's files folder, which Test Lab pulls.
 
 Usage (from .github/workflows/android-test-apk.yml, plain Python 3):
+  TL_NUMBERS=<secret> TL_CODE=<secret> python3 -I tool/testlab_summary.py driver OUT
+      pick ONE test driver (se.d38, the dedicated big-test driver, else
+      browser.SE.driver), normalise it to E.164, check number and code,
+      ::add-mask:: every spelling, write OUT/phone, OUT/code, OUT/scrub
+      (mode 600). Never prints a value; exit 1 on any problem.
   TL_SCRUB="<value>\\n<value>" python3 tool/testlab_summary.py scrub DIR
-      replace every listed value (phone number forms, sign-in code) with
-      [REDACTED] in every text file under DIR, before anything is uploaded.
-      Values come from the environment, never from the command line.
+      replace every listed value (phone number in any spelling: E.164,
+      national, spaced, dashed, bracketed; sign-in code) with [REDACTED] in
+      every text file under DIR, then re-scan every file (text and binary).
+      Fails safe: exit 1 when the value list is empty, and exit 1 AND delete
+      DIR when a value is still found. Values come from the environment,
+      never from the command line.
   python3 tool/testlab_summary.py summary DIR
       print passed/failed per check, JUnit totals and crash lines from
       logcat; also into $GITHUB_STEP_SUMMARY when set. Exit 0 (the Test Lab
@@ -20,6 +28,7 @@ import glob
 import json
 import os
 import re
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 
@@ -42,6 +51,159 @@ CRASH_PATTERNS = [
 MAX_CRASH_LINES = 40
 
 
+# Country codes of the app's countries (lib/core/auth/phone_country.dart);
+# others fall back to the whole number.
+_COUNTRY_CODES = ("216", "33", "46")
+# Separators the app, Android and people put between digits.
+_SEP = r"[\s\-().]*"
+NUMBER_RE = re.compile(r"^\+\d{8,15}$")
+CODE_RE = re.compile(r"^\d{4,8}$")
+# Where the driver is looked up in the MOVERA_TEST_NUMBERS JSON. se.d38 is
+# the dedicated big-test driver; browser.SE.driver (a base number, used on a
+# real phone by the owner) only as fallback: a new sign-in signs the other
+# phone out (one-phone rule, decisions/driver-g1.md).
+DRIVER_PATHS = (("se", "d38"), ("browser", "SE", "driver"))
+
+
+class DriverError(Exception):
+    """A problem with the secret; the message never holds a value."""
+
+
+def normalise_number(raw):
+    """Any spelling of a number -> "+" and digits (Swedish when no country)."""
+    text = str(raw).strip().replace("(0)", "")
+    digits = re.sub(r"\D", "", text)
+    if text.startswith("+"):
+        return "+" + digits
+    if digits.startswith("00"):
+        return "+" + digits[2:]
+    if digits.startswith("0"):
+        return "+46" + digits[1:]
+    if digits.startswith("46") and len(digits) == 11:
+        return "+" + digits
+    return "+46" + digits
+
+
+def split_number(e164):
+    """(country code, national digits without the trunk 0)."""
+    digits = e164.lstrip("+")
+    for cc in _COUNTRY_CODES:
+        if digits.startswith(cc) and len(digits) - len(cc) >= 6:
+            return cc, digits[len(cc):]
+    return "", digits
+
+
+def display_forms(e164):
+    """The spellings the app and people write: as displayPhoneNumber shows it
+    ("+46 NN NNN NN NN"), national with the trunk 0, spaced and dashed."""
+    cc, nat = split_number(e164)
+    if not cc:
+        return [e164, e164[1:]]
+    if cc == "46" and len(nat) == 9:
+        groups = [nat[0:2], nat[2:5], nat[5:7], nat[7:]]
+    elif cc == "33" and len(nat) == 9:
+        groups = [nat[0], nat[1:3], nat[3:5], nat[5:7], nat[7:]]
+    elif cc == "216" and len(nat) == 8:
+        groups = [nat[0:2], nat[2:5], nat[5:]]
+    else:
+        groups = [nat]
+    spaced = " ".join(groups)
+    trunk = "" if cc == "216" else "0"
+    forms = [
+        e164, cc + nat, "00" + cc + nat, nat, trunk + nat,
+        "+%s %s" % (cc, spaced), spaced, trunk + spaced,
+        "+%s-%s" % (cc, "-".join(groups)), "-".join(groups), trunk + "-".join(groups),
+        "+%s (0)%s" % (cc, nat), "+%s (0)%s" % (cc, spaced),
+    ]
+    if len(groups) > 1:
+        # Swedish habit: "0NN-NNN NN NN" and "0NN-NNNNNNN".
+        forms += [trunk + groups[0] + "-" + " ".join(groups[1:]),
+                  trunk + groups[0] + "-" + "".join(groups[1:])]
+    out = []
+    for f in forms:
+        if f and f not in out:
+            out.append(f)
+    return out
+
+
+def parse_numbers(raw):
+    """The secret as JSON, however it was pasted (NAME= prefix, outer or
+    escaped quotes). DriverError says only the shape, never the value."""
+    raw = (raw or "").strip()
+    # Any leading NAME= (JSON never starts with a letter).
+    raw = re.sub(r"^[A-Z][A-Z0-9_]*=", "", raw).strip()
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
+        raw = raw[1:-1].strip()
+    if raw.startswith('{\\"') or raw.startswith('[\\"'):
+        raw = raw.replace('\\"', '"')
+    try:
+        return json.loads(raw)
+    except ValueError as err:
+        def kind(c):
+            if c in "{}[]":
+                return "brace"
+            if c in "'\"":
+                return "quote"
+            if c.isalpha():
+                return "letter"
+            if c.isdigit():
+                return "digit"
+            return "other"
+        raise DriverError(
+            "secret length %d, starts with a %s, ends with a %s; JSON error at char %s; "
+            "the MOVERA_TEST_NUMBERS secret is not JSON (same value as the cloud environment variable)"
+            % (len(raw), kind(raw[:1] or " "), kind(raw[-1:] or " "), getattr(err, "pos", "?")))
+
+
+def pick_driver(numbers):
+    """(E.164 number, path name) of ONE test driver; se.d38 first."""
+    for path in DRIVER_PATHS:
+        value = numbers
+        for key in path:
+            value = value.get(key) if isinstance(value, dict) else None
+        if isinstance(value, str) and value.strip():
+            e164 = normalise_number(value)
+            if not NUMBER_RE.match(e164):
+                raise DriverError("the %s entry is not a phone number (needs 8-15 digits)" % ".".join(path))
+            return e164, ".".join(path)
+    raise DriverError("the MOVERA_TEST_NUMBERS secret has no se.d38 or browser.SE.driver entry")
+
+
+def check_code(code):
+    code = str(code or "").strip()
+    if not CODE_RE.match(code):
+        raise DriverError("the sign-in code is not 4-8 digits")
+    return code
+
+
+def secret_values(e164, code):
+    return display_forms(e164) + [code]
+
+
+def number_pattern(value):
+    """A regex for a number in any spelling, or None when value is no number:
+    the national digits with optional separators between them, after an
+    optional +CC / 00CC / (0) / 0 lead."""
+    if not NUMBER_RE.match(value):
+        return None
+    cc, nat = split_number(value)
+    body = _SEP.join(re.escape(d) for d in nat)
+    lead = ""
+    if cc:
+        cc_re = _SEP.join(cc)
+        lead = r"(?:(?:\+|00)?%s%s(?:\(?0\)?%s)?|0%s)?" % (cc_re, _SEP, _SEP, _SEP)
+    return re.compile(lead + body)
+
+
+def _patterns(secrets):
+    out = []
+    for s in secrets:
+        p = number_pattern(s)
+        if p is not None and p.pattern not in [q.pattern for q in out]:
+            out.append(p)
+    return out
+
+
 def _is_text(data):
     return b"\0" not in data[:8192]
 
@@ -49,6 +211,7 @@ def _is_text(data):
 def scrub(root, secrets):
     """Replaces each secret in every text file under root; returns files changed."""
     values = sorted({s for s in secrets if len(s) >= 4}, key=len, reverse=True)
+    patterns = _patterns(values)
     changed = 0
     for path in glob.glob(os.path.join(root, "**", "*"), recursive=True):
         if not os.path.isfile(path):
@@ -59,6 +222,8 @@ def scrub(root, secrets):
             continue
         text = data.decode("utf-8", errors="surrogateescape")
         new = text
+        for pattern in patterns:
+            new = pattern.sub(REDACTED, new)
         for value in values:
             new = new.replace(value, REDACTED)
         if new != text:
@@ -66,6 +231,65 @@ def scrub(root, secrets):
                 fh.write(new.encode("utf-8", errors="surrogateescape"))
             changed += 1
     return changed
+
+
+def leftovers(root, secrets):
+    """Files under root (text AND binary) that still hold a value; [] = clean."""
+    values = [s.encode("utf-8") for s in {s for s in secrets if len(s) >= 4}]
+    patterns = [re.compile(p.pattern.encode("ascii")) for p in _patterns(secrets)]
+    hits = []
+    for path in glob.glob(os.path.join(root, "**", "*"), recursive=True):
+        if not os.path.isfile(path):
+            continue
+        with open(path, "rb") as fh:
+            data = fh.read()
+        if any(v in data for v in values) or any(p.search(data) for p in patterns):
+            hits.append(path)
+    return sorted(hits)
+
+
+def scrub_or_fail(root, secrets):
+    """Scrub, then re-scan. Returns (exit code, message without values)."""
+    secrets = [s.strip() for s in secrets if s and s.strip()]
+    if not any(len(s) >= 4 for s in secrets):
+        return 1, "::error::no values to scrub (the test driver file is missing or empty); nothing may be uploaded"
+    changed = scrub(root, secrets)
+    left = leftovers(root, secrets)
+    if left:
+        shutil.rmtree(root, ignore_errors=True)
+        return 1, ("::error::%d file(s) still held the test number or code after scrubbing; "
+                   "the results folder was deleted and nothing is uploaded" % len(left))
+    return 0, "scrubbed %d file(s); re-scan clean" % changed
+
+
+def write_driver(out, env):
+    """The `driver` command; returns an exit code. Prints no value."""
+    try:
+        numbers = parse_numbers(env.get("TL_NUMBERS", ""))
+        e164, path = pick_driver(numbers)
+        code = env.get("TL_CODE", "").strip()
+        if not code:
+            with open("contracts/contract.json", encoding="utf-8") as fh:
+                code = str(json.load(fh)["auth"]["testSignIn"]["code"]).strip()
+        code = check_code(code)
+    except DriverError as err:
+        print("::error::" + str(err))
+        return 1
+    values = secret_values(e164, code)
+    for value in values:
+        print("::add-mask::" + value)
+    sys.stdout.flush()
+
+    def write(name, text):
+        fd = os.open(os.path.join(out, name), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as fh:
+            fh.write(text)
+
+    write("phone", e164)
+    write("code", code)
+    write("scrub", "\n".join(values) + "\n")
+    print("test driver ready: %s (number and code masked)" % path)
+    return 0
 
 
 def _logcat_files(root):
@@ -191,15 +415,17 @@ def summary_text(root):
 
 
 def main(argv):
-    if len(argv) != 3 or argv[1] not in ("scrub", "summary"):
+    if len(argv) != 3 or argv[1] not in ("driver", "scrub", "summary"):
         print(__doc__)
         return 2
     root = argv[2]
+    if argv[1] == "driver":
+        return write_driver(root, os.environ)
     if argv[1] == "scrub":
-        secrets = [s.strip() for s in os.environ.get("TL_SCRUB", "").splitlines()]
-        changed = scrub(root, secrets)
-        print("scrubbed %d file(s)" % changed)
-        return 0
+        secrets = os.environ.get("TL_SCRUB", "").splitlines()
+        rc, message = scrub_or_fail(root, secrets)
+        print(message)
+        return rc
     text = summary_text(root)
     print(text)
     step = os.environ.get("GITHUB_STEP_SUMMARY")

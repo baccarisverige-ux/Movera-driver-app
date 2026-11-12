@@ -403,13 +403,27 @@ class _Run {
         ),
     ];
     await log.screenshot(tester, 'safety');
+    // Ordered compare: the contract orders the emergency numbers, so the
+    // app must show them in the server's order. The detail says whether a
+    // difference is only the order or the numbers themselves.
+    final sameOrder = listEquals(shown, served);
+    final sameSet =
+        shown.length == served.length &&
+        shown.toSet().containsAll(served) &&
+        served.toSet().containsAll(shown);
+    final diff = sameOrder
+        ? 'same numbers, same order'
+        : sameSet
+        ? 'same numbers, DIFFERENT ORDER'
+        : 'missing=${served.where((n) => !shown.contains(n)).toList()} '
+              'extra=${shown.where((n) => !served.contains(n)).toList()}';
     final detail =
-        'zone=$zone config=$status server=$served shown=$shown '
+        'zone=$zone config=$status server=$served shown=$shown ($diff) '
         'app asked config for zones=$askedZones';
     final good =
         status == 200 &&
         served.isNotEmpty &&
-        listEquals(shown, served) &&
+        sameOrder &&
         askedZones.contains(zone);
     if (good) {
       log.pass('G17', title, detail);
@@ -529,8 +543,25 @@ class _Run {
 
   Future<void> _goOfflineAtEnd() async {
     if (!_online) {
-      log.skip('OFFLINE', 'Go offline is taken', 'not online');
-      return;
+      // Go online may have thrown or timed out after the tap while the
+      // server did go online: ask the server, so the shared test driver is
+      // never left online on staging.
+      String? before;
+      try {
+        final (_, profile) = await _ask('/api/v1/driver/profile');
+        before = _status(profile);
+      } catch (_) {
+        before = null;
+      }
+      if (before != 'online' && before != 'on_trip') {
+        log.skip(
+          'OFFLINE',
+          'Go offline is taken',
+          'not online (server says ${before ?? 'unknown'})',
+        );
+        _own.close();
+        return;
+      }
     }
     log.step('go offline');
     await backToHome(tester);

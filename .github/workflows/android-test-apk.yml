@@ -185,62 +185,12 @@ jobs:
             exit 0
           fi
           install -m 700 -d "$RUNNER_TEMP/tl"
-          # One driver number (browser.SE.driver, else se.d38) in E.164 and the
-          # staging sign-in code (secret MOVERA_TEST_SIGNIN_CODE, else the
-          # contract's auth.testSignIn.code). Masked first; values only in
-          # $RUNNER_TEMP/tl (mode 600), never printed.
-          python3 -I - "$RUNNER_TEMP/tl" <<'PY'
-          import json, os, sys
-          out = sys.argv[1]
-          raw = os.environ["TL_NUMBERS"].strip()
-          # Tolerate how the value was pasted: a leading "NAME=", outer quotes, escaped quotes.
-          if raw.startswith("MOVERA_TEST_NUMBERS="):
-              raw = raw[len("MOVERA_TEST_NUMBERS="):].strip()
-          if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
-              raw = raw[1:-1].strip()
-          if raw.startswith('{\\"') or raw.startswith('[\\"'):
-              raw = raw.replace('\\"', '"')
-          try:
-              numbers = json.loads(raw)
-          except ValueError as err:
-              # Shape only, never a value: length and the kind of first/last character.
-              kind = lambda c: "brace" if c in "{}[]" else ("quote" if c in "'\"" else ("letter" if c.isalpha() else ("digit" if c.isdigit() else "other")))
-              print(f"::warning::secret length {len(raw)}, starts with a {kind(raw[:1] or ' ')}, ends with a {kind(raw[-1:] or ' ')}; JSON error at char {getattr(err, 'pos', '?')}")
-              print("::error::the MOVERA_TEST_NUMBERS secret is not JSON (same value as the cloud environment variable)")
-              sys.exit(1)
-          raw = None
-          for path in (("browser", "SE", "driver"), ("se", "d38")):
-              value = numbers
-              for key in path:
-                  value = value.get(key) if isinstance(value, dict) else None
-              if isinstance(value, str) and value.strip():
-                  raw = value.strip().replace(" ", "")
-                  break
-          if raw is None:
-              print("::error::the MOVERA_TEST_NUMBERS secret has no browser.SE.driver or se.d38 entry")
-              sys.exit(1)
-          if raw.startswith("+"):
-              e164, national = raw, raw[3:]
-          else:
-              national = raw.lstrip("0")
-              e164 = "+46" + national
-          code = os.environ.get("TL_CODE", "").strip()
-          if not code:
-              with open("contracts/contract.json", encoding="utf-8") as fh:
-                  code = str(json.load(fh)["auth"]["testSignIn"]["code"]).strip()
-          secrets = [e164, national, "0" + national, "46" + national, code]
-          for value in secrets:
-              print("::add-mask::" + value)
-          sys.stdout.flush()
-          def write(name, text):
-              fd = os.open(os.path.join(out, name), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-              with os.fdopen(fd, "w") as fh:
-                  fh.write(text)
-          write("phone", e164)
-          write("code", code)
-          write("scrub", "\n".join(secrets) + "\n")
-          print("test driver ready (number and code masked)")
-          PY
+          # ONE driver number (se.d38, the dedicated big-test driver; else
+          # browser.SE.driver) normalised to E.164 and checked, and the staging
+          # sign-in code (secret MOVERA_TEST_SIGNIN_CODE, else the contract's
+          # auth.testSignIn.code) checked as 4-8 digits. Every spelling is
+          # masked first; values only in $RUNNER_TEMP/tl (mode 600), never printed.
+          python3 -I tool/testlab_summary.py driver "$RUNNER_TEMP/tl"
           echo "ready=true" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v4
         if: steps.driver.outputs.ready == 'true'
@@ -335,18 +285,27 @@ jobs:
           set -uo pipefail
           gsutil -m -q cp -r "gs://$BUCKET/$DIR" testlab-results/ || echo "::warning::results download failed"
           find testlab-results -type f | sed 's/^/  /' | head -80
+      # Fail-safe: scrub exits 1 when the value list is missing or empty, and
+      # re-scans every file after scrubbing (exit 1 and the results folder is
+      # deleted on any hit). The upload below runs only when this step passed.
       - name: Remove test number and code from the results, then summarise
+        id: scrub
         if: always() && steps.driver.outputs.ready == 'true'
         run: |
           set -euo pipefail
           mkdir -p testlab-results
-          TL_SCRUB="$(cat "$RUNNER_TEMP/tl/scrub" 2>/dev/null || true)" python3 tool/testlab_summary.py scrub testlab-results
-          python3 tool/testlab_summary.py summary testlab-results
+          if [ ! -s "$RUNNER_TEMP/tl/scrub" ]; then
+            echo "::error::the test driver value list is missing; nothing is uploaded"
+            rm -rf testlab-results
+            exit 1
+          fi
+          TL_SCRUB="$(cat "$RUNNER_TEMP/tl/scrub")" python3 -I tool/testlab_summary.py scrub testlab-results
+          python3 -I tool/testlab_summary.py summary testlab-results
       - name: Remove the test driver file
         if: always()
         run: rm -rf "$RUNNER_TEMP/tl"
       - uses: actions/upload-artifact@v4
-        if: always() && steps.driver.outputs.ready == 'true'
+        if: always() && steps.driver.outputs.ready == 'true' && steps.scrub.outcome == 'success'
         with:
           name: testlab-results
           path: testlab-results/
