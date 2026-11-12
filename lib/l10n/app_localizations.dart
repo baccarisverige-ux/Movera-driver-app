@@ -11557,6 +11557,12 @@ abstract class AppLocalizations {
   /// **'Movera commission'**
   String get rcMoveraCommission;
 
+  /// Waybill row (G32): Movera's commission on the trip, the server's value; between what the rider pays and what the driver gets.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera commission'**
+  String get waybillMoveraCommission;
+
   /// No description provided for @rcYouGet.
   ///
   /// In en, this message translates to:

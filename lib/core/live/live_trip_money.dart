@@ -24,6 +24,7 @@ class LiveTripMoney {
     this.tip,
     this.debtCollected,
     this.finish,
+    this.commission,
   }) : _cashToCollect = cashToCollect;
 
   /// The projection's money, or null without a `fare` and
@@ -59,7 +60,9 @@ class LiveTripMoney {
     final finish = TripFinishInfo.tryParse(projection['finish']);
     final total = money(projection['driverTotal']) ?? finish?.driverTotal;
     final debt = money(projection['debtCollected']);
+    final commission = money(projection['commission']);
     return LiveTripMoney(
+      commission: commission?.currency == fare.currency ? commission : null,
       driverTotal: total != null && total.currency == earnings.currency
           ? total
           : null,
@@ -123,6 +126,11 @@ class LiveTripMoney {
 
   /// How the trip ended (rider or driver ended early).
   final TripFinishInfo? finish;
+
+  /// G32: Movera's commission as the server keeps it
+  /// (`TripProjection.commission` = fare − debtCollected − driverEarnings
+  /// − pickupPay − driverBonus); null when it did not send one.
+  final Money? commission;
 
   /// The driver's own money for the trip ("You get"): earnings plus
   /// pickup pay plus bonus, so `fare − commission` is exactly this.

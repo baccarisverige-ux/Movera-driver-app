@@ -6,7 +6,8 @@ import 'package:movera/core/waybill/waybill.dart';
 /// right. Shows the same facts as a taxi waybill plus what the driver
 /// earns: the record's fare is the driver's own money, after Movera's
 /// commission, and (owner N11, live test 2026-10-26) what the rider pays
-/// is on it too, the one place the driver sees it.
+/// and (G32) Movera's commission are on it too, the one place the driver
+/// sees them.
 Future<void> showMoveraWaybillSheet(
   BuildContext context,
   WaybillRecord record, {
@@ -69,9 +70,9 @@ Future<void> showMoveraWaybillSheet(
 const _ink = Color(0xFF303A3F);
 const _muted = Color(0xFF7D898F);
 
-// Owner decision 2026-10-27: two totals only, what the rider pays and
-// what the driver gets (pickup pay, waiting fee and any bonus are in it);
-// no breakdown lines.
+// Owner decision 2026-10-27: no breakdown lines. How the rider pays, what
+// the rider pays, (G32, owner 2026-11-12) Movera's commission, then what
+// the driver gets (pickup pay, waiting fee and any bonus are in it).
 List<Widget> _rows(WaybillRecord record) {
   return [
     _Row(tr.trip, record.tripId),
@@ -87,6 +88,9 @@ List<Widget> _rows(WaybillRecord record) {
     const SizedBox(height: 14),
     _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
     if (record.riderFare case final paid?) _Row(tr.riderPays, paid),
+    // G32 (owner 2026-11-12, "all details in waybill"): Movera's share.
+    if (record.commissionText case final share?)
+      _Row(tr.waybillMoveraCommission, share),
     _Row(tr.yourEarnings, record.fare),
   ];
 }

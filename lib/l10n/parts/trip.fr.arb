@@ -284,6 +284,7 @@
   "liveTripFailed": "Movera n'a pas pu enregistrer cette étape. Réessayez.",
   "rcTripTotal": "Total de la course",
   "rcMoveraCommission": "Commission Movera",
+  "waybillMoveraCommission": "Commission Movera",
   "rcYouGet": "Vous recevez",
   "liveOnlineDocumentsExpired": "Un document a expiré : {documents}. Envoyez le nouveau pour passer en ligne.",
   "tipFlatDarkSurface": "Posez-le à plat sur une table sombre",

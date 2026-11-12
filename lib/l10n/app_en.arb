@@ -5048,6 +5048,10 @@
   "liveTripFailed": "Movera could not record this step. Try again.",
   "rcTripTotal": "Trip total",
   "rcMoveraCommission": "Movera commission",
+  "waybillMoveraCommission": "Movera commission",
+  "@waybillMoveraCommission": {
+    "description": "Waybill row (G32): Movera's commission on the trip, the server's value; between what the rider pays and what the driver gets."
+  },
   "rcYouGet": "You get",
   "@rcMoveraCommission": {
     "description": "Ride completed: Movera's share, shown as a minus amount; Trip total minus it is what the driver gets."

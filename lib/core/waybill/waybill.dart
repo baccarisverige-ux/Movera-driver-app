@@ -27,6 +27,7 @@ class WaybillRecord {
     this.tip,
     this.debtCollected,
     this.endedEarlyBy,
+    this.commission,
   });
 
   final String tripId;
@@ -78,6 +79,34 @@ class WaybillRecord {
   /// `rider | driver` when the trip ended before the drop-off; null when
   /// it did not.
   final String? endedEarlyBy;
+
+  /// G32 (owner 2026-11-12, "all details in waybill"): Movera's commission
+  /// as the server sent it (`TripProjection.commission`), e.g. "28,20 kr";
+  /// null when not known. The waybill shows [commissionText].
+  final String? commission;
+
+  /// Movera's commission for the waybill: the server's [commission], else
+  /// what the rider pays less an earlier unpaid fee and the driver's own
+  /// money (his tip is outside the fare), the same lines the trip's
+  /// finished screen adds up; null without the rider's fare.
+  String? get commissionText {
+    if (commission case final value?) return value;
+    final get = Money.parseLabel(fare);
+    final paid = riderFare == null || get == null
+        ? null
+        : Money.parseLabel(riderFare!, currency: get.currency);
+    if (get == null || paid == null || paid.currency != get.currency) {
+      return null;
+    }
+    var share = paid - get;
+    if (debtCollected case final debt? when debt.currency == get.currency) {
+      share = share - debt;
+    }
+    if (tip?.amount case final extra? when extra.currency == get.currency) {
+      share = share + extra;
+    }
+    return share.formatted;
+  }
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.
@@ -197,6 +226,8 @@ class WaybillRecord {
     bool clearTip = false,
     bool clearDebtCollected = false,
     bool clearEndedEarlyBy = false,
+    String? commission,
+    bool clearCommission = false,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -224,6 +255,7 @@ class WaybillRecord {
       endedEarlyBy: clearEndedEarlyBy
           ? null
           : endedEarlyBy ?? this.endedEarlyBy,
+      commission: clearCommission ? null : commission ?? this.commission,
     );
   }
 }

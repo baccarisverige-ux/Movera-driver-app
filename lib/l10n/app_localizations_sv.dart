@@ -6721,6 +6721,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rcMoveraCommission => 'Moveras provision';
 
   @override
+  String get waybillMoveraCommission => 'Movera-provision';
+
+  @override
   String get rcYouGet => 'Du får';
 
   @override
