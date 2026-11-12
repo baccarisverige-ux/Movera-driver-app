@@ -50,7 +50,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
           _homeRadarMatchStates.remove(offer.id);
         });
         _startRadarPickWindow(offer); // its time left, or Match fades
-        IslandMessages.show(HomeIslandNotices.noConnection);
+        IslandMessages.show(HomeIslandNotices.noConnection.forRide(offer.id));
     }
     if (_homeRadarMatchingOfferId == null) {
       _HomeScheduled(this)._afterClaimResolved();
@@ -151,7 +151,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
           !ids.contains(up.id) &&
           _exclusive.claimingId != up.id &&
           !_exclusive.leaving) {
-        IslandMessages.show(HomeIslandNotices.tripUnavailable);
+        IslandMessages.show(HomeIslandNotices.tripUnavailable.forRide(up.id));
         _dismissOutsideRadarOffer();
       }
       // driver-u116: the full Radar list's own Match took it; the trip
@@ -206,7 +206,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
       _homeRadarMatchStates[offer.id] = _HomeRadarMatchState.resolving;
       _claimedHomeOffer = offer;
     });
-    IslandMessages.show(HomeIslandNotices.matched);
+    IslandMessages.show(HomeIslandNotices.matched.forRide(offer.id));
     _openClaimedHomeOffer();
   }
 
@@ -231,7 +231,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     final wasFront = offer.id == _radarExpandedOfferId;
     if (reason == _RadarOfferGone.lostOwnMatch ||
         reason == _RadarOfferGone.takenElsewhere) {
-      IslandMessages.show(HomeIslandNotices.takenByOther);
+      IslandMessages.show(HomeIslandNotices.takenByOther.forRide(offer.id));
     } else if (wasMatching || wasFront) {
       _showTripUnavailableUnlessOfferedAgain(offer.tripId);
     }
@@ -288,7 +288,9 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
               _HomeRadarMatchState.claimedElsewhere;
         });
         if (matchedOffer.id == _radarExpandedOfferId) {
-          IslandMessages.show(HomeIslandNotices.takenByOther);
+          IslandMessages.show(
+            HomeIslandNotices.takenByOther.forRide(matchedOffer.id),
+          );
         }
 
         _homeRadarExternalClaimCleanupTimer?.cancel();
@@ -314,7 +316,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     _outsideOfferTimeoutTimer?.cancel();
     _exclusive.clock.stop();
     _rebuild(() => _exclusive.claimingId = offer.id);
-    IslandMessages.show(HomeIslandNotices.accepting);
+    IslandMessages.show(HomeIslandNotices.accepting.forRide(offer.id));
     ClaimResult result;
     try {
       result = await _dispatch.claimOffer(offer.id);
@@ -333,7 +335,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     }
     switch (result.outcome) {
       case ClaimOutcome.success:
-        IslandMessages.show(HomeIslandNotices.matched);
+        IslandMessages.show(HomeIslandNotices.matched.forRide(offer.id));
         // A reservation keeps the scheduled waiting rules.
         _openWonOffer(
           offer,
@@ -352,17 +354,19 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
           when result.afterCheck:
         // G4 decision 4: the Accept's answer was lost and the server then
         // said it is gone: "Offer no longer available", 2 s, not a miss.
-        IslandMessages.show(HomeIslandNotices.offerGone);
+        IslandMessages.show(HomeIslandNotices.offerGone.forRide(offer.id));
         _dismissOutsideRadarOffer();
       case ClaimOutcome.alreadyClaimed:
-        IslandMessages.show(HomeIslandNotices.takenByOther);
+        IslandMessages.show(HomeIslandNotices.takenByOther.forRide(offer.id));
         _dismissOutsideRadarOffer();
       case ClaimOutcome.expired:
       case ClaimOutcome.unavailable:
-        IslandMessages.show(HomeIslandNotices.tripUnavailable);
+        IslandMessages.show(
+          HomeIslandNotices.tripUnavailable.forRide(offer.id),
+        );
         _dismissOutsideRadarOffer();
       case ClaimOutcome.networkError:
-        IslandMessages.show(HomeIslandNotices.noConnection);
+        IslandMessages.show(HomeIslandNotices.noConnection.forRide(offer.id));
         _HomeExclusive(this)._restartExclusiveTimeout(
           offer,
           offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
@@ -426,7 +430,7 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
         return;
       }
       if (taken) {
-        IslandMessages.show(HomeIslandNotices.takenByOther);
+        IslandMessages.show(HomeIslandNotices.takenByOther.forRide(up.id));
       } else {
         _showTripUnavailableUnlessOfferedAgain(gone.tripId);
       }

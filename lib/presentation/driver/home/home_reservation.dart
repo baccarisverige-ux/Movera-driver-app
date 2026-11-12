@@ -222,7 +222,9 @@ extension _HomeReservation on _DriverHomeState {
       return;
     }
     _reservation.announced = true;
-    IslandMessages.show(HomeIslandNotices.newReservation);
+    IslandMessages.show(
+      HomeIslandNotices.newReservation.forRide(_reservation.request?.id),
+    );
     // And it is in Notifications (Q31, N1).
     if (_reservation.request case final request?) {
       final feed = DriverNotificationFeed.instance;
@@ -384,7 +386,7 @@ extension _HomeReservation on _DriverHomeState {
     _rebuild(() => _reservation.claimingId = id);
     // driver-r5-45: Scheduled rides shows it as Matching meanwhile.
     final listed = ScheduledRideStore.beginClaim(id);
-    IslandMessages.show(HomeIslandNotices.reservationMatching);
+    IslandMessages.show(HomeIslandNotices.reservationMatching.forRide(id));
     ClaimResult result;
     try {
       result = await _dispatch.claimOffer(id);
@@ -402,11 +404,13 @@ extension _HomeReservation on _DriverHomeState {
       _HomeScheduled(this)._afterClaimResolved();
     }
     if (result.outcome == ClaimOutcome.networkError) {
-      IslandMessages.show(HomeIslandNotices.reservationNoConnection);
+      IslandMessages.show(
+        HomeIslandNotices.reservationNoConnection.forRide(id),
+      );
     } else if (!result.isSuccess) {
       // Another driver was first: it leaves Scheduled rides too.
       ScheduledRideStore.take(id);
-      IslandMessages.show(HomeIslandNotices.reservationUnavailable);
+      IslandMessages.show(HomeIslandNotices.reservationUnavailable.forRide(id));
     }
     return result;
   }
@@ -431,7 +435,9 @@ extension _HomeReservation on _DriverHomeState {
     if (result.isSuccess) {
       ScheduledRideStore.take(request.id, upcoming: true);
       IslandMessages.show(
-        HomeIslandNotices.reservationAcceptedAt(request.pickupTime),
+        HomeIslandNotices.reservationAcceptedAt(
+          request.pickupTime,
+        ).forRide(request.id),
       );
     }
     _closeHomeReservation();
@@ -570,7 +576,9 @@ extension _HomeReservation on _DriverHomeState {
             pickupPay: _HomeOfferRadar(this)._pickupPayOf(offer).pay,
           );
           IslandMessages.show(
-            HomeIslandNotices.reservationAcceptedAt(ride.pickupTime),
+            HomeIslandNotices.reservationAcceptedAt(
+              ride.pickupTime,
+            ).forRide(offer.id),
           );
           if (up) {
             _HomeOfferRadar(this)._dismissOutsideRadarOffer();
@@ -580,7 +588,9 @@ extension _HomeReservation on _DriverHomeState {
         // Inside its Exclusive window: it is this driver's trip now.
         ScheduledRideStore.take(offer.id);
         _reservation.wonId = offer.id;
-        IslandMessages.show(HomeIslandNotices.reservationAccepted);
+        IslandMessages.show(
+          HomeIslandNotices.reservationAccepted.forRide(offer.id),
+        );
         _HomeOfferRadar(
           this,
         )._openWonOffer(offer, WaybillRecord.exclusiveReservationSource);

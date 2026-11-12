@@ -208,7 +208,7 @@ extension _HomeScheduled on _DriverHomeState {
       state.planning = true;
       ScheduledRideStore.giveToBackup(ride);
       state.planning = false;
-      IslandMessages.show(HomeIslandNotices.givenToBackup);
+      IslandMessages.show(HomeIslandNotices.givenToBackup.forRide(ride.id));
       if (!identical(_nextScheduledRide, ride)) {
         _planScheduled();
       }
@@ -333,7 +333,9 @@ extension _HomeScheduled on _DriverHomeState {
 
   /// Admin "Late warning": the island, Scheduled rides and Notifications.
   void _warnLateScheduled(ReservationRequestPreview ride) {
-    IslandMessages.show(HomeIslandNotices.headToPickup(ride.pickupTime));
+    IslandMessages.show(
+      HomeIslandNotices.headToPickup(ride.pickupTime).forRide(ride.id),
+    );
     ScheduledRideStore.remind(
       ride,
       () => tr.headToYourPickupTimePickup(ride.pickupTime, ride.pickupAddress),
@@ -415,7 +417,10 @@ extension _HomeScheduled on _DriverHomeState {
       ..lateSince = null;
     ScheduledRideStore.reminder.value = null;
     IslandMessages.show(
-      HomeIslandNotices.leaveNow(ride.pickupTime, riderName: ride.riderName),
+      HomeIslandNotices.leaveNow(
+        ride.pickupTime,
+        riderName: ride.riderName,
+      ).forRide(ride.id),
     );
     _noteRideAlert(
       () => ride.riderName.isEmpty
@@ -464,7 +469,7 @@ extension _HomeScheduled on _DriverHomeState {
     ScheduledRideStore.giveToBackup(ride);
     ScheduledRideStore.reminder.value = null;
     _scheduled.planning = false;
-    IslandMessages.show(HomeIslandNotices.givenToBackup);
+    IslandMessages.show(HomeIslandNotices.givenToBackup.forRide(ride.id));
     _planScheduled();
   }
 
@@ -488,7 +493,10 @@ extension _HomeScheduled on _DriverHomeState {
         ? '${minutes ~/ 60} h'
         : '$minutes min';
     IslandMessages.show(
-      HomeIslandNotices.scheduledReminder(ride.pickupTime, left),
+      HomeIslandNotices.scheduledReminder(
+        ride.pickupTime,
+        left,
+      ).forRide(ride.id),
     );
     ScheduledRideStore.remind(
       ride,
@@ -524,7 +532,9 @@ extension _HomeScheduled on _DriverHomeState {
       return;
     }
     _scheduled.onlineReminded = ride;
-    IslandMessages.show(HomeIslandNotices.goOnlineFor(ride.pickupTime));
+    IslandMessages.show(
+      HomeIslandNotices.goOnlineFor(ride.pickupTime).forRide(ride.id),
+    );
     ScheduledRideStore.remind(
       ride,
       () => tr.goOnlineNowForYourPickup(ride.pickupTime),
@@ -659,7 +669,9 @@ extension _HomeScheduled on _DriverHomeState {
     _afterClaimResolved();
     final ride = _scheduled.assigned[offer.id];
     if (result.outcome == ClaimOutcome.networkError) {
-      IslandMessages.show(HomeIslandNotices.reservationNoConnection);
+      IslandMessages.show(
+        HomeIslandNotices.reservationNoConnection.forRide(offer.id),
+      );
       // Nothing decided: the card counts down again.
       _HomeExclusive(this)._restartExclusiveTimeout(
         offer,
@@ -675,9 +687,13 @@ extension _HomeScheduled on _DriverHomeState {
         ride,
         pickupPay: _HomeOfferRadar(this)._pickupPayOf(offer).pay,
       );
-      IslandMessages.show(HomeIslandNotices.assignmentAccepted);
+      IslandMessages.show(
+        HomeIslandNotices.assignmentAccepted.forRide(offer.id),
+      );
     } else {
-      IslandMessages.show(HomeIslandNotices.reservationUnavailable);
+      IslandMessages.show(
+        HomeIslandNotices.reservationUnavailable.forRide(offer.id),
+      );
     }
     if (_outsideRadarOffer?.id == offer.id) {
       _HomeOfferRadar(this)._dismissOutsideRadarOffer();
@@ -692,7 +708,9 @@ extension _HomeScheduled on _DriverHomeState {
       return;
     }
     _scheduled.answered.add(offer.id);
-    IslandMessages.show(HomeIslandNotices.assignmentNotAccepted);
+    IslandMessages.show(
+      HomeIslandNotices.assignmentNotAccepted.forRide(offer.id),
+    );
   }
 }
 

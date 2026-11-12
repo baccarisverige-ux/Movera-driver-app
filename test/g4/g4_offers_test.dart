@@ -978,12 +978,18 @@ void main() {
     expect(IslandMessages.take(), isNull);
   });
 
-  test('G27: a group\'s waiting messages can be dropped', () {
+  test('G27: a won offer\'s waiting messages can be dropped', () {
     IslandMessages.reset();
     IslandMessages.show(const IslandMessage(title: 'A', group: 'radar-match'));
-    IslandMessages.show(const IslandMessage(title: 'E', group: 'exclusive'));
+    IslandMessages.show(
+      const IslandMessage(title: 'E', group: 'exclusive', ride: 'o1'),
+    );
+    IslandMessages.show(
+      const IslandMessage(title: 'other offer', group: 'exclusive', ride: 'o2'),
+    );
     IslandMessages.show(const IslandMessage(title: 'kept'));
-    IslandMessages.dropGroups(const {'radar-match', 'exclusive'});
+    IslandMessages.dropOffer('o1', const {'radar-match', 'exclusive'});
+    expect(IslandMessages.take()?.title, 'other offer');
     expect(IslandMessages.take()?.title, 'kept');
     expect(IslandMessages.take(), isNull);
   });

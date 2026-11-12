@@ -605,6 +605,27 @@ void main() {
       expect(find.text('Private'), findsOneWidget);
     });
 
+    test('G27 nit: reset() forgets when the texts were read, so the next '
+        'resume reads them again', () async {
+      final requests = <http.Request>[];
+      final api = ApiClient(
+        client: MockClient((request) async {
+          requests.add(request);
+          return _json(200, legalAnswer());
+        }),
+        baseUri: _origin,
+        tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+      );
+      final legal = DriverLegal(api: api, cache: MemoryDriverLegalCache());
+      await legal.start(country: 'SE');
+      expect(requests, hasLength(1));
+      legal
+        ..reset()
+        ..api = api;
+      await legal.refreshIfStale();
+      expect(requests, hasLength(2));
+    });
+
     test('going online refused with terms_not_accepted says "Accept the '
         'new terms to go online"', () {
       final error = ApiError(

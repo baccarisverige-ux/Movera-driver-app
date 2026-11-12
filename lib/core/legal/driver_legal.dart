@@ -430,6 +430,7 @@ class DriverLegal extends ChangeNotifier {
   @visibleForTesting
   void reset() {
     _texts.clear();
+    _readAt.clear();
     _accepted.clear();
     _inFlight.clear();
     _country = 'SE';

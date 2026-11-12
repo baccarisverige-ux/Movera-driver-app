@@ -163,7 +163,9 @@ extension _AcceptRideLateEta on _AcceptRideState {
     );
     await _AcceptRideTrip(this)._leaveAfterRelease(
       status,
-      notice: HomeIslandNotices.lateReassigned(minutes),
+      notice: HomeIslandNotices.lateReassigned(
+        minutes,
+      ).forRide(widget.scheduledRideId),
     );
   }
 }
