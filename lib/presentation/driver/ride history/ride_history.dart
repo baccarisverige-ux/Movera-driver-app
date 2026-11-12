@@ -11,6 +11,8 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
+import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/presentation/driver/ride%20history/cash_balance_sheet.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 
@@ -55,10 +57,81 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   bool _loadFailed = false;
   bool _restoring = false;
 
+  /// G28 step 1: a live build reads the period totals from the server
+  /// (`GET /driver/earnings`), as Home's TODAY face does: the phone's
+  /// archive is wiped at sign-out and reinstall and holds only this
+  /// phone's trips. The ride list below stays the phone's (step 2).
+  late final LiveDriverServices? _live = widget.loadHistory == null
+      ? LiveDriverServices.instance
+      : null;
+  EarningsTotals? _serverTotals;
+  bool _serverFailed = false;
+  int _serverRead = 0;
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    if (_live != null) {
+      Money.zoneCurrencyChanges.addListener(_readServerTotals);
+      _readServerTotals();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_live != null) {
+      Money.zoneCurrencyChanges.removeListener(_readServerTotals);
+    }
+    super.dispose();
+  }
+
+  void _selectPeriod(_HistoryPeriod period) {
+    setState(() => _period = period);
+    _readServerTotals();
+  }
+
+  /// The selected period as instants: today from the phone's midnight,
+  /// "last 7 days" from now − 7 days, the month from its 1st; up to now.
+  static ({DateTime from, DateTime to}) rangeOf(
+    _HistoryPeriod period,
+    DateTime now,
+  ) {
+    final from = switch (period) {
+      _HistoryPeriod.today => DateTime(now.year, now.month, now.day),
+      _HistoryPeriod.week => now.subtract(const Duration(days: 7)),
+      _HistoryPeriod.month => DateTime(now.year, now.month),
+    };
+    // The server counts up to `to`, excluded: now included.
+    return (from: from, to: now.add(const Duration(milliseconds: 1)));
+  }
+
+  Future<void> _readServerTotals() async {
+    final live = _live;
+    if (live == null || !mounted) return;
+    final read = ++_serverRead;
+    setState(() {
+      _serverTotals = null;
+      _serverFailed = false;
+    });
+    final range = rangeOf(_period, DateTime.now());
+    EarningsTotals? totals;
+    try {
+      totals = await live.earnings.range(
+        from: range.from,
+        to: range.to,
+        // The driver's zone currency, as the wallet opens on (owner
+        // 2026-11-10); the server's default until a zone is known.
+        currency: Money.zoneKnown ? Money.zoneCurrency : null,
+      );
+    } catch (_) {
+      totals = null;
+    }
+    if (!mounted || read != _serverRead) return;
+    setState(() {
+      _serverTotals = totals;
+      _serverFailed = totals == null;
+    });
   }
 
   Future<void> _loadHistory() async {
@@ -139,6 +212,11 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   }
 
   String get _periodEarnings {
+    if (_live != null) {
+      // Never the phone's sum shown as the truth (audit R3).
+      if (_serverFailed) return tr.unavailable;
+      return _serverTotals?.net.formatted ?? _pending;
+    }
     final amounts = <Money>[];
     for (final ride in _periodRidesList) {
       if (ride.fareMoney == null) {
@@ -161,10 +239,20 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   List<Money> get _periodCashBalance =>
       CashBalance.totals(_periodCashTrips.map((trip) => trip.cashBalance!));
 
-  String get _periodRides => _periodRidesList
+  String get _periodRides {
+    if (_live != null) {
+      if (_serverFailed) return _pending;
+      return _serverTotals?.tripCount.toString() ?? _pending;
+    }
+    return _localCompletedRides.toString();
+  }
+
+  /// The completed trips of the list below (this phone's archive).
+  int get _localCompletedRides => _periodRidesList
       .where((ride) => ride.status == TripStatus.completed)
-      .length
-      .toString();
+      .length;
+
+  static const String _pending = '—';
 
   String get _periodHours => '—';
 
@@ -417,7 +505,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         // driver-85: the 'Rides' metric and this note count completed
         // trips; the cards and the counts next to them count every
         // finished trip listed, cancelled ones included.
-        if (_periodRides == '0')
+        if (_localCompletedRides == 0)
           Padding(
             padding: EdgeInsets.all(18),
             child: Text(tr.noCompletedRidesInThisPeriod),
@@ -536,17 +624,17 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           _PeriodButton(
             label: tr.today,
             selected: _period == _HistoryPeriod.today,
-            onTap: () => setState(() => _period = _HistoryPeriod.today),
+            onTap: () => _selectPeriod(_HistoryPeriod.today),
           ),
           _PeriodButton(
             label: tr.week,
             selected: _period == _HistoryPeriod.week,
-            onTap: () => setState(() => _period = _HistoryPeriod.week),
+            onTap: () => _selectPeriod(_HistoryPeriod.week),
           ),
           _PeriodButton(
             label: tr.month,
             selected: _period == _HistoryPeriod.month,
-            onTap: () => setState(() => _period = _HistoryPeriod.month),
+            onTap: () => _selectPeriod(_HistoryPeriod.month),
           ),
         ],
       ),
