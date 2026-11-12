@@ -960,8 +960,17 @@ class _AcceptRideState extends State<AcceptRide>
   @override
   Widget build(BuildContext context) {
     return LayoutViewport(
-      child: PopScope(
+      // Back never leaves an active trip. canPop false also beats the open
+      // side menu (a drawer), so Back closes the menu here, as Home does
+      // (device run 7, 2026-11-12).
+      child: PopScope<dynamic>(
         canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          final scaffold = _rideScaffoldKey.currentState;
+          if (!didPop && scaffold != null && scaffold.isDrawerOpen) {
+            scaffold.closeDrawer();
+          }
+        },
         child: Scaffold(
           key: _rideScaffoldKey,
           // The menu opens from the island, not by swiping over the map.
