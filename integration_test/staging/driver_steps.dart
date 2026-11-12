@@ -21,7 +21,19 @@ bool shows(Finder finder) => finder.evaluate().isNotEmpty;
 /// screen there: blank frames, full-screen loaders). Null = nothing.
 void Function()? pumpProbe;
 
-/// Pumps until [done] or [timeout]; taps known one-off prompts meanwhile.
+/// Hard stop for the test's steps (the trip test sets it, then clears it
+/// for its clean-up): past it every [pumpUntil] / [wait] returns at once,
+/// so the running step ends in seconds and the clean-up and Go offline
+/// still run inside the test's and Test Lab's time limits. Null = none.
+DateTime? stepsHardStop;
+
+bool get pastStepsHardStop {
+  final stop = stepsHardStop;
+  return stop != null && DateTime.now().isAfter(stop);
+}
+
+/// Pumps until [done] or [timeout] (or [stepsHardStop]); taps known
+/// one-off prompts meanwhile.
 Future<bool> pumpUntil(
   WidgetTester tester,
   bool Function() done, {
@@ -29,7 +41,9 @@ Future<bool> pumpUntil(
   Duration step = const Duration(milliseconds: 250),
   bool dismiss = true,
 }) async {
-  final end = DateTime.now().add(timeout);
+  var end = DateTime.now().add(timeout);
+  final stop = stepsHardStop;
+  if (stop != null && stop.isBefore(end)) end = stop;
   while (DateTime.now().isBefore(end)) {
     await tester.pump(step);
     pumpProbe?.call();

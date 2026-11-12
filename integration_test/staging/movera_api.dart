@@ -234,6 +234,35 @@ class RiderApi extends MoveraApi {
 
   Future<ApiAnswer> history() =>
       get('/api/v1/rider/trips', query: const {'limit': '20'});
+
+  /// GET /rider/trips?kind=scheduled: the rider's booked-for-later rides
+  /// (`/rider/trips/active` lists one only once its driver is driving).
+  Future<ApiAnswer> scheduledTrips() => get(
+    '/api/v1/rider/trips',
+    query: const {'kind': 'scheduled', 'limit': '50'},
+  );
+
+  /// Ids of the rider's open (non-terminal) trips the contract lists:
+  /// the active trip and the booked rides. Null when a read failed (the
+  /// caller must not treat "unknown" as "none").
+  Future<Set<String>?> openTripIds() async {
+    final active = await activeTrip();
+    final booked = await scheduledTrips();
+    if ((active.status != 200 && active.status != 204) || !booked.ok) {
+      return null;
+    }
+    bool open(Object? t) =>
+        t is Map &&
+        t['tripId'] is String &&
+        !terminalStatuses.contains(t['status']);
+    final items = booked.map?['items'];
+    return <String>{
+      if (open(active.map)) active.map!['tripId'] as String,
+      if (items is List)
+        for (final t in items)
+          if (open(t)) (t as Map)['tripId'] as String,
+    };
+  }
 }
 
 /// Status groups of contract.json TripStatus.

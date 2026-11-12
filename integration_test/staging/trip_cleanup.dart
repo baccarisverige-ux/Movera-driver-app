@@ -4,8 +4,27 @@ part of 'trip_run.dart';
 /// (rider cancel up to the arrival, else driver cancel), and the phone is
 /// brought back to Home.
 extension _TripCleanup on TripRun {
-  Future<void> _cleanup() async {
+  /// [until]: the clean-up's own time box (the run's hard limit has
+  /// passed or the steps are over); each server call is cut at it.
+  Future<void> _cleanup({required DateTime until}) async {
     const title = 'no open test trip is left';
+    Future<ApiAnswer> boxed(Future<ApiAnswer> call) {
+      var left = until.difference(DateTime.now());
+      if (left < const Duration(seconds: 5)) left = const Duration(seconds: 5);
+      return call.timeout(
+        left,
+        onTimeout: () => const ApiAnswer(0, null, error: 'TimeoutException'),
+      );
+    }
+
+    if (bookAnswerLost && rider.signedIn) {
+      // A trip made by a booking whose answer was lost may show up late.
+      final found = await _findLostBooking().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => const <String>[],
+      );
+      CheckLog.say('STEP lost booking re-check: ${found.length} new trip(s)');
+    }
     if (booked.isEmpty) {
       log.skip('CLEANUP', title, 'no trip was booked');
     }
@@ -13,18 +32,20 @@ extension _TripCleanup on TripRun {
     var allClosed = true;
     for (final id in booked) {
       try {
-        var answer = await rider.trip(id);
+        var answer = await boxed(rider.trip(id));
         var status = answer.map?['status'] as String?;
         var how = 'nothing to do';
         if (status != null && !terminalStatuses.contains(status)) {
           final version = (answer.map!['version'] as num).toInt();
           final byRider =
               riderCancellable.contains(status) || status == 'requested';
-          final done = byRider
-              ? await rider.cancel(id, version, 'plans_changed')
-              : await driverApi.cancel(id, version, 'other_on_trip');
+          final done = await boxed(
+            byRider
+                ? rider.cancel(id, version, 'plans_changed')
+                : driverApi.cancel(id, version, 'other_on_trip'),
+          );
           how = '${byRider ? 'rider' : 'driver'} cancel ${done.short}';
-          answer = await rider.trip(id);
+          answer = await boxed(rider.trip(id));
           status = answer.map?['status'] as String?;
         }
         final closed = status != null && terminalStatuses.contains(status);
@@ -51,10 +72,13 @@ extension _TripCleanup on TripRun {
         await wait(tester, const Duration(seconds: 2));
       }
     }
+    final left = until.difference(DateTime.now());
     await pumpUntil(
       tester,
       () => shows(find.byType(DriverHome)),
-      timeout: const Duration(seconds: 15),
+      timeout: left < const Duration(seconds: 15)
+          ? const Duration(seconds: 3)
+          : const Duration(seconds: 15),
     );
   }
 }

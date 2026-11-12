@@ -76,8 +76,9 @@ void main() {
         ].join('\n'),
       );
     },
-    // Test Lab --timeout is 20m: sign-in, ~3 min of driving, the ride
-    // check's 2-minute stop and the clean-up fit with room.
-    timeout: const Timeout(Duration(minutes: 18)),
+    // Test Lab --timeout is 20m (install and start count too). The steps
+    // stop at TripRun.hardAfter (15 min); CLEANUP + OFFLINE then have
+    // TripRun.cleanupBudget, and this limit is above both.
+    timeout: const Timeout(TripRun.testLimit),
   );
 }

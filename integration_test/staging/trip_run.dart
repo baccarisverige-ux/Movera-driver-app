@@ -2,16 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/safety/emergency_numbers.dart';
+import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
+import 'package:movera/widgets/radar_offer_card.dart';
 
 import 'check_log.dart';
 import 'driver_steps.dart';
@@ -23,6 +24,7 @@ import 'trip_steps.dart';
 
 part 'trip_extras.dart';
 part 'trip_cleanup.dart';
+part 'trip_money.dart';
 part 'trip_scheduled.dart';
 
 /// Owner 2026-11-12 ("U can't make all trip lifecycle test on firebase?"):
@@ -48,8 +50,17 @@ class TripRun extends StagingSession {
   /// cancel case) instead of a live one.
   final bool scheduled;
 
-  /// Trip ids this run booked (the clean-up closes every one).
+  /// Trip ids this run booked (the clean-up closes every one), also those
+  /// found after a lost `POST /trips` answer ([_findLostBooking]).
   final List<String> booked = <String>[];
+
+  /// A `POST /trips` answer was lost (no answer / 5xx): the trip may exist.
+  /// The clean-up looks for it once more before closing.
+  bool bookAnswerLost = false;
+
+  /// The rider's open trips before this run's first booking (null:
+  /// unknown).
+  Set<String>? openBeforeBook;
   late final TransitionWatch watch;
   late final MockPosition mock;
 
@@ -71,11 +82,28 @@ class TripRun extends StagingSession {
 
   final DateTime startedAt = DateTime.now();
 
-  /// Optional checks are skipped past this point, so the clean-up always
-  /// has time inside the test's own limit.
-  late final DateTime softDeadline = startedAt.add(const Duration(minutes: 14));
+  /// Optional checks are skipped past this point.
+  late final DateTime softDeadline = startedAt.add(softAfter);
+
+  /// Every step stops here (supervisor 2026-11-12): no new step starts and
+  /// the running one ends within seconds ([stepsHardStop]); CLEANUP and
+  /// OFFLINE then run in the time left before the test's own limit
+  /// ([testLimit], above this plus [cleanupBudget]) and Test Lab's 20 min.
+  late final DateTime hardDeadline = startedAt.add(hardAfter);
+
+  static const Duration softAfter = Duration(minutes: 13);
+  static const Duration hardAfter = Duration(minutes: 15);
+
+  /// The most CLEANUP + OFFLINE may take after [hardDeadline].
+  static const Duration cleanupBudget = Duration(minutes: 2, seconds: 30);
+
+  /// The test's own timeout (trip_lifecycle_test.dart): hard stop + clean-up
+  /// + room, under Test Lab's 20 min (which also counts install and start).
+  static const Duration testLimit = Duration(minutes: 18);
 
   bool get late => DateTime.now().isAfter(softDeadline);
+
+  bool get stopped => DateTime.now().isAfter(hardDeadline);
 
   String? tripId;
   Map<String, dynamic>? lastRiderView;
@@ -95,6 +123,9 @@ class TripRun extends StagingSession {
     String title,
     Future<void> Function() body,
   ) async {
+    if (stopped) {
+      return log.skip(id, title, 'not run: hard time limit (clean-up next)');
+    }
     log.step(id);
     try {
       await body();
@@ -126,7 +157,7 @@ class TripRun extends StagingSession {
           (want.contains(status) || terminalStatuses.contains(status))) {
         return status;
       }
-      if (DateTime.now().isAfter(end)) return status;
+      if (DateTime.now().isAfter(end) || stopped) return status;
       await wait(tester, const Duration(seconds: 2));
     }
   }
@@ -150,6 +181,7 @@ class TripRun extends StagingSession {
     required String code,
     required String riderPhone,
   }) async {
+    stepsHardStop = hardDeadline;
     log.step('sign in (server ${base.host})');
     final signInError = await guard(
       () => signIn(tester, phone: phone, code: code),
@@ -157,6 +189,7 @@ class TripRun extends StagingSession {
     if (signInError != null) {
       log.fail('SIGN-IN', 'test driver reaches Home', signInError);
       log.skip('TRIP', 'trip lifecycle', 'not run: sign-in failed');
+      stepsHardStop = null;
       return;
     }
     log.pass('SIGN-IN', 'test driver reaches Home', 'Home is open');
@@ -192,8 +225,30 @@ class TripRun extends StagingSession {
       log.fail('RUN', 'checks ran to the end', 'stopped by $error');
       CheckLog.say('STACK ${stack.toString().split('\n').take(6).join(' | ')}');
     } finally {
-      await _cleanup();
-      await goOfflineAtEnd();
+      // The steps are over (or stopped at the hard limit): the clean-up
+      // may pump again, and goes offline through the API when the time
+      // left is short.
+      stepsHardStop = null;
+      if (stopped) {
+        CheckLog.say(
+          'STEP hard time limit (${TripRun.hardAfter.inMinutes} min) reached: '
+          'clean-up and offline now',
+        );
+      }
+      // Counted back from the test's own limit (minus room for writing the
+      // results): the clean-up keeps a minute for Go offline, and the
+      // app's own Go offline (hold + confirm, up to ~90 s) only runs with
+      // two minutes left, else the API sets the driver offline.
+      final testEnd = startedAt
+          .add(TripRun.testLimit)
+          .subtract(const Duration(seconds: 20));
+      var cleanupEnd = DateTime.now().add(TripRun.cleanupBudget);
+      final latest = testEnd.subtract(const Duration(minutes: 1));
+      if (latest.isBefore(cleanupEnd)) cleanupEnd = latest;
+      await _cleanup(until: cleanupEnd);
+      final short =
+          testEnd.difference(DateTime.now()) < const Duration(minutes: 2);
+      await goOfflineAtEnd(apiOnly: short);
       rider.close();
     }
   }
@@ -283,10 +338,21 @@ class TripRun extends StagingSession {
       (x) => mine.contains(x['categoryId']),
       orElse: () => quotes.first,
     );
+    // Once per run (the first booking): later bookings' own trips are on
+    // [booked] already.
+    openBeforeBook ??= await rider.openTripIds();
     final booked = await rider.book(chosen, scheduledAt: at);
     final made = booked.map?['tripId'];
     if (!booked.ok || made is! String) {
-      log.fail(id, title, 'quote ${q.short}; book ${booked.short}');
+      final lost = booked.status == 0 || booked.status >= 500;
+      final found = lost ? await _findLostBooking() : const <String>[];
+      log.fail(
+        id,
+        title,
+        'quote ${q.short}; book ${booked.short}'
+        '${lost ? '; answer lost: rider open trips checked, ${found.length} new '
+                  'trip(s) added to the clean-up' : ''}',
+      );
       return;
     }
     tripId = made;
@@ -302,8 +368,30 @@ class TripRun extends StagingSession {
     );
   }
 
+  /// After a lost `POST /trips` answer: the rider's open trips (active +
+  /// booked, contract `/rider/trips/active` and `/rider/trips?kind=
+  /// scheduled`) that were not open before the run's first booking go on
+  /// the clean-up list. Before-list unknown: every open one not already
+  /// listed (the rider is the run's own big-test rider; BOOK cancels its
+  /// open trip anyway). Returns the ids added.
+  Future<List<String>> _findLostBooking() async {
+    bookAnswerLost = true;
+    final now = await rider.openTripIds();
+    if (now == null) {
+      CheckLog.say('STEP lost booking: rider trips not readable now');
+      return const <String>[];
+    }
+    final before = openBeforeBook ?? const <String>{};
+    final added = [
+      for (final id in now)
+        if (!before.contains(id) && !booked.contains(id)) id,
+    ];
+    booked.addAll(added);
+    return added;
+  }
+
   Future<void> _offerAndAccept() async {
-    const title = 'offer shows on the driver phone';
+    const title = 'offer shows, only what the driver gets';
     final sent = DateTime.now();
     String? control;
     await watch.run('home->offer', () async {
@@ -324,12 +412,10 @@ class TripRun extends StagingSession {
       log.skip('ACCEPT', 'driver accepts', 'not run: no offer');
       return;
     }
-    log.pass(
-      'OFFER',
-      title,
-      '$control after ${DateTime.now().difference(sent).inSeconds} s; '
-          'server trip ${view?['status']}',
-    );
+    final card = _offerCardTexts();
+    final offerDetail =
+        '$control after ${DateTime.now().difference(sent).inSeconds} s; '
+        'server trip ${view?['status']}';
     const accept = 'driver accepts in the app';
     final shown = await watch.run(
       'offer->trip',
@@ -339,6 +425,10 @@ class TripRun extends StagingSession {
       'accepted',
       'driver_to_pickup',
     }, const Duration(seconds: 30));
+    final (moneyOk, money) = await _offerMoney(card);
+    moneyOk
+        ? log.pass('OFFER', title, '$offerDetail; $money')
+        : log.fail('OFFER', title, '$offerDetail; $money');
     final screen = tripScreen();
     final sameTrip = screen?.tripId == tripId;
     accepted =
@@ -398,7 +488,7 @@ class TripRun extends StagingSession {
       await rideCheckGate();
       if (!await slidePrimary(tester)) return false;
       final end = DateTime.now().add(const Duration(seconds: 40));
-      while (DateTime.now().isBefore(end)) {
+      while (DateTime.now().isBefore(end) && !stopped) {
         await answerStepSheets(tester, pin: pin);
         status = await waitStatus(onBoardStatuses, const Duration(seconds: 1));
         if (onBoardStatuses.contains(status)) break;
@@ -442,66 +532,6 @@ class TripRun extends StagingSession {
 
   static String short(Money m) =>
       Money.parseLabel(m.formatted)?.formattedShort ?? m.formatted;
-
-  Future<void> _collect() async {
-    const title = 'to collect / you get = server, trip completed';
-    final opened = await watch.run('collect', () async {
-      await rideCheckGate();
-      if (!await tapTripControl(tester, 'active-ride-collect-cash')) {
-        return false;
-      }
-      return pumpUntil(
-        tester,
-        () => shows(byKey('cash-collect-sheet')),
-        timeout: const Duration(seconds: 30),
-      );
-    });
-    final raw = rec.lastAnswer['/api/v1/driver/trips/$tripId/complete-preview'];
-    preview = raw is Map
-        ? CompletePreview.tryParse(Map<String, dynamic>.from(raw))
-        : null;
-    final p = preview;
-    if (!opened || p == null) {
-      log.fail('PAY', title, 'cash sheet=$opened server preview=${p != null}');
-      return;
-    }
-    final amount = byKey('cash-collect-amount');
-    final shownCash = shows(amount)
-        ? tester.widget<Text>(amount.first).data
-        : null;
-    final wantCash = short(p.cashDue);
-    final share = p.yourShare;
-    final balance = textsUnder(byKey('cash-collect-balance'));
-    final shareShown = share == null ? null : balance.contains(short(share));
-    await log.screenshot(tester, 'cash-collect');
-    var status = serverStatus;
-    await watch.run('end', () async {
-      await tester.tap(byKey('cash-complete-ride').first, warnIfMissed: false);
-      final end = DateTime.now().add(const Duration(seconds: 45));
-      while (DateTime.now().isBefore(end) && !rideCompletedShown()) {
-        await answerStepSheets(tester);
-        await wait(tester, const Duration(milliseconds: 750));
-      }
-      status = await waitStatus({'completed'}, const Duration(seconds: 15));
-    });
-    completed = status == 'completed';
-    completedView = lastRiderView;
-    final fare = moneyOf(completedView?['fare']);
-    final total = (p.total.minorUnits, p.total.currency);
-    final good =
-        shownCash == wantCash &&
-        shareShown != false &&
-        completed &&
-        fare == total &&
-        rideCompletedShown();
-    final detail =
-        'to collect shown=$shownCash server=$wantCash; you get '
-        '${share == null ? 'not sent by the server' : '${short(share)} shown=$shareShown'}; '
-        'server status=$status fare=$fare preview total=$total '
-        'earlyEnd=${p.earlyEnd}; finished screen=${rideCompletedShown()}';
-    good ? log.pass('PAY', title, detail) : log.fail('PAY', title, detail);
-    if (rideCompletedShown()) await log.screenshot(tester, 'ride-completed');
-  }
 
   Future<void> _rate() async {
     const title = 'stars + Done send the rating, Home shows';

@@ -159,7 +159,25 @@ class StagingSession {
     );
   }
 
-  Future<void> goOfflineAtEnd() async {
+  /// [apiOnly]: little time left (the trip test's hard limit): the server
+  /// is set offline through the API at once instead of the app's hold +
+  /// confirm, and the line says so.
+  Future<void> goOfflineAtEnd({bool apiOnly = false}) async {
+    if (apiOnly) {
+      final (_, profile) = await ask('/api/v1/driver/profile');
+      final api = await _offlineByApi(profile);
+      final (status, after) = await ask('/api/v1/driver/profile');
+      final now = statusOf(after);
+      final detail =
+          'time limit near: offline through the API ($api); '
+          'profile=$status onlineStatus=$now (the app\'s own Go offline '
+          'NOT CHECKED)';
+      now == 'offline'
+          ? log.pass('OFFLINE', 'Go offline is taken', detail)
+          : log.fail('OFFLINE', 'Go offline is taken', detail);
+      driverApi.close();
+      return;
+    }
     if (!online) {
       // Go online may have thrown or timed out after the tap while the
       // server did go online: ask the server, so the shared test driver is

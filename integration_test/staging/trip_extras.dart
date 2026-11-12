@@ -46,88 +46,6 @@ extension _TripExtras on TripRun {
         : log.fail(id, title, detail);
   }
 
-  /// The waybill: trip id, pickup, drop-off, driver name; after the trip
-  /// also the rider's fare and the driver's money from the server.
-  Future<void> _waybill({required bool after}) async {
-    final id = after ? 'WAYBILL-AFTER' : 'WAYBILL-DURING';
-    final title = after
-        ? 'waybill after the trip = server'
-        : 'waybill during the trip = server';
-    if (late) return log.skip(id, title, 'not run: time limit near');
-    final sheet = byKey('waybill-$tripId');
-    await watch.run(after ? 'waybill-after' : 'waybill-during', () async {
-      if (after) {
-        if (shows(byKey('ride-completed-waybill'))) {
-          await tester.ensureVisible(byKey('ride-completed-waybill').first);
-          await tester.tap(
-            byKey('ride-completed-waybill').first,
-            warnIfMissed: false,
-          );
-        }
-      } else if (shows(byKey('current-waybill-shortcut'))) {
-        await tapTripControl(tester, 'current-waybill-shortcut');
-      } else if (await tapTripControl(tester, 'current-trip-more')) {
-        await pumpUntil(
-          tester,
-          () => shows(byKey('current-trip-waybill-option')),
-          timeout: const Duration(seconds: 5),
-        );
-        if (shows(byKey('current-trip-waybill-option'))) {
-          await tester.tap(
-            byKey('current-trip-waybill-option').first,
-            warnIfMissed: false,
-          );
-        }
-      }
-      await pumpUntil(
-        tester,
-        () => shows(sheet),
-        timeout: const Duration(seconds: 10),
-      );
-    });
-    if (!shows(sheet)) {
-      log.fail(id, title, 'the waybill did not open');
-      return;
-    }
-    final texts = textsUnder(sheet);
-    bool has(String s) => texts.any((t) => t.contains(s));
-    final profile = rec.lastAnswer['/api/v1/driver/profile'];
-    final first = profile is Map ? profile['firstName'] as String? : null;
-    final missing = <String>[
-      if (!has(tripId!)) 'trip id',
-      if (!has(TripRun.pickupName)) 'pickup',
-      if (!has(TripRun.dropoffName)) 'drop-off',
-      if (first != null && !has(first)) 'driver name',
-    ];
-    if (after) {
-      final view = completedView;
-      for (final (name, money) in [
-        ('rider fare', view?['fare']),
-        (
-          'driver total',
-          preview?.yourShare == null
-              ? null
-              : {
-                  'amountMinor': preview!.yourShare!.minorUnits,
-                  'currency': preview!.yourShare!.currency,
-                },
-        ),
-      ]) {
-        if (money is! Map) continue;
-        final m = Money.fromJson(Map<String, dynamic>.from(money));
-        if (!has(m.formatted) && !has(TripRun.short(m))) missing.add(name);
-      }
-    }
-    await systemBack(tester);
-    await tester.pump(const Duration(milliseconds: 500));
-    final detail =
-        'checked trip id, pickup, drop-off, driver name'
-        '${after ? ', rider fare, driver total' : ''}; missing=$missing; '
-        'times and vehicle: shown, not compared (no server field in the '
-        'same format)';
-    missing.isEmpty ? log.pass(id, title, detail) : log.fail(id, title, detail);
-  }
-
   /// Rider -> driver (unread badge, the text in the chat), driver ->
   /// rider (typed in the app, read over HTTP); chat open/close watched.
   Future<void> _chat() async {
@@ -348,7 +266,9 @@ extension _TripExtras on TripRun {
       );
     }
     final mark = rec.length;
-    while (rideCheckSeenAt == null && DateTime.now().isBefore(until)) {
+    while (rideCheckSeenAt == null &&
+        DateTime.now().isBefore(until) &&
+        !stopped) {
       await rideCheckGate();
       await wait(tester, const Duration(seconds: 2));
     }
@@ -392,7 +312,7 @@ extension _TripExtras on TripRun {
     final view = await riderView();
     ApiAnswer receipt = await rider.receipt(id);
     final end = DateTime.now().add(const Duration(seconds: 30));
-    while (receipt.status == 409 && DateTime.now().isBefore(end)) {
+    while (receipt.status == 409 && DateTime.now().isBefore(end) && !stopped) {
       await wait(tester, const Duration(seconds: 3));
       receipt = await rider.receipt(id);
     }
@@ -419,121 +339,5 @@ extension _TripExtras on TripRun {
             moneyOf(row['fare']) == fare
         ? log.pass('RIDER', title, detail)
         : log.fail('RIDER', title, detail);
-  }
-
-  /// Driver history (menu): the server's net for today (G28) shows, the
-  /// trip is listed, its details show fare, commission, his money and
-  /// "pay in car".
-  Future<void> _history() async {
-    const title = 'history: G28 net, the trip, all its lines';
-    if (late) return log.skip('HISTORY', title, 'not run: time limit near');
-    await backToHome(tester);
-    final mark = rec.length;
-    var opened = false;
-    await watch.run('history-open', () async {
-      final menu = find.byTooltip(tr.menu);
-      if (!await pumpUntil(
-        tester,
-        () => shows(menu),
-        timeout: const Duration(seconds: 5),
-      )) {
-        return;
-      }
-      await tester.tap(menu.first, warnIfMissed: false);
-      await pumpUntil(
-        tester,
-        () => shows(byKey('driver-side-menu')),
-        timeout: const Duration(seconds: 5),
-      );
-      final entry = find.descendant(
-        of: byKey('driver-side-menu'),
-        matching: find.text(tr.rideHistory),
-      );
-      if (!shows(entry)) return;
-      await tester.ensureVisible(entry.first);
-      await tester.tap(entry.first, warnIfMissed: false);
-      opened = await pumpUntil(
-        tester,
-        () => shows(find.byType(DriverRideHistory)),
-        timeout: const Duration(seconds: 10),
-      );
-      await pumpUntil(
-        tester,
-        () => calls(
-          '/api/v1/driver/earnings',
-          method: 'GET',
-          from: mark,
-        ).any((c) => c.status != null),
-        timeout: const Duration(seconds: 20),
-      );
-      await wait(tester, const Duration(seconds: 2));
-    });
-    final report = rec.lastAnswer['/api/v1/driver/earnings'];
-    EarningsTotals? totals;
-    try {
-      if (report is Map) {
-        totals = EarningsTotals.of(Map<String, dynamic>.from(report));
-      }
-    } on FormatException {
-      totals = null;
-    }
-    final page = find.byType(DriverRideHistory);
-    final netShown =
-        totals != null &&
-        textsUnder(page).any((t) => t.contains(totals!.net.formatted));
-    final row = find.byKey(ValueKey<String>(tripId!));
-    if (!shows(row)) {
-      for (final key in const [
-        'history-view-all-rides',
-        'history-all-rides-button',
-      ]) {
-        if (shows(byKey(key))) {
-          await tester.tap(byKey(key).first, warnIfMissed: false);
-          await wait(tester, const Duration(seconds: 2));
-          break;
-        }
-      }
-    }
-    final listed = shows(row);
-    final missing = <String>[];
-    if (listed) {
-      await watch.run('history-detail', () async {
-        await tester.ensureVisible(row.first);
-        await tester.tap(row.first, warnIfMissed: false);
-        await pumpUntil(
-          tester,
-          () => shows(find.byType(DriverRideHistoryDetail)),
-          timeout: const Duration(seconds: 10),
-        );
-      });
-      final texts = textsUnder(find.byType(DriverRideHistoryDetail));
-      bool has(Object? money) {
-        if (money is! Map) return true;
-        final m = Money.fromJson(Map<String, dynamic>.from(money));
-        return texts.any(
-          (t) => t.contains(m.formatted) || t.contains(TripRun.short(m)),
-        );
-      }
-
-      final view = completedView;
-      final driverView = await driverApi.trip(tripId!);
-      if (!has(view?['fare'])) missing.add('fare');
-      if (!has(driverView.map?['commission'])) missing.add('commission');
-      if (!has(
-        driverView.map?['driverTotal'] ?? driverView.map?['driverEarnings'],
-      )) {
-        missing.add('what he gets');
-      }
-      if (!texts.any((t) => t.contains(paymentMethodText('Cash')))) {
-        missing.add('payment method (${paymentMethodText('Cash')})');
-      }
-    }
-    await backToHome(tester, tries: 4);
-    final detail =
-        'page=$opened server net today=${totals?.net.formatted} shown=$netShown '
-        'trips=${totals?.tripCount}; trip listed=$listed; detail missing=$missing';
-    opened && netShown && listed && missing.isEmpty
-        ? log.pass('HISTORY', title, detail)
-        : log.fail('HISTORY', title, detail);
   }
 }

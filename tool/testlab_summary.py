@@ -457,6 +457,15 @@ def transitions_text(rows):
     return out
 
 
+# Supervisor 2026-11-12 (5x5 rule): the device checks share se.d38 / se.r35
+# with the 5x5 screen runs. Said in every summary so nobody overlaps them.
+SHARED_ACCOUNTS_NOTE = (
+    "Shared test accounts: se.d38 (driver) and se.r35 (rider) are also the 5x5 "
+    "screen runs' pair. One device-check run at a time (workflow concurrency "
+    "group); never dispatch one while a 5x5 screen run is going."
+)
+
+
 def summary_text(root):
     checks, source = checks_from(root)
     totals, failed_cases = junit_from(root)
@@ -479,6 +488,7 @@ def summary_text(root):
     out += ["", "JUnit: tests=%(tests)d failures=%(failures)d errors=%(errors)d skipped=%(skipped)d" % totals]
     if failed_cases:
         out.append("Failed JUnit cases: " + ", ".join(failed_cases))
+    out += ["", SHARED_ACCOUNTS_NOTE]
     out += ["", "Crash / error lines in logcat: %d" % len(crashes)]
     if crashes:
         out.append("```")

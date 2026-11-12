@@ -301,6 +301,18 @@ class TestlabSummaryTest(unittest.TestCase):
         self.logcat.write_text('I flutter : MOVERA-TL TRANSITIONS-JSON %s\n' % json.dumps(rows[:1]))
         self.assertIn('| offer->trip |', testlab_summary.summary_text(str(self.root)))
 
+    def test_summary_notes_the_5x5_shared_accounts_rule(self):
+        text = testlab_summary.summary_text(str(self.root))
+        self.assertIn('5x5', text)
+        self.assertIn('One device-check run at a time', text)
+
+    def test_workflow_runs_one_device_check_at_a_time(self):
+        workflow = pathlib.Path(__file__).resolve().parents[2] / '.github/workflows/android-test-apk.yml'
+        job = workflow.read_text().split('  device-checks:', 1)[1].split('    steps:', 1)[0]
+        self.assertIn('concurrency:', job)
+        self.assertIn('group: movera-device-checks-d38-r35', job)
+        self.assertIn('cancel-in-progress: false', job)
+
     def test_workflow_trip_passes_rider_only_at_run_time(self):
         workflow = pathlib.Path(__file__).resolve().parents[2] / '.github/workflows/android-test-apk.yml'
         job = workflow.read_text().split('  device-checks:', 1)[1]

@@ -164,10 +164,19 @@ jobs:
   # integration_test/trip_lifecycle_test.dart; the test also plays ONE
   # big-test rider over HTTP (se.r35, else se.r36), passed the same way as
   # the driver (run time only, masked, scrubbed in every spelling).
+  #
+  # One device-check run at a time (supervisor 2026-11-12): every kind signs in
+  # the shared big-test driver se.d38 (signing its other phone out) and the trip
+  # kinds cancel any open trip of rider se.r35, the same pair the 5x5 screen
+  # runs use. A second dispatch waits here instead of running alongside; never
+  # dispatch while a 5x5 screen run is going (that runs outside this group).
   device-checks:
     if: inputs.testlab_device != '' && inputs.testlab_test != 'robo'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    concurrency:
+      group: movera-device-checks-d38-r35
+      cancel-in-progress: false
     env:
       LIVE_API: https://movera-server.onrender.com
       GOOGLE_MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY || secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY }}
