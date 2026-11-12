@@ -815,7 +815,20 @@ class LiveLocationReporter {
   static const locationPath = '/api/v1/driver/location';
 
   /// The longest one GPS read may take.
-  static const readTimeout = Duration(seconds: 8);
+  ///
+  /// Device run 4 (2026-11-12, Go online refused with "Turn on location"
+  /// before any server call while Home had a position): this was 8 s, the
+  /// same as [DriverLocationService.oneShotLimit], so it always fired
+  /// first (the permission checks come before the one-shot) and the
+  /// service's last-known fallback (at most 30 s old, 50 m) never answered
+  /// Go online. It is now the one-shot limit plus [readFallbackMargin] for
+  /// the permission checks and the last-known read. The web is unchanged:
+  /// its one-shot ends at the same limit and has no last-known fix, so the
+  /// read still fails then and the held fix rules below apply as before.
+  static const readTimeout = Duration(seconds: 12);
+
+  /// Time [readTimeout] leaves after the one-shot limit.
+  static const readFallbackMargin = Duration(seconds: 4);
 
   final ApiClient _api;
   final DriverLocationRepository _location;

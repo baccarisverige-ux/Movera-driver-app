@@ -94,7 +94,10 @@ class DriverLocationService implements DriverLocationRepository {
     appResumed = _bindingResumed;
   }
 
-  static const Duration _oneShotLimit = Duration(seconds: 8);
+  /// The longest the one-shot GPS read may take before the last-known
+  /// fallback is tried. A caller's own timeout around
+  /// [getCurrentPosition] must be longer than this (device run 4).
+  static const Duration oneShotLimit = Duration(seconds: 8);
 
   /// Driver group 3 (live test 2026-10-30, "position sent only once"): a
   /// browser one-shot with `maximumAge: 0` waits for a *new* position, and
@@ -107,11 +110,11 @@ class DriverLocationService implements DriverLocationRepository {
       ? WebSettings(
           accuracy: LocationAccuracy.high,
           maximumAge: webMaximumAge,
-          timeLimit: _oneShotLimit,
+          timeLimit: oneShotLimit,
         )
       : LocationSettings(
           accuracy: LocationAccuracy.bestForNavigation,
-          timeLimit: _oneShotLimit,
+          timeLimit: oneShotLimit,
         );
 
   /// The app's page in the device settings, where precise location is
@@ -136,7 +139,7 @@ class DriverLocationService implements DriverLocationRepository {
       // never answers would block Home and the trip. Enforce it here too.
       final position = await Geolocator.getCurrentPosition(
         locationSettings: _settings,
-      ).timeout(_oneShotLimit);
+      ).timeout(oneShotLimit);
       return _toDriverLocation(position);
     } catch (error, stack) {
       DriverLog.warn('Current GPS failed, trying last known: $error');
