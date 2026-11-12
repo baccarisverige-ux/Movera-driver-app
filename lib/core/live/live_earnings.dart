@@ -41,6 +41,30 @@ class LiveEarnings {
     return EarningsWeek.of(report, now ?? DateTime.now());
   }
 
+  /// G28 step 1: the totals of [from]..[to] (instants, sent in UTC) as
+  /// the server counts them, `GET /driver/earnings?period=day&from&to`
+  /// summed over its day periods, in one [currency] (null: the server's
+  /// default). Throws when the server could not answer.
+  ///
+  /// A range that ends now leaves [to] out: the server then counts up to
+  /// its own now, included (a phone clock behind the server's would cut
+  /// off a trip just finished, as it counts `at < to`).
+  Future<EarningsTotals> range({
+    required DateTime from,
+    DateTime? to,
+    String? currency,
+  }) async {
+    final query = [
+      'period=day',
+      'from=${Uri.encodeQueryComponent(from.toUtc().toIso8601String())}',
+      if (to != null)
+        'to=${Uri.encodeQueryComponent(to.toUtc().toIso8601String())}',
+      if (currency != null) 'currency=${Uri.encodeQueryComponent(currency)}',
+    ].join('&');
+    final report = await _api.get('$path?$query');
+    return EarningsTotals.of(report);
+  }
+
   /// `GET /driver/payouts` (newest first): the driver's own payouts.
   /// Throws when the server could not answer.
   Future<List<DriverPayout>> payouts({int limit = 10}) async {
@@ -142,5 +166,73 @@ class EarningsWeek {
   final String? currency;
 
   /// Every currency earned in during the range; two or more → the switch.
+  final List<String> currencies;
+}
+
+/// G28 step 1: an `EarningsReport` summed over all its periods: `net`,
+/// `tripCount`, `cashCollected` and `tips` + `fees`, in the report's one
+/// currency.
+class EarningsTotals {
+  const EarningsTotals({
+    required this.net,
+    required this.tripCount,
+    required this.cashCollected,
+    this.tipsAndFees,
+    this.currencies = const [],
+  });
+
+  /// Throws [FormatException] when the report or one of its amounts
+  /// cannot be read (never a partial sum shown as the truth).
+  factory EarningsTotals.of(Map<String, dynamic> report) {
+    final currency = report['currency'];
+    if (currency is! String) {
+      throw FormatException('report currency missing', currency);
+    }
+    final periods = report['periods'];
+    if (periods is! List) throw FormatException('periods missing', periods);
+    Money sum(Money total, Object? amount) {
+      if (amount == null) return total;
+      if (amount is! Map) throw FormatException('amount', amount);
+      return total + Money.fromJson(Map<String, dynamic>.from(amount));
+    }
+
+    var net = Money(minorUnits: 0, currency: currency);
+    var cash = Money(minorUnits: 0, currency: currency);
+    Money? tipsAndFees = Money(minorUnits: 0, currency: currency);
+    var trips = 0;
+    for (final period in periods) {
+      if (period is! Map) throw FormatException('period', period);
+      net = sum(net, period['net']);
+      cash = sum(cash, period['cashCollected']);
+      // `tips` is required by the contract, `fees` (v0.5.1) optional: a
+      // period without `tips` → the sum is not known.
+      tipsAndFees = period['tips'] == null || tipsAndFees == null
+          ? null
+          : sum(sum(tipsAndFees, period['tips']), period['fees']);
+      trips += (period['tripCount'] as num?)?.toInt() ?? 0;
+    }
+    final listed = report['currencies'];
+    return EarningsTotals(
+      net: net,
+      tripCount: trips,
+      cashCollected: cash,
+      tipsAndFees: tipsAndFees,
+      currencies: [
+        if (listed is List)
+          for (final c in listed)
+            if (c is String && c.isNotEmpty) c,
+      ],
+    );
+  }
+
+  final Money net;
+  final int tripCount;
+  final Money cashCollected;
+
+  /// The driver's tips and his shares of cancel / no-show fees over the
+  /// range (both in [net]); null when the report does not give them.
+  final Money? tipsAndFees;
+
+  /// Every currency earned in during the range.
   final List<String> currencies;
 }
