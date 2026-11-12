@@ -264,6 +264,70 @@ void main() {
     });
   });
 
+  group('device run 4: Go online uses the last-known fallback', () {
+    late GeolocatorPlatform original;
+    late DriverLogSink sink;
+    setUp(() {
+      original = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = _SlowOneShotGeolocator();
+      sink = DriverLog.sink;
+      DriverLog.sink = (_) {};
+    });
+    tearDown(() {
+      GeolocatorPlatform.instance = original;
+      DriverLog.sink = sink;
+      DriverLocationService.resetForTesting();
+    });
+
+    testWidgets('a phone whose one-shot read takes longer than the one-shot '
+        'limit but has a fresh last-known fix reaches the availability '
+        'call (it was refused locally with "Turn on location")', (
+      tester,
+    ) async {
+      final client = api();
+      final reporter = LiveLocationReporter(
+        api: client,
+        location: const DriverLocationService(),
+        every: const Duration(hours: 1),
+        restampHeldFix: false,
+      );
+      final presence = LivePresence(
+        api: client,
+        dispatch: _FakeDispatch(),
+        reporter: reporter,
+      );
+      answers
+        ..add((_) => json(200, {'onlineStatus': 'offline', 'version': 4}))
+        ..add((_) => json(200, {'onlineStatus': 'online', 'version': 5}));
+      String? answer = 'pending';
+      unawaited(presence.goOnline().then((value) => answer = value));
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      reporter.stop();
+      expect(answer, isNull, reason: 'online, not "Turn on location"');
+      final availability = requests
+          .where((r) => r.url.path == '/api/v1/driver/availability')
+          .toList();
+      expect(availability, hasLength(1));
+      final fix = body(availability.single)['location'] as Map;
+      expect(fix['lat'], 59.33);
+      expect(fix['accuracy'], 5);
+    });
+
+    test('the outer read limit leaves time for the inner fallback', () {
+      expect(
+        LiveLocationReporter.readTimeout,
+        DriverLocationService.oneShotLimit +
+            LiveLocationReporter.readFallbackMargin,
+      );
+      expect(
+        LiveLocationReporter.readFallbackMargin,
+        greaterThanOrEqualTo(const Duration(seconds: 2)),
+      );
+    });
+  });
+
   group('decision 1 background location while online', () {
     late GeolocatorPlatform original;
     late _RecordingGeolocator fake;
@@ -650,6 +714,26 @@ class _HangingGeolocator extends GeolocatorPlatform {
   @override
   Future<Position?> getLastKnownPosition({bool forceLocationManager = false}) =>
       Future.value(null);
+}
+
+/// Device run 4: the fused high-accuracy one-shot never answers in time,
+/// while the phone's last-known fix is fresh and precise.
+class _SlowOneShotGeolocator extends GeolocatorPlatform {
+  @override
+  Future<bool> isLocationServiceEnabled() async => true;
+  @override
+  Future<LocationPermission> checkPermission() async =>
+      LocationPermission.whileInUse;
+  @override
+  Future<LocationAccuracyStatus> getLocationAccuracy() async =>
+      LocationAccuracyStatus.precise;
+  @override
+  Future<Position> getCurrentPosition({LocationSettings? locationSettings}) =>
+      Completer<Position>().future;
+  @override
+  Future<Position?> getLastKnownPosition({
+    bool forceLocationManager = false,
+  }) async => _position();
 }
 
 class _RecordingGeolocator extends GeolocatorPlatform {
