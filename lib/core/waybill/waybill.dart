@@ -85,28 +85,12 @@ class WaybillRecord {
   /// null when not known. The waybill shows [commissionText].
   final String? commission;
 
-  /// Movera's commission for the waybill: the server's [commission], else
-  /// what the rider pays less an earlier unpaid fee and the driver's own
-  /// money (his tip is outside the fare), the same lines the trip's
-  /// finished screen adds up; null without the rider's fare.
-  String? get commissionText {
-    if (commission case final value?) return value;
-    final get = Money.parseLabel(fare);
-    final paid = riderFare == null || get == null
-        ? null
-        : Money.parseLabel(riderFare!, currency: get.currency);
-    if (get == null || paid == null || paid.currency != get.currency) {
-      return null;
-    }
-    var share = paid - get;
-    if (debtCollected case final debt? when debt.currency == get.currency) {
-      share = share - debt;
-    }
-    if (tip?.amount case final extra? when extra.currency == get.currency) {
-      share = share + extra;
-    }
-    return share.formatted;
-  }
+  /// Movera's commission for the waybill: the server's [commission] only
+  /// (supervisor G32: a figure worked out on the phone is wrong after an
+  /// admin pay change, an offline finish with a waiting fee, or an old
+  /// unpaid fee in the offer fare); null, so no row, without it. A bonus
+  /// larger than the commission makes it negative: "−5,00 kr".
+  String? get commissionText => commission;
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.

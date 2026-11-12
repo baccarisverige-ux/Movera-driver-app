@@ -482,6 +482,45 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });
+
+  // G32 (owner 2026-11-12, "all details in waybill"; supervisor review):
+  // the server's `commission` on the finished trip reaches the waybill
+  // through _withMoney and the waybill opened from the finish screen
+  // shows it. The phone works out no commission of its own, so this
+  // fails when _withMoney drops it.
+  testWidgets('G32: the finished trip\'s waybill shows the server\'s '
+      'Movera commission', (tester) async {
+    await openCashSheet(tester);
+    await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
+    for (
+      var i = 0;
+      i < 80 && find.byType(DriverRideCompleted).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 25));
+    }
+    expect(find.byType(DriverRideCompleted), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1200));
+    final last = InMemoryWaybillRepository.instance.last!;
+    expect(last.commission, '14,00 kr');
+
+    final open = find.byKey(const ValueKey<String>('ride-completed-waybill'));
+    await tester.ensureVisible(open);
+    await tester.tap(open);
+    await frames(tester, 20);
+    final sheet = find.byKey(const ValueKey<String>('waybill-live-trip'));
+    expect(sheet, findsOneWidget);
+    final row = find.ancestor(
+      of: find.descendant(of: sheet, matching: find.text('Movera commission')),
+      matching: find.byType(Row),
+    );
+    expect(row, findsOneWidget);
+    expect(
+      find.descendant(of: row.first, matching: find.text('14,00 kr')),
+      findsOneWidget,
+    );
+    await close(tester);
+  });
 }
 
 class _NoGps implements DriverLocationRepository {

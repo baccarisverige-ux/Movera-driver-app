@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/live/live_trip_money.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
@@ -109,17 +110,46 @@ void main() {
       expect(pays < commission && commission < gets, isTrue);
     });
 
-    testWidgets('without the server\'s value: the fare less his money', (
+    // Supervisor G32 (2026-11-12): a figure worked out on the phone
+    // (rider fare − old fee − his money + tip) is wrong after an admin pay
+    // change, an offline finish with a waiting fee or an old unpaid fee in
+    // the offer fare; only the server's value is shown.
+    testWidgets('no commission row without the server\'s value', (
       tester,
     ) async {
       await _openWaybill(tester, _record());
-      expect(_row(tester, 'Movera commission'), '31,20 kr');
+      expect(_row(tester, 'Movera commission'), isNull);
+      expect(_row(tester, 'Rider pays'), '184,00 kr');
+      expect(_row(tester, 'Your earnings'), '152,80 kr');
     });
 
-    testWidgets('no commission row when neither is known', (tester) async {
+    testWidgets('no commission row when nothing is known', (tester) async {
       await _openWaybill(tester, _record(riderFare: null));
       expect(_row(tester, 'Movera commission'), isNull);
       expect(_row(tester, 'Your earnings'), '152,80 kr');
+    });
+
+    testWidgets('a bonus larger than the commission: a minus amount', (
+      tester,
+    ) async {
+      // The server's commission is negative when the driver's bonus is
+      // larger than Movera's share; the row shows it as the server sent
+      // it, with a minus sign (U+2212), never as a positive number.
+      final money = LiveTripMoney.tryParse({
+        'fare': {'amountMinor': 10000, 'currency': 'SEK'},
+        'driverEarnings': {'amountMinor': 8000, 'currency': 'SEK'},
+        'driverBonus': {'amountMinor': 2500, 'currency': 'SEK'},
+        'commission': {'amountMinor': -500, 'currency': 'SEK'},
+      })!;
+      await _openWaybill(
+        tester,
+        _record(
+          fare: '105,00 kr',
+          riderFare: '100,00 kr',
+          commission: money.commission?.formatted,
+        ),
+      );
+      expect(_row(tester, 'Movera commission'), '\u22125,00 kr');
     });
 
     test('the live projection carries the commission to the waybill', () {
@@ -130,6 +160,12 @@ void main() {
       })!;
       expect(money.commission?.minorUnits, 2820);
     });
+  });
+
+  test('Swedish: the waybill says it as the ride-completed screen', () {
+    final sv = lookupAppLocalizations(const Locale('sv'));
+    expect(sv.waybillMoveraCommission, 'Moveras provision');
+    expect(sv.waybillMoveraCommission, sv.rcMoveraCommission);
   });
 
   group('G32: the offer card shows only what the driver gets', () {
