@@ -192,9 +192,20 @@ jobs:
           python3 -I - "$RUNNER_TEMP/tl" <<'PY'
           import json, os, sys
           out = sys.argv[1]
+          raw = os.environ["TL_NUMBERS"].strip()
+          # Tolerate how the value was pasted: a leading "NAME=", outer quotes, escaped quotes.
+          if raw.startswith("MOVERA_TEST_NUMBERS="):
+              raw = raw[len("MOVERA_TEST_NUMBERS="):].strip()
+          if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
+              raw = raw[1:-1].strip()
+          if raw.startswith('{\\"') or raw.startswith('[\\"'):
+              raw = raw.replace('\\"', '"')
           try:
-              numbers = json.loads(os.environ["TL_NUMBERS"])
-          except ValueError:
+              numbers = json.loads(raw)
+          except ValueError as err:
+              # Shape only, never a value: length and the kind of first/last character.
+              kind = lambda c: "brace" if c in "{}[]" else ("quote" if c in "'\"" else ("letter" if c.isalpha() else ("digit" if c.isdigit() else "other")))
+              print(f"::warning::secret length {len(raw)}, starts with a {kind(raw[:1] or ' ')}, ends with a {kind(raw[-1:] or ' ')}; JSON error at char {getattr(err, 'pos', '?')}")
               print("::error::the MOVERA_TEST_NUMBERS secret is not JSON (same value as the cloud environment variable)")
               sys.exit(1)
           raw = None
