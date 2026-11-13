@@ -262,7 +262,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.78');
+      expect(contract['version'], '0.18.81');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
@@ -494,4 +494,35 @@ void main() {
       expect(_reservations(config.reservations), json['reservations']);
     });
   });
+
+  // B1.34 (contract v0.18.81, bookLater.riderCap): rider-side cap; the driver
+  // app only keeps it so the zone document round-trips; unknown keys never
+  // break the parse.
+  test(
+    'B1.34: maxOpenPerRider is read (1-50, default 3); unknown keys are ignored',
+    () {
+      expect(const ScheduledRideRules().bookLater.maxOpenPerRider, 3);
+      expect(
+        ScheduledRideRules.fromJson({
+          'maxOpenPerRider': 7,
+        }).bookLater.maxOpenPerRider,
+        7,
+      );
+      for (final bad in [0, 51, 2.5, '5', null]) {
+        expect(
+          ScheduledRideRules.fromJson({
+            'maxOpenPerRider': bad,
+          }).bookLater.maxOpenPerRider,
+          3,
+          reason: '$bad',
+        );
+      }
+      expect(
+        _reservations(
+          ScheduledRideRules.fromJson({'aKeyFromANewerContract': 1}),
+        ),
+        _reservations(const ScheduledRideRules()),
+      );
+    },
+  );
 }

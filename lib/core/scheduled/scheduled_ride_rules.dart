@@ -417,6 +417,7 @@ class BookLaterRules {
     this.takeBackKeepIfDriveMin = 10,
     this.takeBackUntilMinBeforePickup = 15,
     this.noDriverStopAfterMin = 15,
+    this.maxOpenPerRider = 3,
   });
 
   /// FIX JOB 4 (contract v0.18.35 §59, owner Q2): the server takes a held
@@ -432,6 +433,12 @@ class BookLaterRules {
   /// booked ride with no driver this many minutes after its pickup time. The
   /// app only reads it (an open ride then leaves Scheduled rides).
   final int noDriverStopAfterMin;
+
+  /// v0.18.81 B1.34 (contract.json#bookLater.riderCap): a rider holds at
+  /// most this many booked rides that have not ended; the server refuses the
+  /// next one. Rider-side only: the driver app reads it so the zone document
+  /// round-trips, and never uses it.
+  final int maxOpenPerRider;
 
   final int dispatchBeforeMin;
   final double listHomeKm;
@@ -547,6 +554,8 @@ class BookLaterRules {
       noDriverStopAfterMin:
           _intIn(json['noDriverStopAfterMin'], 1, 240) ??
           seed.noDriverStopAfterMin,
+      maxOpenPerRider:
+          _intIn(json['maxOpenPerRider'], 1, 50) ?? seed.maxOpenPerRider,
     );
   }
 
@@ -582,5 +591,6 @@ class BookLaterRules {
     'takeBackKeepIfDriveMin': takeBackKeepIfDriveMin,
     'takeBackUntilMinBeforePickup': takeBackUntilMinBeforePickup,
     'noDriverStopAfterMin': noDriverStopAfterMin,
+    'maxOpenPerRider': maxOpenPerRider,
   };
 }
