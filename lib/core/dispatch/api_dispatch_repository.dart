@@ -488,6 +488,8 @@ class ApiDispatchRepository implements DispatchRepository {
   Future<void> connect() async {
     _wanted = true;
     final generation = ++_generation;
+    // A feed opened again (a resume) keeps the credit of its time up.
+    _endUptime();
     _reconnect?.cancel();
     _feedIdle?.cancel();
     await _feed?.cancel();
@@ -526,14 +528,23 @@ class ApiDispatchRepository implements DispatchRepository {
           // The next try asks again.
         }
       }
-      _feedLost();
+      // D3 (fix plan 2026-11-13, G34 load): a busy server's 503 / 429
+      // says when to come back (Retry-After, at most 60 s); the feed does
+      // not ask sooner.
+      _feedLost(
+        atLeast: streamRetryAfter(response.statusCode, response.headers),
+      );
       return;
     }
     if (_disposed || !_wanted) {
       unawaited(response.stream.drain<void>().catchError((_) {}));
       return;
     }
-    _reconnects = 0;
+    // D2 (fix plan 2026-11-13, owner R3): a 200 alone is not "connected".
+    // The backoff starts again only after an event or 30 s up
+    // ([streamConnectedAfter]); a feed the busy server ends right after
+    // it opened is one more failed try.
+    _openedAt = _now();
     _setLive(true);
     if (_reloadOnOpen) {
       // Belt and braces after a lost feed: the open offers come again.
@@ -583,7 +594,11 @@ class ApiDispatchRepository implements DispatchRepository {
               data.clear();
               try {
                 final event = jsonDecode(raw);
-                if (event is Map) ingest(Map<String, dynamic>.from(event));
+                if (event is Map) {
+                  // A real event: the feed is connected (owner R3).
+                  if (generation == _generation) _reconnects = 0;
+                  ingest(Map<String, dynamic>.from(event));
+                }
               } on FormatException {
                 // A broken event is skipped; the next resync fixes the list.
               }
@@ -595,16 +610,32 @@ class ApiDispatchRepository implements DispatchRepository {
         );
   }
 
-  /// The feed is gone: not live, and it tries again after a while.
-  void _feedLost() {
+  /// When the open feed answered 200; null while none is open.
+  DateTime? _openedAt;
+
+  /// Owner R3: a feed that stayed open [streamConnectedAfter] was
+  /// connected, so the next wait is the shortest again.
+  void _endUptime() {
+    final opened = _openedAt;
+    _openedAt = null;
+    if (opened != null && _now().difference(opened) >= streamConnectedAfter) {
+      _reconnects = 0;
+    }
+  }
+
+  /// The feed is gone: not live, and it tries again after a while, never
+  /// sooner than [atLeast] (the server's Retry-After).
+  void _feedLost({Duration? atLeast}) {
     _feedIdle?.cancel();
     _feedIdle = null;
+    _endUptime();
     _setLive(false);
     if (_disposed || !_wanted) return;
     _reloadOnOpen = true;
     _reconnect?.cancel();
+    final backoff = _reconnectDelay(_reconnects++);
     _reconnect = Timer(
-      _reconnectDelay(_reconnects++),
+      atLeast != null && atLeast > backoff ? atLeast : backoff,
       () => unawaited(connect()),
     );
   }
@@ -616,6 +647,9 @@ class ApiDispatchRepository implements DispatchRepository {
     _generation++;
     _reconnect?.cancel();
     _reconnect = null;
+    // The next Go online starts again from the shortest wait.
+    _reconnects = 0;
+    _openedAt = null;
     _feedIdle?.cancel();
     _feedIdle = null;
     final feed = _feed;
