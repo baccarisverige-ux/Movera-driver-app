@@ -472,5 +472,115 @@ class TestlabSummaryTest(unittest.TestCase):
             line = next(l for l in text.splitlines() if l.strip().startswith(name + ')'))
             self.assertIn('tl_timeout=25m', line)
 
+    # --- Lock step: mirror of the rider repo's G31 lock (supervisor GO 4c31475a)
+
+    def _cmd(self, content, *extra, command='count-runs'):
+        f = self.root / 'answer.json'
+        f.write_text(content)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = testlab_summary.main(['testlab_summary.py', command, str(f), *extra])
+        return rc, buf.getvalue().strip()
+
+    def test_count_runs_reads_total_count(self):
+        self.assertEqual(self._cmd(json.dumps({'total_count': 0, 'workflow_runs': []})), (0, '0'))
+        self.assertEqual(self._cmd(json.dumps({'total_count': 2, 'workflow_runs': [{}]})), (0, '2'))
+
+    def test_count_runs_fails_closed_on_any_other_shape(self):
+        for bad in ('', 'not json', '[]', '{}', json.dumps({'total_count': -1}),
+                    json.dumps({'total_count': '1'}), json.dumps({'total_count': True}),
+                    json.dumps({'total_count': 1.5}),
+                    json.dumps({'message': 'API rate limit exceeded'}),
+                    json.dumps({'message': 'Not Found', 'status': '404'}),
+                    json.dumps({'total_count': 0, 'workflow_runs': 'x'})):
+            rc, out = self._cmd(bad)
+            self.assertEqual(rc, 1, bad)
+            self.assertEqual(out, '', bad)
+        self.assertIsNone(testlab_summary.count_runs(str(self.root / 'missing.json')))
+
+    WF = '.github/workflows/android-test-apk.yml'
+
+    def test_workflow_missing_only_on_a_whole_list_without_the_file(self):
+        other = {'path': '.github/workflows/ci.yml', 'name': 'CI'}
+        self.assertEqual(self._cmd(json.dumps({'total_count': 1, 'workflows': [other]}),
+                                   self.WF, command='workflow-missing'), (0, ''))
+        self.assertEqual(self._cmd(json.dumps({'total_count': 0, 'workflows': []}),
+                                   self.WF, command='workflow-missing'), (0, ''))
+
+    def test_workflow_missing_fails_closed_when_present_or_unclear(self):
+        here = {'path': self.WF, 'name': 'Android test APK (staging)'}
+        other = {'path': '.github/workflows/ci.yml'}
+        for bad in ('', 'not json', '[]', '{}',
+                    json.dumps({'message': 'Not Found'}),
+                    json.dumps({'message': 'API rate limit exceeded'}),
+                    json.dumps({'total_count': 2, 'workflows': [here, other]}),
+                    # more workflows than on this page: the file may be on the next one
+                    json.dumps({'total_count': 120, 'workflows': [other]}),
+                    json.dumps({'total_count': True, 'workflows': []}),
+                    json.dumps({'total_count': 1, 'workflows': 'x'}),
+                    json.dumps({'total_count': 1, 'workflows': [{'name': 'no path'}]}),
+                    json.dumps({'total_count': 1, 'workflows': ['x']})):
+            rc, out = self._cmd(bad, self.WF, command='workflow-missing')
+            self.assertEqual(rc, 1, bad)
+            self.assertEqual(out, '', bad)
+        self.assertFalse(testlab_summary.workflow_missing(str(self.root / 'missing.json'), self.WF))
+        # Wrong argument count is a usage error, never a "missing".
+        f = self.root / 'answer.json'
+        f.write_text(json.dumps({'total_count': 0, 'workflows': []}))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(testlab_summary.main(['t', 'workflow-missing', str(f)]), 2)
+
+    def _job(self):
+        workflow = pathlib.Path(__file__).resolve().parents[2] / '.github/workflows/android-test-apk.yml'
+        return workflow.read_text().split('  device-checks:', 1)[1]
+
+    def test_workflow_lock_is_short_and_fail_closed(self):
+        job = self._job()
+        lock = job.split('id: lock', 1)[1].split('\n      - ', 1)[0]
+        self.assertIn('baccarisverige-ux/movera-rider-app/actions/workflows', lock)
+        self.assertIn('android-test-apk.yml/runs', lock)
+        self.assertIn('for status in in_progress queued', lock)
+        self.assertIn('timeout-minutes: 16', lock)
+        self.assertIn('for round in $(seq 1 14)', lock)
+        self.assertIn('for try in 1 2 3', lock)
+        self.assertIn('testlab_summary.py count-runs', lock)
+        self.assertIn('GH_TOKEN: ${{ github.token }}', lock)
+        # free only after a round where both reads gave 0; unreadable or
+        # still busy -> not free (no Test Lab), never a fail-open "going on".
+        self.assertEqual(lock.count('free=true'), 1)
+        self.assertIn('if [ "$busy" -eq 0 ]; then echo "free=true"', lock)
+        self.assertEqual(lock.count('free=false'), 2)
+        self.assertEqual(lock.count('NOT CHECKED'), 2)
+        self.assertNotIn('going on', lock)
+        self.assertIn('sleep 60', lock)
+        # A 404 is "0 runs" only with a 200 whole workflow list without the file.
+        self.assertIn('[ "$code" = 200 ] && n="$(python3 -I tool/testlab_summary.py count-runs', lock)
+        self.assertIn('[ "$code" = 404 ]', lock)
+        self.assertIn('[ "$lcode" = 200 ]', lock)
+        self.assertIn('testlab_summary.py workflow-missing "$list" "$wf"', lock)
+        self.assertIn('wf=".github/workflows/android-test-apk.yml"', lock)
+        self.assertNotIn(' -f', lock.replace('-fsS', ''))  # codes read with -w, not curl -f
+        # The lock prints counts only: no answer file is ever printed.
+        self.assertNotIn('cat ', lock)
+        self.assertNotIn('set -x', lock)
+        # The lock is the first step after checkout; the driver step waits on it.
+        self.assertLess(job.index('id: lock'), job.index('id: driver'))
+        driver = job.split('id: driver', 1)[1].split('run: |', 1)[0]
+        self.assertIn("if: steps.lock.outputs.free == 'true'", driver)
+
+    def test_workflow_job_time_fits_lock_build_test_lab_and_upload(self):
+        import re as _re
+        job = self._job()
+        head = job.split('    steps:', 1)[0]
+        job_min = int(_re.search(r'timeout-minutes: (\d+)', head).group(1))
+        lock_min = int(_re.search(r'id: lock\n\s+timeout-minutes: (\d+)', job).group(1))
+        run = job.split('id: run', 1)[1].split('\n      - ', 1)[0]
+        tl_step = int(_re.search(r'timeout-minutes: (\d+)', run).group(1))
+        self.assertIn('tl_timeout=25m', job)
+        self.assertGreaterEqual(tl_step, 25 + 3)
+        # lock + set-up/build (~15) + wake (2) + Test Lab step + results (~5)
+        self.assertLessEqual(lock_min + 15 + 2 + tl_step + 5, job_min)
+        self.assertLessEqual(lock_min, 16)
+
 if __name__ == '__main__':
     unittest.main()
