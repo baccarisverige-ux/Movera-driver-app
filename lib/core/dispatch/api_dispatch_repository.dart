@@ -806,21 +806,40 @@ class ApiDispatchRepository implements DispatchRepository {
       acceptCheckFor,
     );
     var version = offer.version;
+    // Fix plan 2026-11-13 (G34 load: answers 2–10 s late on a busy
+    // server): a check that is not answered within [acceptCheckEvery] is
+    // not forgotten. The next one still goes out on time, but the answer
+    // of ANY check sent so far is used, so a busy server's late "claimed"
+    // opens the trip instead of ending as "No connection".
+    final answers = _CheckAnswers();
+    var ask = true;
     while (true) {
-      final http.Response response;
-      try {
-        response = await _client
-            .get(
-              _uri('/driver/offers/${Uri.encodeComponent(offerId)}'),
-              headers: await _headers(),
-            )
-            // Each check waits at most until the next one is due.
-            .timeout(acceptCheckEvery);
-      } catch (_) {
-        if (!await _waitForNextCheck(until)) {
+      if (ask) {
+        answers.sent();
+        unawaited(
+          _headers()
+              .then(
+                (headers) => _client.get(
+                  _uri('/driver/offers/${Uri.encodeComponent(offerId)}'),
+                  headers: headers,
+                ),
+              )
+              .timeout(acceptCheckFor)
+              .then(answers.add, onError: (Object _) => answers.add(null)),
+        );
+      }
+      ask = true;
+      // Each check waits at most until the next one is due.
+      var response = await answers.next(acceptCheckEvery);
+      if (response == null) {
+        // No answer yet: wait for the next check, taking a late answer
+        // to any check sent so far meanwhile.
+        if (!until.take() || _disposed) {
           return const ClaimResult.networkError();
         }
-        continue;
+        response = await answers.next(acceptCheckEvery, fullWait: true);
+        if (_disposed) return const ClaimResult.networkError();
+        if (response == null) continue;
       }
       if (response.statusCode == 404) {
         _withdraw(offerId, OfferGoneReason.withdrawn, emit: true);
@@ -972,6 +991,48 @@ class ApiDispatchRepository implements DispatchRepository {
     await _nearby.close();
     await _next.close();
     await _withdrawals.close();
+  }
+}
+
+/// The answers to the lost-Accept checks, in the order they come; a
+/// failed check counts as answered with nothing (null).
+class _CheckAnswers {
+  final List<http.Response> _ready = <http.Response>[];
+  int _pending = 0;
+  Completer<void>? _wake;
+
+  void sent() => _pending++;
+
+  void add(http.Response? response) {
+    if (_pending > 0) _pending--;
+    if (response != null) _ready.add(response);
+    _wake?.complete();
+    _wake = null;
+  }
+
+  /// A late answer taken during a wait, to be read first.
+  void putBack(http.Response response) => _ready.insert(0, response);
+
+  /// The next answer within [within]; null when none came. Without
+  /// [fullWait] it returns at once when no check is still under way (a
+  /// check that failed at once). With it, it waits the whole time unless
+  /// an answer comes.
+  Future<http.Response?> next(Duration within, {bool fullWait = false}) async {
+    var over = false;
+    final timer = Timer(within, () {
+      over = true;
+      _wake?.complete();
+      _wake = null;
+    });
+    try {
+      while (_ready.isEmpty) {
+        if (over || (!fullWait && _pending == 0)) return null;
+        await (_wake ??= Completer<void>()).future;
+      }
+      return _ready.removeAt(0);
+    } finally {
+      timer.cancel();
+    }
   }
 }
 
