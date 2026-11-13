@@ -166,7 +166,7 @@ class OfferFeedEvent {
 ///
 /// A live build (`MOVERA_AUTH_REQUIRED`) installs it through
 /// `LiveDriverServices`; the demo builds use the in-process demo dispatch.
-class ApiDispatchRepository implements DispatchRepository {
+class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   ApiDispatchRepository({
     required http.Client client,
     required Uri baseUri,
@@ -350,9 +350,11 @@ class ApiDispatchRepository implements DispatchRepository {
 
   /// True while the offer feed is open. When it is not, the offer list
   /// is the last one known and may be stale; it reconnects by itself.
+  @override
   bool get feedLive => _feedLive;
 
   /// [feedLive] as it changes.
+  @override
   Stream<bool> watchFeedLive() => _live.stream;
 
   void _setLive(bool live) {

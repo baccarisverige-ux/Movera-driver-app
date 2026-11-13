@@ -383,6 +383,17 @@ class ClaimResult {
   bool get isSuccess => outcome == ClaimOutcome.success;
 }
 
+/// D4 (fix plan 2026-11-13): a dispatch with a live offer feed says
+/// whether it is open, so Home can say "No connection" when it stays
+/// down. The demo has no feed and does not implement it.
+abstract interface class OfferFeedHealth {
+  /// True while the offer feed is open.
+  bool get feedLive;
+
+  /// [feedLive] as it changes.
+  Stream<bool> watchFeedLive();
+}
+
 /// Dispatch/Radar boundary. UI must not decide an atomic winner.
 abstract interface class DispatchRepository {
   Stream<List<RideOffer>> watchNearbyOffers({

@@ -69,6 +69,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
+import 'package:movera/presentation/driver/home/components/offer_feed_down.dart';
 import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
@@ -301,6 +302,15 @@ class _DriverHomeState extends State<DriverHome>
       setState(() {});
     }
   }
+
+  /// D4: "No connection" on the island while online with the offer feed
+  /// down for more than 10 s (live dispatch only; the demo has no feed).
+  late final OfferFeedDownWatch _feedDown = OfferFeedDownWatch(
+    switch (_dispatch) {
+      final OfferFeedHealth feed => feed,
+      _ => null,
+    },
+  )..addListener(_islandWaitingListener);
 
   void _islandMessagesListener() =>
       _HomeMapSheet(this)._onIslandMessagesChanged();
@@ -1369,6 +1379,7 @@ class _DriverHomeState extends State<DriverHome>
     RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
     _islandWaiting.dispose();
+    _feedDown.dispose();
     _radarListClaiming.removeListener(_syncClaimLock);
     _radarListClaiming.dispose();
     ClaimLock.set(false);
