@@ -388,12 +388,17 @@ extension _TripMoney on TripRun {
     final mark = rec.length;
     var opened = false;
     await watch.run('history-open', () async {
-      final menu = find.byTooltip(tr.menu);
+      // Run 8b HISTORY: after Rate → Done, Home's island shows a message
+      // and tucks its menu button (IgnorePointer, opacity 0,
+      // home_map_top_island.dart:140-160): in the tree, not tappable. Wait
+      // for a menu button that takes the tap.
+      final menu = find.byTooltip(tr.menu).hitTestable();
       if (!await pumpUntil(
         tester,
         () => shows(menu),
-        timeout: const Duration(seconds: 5),
+        timeout: const Duration(seconds: 15),
       )) {
+        CheckLog.say('MISSED menu button not tappable in 15 s (Home)');
         return;
       }
       await tester.tap(menu.first, warnIfMissed: false);
