@@ -142,6 +142,8 @@ class ApiDriverRealtime implements DriverRealtime {
     final tripId = _tripId;
     if (_disposed || tripId == null) return;
     final generation = ++_generation;
+    // A stream opened again (a resume) keeps the credit of its time up.
+    _endUptime();
     _idle?.cancel();
     _idle = null;
     // A half-open stream's cancel may never complete: it must not hold up
@@ -199,7 +201,11 @@ class ApiDriverRealtime implements DriverRealtime {
     // Back after a drop: a message may have passed while the stream was
     // down, so the chat reads its history again.
     if (_attempts > 0) unawaited(_chat?.reconcile(tripId));
-    _attempts = 0;
+    // D2 (fix plan 2026-11-13, owner R3, as the offer feed): a 200 alone
+    // is not "connected". The backoff starts again only after an event or
+    // 30 s up ([streamConnectedAfter]); a stream the busy server ends
+    // right after it opened is one more failed try.
+    _openedAt = _now();
     final data = StringBuffer();
     void quiet() {
       if (generation != _generation) return;
@@ -232,7 +238,11 @@ class ApiDriverRealtime implements DriverRealtime {
               data.clear();
               try {
                 final json = jsonDecode(raw);
-                if (json is Map) ingest(Map<String, dynamic>.from(json));
+                if (json is Map) {
+                  // A real event: the stream is connected (owner R3).
+                  if (generation == _generation) _attempts = 0;
+                  ingest(Map<String, dynamic>.from(json));
+                }
               } on FormatException {
                 // A broken event is skipped; the next one carries the state.
               }
@@ -337,8 +347,22 @@ class ApiDriverRealtime implements DriverRealtime {
     );
   }
 
+  /// When the open stream answered 200; null while none is open.
+  DateTime? _openedAt;
+
+  /// Owner R3: a stream that stayed open [streamConnectedAfter] was
+  /// connected, so the next wait is the shortest again.
+  void _endUptime() {
+    final opened = _openedAt;
+    _openedAt = null;
+    if (opened != null && _now().difference(opened) >= streamConnectedAfter) {
+      _attempts = 0;
+    }
+  }
+
   void _lost() {
     _open = false;
+    _endUptime();
     _idle?.cancel();
     _idle = null;
     if (_disposed || _tripId == null) return;
@@ -348,6 +372,7 @@ class ApiDriverRealtime implements DriverRealtime {
 
   void _close() {
     _generation++;
+    _openedAt = null;
     _retry?.cancel();
     _retry = null;
     _idle?.cancel();
