@@ -170,10 +170,20 @@ jobs:
   # kinds cancel any open trip of rider se.r35, the same pair the 5x5 screen
   # runs use. A second dispatch waits here instead of running alongside; never
   # dispatch while a 5x5 screen run is going (that runs outside this group).
+  # The rider app's device suite (G31) uses the same pair and the same group
+  # name, but GitHub concurrency groups only hold runs of ONE repository, so
+  # the first step also waits (at most 14 min) while the rider repo's
+  # "Android test APK (staging)" run is going, and gives up without using
+  # Test Lab when it does not end or cannot be read. Dispatch the two repos
+  # one after the other: two dispatched together each see the other busy and
+  # both end NOT CHECKED (closed, no quota used).
   device-checks:
     if: inputs.testlab_device != '' && inputs.testlab_test != 'robo'
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # Budget: lock <= 16 m + set-up and build ~15 m + wake <= 1.5 m +
+    # Test Lab 25 m (step cut at 30 m) + download / scrub / upload ~5 m
+    # = ~68 m worst case, with margin (as the rider repo's job).
+    timeout-minutes: 80
     concurrency:
       group: movera-device-checks-d38-r35
       cancel-in-progress: false
@@ -186,8 +196,67 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.new_ref }}
+      # Mirror of the rider repo's lock (supervisor GO 4c31475a): at most 14
+      # rounds of 60 s (the step is cut at 16 min), and fail-closed: each
+      # read is tried 3 times; a read that still fails, or a rider run still
+      # going after the last round, means NOT CHECKED and no Test Lab run
+      # (no quota used). A run seen busy stays busy until a later round sees
+      # none. Only github.token (read) against api.github.com; the answers
+      # go to $RUNNER_TEMP and only counts are printed.
+      # "No such workflow": an HTTP 404 for the rider workflow file counts as
+      # 0 ONLY when, in the same try, the rider repo's workflow list reads
+      # 200, is whole (total_count = rows on the page) and has no
+      # .github/workflows/android-test-apk.yml (`workflow-missing`). That
+      # proves the repo is readable and the file is not there, so the 404 is
+      # not an access, rename or outage answer. Any other 404 / code is a
+      # failed read.
+      - name: Wait while the rider app's device run is going (shared test pair)
+        id: lock
+        timeout-minutes: 16
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          api="https://api.github.com/repos/baccarisverige-ux/movera-rider-app/actions/workflows"
+          wf=".github/workflows/android-test-apk.yml"
+          url="$api/android-test-apk.yml/runs"
+          runs="$RUNNER_TEMP/rider-runs.json"
+          list="$RUNNER_TEMP/rider-workflows.json"
+          for round in $(seq 1 14); do
+            busy=0
+            for status in in_progress queued; do
+              n=""
+              for try in 1 2 3; do
+                code="$(curl -sS -m 20 -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+                  -o "$runs" -w '%{http_code}' "$url?status=$status&per_page=1")" || code=""
+                if [ "$code" = 200 ] && n="$(python3 -I tool/testlab_summary.py count-runs "$runs")"; then
+                  break
+                fi
+                if [ "$code" = 404 ] \
+                   && lcode="$(curl -sS -m 20 -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
+                        -o "$list" -w '%{http_code}' "$api?per_page=100")" \
+                   && [ "$lcode" = 200 ] \
+                   && python3 -I tool/testlab_summary.py workflow-missing "$list" "$wf"; then
+                  echo "rider device workflow not in the rider repo (404 + whole workflow list without it): 0"
+                  n=0; break
+                fi
+                n=""; sleep 5
+              done
+              if [ -z "$n" ]; then
+                echo "::warning::NOT CHECKED: the rider repo's runs could not be read (3 tries); no Test Lab run was used, so a rider device run can never overlap this one."
+                echo "free=false" >> "$GITHUB_OUTPUT"; exit 0
+              fi
+              busy=$((busy + n))
+            done
+            if [ "$busy" -eq 0 ]; then echo "free=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+            echo "rider app device run going ($busy); waiting 60 s (round $round/14)"
+            sleep 60
+          done
+          echo "::warning::NOT CHECKED: the rider app's device run was still going after 14 min; no Test Lab run was used."
+          echo "free=false" >> "$GITHUB_OUTPUT"
       - name: Test driver for this run (from secrets, never built in)
         id: driver
+        if: steps.lock.outputs.free == 'true'
         env:
           TL_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
           TL_CODE: ${{ secrets.MOVERA_TEST_SIGNIN_CODE }}
@@ -279,6 +348,7 @@ jobs:
       - name: Device checks on a real phone (Firebase Test Lab)
         id: run
         if: steps.driver.outputs.ready == 'true'
+        timeout-minutes: 30
         env:
           RESULTS_BUCKET: ${{ vars.TESTLAB_RESULTS_BUCKET }}
           TL_TIMEOUT: ${{ steps.driver.outputs.tl_timeout }}

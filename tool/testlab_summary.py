@@ -27,6 +27,17 @@ Usage (from .github/workflows/android-test-apk.yml, plain Python 3):
       print passed/failed per check, JUnit totals and crash lines from
       logcat; also into $GITHUB_STEP_SUMMARY when set. Exit 0 (the
       `verdict` below decides the job).
+  python3 -I tool/testlab_summary.py count-runs FILE
+      lock step (mirror of the rider repo's G31 lock): FILE is a GitHub
+      "list workflow runs" answer; prints its total_count (a whole number
+      >= 0). Exit 1, printing nothing, when the answer is not that shape
+      (the workflow then counts the read as failed: fail-closed).
+  python3 -I tool/testlab_summary.py workflow-missing FILE PATH
+      lock step: FILE is a GitHub "list repository workflows" answer. Exit 0
+      (printing nothing) ONLY when it is whole (total_count = the rows on
+      the page) and no row has path PATH, i.e. the workflow file is clearly
+      not in that repo; exit 1 on PATH present or any other shape. The
+      workflow treats a 404 for the file as "0 runs" only after this.
   RC=<gcloud exit code> python3 -I tool/testlab_summary.py verdict DIR
       the job's pass/fail, run on the SCRUBBED results after the upload.
       Run 6 (2026-11-12) was a false pass: gcloud exit 0 and Test Lab
@@ -583,11 +594,67 @@ def verdict(root, rc):
     return 0
 
 
+def _load_json(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
+def _whole_count(data):
+    n = data.get("total_count") if isinstance(data, dict) else None
+    if isinstance(n, bool) or not isinstance(n, int) or n < 0:
+        return None
+    return n
+
+
+def count_runs(path):
+    """total_count of a GitHub workflow-runs answer, or None when FILE is
+    not one (missing, not JSON, no whole total_count >= 0)."""
+    data = _load_json(path)
+    n = _whole_count(data)
+    if n is None or not isinstance(data.get("workflow_runs", []), list):
+        return None
+    return n
+
+
+def workflow_missing(path, workflow_path):
+    """True only when FILE is a whole GitHub workflow-list answer (every
+    workflow on this page) and none of them is workflow_path. False when
+    it is there, or the answer is not that shape (fail-closed)."""
+    data = _load_json(path)
+    n = _whole_count(data)
+    if n is None:
+        return False
+    rows = data.get("workflows")
+    if not isinstance(rows, list) or len(rows) != n:
+        return False
+    paths = []
+    for row in rows:
+        if not isinstance(row, dict) or not isinstance(row.get("path"), str):
+            return False
+        paths.append(row["path"])
+    return workflow_path not in paths
+
+
+COMMANDS = ("driver", "trip", "count-runs", "workflow-missing", "scrub", "summary", "verdict")
+
+
 def main(argv):
-    if len(argv) != 3 or argv[1] not in ("driver", "trip", "scrub", "summary", "verdict"):
+    wanted = 4 if len(argv) > 1 and argv[1] == "workflow-missing" else 3
+    if len(argv) != wanted or argv[1] not in COMMANDS:
         print(__doc__)
         return 2
     root = argv[2]
+    if argv[1] == "count-runs":
+        n = count_runs(root)
+        if n is None:
+            return 1
+        print(n)
+        return 0
+    if argv[1] == "workflow-missing":
+        return 0 if workflow_missing(root, argv[3]) else 1
     if argv[1] in ("driver", "trip"):
         return write_driver(root, os.environ, with_rider=argv[1] == "trip")
     if argv[1] == "scrub":
