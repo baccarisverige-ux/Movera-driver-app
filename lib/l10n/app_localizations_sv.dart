@@ -7004,6 +7004,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Kör tillbaka till upphämtningen innan du markerar att resenären inte kom.';
 
   @override
+  String get waitingBackAtPickup => 'Jag är tillbaka vid upphämtningen';
+
+  @override
   String get docInsuranceLetter => 'Försäkringsbrev';
 
   @override

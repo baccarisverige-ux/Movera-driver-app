@@ -572,6 +572,26 @@ extension _AcceptRidePanel on _AcceptRideState {
                           ),
                         ),
                         const SizedBox(height: 8),
+                        // Round 2 (autoArrive.texts.driverBack, M2): the
+                        // contract's "or his tap" restart.
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            key: const ValueKey<String>(
+                              'active-ride-back-at-pickup',
+                            ),
+                            onPressed: _stepBusy
+                                ? null
+                                : () => unawaited(
+                                    _AcceptRidePickup(
+                                      this,
+                                    )._onBackAtPickupTap(),
+                                  ),
+                            child: Text(tr.waitingBackAtPickup),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                       ],
                       _buildPrimaryAction(),
                     ],

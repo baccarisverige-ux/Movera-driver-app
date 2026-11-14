@@ -12007,6 +12007,12 @@ abstract class AppLocalizations {
   /// **'Drive back to the pickup before marking a no-show.'**
   String get noShowAwayFromPickup;
 
+  /// Contract v0.18.93 round 2 (contract.json#autoArrive.texts.driverBack, supervisor M2): button under the paused note while the server stopped the waiting clock (waiting.away); the server counts the tap only within terms.leaveMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m back at the pickup'**
+  String get waitingBackAtPickup;
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:

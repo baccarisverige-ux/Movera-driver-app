@@ -7128,6 +7128,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Revenez au point de prise en charge avant de signaler l’absence du passager.';
 
   @override
+  String get waitingBackAtPickup =>
+      'Je suis de retour au point de prise en charge';
+
+  @override
   String get docInsuranceLetter => 'Attestation d’assurance';
 
   @override

@@ -346,6 +346,30 @@ class LiveTripCommands {
     );
   }
 
+  /// v0.18.93 round 2 (`contract.json#autoArrive.back`, supervisor M2):
+  /// "I'm back at the pickup" while the server's waiting clock stands still
+  /// (`waiting.away`): the same `arrive` command, with the latest fix. The
+  /// server counts it only within the trip's `terms.leaveMeters` (else 409
+  /// `not_at_pickup`). Already going on (a fix brought him back first) or
+  /// a step further = done, nothing is sent.
+  Future<LiveTripOutcome> resumeWaiting(String tripId) {
+    final fix = _lastFix();
+    return _step(
+      tripId,
+      'arrive',
+      body: {if (fix != null) 'location': fix},
+      done: const {..._onboard},
+      leadsTo: const {'arrived'},
+      isDone: (current) =>
+          current['status'] != 'arrived' || !_waitingAway(current),
+    );
+  }
+
+  static bool _waitingAway(Map<String, dynamic> trip) {
+    final waiting = trip['waiting'];
+    return waiting is Map && waiting['away'] is Map;
+  }
+
   /// "Start trip": the app's one slide is the contract's `board` then
   /// `start` (`rider_onboard` → `in_trip`). [pin]: the rider's 4-digit
   /// code when the trip has `pinRequired` (contract v0.18.8 round 1):
@@ -694,13 +718,17 @@ class LiveTripCommands {
     Map<String, Object?> body = const {},
     required Set<String> done,
     required Set<String> leadsTo,
+    bool Function(Map<String, dynamic> current)? isDone,
   }) async {
     final path = '$_base/${Uri.encodeComponent(tripId)}/$command';
     for (var attempt = 0; attempt < 2; attempt++) {
       final current = await _current(tripId);
       if (current == null) return _unknown;
       // Already there (a retry after a lost answer, or another screen).
-      if (done.contains(current['status'])) return const LiveTripOutcome.ok();
+      if (done.contains(current['status']) ||
+          (isDone?.call(current) ?? false)) {
+        return const LiveTripOutcome.ok();
+      }
       final payload = {...body, 'expectedVersion': versionOf(tripId)};
       final signature = '$path ${jsonEncode(payload)}';
       final key = _keys.putIfAbsent(signature, ApiClient.randomKey);

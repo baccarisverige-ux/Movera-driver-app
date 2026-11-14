@@ -1981,6 +1981,7 @@
   "arrivedFarWarning": "Vous êtes à {m} m de la destination – la course se termine plus tôt",
   "waitingPausedAway": "Attente en pause : vous êtes à plus de {leave} m du point de prise en charge. Revenez à moins de {arrive} m pour continuer.",
   "noShowAwayFromPickup": "Revenez au point de prise en charge avant de signaler l’absence du passager.",
+  "waitingBackAtPickup": "Je suis de retour au point de prise en charge",
   "docInsuranceLetter": "Attestation d’assurance",
   "docTaxiDriverLicense": "Carte professionnelle de taxi",
   "docTaxiLicenseShort": "Carte taxi",

@@ -6992,6 +6992,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Drive back to the pickup before marking a no-show.';
 
   @override
+  String get waitingBackAtPickup => 'I\'m back at the pickup';
+
+  @override
   String get docInsuranceLetter => 'Insurance letter';
 
   @override

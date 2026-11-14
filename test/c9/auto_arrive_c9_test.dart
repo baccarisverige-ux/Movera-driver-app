@@ -328,4 +328,53 @@ void main() {
     expect(find.byKey(const ValueKey('waiting-fee-counter')), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('round 2 (M2, autoArrive.texts.driverBack): while paused the '
+      'middle sheet has "I\'m back at the pickup"; it goes with the stop', (
+    tester,
+  ) async {
+    final realtime = await _pump(tester, ActiveRideStage.waitingForRider);
+    _now = DateTime.utc(2026, 11, 14, 10, 3);
+    _emit(
+      realtime,
+      _projection({
+        ..._arrived,
+        'freeUntil': '2026-11-14T10:05:00Z',
+        'noShowAt': '2026-11-14T10:05:00Z',
+        'away': {'since': '2026-11-14T10:02:00Z'},
+      }),
+    );
+    await _frames(tester);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('active-ride-compact-dock')),
+    );
+    await _frames(tester);
+    final back = find.byKey(
+      const ValueKey<String>('active-ride-back-at-pickup'),
+    );
+    expect(back, findsOneWidget);
+    expect(
+      find.descendant(
+        of: back,
+        matching: find.text(
+          lookupAppLocalizations(const Locale('en')).waitingBackAtPickup,
+        ),
+      ),
+      findsOneWidget,
+    );
+    _now = DateTime.utc(2026, 11, 14, 10, 8);
+    _emit(
+      realtime,
+      _projection({
+        ..._arrived,
+        'freeUntil': '2026-11-14T10:11:00Z',
+        'noShowAt': '2026-11-14T10:11:00Z',
+        'pausedSeconds': 360,
+        'pauseCount': 1,
+      }),
+    );
+    await _frames(tester);
+    expect(back, findsNothing, reason: 'the button goes with the stop');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

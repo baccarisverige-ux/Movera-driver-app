@@ -158,6 +158,19 @@ extension _AcceptRidePickup on _AcceptRideState {
       _stage == ActiveRideStage.waitingForRider &&
       _live?.waiting?.paused == true;
 
+  /// v0.18.93 round 2 (`contract.json#autoArrive.back`, supervisor M2):
+  /// "I'm back at the pickup" while the waiting is paused — the server's
+  /// back tap (within the trip's leaveMeters; farther it says "You are not
+  /// at the pickup yet"). The clock goes on from the server's answer.
+  Future<void> _onBackAtPickupTap() async {
+    if (!_waitPausedAway || !LiveDriverServices.active) return;
+    await _whileStepBusy(
+      () => _AcceptRideLive(
+        this,
+      )._serverStep((trips) => trips.resumeWaiting(widget.tripId)),
+    );
+  }
+
   /// `autoArrive.texts.driverPaused` with the trip's own distances; the
   /// contract defaults (200 / 100 m) only for a trip booked before v0.18.93,
   /// whose terms carry none.
