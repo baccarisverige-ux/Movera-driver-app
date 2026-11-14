@@ -38,6 +38,7 @@ WaybillRecord _record({
   String? endedBy,
   String riderFare = '318,00 kr',
   String fare = '60,05 kr',
+  String? commission,
 }) => WaybillRecord(
   tripId: 'trp_g8',
   statusLabel: WaybillRecord.completed,
@@ -57,6 +58,9 @@ WaybillRecord _record({
   tip: tip,
   debtCollected: debt,
   endedEarlyBy: endedBy,
+  // S5 J5d (v0.18.82 moneyBase.commission): the server's number, as the
+  // live finish keeps it (accept_ride_trip.dart); the phone never works it out.
+  commission: commission,
 );
 
 void main() {
@@ -200,6 +204,7 @@ void main() {
             EarningsLine('pickup_pay', Money(minorUnits: 360, currency: 'SEK')),
           ],
           endedBy: 'rider',
+          commission: Money(minorUnits: 1795, currency: 'SEK').formatted,
         ),
       );
       waybills.completeCurrent();
@@ -247,6 +252,7 @@ void main() {
             amount: Money(minorUnits: 2000, currency: 'SEK'),
             method: 'cash',
           ),
+          commission: Money(minorUnits: 2000, currency: 'SEK').formatted,
         ),
       );
       waybills.completeCurrent();

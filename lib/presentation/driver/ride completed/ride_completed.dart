@@ -442,14 +442,6 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     return label == null ? null : Money.parseLabel(label, currency: currency);
   }
 
-  /// Older saves only (no server commission): what is left of the fare.
-  static Money _leftOver(Money paid, Money get, Money? debt, Money? tip) {
-    var left = paid - get;
-    if (debt != null) left = left - debt;
-    if (tip != null) left = left + tip;
-    return left;
-  }
-
   static const TextStyle _value = TextStyle(
     color: _ink,
     fontSize: 15,
@@ -464,8 +456,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   /// tip is all the driver's, outside the fare.
   /// S5 J5d (contract v0.18.82 `moneyBase.commission`): the commission is
   /// the server's number (`TripProjection.commission`, kept on the record)
-  /// and is never worked out on the phone. Only a record without it (an
-  /// older save, a sample trip) keeps the old "what is left" line.
+  /// and is never worked out on the phone: a record without it (an older
+  /// save, a sample trip) shows no commission row.
   Widget _money(WaybillRecord? record) {
     final get = record == null ? null : Money.parseLabel(record.fare);
     final paid = record?.riderFare == null || get == null
@@ -478,9 +470,10 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     final tip = record.tip?.amount.currency == get.currency
         ? record.tip!.amount
         : null;
-    final commission = _serverCommission(record, get.currency) ??
-        _leftOver(paid, get, debt, tip);
-    final share = commission.minorUnits < 0
+    final commission = _serverCommission(record, get.currency);
+    final share = commission == null
+        ? null
+        : commission.minorUnits < 0
         ? '+${Money(minorUnits: -commission.minorUnits, currency: get.currency).formatted}'
         : '−${commission.formatted}';
     final lines = record.earningsBreakdown;
@@ -515,14 +508,15 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
               style: const TextStyle(fontSize: 12, color: Color(0xFF6F7B82)),
             ),
           ),
-        _row(
-          tr.rcMoveraCommission,
-          Text(
-            share,
-            key: const ValueKey<String>('ride-completed-commission'),
-            style: _value,
+        if (share != null)
+          _row(
+            tr.rcMoveraCommission,
+            Text(
+              share,
+              key: const ValueKey<String>('ride-completed-commission'),
+              style: _value,
+            ),
           ),
-        ),
         if (tip != null)
           _row(
             tr.g8LineTip,
