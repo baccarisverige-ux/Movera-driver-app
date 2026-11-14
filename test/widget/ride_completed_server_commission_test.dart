@@ -96,19 +96,20 @@ void main() {
     },
   );
 
-  testWidgets('a big Movera bonus: the server\'s negative commission shows as +', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      _record(
-        riderFare: _sek(10000),
-        driverTotal: _sek(11000),
-        commission: _sek(-1000),
-      ),
-    );
-    expect(_text(tester, 'ride-completed-commission'), '+10,00 kr');
-  });
+  testWidgets(
+    'a big Movera bonus: the server\'s negative commission shows as +',
+    (tester) async {
+      await _pump(
+        tester,
+        _record(
+          riderFare: _sek(10000),
+          driverTotal: _sek(11000),
+          commission: _sek(-1000),
+        ),
+      );
+      expect(_text(tester, 'ride-completed-commission'), '+10,00 kr');
+    },
+  );
 
   testWidgets('Tunisia (TND, 3 decimals): the server\'s 2.750 DT', (
     tester,
@@ -126,7 +127,10 @@ void main() {
         ],
       ),
     );
-    expect(_text(tester, 'ride-completed-commission'), '−${_tnd(2750).formatted}');
+    expect(
+      _text(tester, 'ride-completed-commission'),
+      '−${_tnd(2750).formatted}',
+    );
     expect(_text(tester, 'ride-completed-fare'), _tnd(10250).formatted);
   });
 }
