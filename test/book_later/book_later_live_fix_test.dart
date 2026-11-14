@@ -197,8 +197,10 @@ void main() {
 
   testWidgets('HIGH 2 + MED 6: Keep it at the new time? shows the new time, '
       'the NEW price and Yes / No', (tester) async {
-    final ride = ServerReservation.fromJson(
-      _row(
+    // v0.18.96 (BQ-M23): the new price is the server's driverTotal (what
+    // he gets), no longer the bare earnings line.
+    final ride = ServerReservation.fromJson({
+      ..._row(
         reservation: {
           'changeAsk': {
             'until': '2026-11-05T07:15:00Z',
@@ -206,7 +208,8 @@ void main() {
           },
         },
       ),
-    );
+      'driverTotal': {'amountMinor': 21950, 'currency': 'SEK'},
+    });
     bool? answer;
     await _pump(
       tester,
@@ -224,7 +227,8 @@ void main() {
       find.byKey(const ValueKey<String>('scheduled-keep-price')),
       findsOneWidget,
     );
-    expect(find.textContaining(ride.earnings.formatted), findsOneWidget);
+    expect(find.textContaining('219,50 kr'), findsOneWidget);
+    expect(find.textContaining(ride.earnings.formatted), findsNothing);
     expect(
       find.textContaining(ServerReservation.clockOf(ride.scheduledAt)),
       findsOneWidget,

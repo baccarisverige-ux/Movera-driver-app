@@ -25,6 +25,8 @@ Map<String, Object?> row(String id, {String status = 'requested'}) => {
   'distanceMeters': 8000,
   'durationSeconds': 1080,
   'earnings': {'amountMinor': 17360, 'currency': 'SEK'},
+  // v0.18.96 (BQ-M23): what the driver gets (earnings + pickup pay + bonus).
+  'driverTotal': {'amountMinor': 19360, 'currency': 'SEK'},
   'status': status,
   'mustBeOnlineAt': '2026-11-05T06:00:00Z',
   'canStartAt': '2026-11-05T06:00:00Z',
@@ -50,8 +52,10 @@ void main() {
       expect(card.earnings, ride.earnings.formatted);
       expect(
         card.driverPayLabel,
-        ride.earnings.formatted,
-        reason: 'the server earnings, never the demo share',
+        '193,60 kr',
+        reason:
+            'v0.18.96: the server driverTotal, never earnings or the '
+            'demo share',
       );
       expect(card.pickupAddress, 'Sergels torg');
     },

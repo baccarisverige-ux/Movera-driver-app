@@ -76,7 +76,7 @@ class _KeepWords extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       Text(
-        tr.schedKeepNewPrice(ride.earnings.formatted),
+        tr.schedKeepNewPrice(ride.driverPayLabel),
         key: const ValueKey<String>('scheduled-keep-price'),
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),

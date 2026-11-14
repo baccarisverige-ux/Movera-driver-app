@@ -464,7 +464,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               ? tr.islandNoLongerAvailable
               : tr.schedRideChanged(
                   ServerReservation.clockOf(now.scheduledAt),
-                  now.earnings.formatted,
+                  now.driverPayLabel,
                 ),
         );
       }
