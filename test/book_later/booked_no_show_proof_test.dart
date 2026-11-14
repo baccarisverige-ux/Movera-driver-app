@@ -220,7 +220,7 @@ void main() {
       find.byKey(const ValueKey<String>('trip-cancellation-confirmation')),
       findsOneWidget,
     );
-    expect(find.text('Mark as no-show? You get 120 kr'), findsOneWidget);
+    expect(find.text('Mark as no-show? You get 120,00 kr'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

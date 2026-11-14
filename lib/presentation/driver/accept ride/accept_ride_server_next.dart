@@ -160,6 +160,7 @@ class _ServerNextOffers {
     // The server's pickup pay, none when it sent none (never local rates).
     serverPickupPay:
         offer.pickupPay ?? Money(minorUnits: 0, currency: offer.fare.currency),
+    serverDriverTotal: offer.driverTotal,
     expiresAt: offer.expiresAt,
   );
 

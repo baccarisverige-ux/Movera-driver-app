@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -23,6 +24,7 @@ Future<bool> showCashCollectSheet(
   List<EarningsLine> breakdown = const [],
   bool riderEnded = false,
   bool driverEnded = false,
+  Money? owedToMovera,
 }) async {
   final ended = riderEnded || driverEnded;
   final done = await showModalBottomSheet<bool>(
@@ -40,6 +42,7 @@ Future<bool> showCashCollectSheet(
       breakdown: breakdown,
       riderEnded: riderEnded,
       driverEnded: driverEnded,
+      owedToMovera: owedToMovera,
     ),
     isDismissible: !ended,
     enableDrag: !ended,
@@ -59,7 +62,10 @@ class CashCollectSheet extends StatelessWidget {
     this.breakdown = const [],
     this.riderEnded = false,
     this.driverEnded = false,
-  }) : cash = cash ?? fare;
+    this.owedToMovera,
+    bool? live,
+  }) : cash = cash ?? fare,
+       _live = live;
 
   /// The driver's own money for the trip, after Movera's commission
   /// (owner decision 2026-10-26); no fee is taken off it again.
@@ -95,6 +101,35 @@ class CashCollectSheet extends StatelessWidget {
 
   bool get _ended => riderEnded || driverEnded;
 
+  /// Contract v0.18.89 `TripFinish.owedToMovera` (§90): the trip's
+  /// balance with Movera from the server (above 0 the driver owes Movera).
+  /// The "You owe Movera" / "Movera owes you" line shows only this.
+  final Money? owedToMovera;
+
+  /// Against a live server (default: [LiveDriverServices.active]) the
+  /// balance line needs [owedToMovera]; the demo still works it out.
+  final bool? _live;
+
+  /// The balance card's numbers: the server's [owedToMovera]; live
+  /// without it, none (price audit 2026-11-14 gaps 11 and 13: the line is
+  /// hidden, never fare − cash worked out on the phone).
+  CashBalance? get _balance {
+    final owed = owedToMovera;
+    final share = Money.parseLabel(fare, currency: owed?.currency);
+    final taken = Money.parseLabel(cash, currency: owed?.currency);
+    if (owed != null) {
+      return share == null || taken == null
+          ? null
+          : CashBalance.fromServer(
+              fare: share,
+              cashCollected: taken,
+              owedToMovera: owed,
+            );
+    }
+    if (_live ?? LiveDriverServices.active) return null;
+    return CashBalance.fromLabels(fare: fare, cashCollected: cash);
+  }
+
   /// Share of the screen the sheet covers.
   static const double heightFactor = 0.76;
 
@@ -105,9 +140,11 @@ class CashCollectSheet extends StatelessWidget {
   static const Color _owe = Color(0xFFB4232C);
   static const Color _due = Color(0xFF1E7A46);
 
-  /// "250 kr" for whole kronor, otherwise "126,75 kr" (any currency).
+  /// The label in its currency's exact form: "250,00 kr", "126,75 kr",
+  /// "5.000 DT" (owner 2026-11-14: whole amounts keep their decimals);
+  /// "—" and other non-amounts as they are.
   static String _short(String label) =>
-      Money.parseLabel(label)?.formattedShort ?? label;
+      Money.parseLabel(label)?.formatted ?? label;
 
   /// G8 (live 2026-11-01): the button names the action, "Avsluta resan",
   /// never the category's brand name ("Avsluta Movera").
@@ -117,7 +154,7 @@ class CashCollectSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final amount = _short(cash);
-    final balance = CashBalance.fromLabels(fare: fare, cashCollected: cash);
+    final balance = _balance;
     final first = riderName.trim().split(' ').first;
     final height = MediaQuery.sizeOf(context).height * heightFactor;
     return SizedBox(
@@ -184,7 +221,10 @@ class CashCollectSheet extends StatelessWidget {
                           const SizedBox(height: 12),
                         ],
                         _cashCase(amount),
-                        if (balance != null) ...[
+                        // Live: the share and the cash always; the line
+                        // with Movera only with the server's number.
+                        if (balance != null ||
+                            (_live ?? LiveDriverServices.active)) ...[
                           const SizedBox(height: 14),
                           _balanceCard(balance),
                         ],
@@ -350,8 +390,10 @@ class CashCollectSheet extends StatelessWidget {
 
   /// The driver's earnings, the cash, and what is owed by or to Movera
   /// (R8-4).
-  Widget _balanceCard(CashBalance balance) {
-    final color = balance.driverOwesMovera
+  Widget _balanceCard(CashBalance? balance) {
+    final color = balance == null
+        ? _ink
+        : balance.driverOwesMovera
         ? _owe
         : balance.moveraOwesDriver
         ? _due
@@ -371,21 +413,23 @@ class CashCollectSheet extends StatelessWidget {
             if (breakdown.length > 1 || line.code != 'trip')
               Padding(
                 padding: const EdgeInsets.only(top: 4, left: 10),
-                child: _row(line.label, line.amount.formattedShort),
+                child: _row(line.label, line.amount.formatted),
               ),
           const SizedBox(height: 8),
           _row(tr.cashFromRider, _short(cash)),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(height: 1, color: _line),
-          ),
-          _row(
-            balance.directionLabel,
-            balance.signedLabel,
-            color: color,
-            strong: true,
-          ),
-          if (balance.balance.minorUnits != 0) ...[
+          if (balance != null) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+              child: Divider(height: 1, color: _line),
+            ),
+            _row(
+              balance.directionLabel,
+              balance.signedLabel,
+              color: color,
+              strong: true,
+            ),
+          ],
+          if (balance != null && balance.balance.minorUnits != 0) ...[
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerLeft,

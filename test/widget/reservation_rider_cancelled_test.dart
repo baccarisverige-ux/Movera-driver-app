@@ -25,7 +25,7 @@ void main() {
     );
     expect(ScheduledRideStore.upcoming.any((r) => r.id == ride.id), isFalse);
     final message = IslandMessages.take();
-    expect(message?.title, '${ride.pickupTime} cancelled · +105 kr');
+    expect(message?.title, '${ride.pickupTime} cancelled · +105,00 kr');
     expect(message?.priority, IslandPriority.high);
 
     // Not an accepted ride (or already gone): nothing happens.

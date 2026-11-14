@@ -315,8 +315,8 @@ void main() {
             find.byKey(const ValueKey<String>('cash-collect-amount')),
           )
           .data,
-      '173 kr',
-      reason: 'the cash sheet shows the server\'s 173 kr',
+      '173,00 kr',
+      reason: 'the cash sheet shows the server\'s 173,00 kr',
     );
     await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
     await frames(30);

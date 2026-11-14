@@ -110,7 +110,7 @@ void main() {
       expect(DriverNoticeKind.payoutSent.group, DriverNoticeGroup.account);
       expect(DriverNoticeKind.bonusProgress.group, DriverNoticeGroup.account);
       final demo = DriverNotices.demoReceived(DateTime(2026, 10, 15));
-      expect(demo.first.body, 'Tomorrow 07:40 · 126 kr · Tap to view');
+      expect(demo.first.body, 'Tomorrow 07:40 · 126,00 kr · Tap to view');
     });
   });
 }

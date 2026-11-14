@@ -88,6 +88,7 @@ class TripFinishInfo {
     this.driverTotal,
     this.earningsBreakdown = const [],
     this.ratingAllowed = false,
+    this.owedToMovera,
   });
 
   final bool endedEarly;
@@ -101,6 +102,12 @@ class TripFinishInfo {
   final Money? driverTotal;
   final List<EarningsLine> earningsBreakdown;
   final bool ratingAllowed;
+
+  /// Contract v0.18.89 `TripFinish.owedToMovera` (§90): cash collected
+  /// for the trip − `driverTotal`, from the server. Above 0 the driver
+  /// owes Movera, below 0 Movera owes him, 0 settled; null when not sent
+  /// (the balance line is then hidden, never worked out on the phone).
+  final Money? owedToMovera;
 
   /// Owner G8 Q1: the rider ended the trip on board; the driver gets the
   /// cash sheet with this amount, then the rating.
@@ -127,6 +134,7 @@ class TripFinishInfo {
         currency: driverTotal?.currency,
       ),
       ratingAllowed: raw['ratingAllowed'] == true,
+      owedToMovera: _money(raw['owedToMovera']),
     );
   }
 }

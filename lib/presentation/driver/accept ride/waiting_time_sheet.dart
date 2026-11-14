@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
@@ -115,7 +116,12 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
     final graceSeconds = terms.freeSeconds;
     final noShowSeconds = terms.noShowSeconds;
     final phase = _WaitPhase.of(seconds, terms);
-    final driverNoShow = widget.noShowDriverShare ?? terms.driverNoShowFee;
+    // Price audit 2026-11-14 gap 17: live, the server's
+    // `waiting.noShowDriverShare` only ("—" without it) and no waiting
+    // money counted up on the phone; the demo works its own out.
+    final live = LiveDriverServices.active;
+    final driverNoShow =
+        widget.noShowDriverShare ?? (live ? null : terms.driverNoShowFee);
     final canNoShow =
         !widget.fullyPaid &&
         seconds >= noShowSeconds &&
@@ -200,7 +206,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       ],
                       // Q42/Q43: once the free wait is over, the waiting
                       // fee counts up live; it is all the driver's.
-                      if (paidSeconds > 0 && terms.pricesKnown) ...[
+                      if (paidSeconds > 0 && terms.pricesKnown && !live) ...[
                         const SizedBox(height: 12),
                         WaitingFeeCounter(
                           fee: terms.driverWaitingFee(paidSeconds),
@@ -272,7 +278,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                         ? tr.canBeAppliedAfterNoShow(terms.noShowAfterMinutes)
                         : tr.noShowFromTime(_clockTime(widget.noShowAt!)),
                     // The driver's share, not the rider's fee (G6 fix 5).
-                    value: terms.pricesKnown ? driverNoShow.formatted : '',
+                    value: terms.pricesKnown
+                        ? driverNoShow?.formatted ?? '—'
+                        : '',
                     tone: const Color(0xFF9E2B33),
                     state: seconds < noShowSeconds
                         ? _PhaseState.later
@@ -303,7 +311,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                         : tr.youGetDriverShareWaitPercent2(
                             terms.driverShareWaitPercent,
                             terms.driverShareNoShowPercent,
-                            driverNoShow.formatted,
+                            driverNoShow?.formatted ?? '—',
                           ),
                     key: const ValueKey<String>('waiting-driver-share'),
                     textAlign: TextAlign.center,

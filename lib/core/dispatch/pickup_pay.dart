@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:movera/core/admin/pickup_pay_config.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 
@@ -25,24 +26,33 @@ class PickupPayQuote {
     required this.pay,
     required this.leg,
     this.display = PickupPayDisplay.totalOnly,
+    this.serverTotal,
   });
 
   final Money pay;
   final PickupLeg leg;
   final PickupPayDisplay display;
 
+  /// Contract v0.18.89 `Offer.driverTotal` (§90): what the driver gets for
+  /// the trip, pickup pay included, as the server worked it out. When set
+  /// it is the only number the offer shows (owner Q-M6, s06:1164); the
+  /// phone adds nothing to it.
+  final Money? serverTotal;
+
   bool get hasPay => pay.ore > 0;
 
-  /// [fare] (a "142,30 kr", "12,50 €" or "12.500 DT" label) plus the
-  /// pickup pay. Unchanged when there is no pickup pay or the label is not
-  /// an amount.
+  /// The amount the offer card shows for [fare] (the driver's own money,
+  /// e.g. "142,30 kr", "12,50 €", "12.500 DT"): the server's
+  /// [serverTotal] when it sent one; else [fare] plus the server's pickup
+  /// pay (contract §3.2 before v0.18.89), read in the pay's own currency
+  /// with its decimals (price audit 2026-11-14 gap 1: a SEK-only reader
+  /// dropped the pickup pay of every euro and dinar offer). Unchanged when
+  /// there is no pickup pay or the label is not an amount in it.
   String totalOf(String fare) {
+    if (serverTotal case final total?) return total.formatted;
     if (!hasPay) {
       return fare;
     }
-    // Price audit 2026-11-14 gap 1: read in the pay's own currency with
-    // its decimals ("12,50 €", "12.500 DT"); a SEK-only reader dropped the
-    // pickup pay of every euro and dinar offer.
     final base = Money.parseLabel(fare, currency: pay.currency);
     return base == null ? fare : (base + pay).formatted;
   }
@@ -55,23 +65,34 @@ class PickupPayQuote {
   /// [driverBonus] (no fee on it, all of it the driver's). [cashToCollect],
   /// the rider's cash on a cash trip (`RideOffer.riderCash`), is kept as
   /// given: the rider pays their own fare, never this total. Unchanged
-  /// without pickup pay.
+  /// without pickup pay. The fare is [totalOf], so the trip keeps the
+  /// card's own number ([serverTotal] when the server sent one).
   ({String fare, Money? driverBonus, String? cashToCollect}) termsOf({
     required String fare,
     Money? driverBonus,
     String? cashToCollect,
   }) {
-    final base = hasPay ? Money.parseLabel(fare, currency: pay.currency) : null;
-    if (base == null) {
+    final total = serverTotal;
+    final base = hasPay && total == null
+        ? Money.parseLabel(fare, currency: pay.currency)
+        : null;
+    if (total == null && base == null) {
       return (
         fare: fare,
         driverBonus: driverBonus,
         cashToCollect: cashToCollect,
       );
     }
+    final bonus = !hasPay
+        ? driverBonus
+        : driverBonus == null
+        ? pay
+        : driverBonus.currency == pay.currency
+        ? driverBonus + pay
+        : driverBonus;
     return (
-      fare: (base + pay).formatted,
-      driverBonus: driverBonus == null ? pay : driverBonus + pay,
+      fare: total?.formatted ?? (base! + pay).formatted,
+      driverBonus: bonus,
       cashToCollect: cashToCollect,
     );
   }
@@ -112,22 +133,36 @@ abstract final class PickupPayCalculator {
   }
 
   /// The quote an offer card shows now. [serverPay] is the offer's own
-  /// `Offer.pickupPay`: when the server sent one, it is the pay
-  /// (driver-r5-1); the local rates are for demo offers.
+  /// `Offer.pickupPay` and [serverTotal] its `Offer.driverTotal`
+  /// (v0.18.89). Against a live server the server's pay is the pay and no
+  /// `pickupPay` means none (price audit 2026-11-14 gap 2: never worked out
+  /// on the phone; the server sends it only above 0); the local rates are
+  /// for the demo's own offers only.
   static PickupPayQuote quote({
     required String category,
     required PickupPayOfferKind kind,
     required PickupLeg leg,
     PickupPayConfig? config,
     Money? serverPay,
+    Money? serverTotal,
+    String? currency,
+    bool? live,
   }) {
     final rules = config ?? PickupPayConfig.current;
+    final onServer = live ?? LiveDriverServices.active;
     return PickupPayQuote(
       pay:
           serverPay ??
-          pay(category: category, kind: kind, leg: leg, config: rules),
+          (onServer
+              ? Money(
+                  minorUnits: 0,
+                  currency:
+                      serverTotal?.currency ?? currency ?? Money.zoneCurrency,
+                )
+              : pay(category: category, kind: kind, leg: leg, config: rules)),
       leg: leg,
       display: rules.display,
+      serverTotal: serverTotal,
     );
   }
 }

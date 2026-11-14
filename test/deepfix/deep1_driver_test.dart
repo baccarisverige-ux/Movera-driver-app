@@ -152,23 +152,16 @@ void main() {
       earningsDifference: Money(minorUnits: 1200, currency: 'SEK'),
     );
 
-    test('earnings + the pickup pay and bonus the trip already pays', () {
-      // Today: earnings 37,56 kr, driverTotal 92,56 kr (55 kr pickup pay).
-      final total = change.driverTotalWith(
-        currentTotal: const Money(minorUnits: 9256, currency: 'SEK'),
-        currentEarnings: const Money(minorUnits: 3756, currency: 'SEK'),
-      );
-      expect(total?.formatted, '104,56 kr');
-      // Another currency: the change's own number.
-      expect(
-        change
-            .driverTotalWith(
-              currentTotal: const Money(minorUnits: 900, currency: 'EUR'),
-              currentEarnings: const Money(minorUnits: 300, currency: 'EUR'),
-            )
-            ?.formatted,
-        '49,56 kr',
-      );
+    test('the one number is the server driverTotal (price audit gap 16)', () {
+      // v0.18.89: TripRouteChange.driverTotal; nothing added on the phone.
+      expect(change.driverTotal, isNull);
+      final withTotal = TripRouteChange.tryParse({
+        'changeId': 'rc1',
+        'status': 'pending',
+        'driverEarnings': {'amountMinor': 4956, 'currency': 'SEK'},
+        'driverTotal': {'amountMinor': 10456, 'currency': 'SEK'},
+      });
+      expect(withTotal?.driverTotal?.formatted, '104,56 kr');
     });
 
     testWidgets('the sheet shows the one number', (tester) async {

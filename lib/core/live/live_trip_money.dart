@@ -149,15 +149,22 @@ class LiveTripMoney {
 
   /// The driver's own money for the trip ("You get"): earnings plus
   /// pickup pay plus bonus, so `fare − commission` is exactly this.
-  Money get driverPay {
-    if (driverTotal case final total?) return total;
-    var pay = driverEarnings;
-    if (pickupPay case final extra?) pay = pay + extra;
-    if (driverBonus case final extra?) pay = pay + extra;
-    return pay;
-  }
+  ///
+  /// Price audit 2026-11-14 gap 11 (contract v0.18.89 §90): only the
+  /// server's [driverTotal]; null without it, so the screens show "—",
+  /// never a sum worked out on the phone.
+  Money? get driverPay => driverTotal;
 
   /// On a cash trip, what the rider hands over: the server's
   /// `cashToCollect` when a wallet paid part, else the whole fare.
   Money get cash => _cashToCollect ?? riderFare;
+
+  /// The server's own cash to collect (`cashToCollect`, or the finish
+  /// block's); null when it sent none (contract v0.18.89 §90: every
+  /// pay-in-car trip carries it from accept).
+  Money? get cashToCollect => _cashToCollect;
+
+  /// Contract v0.18.89 `TripFinish.owedToMovera`: this trip's balance with
+  /// Movera (above 0 the driver owes Movera); null when not sent.
+  Money? get owedToMovera => finish?.owedToMovera;
 }

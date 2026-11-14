@@ -26,7 +26,8 @@ class RouteChangeSheet extends StatefulWidget {
     this.driverTotal,
   });
 
-  /// The new money as one number (earnings + pickup pay + bonus, G8 Q3);
+  /// The new money as one number (earnings + pickup pay + bonus, G8 Q3),
+  /// as the server sent it (`TripRouteChange.driverTotal`);
   /// null = the change's `driverEarnings`.
   final Money? driverTotal;
 
@@ -78,7 +79,11 @@ class _RouteChangeSheetState extends State<RouteChangeSheet> {
   Widget build(BuildContext context) {
     final change = widget.change;
     final left = change.secondsLeft(widget.now().toUtc());
-    final earnings = widget.driverTotal ?? change.driverEarnings;
+    // Price audit 2026-11-14 gap 16 (contract v0.18.89 §90): only the
+    // server's `driverTotal` for the whole trip with the new route; the
+    // change's `driverEarnings` alone leaves out the pickup pay and bonus,
+    // and nothing is added on the phone. No number: the line is hidden.
+    final earnings = widget.driverTotal ?? change.driverTotal;
     final difference = change.earningsDifference;
     final theme = Theme.of(context);
     return Material(

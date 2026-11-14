@@ -777,8 +777,12 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               label: trips.isEmpty
                   ? tr.otherEarnings
                   : tr.otherEarningsTripsLengthCash(trips.length),
-              value: CashBalance.signedAll(balance),
-              valueColor: CashBalanceSheet.colorFor(balance.first.minorUnits),
+              // Price audit 2026-11-14 gap 13: live, no sum of the trips
+              // is worked out on the phone (no server number yet): "—".
+              value: _live != null ? '—' : CashBalance.signedAll(balance),
+              valueColor: _live != null
+                  ? null
+                  : CashBalanceSheet.colorFor(balance.first.minorUnits),
             ),
           ),
           const SizedBox(width: 4),

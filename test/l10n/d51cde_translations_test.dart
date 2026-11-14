@@ -124,9 +124,9 @@ void main() {
     String fee(int minor, String currency) => HomeIslandNotices.feeSuffix(
       Money(minorUnits: minor, currency: currency),
     );
-    expect(fee(500, 'EUR'), ' · +5 €');
-    expect(fee(5000, 'TND'), ' · +5 DT');
-    expect(fee(4500, 'SEK'), ' · +45 kr');
+    expect(fee(500, 'EUR'), ' · +5,00 €');
+    expect(fee(5000, 'TND'), ' · +5.000 DT');
+    expect(fee(4500, 'SEK'), ' · +45,00 kr');
     expect(fee(4550, 'SEK'), ' · +45,50 kr');
   });
 

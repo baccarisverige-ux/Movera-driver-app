@@ -13,6 +13,23 @@ extension _AcceptRideStateGetters on _AcceptRideState {
     return _pickupPosition;
   }
 
+  /// The live trip's money as the server last sent it; null in the demo
+  /// or before a projection with money (price audit 2026-11-14: the
+  /// trip's money numbers come from here, never from the phone).
+  LiveTripMoney? get _serverMoney {
+    final projection = _AcceptRideLive(
+      this,
+    )._liveTrips?.projectionOf(widget.tripId);
+    return projection == null ? null : LiveTripMoney.tryParse(projection);
+  }
+
+  /// The server's one driver money number for this trip, or null.
+  Money? get _serverDriverTotal => _serverMoney?.driverTotal;
+
+  /// Contract v0.18.89 `TripFinish.owedToMovera`: this trip's balance with
+  /// Movera as the server sent it (above 0 he owes Movera), or null.
+  Money? get _serverOwedToMovera => _serverMoney?.owedToMovera;
+
   bool get _arrivalDemo => DriverRuntimeConfig.current.simulatedArrival;
 
   /// A RideCheck demo trip: its scripted GPS is the trip's own position.
@@ -255,11 +272,23 @@ extension _AcceptRideStateGetters on _AcceptRideState {
       _stopCursor >= _stopAddresses.length;
 
   /// R8-4: the cash taken from the rider; the fare unless a promotion
-  /// changed it.
-  String get _cashToCollect => WaitingTerms.addFee(
-    widget.cashToCollect ?? _AcceptRideTrip(this)._riderFare,
-    _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal),
-  );
+  /// changed it. Live (price audit 2026-11-14 gap 11, contract v0.18.89
+  /// §90): the server's `TripProjection.cashToCollect`; the offer's own
+  /// `cashToCollect` while no paid wait ran; else "—", never worked out
+  /// on the phone. The demo adds its own waiting fee.
+  String get _cashToCollect {
+    if (_AcceptRideLive(this)._liveTrips != null) {
+      final paidWait = _AcceptRideTrip(this)._paidWaitTotal;
+      return _serverMoney?.cashToCollect?.formatted ??
+          (paidWait == 0 ? widget.cashToCollect : null) ??
+          '—';
+    }
+    return WaitingTerms.addFee(
+      widget.cashToCollect ?? _AcceptRideTrip(this)._riderFare,
+      _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal),
+    );
+  }
+
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
   // G6 `terms.stopFreeWaitMin` in seconds.
   int get _stopFreeSeconds => (_live?.terms?.stopFreeWaitMinutes ?? 0) * 60;

@@ -96,6 +96,10 @@ class _HomeDirectOffer {
   final String? driverEarnings;
   final Money? serverPickupPay;
 
+  /// Contract v0.18.89 `Offer.driverTotal`: what the driver gets, pickup
+  /// pay included; when sent, the only number the card shows.
+  final Money? serverDriverTotal;
+
   /// Accept is dispatch's claim (§3, §3.1).
   bool get claimedViaDispatch => adminAssigned || dispatchExclusive;
 
@@ -110,11 +114,14 @@ class _HomeDirectOffer {
   );
 
   /// On a cash trip, the cash the rider hands over: [cashToCollect] from
-  /// dispatch, else [fare] without Movera's [driverBonus] (driver-u61);
-  /// [fare] as it is when it is not an amount.
-  String get riderCash {
+  /// dispatch. Against a live server nothing else (price audit 2026-11-14
+  /// gap 11: never worked out on the phone; the trip then reads the
+  /// server's `cashToCollect`); a demo offer: [fare] without Movera's
+  /// [driverBonus] (driver-u61), [fare] as it is when it is not an amount.
+  String? get riderCash {
     final cash = cashToCollect;
     if (cash != null) return cash;
+    if (LiveDriverServices.active) return null;
     final money = Money.parseLabel(fare);
     return money == null
         ? fare
@@ -157,6 +164,7 @@ class _HomeDirectOffer {
     this.dispatchExclusive = false,
     this.driverEarnings,
     this.serverPickupPay,
+    this.serverDriverTotal,
     this.bookedTime,
   });
 
@@ -202,6 +210,7 @@ class _HomeDirectOffer {
     dispatchExclusive: dispatchExclusive,
     driverEarnings: offer.driverEarnings?.formatted,
     serverPickupPay: offer.pickupPay,
+    serverDriverTotal: offer.driverTotal,
   );
 }
 
@@ -1087,6 +1096,8 @@ extension _HomeOfferRadar on _DriverHomeState {
         ),
         leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
         serverPay: offer.serverPickupPay,
+        serverTotal: offer.serverDriverTotal,
+        currency: offer.driverBonus?.currency,
       );
 
   /// Radar offers on Home: a deck of cards above the radar. The total

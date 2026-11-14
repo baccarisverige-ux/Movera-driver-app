@@ -370,6 +370,7 @@ class _NextTripRadarOffer {
     this.driverEarnings,
     this.serverOfferId,
     this.serverPickupPay,
+    this.serverDriverTotal,
     this.expiresAt,
   });
 
@@ -382,6 +383,10 @@ class _NextTripRadarOffer {
   /// offers) and `expiresAt` (its time to answer).
   final Money? serverPickupPay;
   final DateTime? expiresAt;
+
+  /// Contract v0.18.89 `Offer.driverTotal`: what the driver gets, pickup
+  /// pay included; when sent, the only number the card shows.
+  final Money? serverDriverTotal;
 
   final String id;
   final String category;
@@ -405,8 +410,9 @@ class _NextTripRadarOffer {
   /// was secured; null while it is only offered.
   final Money? securedPickupPay;
 
-  /// Pickup pay, worked out each time the offer shows; once secured, the
-  /// accepted one.
+  /// Pickup pay as the server sent it (none when it sent none, price audit
+  /// 2026-11-14 gap 2; the local rates only for the demo's own offer);
+  /// once secured, the accepted one.
   PickupPayQuote get pickupPay {
     final leg = PickupLeg(km: pickupKm, minutes: pickupMinutes);
     final secured = securedPickupPay;
@@ -416,11 +422,13 @@ class _NextTripRadarOffer {
             kind: PickupPayOfferKind.nextTripWhileDriving,
             leg: leg,
             serverPay: serverPickupPay,
+            serverTotal: serverDriverTotal,
           )
         : PickupPayQuote(
             pay: secured,
             leg: leg,
             display: PickupPayConfig.current.display,
+            serverTotal: serverDriverTotal,
           );
   }
 
@@ -455,6 +463,7 @@ class _NextTripRadarOffer {
     securedPickupPay: pickupPay.pay,
     serverOfferId: serverOfferId,
     serverPickupPay: serverPickupPay,
+    serverDriverTotal: serverDriverTotal,
     expiresAt: expiresAt,
   );
   final int tripMinutes;

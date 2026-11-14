@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 
 /// R8-4: "Other earnings" details. Each cash trip with its fare, the cash
 /// collected and its +/− balance, then the total the driver owes Movera
@@ -22,7 +23,12 @@ Future<void> showCashBalanceSheet(
 }
 
 class CashBalanceSheet extends StatelessWidget {
-  const CashBalanceSheet({super.key, required this.trips});
+  const CashBalanceSheet({super.key, required this.trips, this.live});
+
+  /// Against a live server (default: [LiveDriverServices.active]) the
+  /// total is "—": no sum is worked out on the phone (price audit
+  /// 2026-11-14 gap 13); each trip shows the server's own balance.
+  final bool? live;
 
   /// Completed cash trips; others are left out.
   final List<TripHistoryRecord> trips;
@@ -129,7 +135,9 @@ class CashBalanceSheet extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          total.minorUnits < 0
+                          (live ?? LiveDriverServices.active)
+                              ? tr.totalBalance
+                              : total.minorUnits < 0
                               ? tr.totalYouOweMovera
                               : total.minorUnits > 0
                               ? tr.totalMoveraOwesYou
@@ -142,9 +150,13 @@ class CashBalanceSheet extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        CashBalance.signedAll(totals),
+                        (live ?? LiveDriverServices.active)
+                            ? '—'
+                            : CashBalance.signedAll(totals),
                         style: TextStyle(
-                          color: colorFor(total.minorUnits),
+                          color: (live ?? LiveDriverServices.active)
+                              ? _ink
+                              : colorFor(total.minorUnits),
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
                         ),

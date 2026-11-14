@@ -36,8 +36,14 @@ void main() {
     final parsed = LiveTripMoney.tryParse(completed)!;
     expect(parsed.riderFare, Money(minorUnits: 5400, currency: 'SEK'));
     expect(parsed.driverEarnings, Money(minorUnits: 3920, currency: 'SEK'));
-    expect(parsed.driverPay, Money(minorUnits: 4000, currency: 'SEK'));
-    expect(parsed.driverPay.formatted, '40,00 kr');
+    // Price audit 2026-11-14 gap 11: no sum on the phone; the server's
+    // driverTotal only.
+    expect(parsed.driverPay, isNull);
+    final withTotal = LiveTripMoney.tryParse({
+      ...completed,
+      'driverTotal': money(4000),
+    })!;
+    expect(withTotal.driverPay?.formatted, '40,00 kr');
     expect(parsed.riderFare.formatted, '54,00 kr');
     expect(parsed.waitingFee, isNull);
     // Cash: the whole fare unless a wallet paid part of it.
@@ -74,9 +80,14 @@ void main() {
       isNull,
     );
     expect(LiveTripMoney.tryParse({'status': 'completed'}), isNull);
+    // Price audit 2026-11-14: without driverTotal no sum on the phone.
     final noPickupPay = {...completed}..remove('pickupPay');
+    expect(LiveTripMoney.tryParse(noPickupPay)!.driverPay, isNull);
     expect(
-      LiveTripMoney.tryParse(noPickupPay)!.driverPay,
+      LiveTripMoney.tryParse({
+        ...noPickupPay,
+        'driverTotal': money(3920),
+      })!.driverPay,
       Money(minorUnits: 3920, currency: 'SEK'),
     );
   });
@@ -87,10 +98,14 @@ void main() {
       ...completed,
       'driverBonus': money(300),
       'commission': money(1100),
+      'driverTotal': money(4300),
     };
     final parsed = LiveTripMoney.tryParse(bonused)!;
     expect(parsed.driverPay, Money(minorUnits: 4300, currency: 'SEK'));
-    for (final trip in [completed, bonused]) {
+    for (final trip in [
+      {...completed, 'driverTotal': money(4000)},
+      bonused,
+    ]) {
       final money = LiveTripMoney.tryParse(trip)!;
       final commission = Money.fromJson(
         trip['commission'] as Map<String, dynamic>,

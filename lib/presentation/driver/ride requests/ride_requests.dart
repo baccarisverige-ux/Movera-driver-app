@@ -447,6 +447,9 @@ class _RideRequestsState extends State<RideRequests> {
     ),
     leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
     serverPay: trip.source.pickupPay,
+    // v0.18.89 §90: the server's one number for the card.
+    serverTotal: trip.source.driverTotal,
+    currency: trip.source.fare.currency,
   );
 
   void _resolveMatchWon(_RadarTrip trip) {

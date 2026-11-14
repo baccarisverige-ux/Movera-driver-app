@@ -495,7 +495,7 @@ void main() {
         find.byKey(const ValueKey<String>('cash-collect-sheet')),
         findsOneWidget,
       );
-      expect(find.text('250 kr'), findsWidgets);
+      expect(find.text('250,00 kr'), findsWidgets);
       expect(find.text('You owe Movera'), findsOneWidget);
       // The driver's 200 kr earnings (owner decision 2026-10-26: no fee
       // off again) − 250 cash.
