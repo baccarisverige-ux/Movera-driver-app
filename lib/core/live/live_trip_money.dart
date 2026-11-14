@@ -137,10 +137,14 @@ class LiveTripMoney {
 
   /// Contract v0.18.87 `moneyBase.commissionRow` (owner 2026-11-13 "Movera
   /// commission is how much movera keep"): what Movera keeps NOW on the
-  /// trip (`TripProjection.moveraKeepsNow`, the admin's moneySplit.movera:
-  /// a later admin bonus or pay change already off). The "Movera
-  /// commission" rows show only this; null (row hidden) when the server
-  /// does not send it — never [commission] as a fallback.
+  /// trip (`TripProjection.moveraKeepsNow` on the driver view: riderPaid −
+  /// driverTotal − debtCollected of HIS trip, a later admin bonus or pay
+  /// change already off). On a reassigned trip this is not the admin's
+  /// moneySplit.movera: a lost driver's payment is another driver's money
+  /// and is never in his number (contract v0.18.90
+  /// `moneyBase.lostDriverPaid.driverView`). The "Movera commission" rows
+  /// show only this; null (row hidden) when the server does not send it —
+  /// never [commission] as a fallback.
   final Money? moveraKeepsNow;
 
   /// The driver's own money for the trip ("You get"): earnings plus
