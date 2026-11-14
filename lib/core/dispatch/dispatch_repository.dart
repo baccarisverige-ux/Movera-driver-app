@@ -138,11 +138,15 @@ class RideOffer {
     );
   }
 
-  /// Reservation previews still carry SEK labels (follow-up); offers do not.
+  /// Reservation previews carry display labels in the ride's own currency
+  /// (a server row's `earnings.formatted`: "224,50 kr", "12,50 €",
+  /// "12.350 DT"); the currency comes from the symbol, else the zone. F2
+  /// (M23 supervisor): reading them as SEK only threw on a TN or FR booked
+  /// ride at "Leave now", so the ride could not open.
   static Money? _amount(String? label, String field) {
     if (label == null) return null;
-    return Money.parseSekLabel(label) ??
-        (throw ArgumentError.value(label, field, 'Not a SEK amount'));
+    return Money.parseLabel(label) ??
+        (throw ArgumentError.value(label, field, 'Not an amount'));
   }
 
   /// The offer (contract `offerId`): what the driver claims.
