@@ -69,6 +69,11 @@ dependencies:
   google_sign_in: ^7.2.0
   # Decision 2 (driver group 3): battery saver warns once before going online.
   battery_plus: ^7.1.2
+  # BQ-V43 (G4 decision 1, owner R7): offer push on Android store builds.
+  # Firebase is started at run time from GET /push/config (no Firebase
+  # file or key in this repository); the web build keeps web/movera_push.js.
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
   flutter_webrtc: ^1.6.3
   flutter_tts: ^4.2.5
 

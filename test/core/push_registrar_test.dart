@@ -40,6 +40,18 @@ class _FakePlatform implements PushPlatform {
   String get platformName => 'web';
 
   @override
+  bool get ready => supported;
+
+  @override
+  PushWebConfig? settingsFrom(PushConfig config) => config.webConfig;
+
+  @override
+  Future<bool> prepare(PushWebConfig settings) async => true;
+
+  @override
+  void onTokenRefresh(void Function(String token) handler) {}
+
+  @override
   Future<String> permission() async => state;
 
   @override
@@ -72,7 +84,7 @@ class _FakeApi implements PushApi {
   final calls = <String>[];
 
   @override
-  Future<PushConfig> config() async {
+  Future<PushConfig> config({String platform = 'web'}) async {
     calls.add('config');
     return answer;
   }
@@ -326,7 +338,8 @@ void main() {
 
 class _ThrowingApi implements PushApi {
   @override
-  Future<PushConfig> config() async => throw StateError('down');
+  Future<PushConfig> config({String platform = 'web'}) async =>
+      throw StateError('down');
 
   @override
   Future<void> register(String token, String platform) async =>
