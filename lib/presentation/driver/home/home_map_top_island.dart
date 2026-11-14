@@ -40,7 +40,7 @@ extension _HomeMapTopIsland on _DriverHomeState {
     // until the feed is back. A passing message, an offer or a
     // reservation to answer goes first; menu and search stay.
     final feedDown =
-        _feedDown.sync(_isOnline && _driverSession.activeTripId == null) &&
+        _noFeed.sync(_isOnline && _driverSession.activeTripId == null) &&
             message == null &&
             reservation == null &&
             exclusive == null &&

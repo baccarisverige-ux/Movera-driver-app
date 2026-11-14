@@ -303,14 +303,7 @@ class _DriverHomeState extends State<DriverHome>
     }
   }
 
-  /// D4: "No connection" on the island while online with the offer feed
-  /// down for more than 10 s (live dispatch only; the demo has no feed).
-  late final OfferFeedDownWatch _feedDown = OfferFeedDownWatch(
-    switch (_dispatch) {
-      final OfferFeedHealth feed => feed,
-      _ => null,
-    },
-  )..addListener(_islandWaitingListener);
+  late final _noFeed = OfferFeedDownWatch.of(_dispatch, _islandWaitingListener);
 
   void _islandMessagesListener() =>
       _HomeMapSheet(this)._onIslandMessagesChanged();
@@ -1379,7 +1372,7 @@ class _DriverHomeState extends State<DriverHome>
     RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
     _islandWaiting.dispose();
-    _feedDown.dispose();
+    _noFeed.dispose();
     _radarListClaiming.removeListener(_syncClaimLock);
     _radarListClaiming.dispose();
     ClaimLock.set(false);

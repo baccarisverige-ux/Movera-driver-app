@@ -23,6 +23,17 @@ class OfferFeedDownWatch extends ChangeNotifier {
     });
   }
 
+  /// Home's watch (D4) of [dispatch]'s offer feed, calling [onChange]
+  /// when the line comes or goes; a dispatch without a feed (the demo)
+  /// never says "No connection".
+  factory OfferFeedDownWatch.of(
+    DispatchRepository dispatch,
+    VoidCallback onChange,
+  ) => OfferFeedDownWatch(switch (dispatch) {
+    final OfferFeedHealth feed => feed,
+    _ => null,
+  })..addListener(onChange);
+
   /// Owner: "more than 10 s".
   final Duration downAfter;
 
