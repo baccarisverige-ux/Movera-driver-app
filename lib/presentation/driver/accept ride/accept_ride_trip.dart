@@ -122,8 +122,19 @@ extension _AcceptRideTrip on _AcceptRideState {
   int get _paidWaitTotal => _paidWaitSeconds + _paidWaitNow;
 
   /// Q43: the fare with the driver's waiting fee in it, for the earnings.
-  String get _fareWithWaiting =>
-      WaitingTerms.addFee(_fare, _waitTerms.driverWaitingFee(_paidWaitTotal));
+  /// Live (price audit 2026-11-14 gap 11, never worked out on the phone):
+  /// the server's `driverTotal`; the booked pay while no paid wait ran;
+  /// else "—". The demo adds its own waiting fee.
+  String get _fareWithWaiting {
+    if (_liveTrips != null) {
+      return _AcceptRideStateGetters(this)._serverDriverTotal?.formatted ??
+          (_paidWaitTotal == 0 ? _fare : '—');
+    }
+    return WaitingTerms.addFee(
+      _fare,
+      _waitTerms.driverWaitingFee(_paidWaitTotal),
+    );
+  }
 
   /// The cash of a cash trip saved before the trip's fare became the
   /// driver's own pay (owner decision 2026-10-26): the fare without
@@ -165,10 +176,14 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   /// The current trip's waybill with the waiting fee in its fare.
   WaybillRecord _paidWaybill() {
-    final fee = _waitTerms.driverWaitingFee(_paidWaitTotal);
+    // Live: the server's waiting lines come with its money (`_withMoney`);
+    // no fee is worked out here.
+    final fee = _liveTrips != null
+        ? null
+        : _waitTerms.driverWaitingFee(_paidWaitTotal);
     return _ownWaybill().copyWith(
       fare: _fareWithWaiting,
-      waitingFee: fee.isZero ? null : fee.formatted,
+      waitingFee: fee == null || fee.isZero ? null : fee.formatted,
       paidByCash: widget.paidByCash,
     );
   }
@@ -281,7 +296,7 @@ extension _AcceptRideTrip on _AcceptRideState {
   /// its lines, the tip, an old fee, an early end).
   WaybillRecord _withMoney(WaybillRecord paid, LiveTripMoney money) =>
       paid.copyWith(
-        fare: money.driverPay.formatted,
+        fare: money.driverPay?.formatted ?? '—',
         riderFare: money.riderFare.formatted,
         waitingFee: money.waitingFee?.formatted,
         clearWaitingFee: money.waitingFee == null,
@@ -818,6 +833,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       // number as the finished screen.
       fare: preview?.yourShare?.formatted ?? _fareWithWaiting,
       cash: preview?.cashDue.formatted ?? _cashToCollect,
+      // v0.18.89 §90: the balance with Movera is the server's only.
+      owedToMovera: _AcceptRideStateGetters(this)._serverOwedToMovera,
       riderName: _riderName,
       category: widget.category,
       recalculated: preview?.earlyEnd ?? false,

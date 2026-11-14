@@ -533,7 +533,7 @@ void main() {
       expect(words(tr.noticeBonusProgressTitle), findsOneWidget);
       expect(words(tr.noticePayoutSentTitle), findsOneWidget);
       expect(
-        words(tr.noticeScheduledBody(tr.tomorrow, '07:40', '126 kr')),
+        words(tr.noticeScheduledBody(tr.tomorrow, '07:40', '126,00 kr')),
         findsOneWidget,
       );
       for (final english in ['Bonus progress', 'Payout sent', 'Tap to view']) {

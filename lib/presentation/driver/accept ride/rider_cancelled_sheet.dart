@@ -59,7 +59,8 @@ class RiderCancelledSheet extends StatelessWidget {
 
   /// Q2 (contract v0.18.7): `cancel` or `no_show`, which rule set the
   /// rider's [riderFee] (a cancel after the driver arrived counts as a
-  /// no-show when the zone says so).
+  /// no-show when the zone says so). [riderFee] only says whether a fee
+  /// was charged; its amount is the rider's and is never shown.
   final String? feeKind;
   final Money? riderFee;
   final VoidCallback onAcknowledge;
@@ -75,13 +76,17 @@ class RiderCancelledSheet extends StatelessWidget {
             ? tr.activeTripCancelledByRider
             : tr.pickupCancelledByRider) +
         HomeIslandNotices.feeSuffix(fee);
+    // Price audit 2026-11-14 gap 19 (owner rule s06:1164, the driver sees
+    // only his own money): the rider's fee amount is never shown here.
+    // The driver's share is in [status] ("+45,00 kr"); this line only
+    // names which fee it came from.
     final riderCharged = riderFee;
     final feeLine = riderCharged == null || riderCharged.isZero
         ? null
         : feeKind == 'no_show'
-        ? tr.feeKindNoShow(riderCharged.formattedShort)
+        ? tr.feeKindNoShowShort
         : feeKind == 'cancel'
-        ? tr.feeKindCancel(riderCharged.formattedShort)
+        ? tr.feeKindCancelShort
         : null;
 
     // Sized by the sheet route: its usual height, taller only when the

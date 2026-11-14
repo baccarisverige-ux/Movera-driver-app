@@ -3,6 +3,7 @@ import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 
 enum ClaimOutcome {
   success,
@@ -72,6 +73,7 @@ class RideOffer {
     this.driverBonus,
     this.driverEarnings,
     this.pickupPay,
+    this.driverTotal,
     this.priority = false,
     this.source = OfferSource.system,
     this.groupId,
@@ -184,14 +186,19 @@ class RideOffer {
   String get driverPayLabel => driverEarnings?.formatted ?? '—';
 
   /// On a cash trip, the cash the rider hands over: [cashToCollect] when
-  /// dispatch sent one (R8-4), else [fare] without Movera's [driverBonus],
-  /// which the rider never pays (driver-u61). The rider's money, not the
-  /// driver's ([driverPay]): the trip shows it only as the cash to
-  /// collect.
-  Money get riderCash => cashToCollect ?? riderCashOf(fare, driverBonus);
+  /// dispatch sent one (R8-4; contract v0.18.89 `Offer.cashToCollect`).
+  /// Against a live server nothing else: null, and the trip reads the
+  /// server's own `cashToCollect` (price audit 2026-11-14 gap 11: never
+  /// worked out on the phone). A demo offer: [fare] without Movera's
+  /// [driverBonus], which the rider never pays (driver-u61). The rider's
+  /// money, not the driver's ([driverPay]): the trip shows it only as the
+  /// cash to collect.
+  Money? get riderCash =>
+      cashToCollect ??
+      (LiveDriverServices.active ? null : riderCashOf(fare, driverBonus));
 
-  /// Display form of [riderCash], e.g. `112,40 kr`.
-  String get riderCashLabel => riderCash.formatted;
+  /// Display form of [riderCash], e.g. `112,40 kr`; null when unknown.
+  String? get riderCashLabel => riderCash?.formatted;
 
   /// [fare] without Movera's [bonus]: [fare] itself when there is no
   /// bonus, it is another currency or larger than the fare.
@@ -277,6 +284,12 @@ class RideOffer {
   /// (driver-r5-1). When set, cards and accepted terms use it instead of
   /// the local pickup pay rates; null for demo offers.
   final Money? pickupPay;
+
+  /// Contract v0.18.89 `Offer.driverTotal` (§90): what the driver gets for
+  /// this trip, pickup pay included, from the server. When sent it is the
+  /// only number the offer shows (owner Q-M6, s06:1164); null from an
+  /// older server.
+  final Money? driverTotal;
 
   /// Contract `Offer.priority`: the card shows the red "Priority" badge.
   final bool priority;

@@ -70,17 +70,14 @@ class LiveActiveTrip {
       if (trip['stops'] is List)
         for (final stop in trip['stops'] as List) ?_place(stop),
     ];
-    final earnings = _money(trip['driverEarnings']);
-    final pickupPay = _money(trip['pickupPay']);
     final riderFare = _money(trip['fare']);
     final bonus = _money(trip['driverBonus']);
-    // "You get": earnings + pickup pay + bonus (fare − commission).
-    Money? pay = earnings;
-    for (final extra in [pickupPay, bonus]) {
-      if (pay != null && extra != null && extra.currency == pay.currency) {
-        pay = pay + extra;
-      }
-    }
+    // Contract v0.18.89 §90 (supervisor M1, Rules
+    // audits/impact/pd2-pf-supervisor.md): "You get" is the server's
+    // `driverTotal` and the cash is its `cashToCollect` (a wallet part is
+    // already off it); without them none ("—"), never summed on the phone.
+    final pay = _money(trip['driverTotal']);
+    final cashDue = _money(trip['cashToCollect']);
     final cash = trip['paymentMethod'] == 'cash';
     final category = trip['categoryId'];
     // Contract v0.18.7 (Q1): the rider's first name and rating as the
@@ -124,7 +121,7 @@ class LiveActiveTrip {
           : null,
       fare: pay?.formatted,
       paidByCash: cash,
-      cashToCollect: cash ? riderFare?.formatted : null,
+      cashToCollect: cash ? cashDue?.formatted : null,
       riderFare: riderFare?.formatted,
       driverBonus: bonus,
       category: category is String ? CategoryCatalog.labelOf(category) : null,

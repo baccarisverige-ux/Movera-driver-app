@@ -82,13 +82,10 @@ class LastTripTip {
         : LiveTripMoney.tryParse(projection);
     final tip = money?.tip;
     if (money == null || tip == null) return;
-    // driverTotal holds the tip; an older server's earnings do not.
-    final total = money.driverTotal != null
-        ? money.driverPay
-        : tip.amount.currency == money.driverPay.currency
-        ? money.driverPay + tip.amount
-        : money.driverPay;
-    waybills.updateLast(last.copyWith(fare: total.formatted, tip: tip));
+    // driverTotal holds the tip. Price audit 2026-11-14: without it the
+    // fare stays as it was; the tip is never added on the phone.
+    final total = money.driverTotal;
+    waybills.updateLast(last.copyWith(fare: total?.formatted, tip: tip));
   }
 
   @visibleForTesting

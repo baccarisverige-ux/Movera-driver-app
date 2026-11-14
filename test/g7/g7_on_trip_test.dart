@@ -45,6 +45,8 @@ void main() {
     'askedAt': '2026-11-02T10:00:00Z',
     'answerBy': '2026-11-02T10:01:00Z',
     'driverEarnings': money(20000, currency),
+    // v0.18.89: the one number the sheet shows (price audit gap 16).
+    'driverTotal': money(20000, currency),
     'earningsDifference': money(4800, currency),
   };
 
@@ -172,7 +174,7 @@ void main() {
         'expectedVersion': 9,
         'changeId': 'rc_1',
       });
-      expect(requests.single.headers['X-Contract-Version'], '0.18.87');
+      expect(requests.single.headers['X-Contract-Version'], '0.18.89');
       expect(trips.versionOf('t1'), 10);
     });
 

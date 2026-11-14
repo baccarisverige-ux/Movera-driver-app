@@ -77,6 +77,9 @@ void main() {
       'dropoff': {'lat': 59.31, 'lng': 18.07, 'address': 'Medborgarplatsen'},
       'fare': {'amountMinor': 17300, 'currency': 'SEK'},
       'driverEarnings': {'amountMinor': 12564, 'currency': 'SEK'},
+      // v0.18.89 §90: the driver's one number and the cash, from the server.
+      'driverTotal': {'amountMinor': 12564, 'currency': 'SEK'},
+      'cashToCollect': {'amountMinor': 17300, 'currency': 'SEK'},
       'paymentMethod': 'cash',
       'categoryId': 'economy',
       'rider': {'firstName': 'Alva', 'rating': 4.9},
@@ -315,8 +318,8 @@ void main() {
             find.byKey(const ValueKey<String>('cash-collect-amount')),
           )
           .data,
-      '173 kr',
-      reason: 'the cash sheet shows the server\'s 173 kr',
+      '173,00 kr',
+      reason: 'the cash sheet shows the server\'s 173,00 kr',
     );
     await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
     await frames(30);

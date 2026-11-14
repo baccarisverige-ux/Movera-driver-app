@@ -3,6 +3,7 @@ import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
@@ -64,6 +65,7 @@ class TripHistoryRecord {
     this.feeEarned,
     this.pickupPoint,
     this.dropoffPoint,
+    this.owedToMovera,
   });
 
   final String tripId;
@@ -98,6 +100,11 @@ class TripHistoryRecord {
   /// cash trip then counts as its fare.
   final String? cashCollected;
 
+  /// Contract v0.18.89 `TripFinish.owedToMovera` (§90) as the server sent
+  /// it, e.g. "45,00 kr" (above 0 the driver owes Movera); null when not
+  /// known. Against a live server the balance line shows only this.
+  final String? owedToMovera;
+
   /// Q16/Q18: Movera's bonus already in [fare], e.g. "40 kr"; null for
   /// none. Shown as "incl. +40 kr Movera bonus".
   final String? driverBonus;
@@ -128,9 +135,34 @@ class TripHistoryRecord {
   /// collected, owed by (−) or to (+) the driver. [fare] is already after
   /// Movera's commission (owner decision 2026-10-26), so no fee is taken
   /// off again. Null otherwise.
-  CashBalance? get cashBalance => paidByCash && status == TripStatus.completed
-      ? CashBalance.fromLabels(fare: fare, cashCollected: cashCollected ?? fare)
-      : null;
+  ///
+  /// Price audit 2026-11-14 gap 13: against a live server only the
+  /// server's [owedToMovera]; null without it (the line is hidden), never
+  /// fare − cash worked out on the phone. The demo still works it out.
+  CashBalance? get cashBalance {
+    if (!paidByCash || status != TripStatus.completed) return null;
+    final owedLabel = owedToMovera;
+    final owed = owedLabel == null ? null : Money.parseLabel(owedLabel);
+    if (owed != null) {
+      final share = Money.parseLabel(fare, currency: owed.currency);
+      final cash = Money.parseLabel(
+        cashCollected ?? fare,
+        currency: owed.currency,
+      );
+      return share == null || cash == null
+          ? null
+          : CashBalance.fromServer(
+              fare: share,
+              cashCollected: cash,
+              owedToMovera: owed,
+            );
+    }
+    if (LiveDriverServices.active) return null;
+    return CashBalance.fromLabels(
+      fare: fare,
+      cashCollected: cashCollected ?? fare,
+    );
+  }
 
   Money? get fareMoney => status != TripStatus.completed
       ? null

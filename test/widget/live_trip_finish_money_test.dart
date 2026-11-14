@@ -70,6 +70,9 @@ void main() {
     // v0.18.87 commissionRow: what Movera keeps now (no later change).
     'moveraKeepsNow': money(1400),
     'pickupPay': money(80),
+    // The server's one driver number (v0.18.10); the app adds nothing
+    // (price audit 2026-11-14 gap 11).
+    'driverTotal': money(4000),
     'paymentMethod': 'cash',
   };
 
@@ -255,7 +258,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey<String>('cash-collect-case')),
-        matching: find.text('217 kr'),
+        matching: find.text('217,00 kr'),
       ),
       findsOneWidget,
     );
@@ -299,7 +302,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey<String>('cash-collect-case')),
-        matching: find.text('59 kr'),
+        matching: find.text('59,00 kr'),
       ),
       findsOneWidget,
     );
@@ -324,7 +327,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey<String>('cash-collect-case')),
-        matching: find.text('208 kr'),
+        matching: find.text('208,00 kr'),
       ),
       findsOneWidget,
     );
@@ -433,13 +436,15 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey<String>('cash-collect-case')),
-        matching: find.text('54 kr'),
+        matching: find.text('54,00 kr'),
       ),
       findsOneWidget,
     );
     expect(find.textContaining('208', findRichText: true), findsNothing);
-    // The balance uses the server's earnings for that price: 39,20 − 54.
-    expect(find.text('−14,80 kr'), findsOneWidget);
+    // Price audit 2026-11-14 gaps 11/13: no balance worked out on the phone
+    // (39,20 − 54); without the server's owedToMovera the line is hidden.
+    expect(find.text('−14,80 kr'), findsNothing);
+    expect(find.text('You owe Movera'), findsNothing);
     expect(
       find.text('Ending before the destination – price recalculated'),
       findsOneWidget,
@@ -479,7 +484,9 @@ void main() {
     final history = await PrefsTripHistoryRepository().list();
     expect(history.single.fare, '40,00 kr');
     expect(history.single.cashCollected, '54,00 kr');
-    expect(history.single.cashBalance!.balance.minorUnits, 4000 - 5400);
+    // Price audit 2026-11-14 gap 13: live, no balance worked out on the
+    // phone (40 − 54); only the server's owedToMovera would give one.
+    expect(history.single.cashBalance, isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

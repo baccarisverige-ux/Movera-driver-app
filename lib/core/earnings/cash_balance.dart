@@ -16,7 +16,22 @@ class CashBalance {
     required this.fare,
     required this.cashCollected,
     this.serviceFee,
-  });
+  }) : _server = null;
+
+  /// Contract v0.18.89 `TripFinish.owedToMovera` (§90): the server's own
+  /// balance. [owedToMovera] above 0 is what the driver owes Movera, so
+  /// [balance] is its opposite; nothing is worked out on the phone.
+  const CashBalance.fromServer({
+    required this.fare,
+    required this.cashCollected,
+    required Money owedToMovera,
+  }) : serviceFee = null,
+       _server = owedToMovera;
+
+  final Money? _server;
+
+  /// True when [balance] is the server's number.
+  bool get fromServerNumber => _server != null;
 
   /// From display labels such as "200 kr"; null when the fare or the cash
   /// is unknown. [serviceFee] is Movera's fee on the trip (the waybill's).
@@ -54,7 +69,14 @@ class CashBalance {
   Money get earnings => serviceFee == null ? fare : fare - serviceFee!;
 
   /// Positive: Movera owes the driver. Negative: the driver owes Movera.
-  Money get balance => earnings - cashCollected;
+  /// The server's `owedToMovera` (opposite sign) when it sent one.
+  Money get balance {
+    final owed = _server;
+    if (owed != null) {
+      return Money(minorUnits: -owed.minorUnits, currency: owed.currency);
+    }
+    return earnings - cashCollected;
+  }
 
   bool get driverOwesMovera => balance.minorUnits < 0;
   bool get moveraOwesDriver => balance.minorUnits > 0;

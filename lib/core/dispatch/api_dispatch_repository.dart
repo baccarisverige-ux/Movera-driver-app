@@ -85,6 +85,9 @@ abstract final class OfferWire {
       driverBonus: money('driverBonus'),
       driverEarnings: money('driverEarnings'),
       pickupPay: money('pickupPay'),
+      // v0.18.89 §90: the card's one number and the rider's cash.
+      driverTotal: money('driverTotal'),
+      cashToCollect: money('cashToCollect'),
       fareBoost: money('fareBoost'),
       priority: json['priority'] == true,
       source: OfferSource.fromWire(json['source']),

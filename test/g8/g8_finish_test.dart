@@ -90,13 +90,15 @@ void main() {
       expect(money.tip!.cash, isTrue);
     });
 
-    test('an older server keeps earnings + pickup pay + bonus', () {
+    test('an older server without driverTotal: no sum on the phone', () {
+      // Price audit 2026-11-14 gap 11: never earnings + pickup pay + bonus
+      // worked out here; the screens show "—".
       final money = LiveTripMoney.tryParse({
         'fare': _m(10000),
         'driverEarnings': _m(8000),
         'pickupPay': _m(300),
       })!;
-      expect(money.driverPay, Money(minorUnits: 8300, currency: 'SEK'));
+      expect(money.driverPay, isNull);
       expect(money.finish, isNull);
     });
 
@@ -127,7 +129,7 @@ void main() {
         'driverTotal': _m(1200, 'EUR'),
         'tip': {'amount': _m(200, 'EUR'), 'method': 'cash'},
       })!;
-      expect(money.driverPay.currency, 'EUR');
+      expect(money.driverPay?.currency, 'EUR');
       expect(money.tip!.amount.currency, 'EUR');
     });
 
@@ -188,7 +190,7 @@ void main() {
         ),
       );
       expect(
-        find.text('The rider ended the trip. Collect 54 kr.'),
+        find.text('The rider ended the trip. Collect 54,00 kr.'),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('cash-not-yet')), findsNothing);
@@ -269,7 +271,7 @@ void main() {
       );
       expect(find.byKey(const ValueKey('ride-completed-tip')), findsOneWidget);
       expect(
-        find.text('The rider gives you a 20 kr tip in cash.'),
+        find.text('The rider gives you a 20,00 kr tip in cash.'),
         findsOneWidget,
       );
       waybills.reset();

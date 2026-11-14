@@ -24,6 +24,7 @@ import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/core/live/trip_finish.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/widgets/map_control_button.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
@@ -535,6 +536,19 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
         // Q23 / R8-4: on a cash trip, the cash the driver collected and
         // the balance: earnings − cash, owed by (−) or to (+) the driver,
         // settled in the next payout.
+        // Price audit 2026-11-14 gap 13: live, the balance is the server's
+        // `owedToMovera` only; without it just the cash collected.
+        if (_ride.cashBalance == null &&
+            completed &&
+            _ride.paidByCash &&
+            _ride.cashCollected != null) ...[
+          16.height,
+          _detailRow(
+            tr.cashCollected,
+            Money.parseLabel(_ride.cashCollected!)?.formatted ??
+                _ride.cashCollected!,
+          ),
+        ],
         if (_ride.cashBalance case final cash?) ...[
           16.height,
           _detailRow(tr.cashCollected, cash.cashCollected.formatted),

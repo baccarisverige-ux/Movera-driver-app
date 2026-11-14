@@ -104,7 +104,7 @@ void main() {
     );
     final last = InMemoryWaybillRepository.instance.last!;
     expect(last.fare, '128,60 kr');
-    expect(last.driverBonus, '30 kr');
+    expect(last.driverBonus, '30,00 kr');
     // Owner decision 2026-10-27: the bonus is in the one amount, no line.
     expect(find.textContaining('paid by Movera'), findsNothing);
     expect(find.textContaining('bonus'), findsNothing);

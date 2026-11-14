@@ -241,13 +241,12 @@ class Money {
     return '$sign${_group(int.parse(parts[0]))}$_decimalSign${parts[1]} $symbol';
   }
 
-  /// Like [formatted], without a zero fraction: `40 kr`, `12,50 kr`. Used
-  /// where the app showed whole amounts (boosts, cash to collect).
-  String get formattedShort {
-    final full = formatted;
-    final zero = '$_decimalSign${'0' * exponent} ';
-    return full.contains(zero) ? full.replaceFirst(zero, ' ') : full;
-  }
+  /// Exactly [formatted]: `40,00 kr`, `12,50 kr`, `5.000 DT`. Owner
+  /// 2026-11-14 (contract v0.18.89 `moneyDisplay.wholeAmounts`): whole
+  /// amounts keep their decimals everywhere, so the zero fraction is no
+  /// longer dropped (it showed "40 kr" / "5 DT"). Kept as a name for the
+  /// boosts, cash to collect and fee texts that used it.
+  String get formattedShort => formatted;
 
   void _sameCurrency(Money other) {
     if (other.currency != currency) {

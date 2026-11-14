@@ -141,7 +141,7 @@ void main() {
         waitNow: () => tester.binding.clock.now(),
       ),
     );
-    expect(amount, '120 kr');
+    expect(amount, '120,00 kr');
     await location.updates.close();
   });
 

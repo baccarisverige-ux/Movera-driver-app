@@ -333,11 +333,14 @@ extension _AcceptRideTripNext on _AcceptRideState {
   }
 
   /// Q6 (contract v0.18.7 `feeAmountsShown`): the driver's part of the
-  /// no-show fee as the server set it at arrive (`waiting.noShowDriverShare`);
-  /// the trip's terms before a server sends it.
+  /// no-show fee as the server set it at arrive (`waiting.noShowDriverShare`).
+  /// Live, nothing else (price audit 2026-11-14 gap 17: never a share
+  /// worked out on the phone); the demo uses the trip's terms.
   Money? get _noShowDriverShare =>
       _live?.waiting?.noShowDriverShare ??
-      (_waitTerms.pricesKnown ? _waitTerms.driverNoShowFee : null);
+      (_AcceptRideLive(this)._liveTrips == null && _waitTerms.pricesKnown
+          ? _waitTerms.driverNoShowFee
+          : null);
 
   /// "Mark as no-show? You get 52 kr" / "… No fee"; no amount the phone
   /// does not know (no server terms).
@@ -350,9 +353,18 @@ extension _AcceptRideTripNext on _AcceptRideState {
   }
 
   /// A no-show's earnings for the driver: their share of the no-show fee
-  /// plus their share of the paid wait (the waiting sheet's words).
+  /// plus their share of the paid wait (the waiting sheet's words). Live:
+  /// the server's share only, and only while no paid wait ran (the
+  /// server's `cancellation.driverShare` follows; nothing is added on the
+  /// phone, price audit 2026-11-14 gap 17).
   String? get _noShowEarned {
     final fee = _noShowDriverShare;
+    if (_AcceptRideLive(this)._liveTrips != null) {
+      if (fee == null || _paidWaitTotal > 0 || fee.minorUnits <= 0) {
+        return null;
+      }
+      return fee.formatted;
+    }
     final wait = _waitTerms.driverWaitingFee(_paidWaitTotal);
     if (fee == null) return wait.minorUnits <= 0 ? null : wait.formatted;
     final total = wait.currency == fee.currency ? fee + wait : fee;
@@ -519,8 +531,9 @@ extension _AcceptRideTripNext on _AcceptRideState {
     if (cash != null && cash.minorUnits > 0) {
       await showCashCollectSheet(
         context,
-        fare: money.driverPay.formatted,
+        fare: money.driverPay?.formatted ?? '—',
         cash: cash.formatted,
+        owedToMovera: money.owedToMovera,
         riderName: _riderName,
         category: widget.category,
         breakdown: money.earningsBreakdown,

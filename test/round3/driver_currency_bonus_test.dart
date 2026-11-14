@@ -125,7 +125,7 @@ void main() {
         WaybillRecord.bonusLabel(
           const Money(minorUnits: 3000, currency: 'SEK'),
         ),
-        '30 kr',
+        '30,00 kr',
       );
       expect(
         WaybillRecord.bonusLabel(const Money(minorUnits: 0, currency: 'SEK')),

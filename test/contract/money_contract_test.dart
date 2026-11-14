@@ -76,8 +76,9 @@ void main() {
       '12.500 DT',
     );
     expect(
+      // Owner 2026-11-14: whole amounts keep their decimals.
       const Money(minorUnits: 4000, currency: 'SEK').formattedShort,
-      '40 kr',
+      '40,00 kr',
     );
     expect(
       const Money(minorUnits: 4050, currency: 'SEK').formattedShort,
@@ -98,7 +99,7 @@ void main() {
     );
     expect(
       const Money(minorUnits: 2000, currency: 'TND').formattedShort,
-      '2 DT',
+      '2.000 DT',
     );
     expect(
       const Money(minorUnits: 12350, currency: 'TND').formattedShort,

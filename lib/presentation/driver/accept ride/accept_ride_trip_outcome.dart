@@ -305,8 +305,9 @@ extension _AcceptRideTripOutcome on _AcceptRideState {
     if (cash != null && cash.minorUnits > 0) {
       await showCashCollectSheet(
         context,
-        fare: money.driverPay.formatted,
+        fare: money.driverPay?.formatted ?? '—',
         cash: cash.formatted,
+        owedToMovera: money.owedToMovera,
         riderName: _riderName,
         category: widget.category,
         breakdown: money.earningsBreakdown,
