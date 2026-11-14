@@ -72,6 +72,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       cashToCollect: widget.cashToCollect,
       riderFare: _changedRoute?.riderFare ?? widget.riderFare,
       driverBonus: widget.driverBonus,
+      pickupPay: widget.pickupPay,
       category: widget.category,
       matchedVia: widget.matchedVia,
       pickupAddress: _pickupAddress,
@@ -260,6 +261,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       issuedAt: DateTime.now(),
       fare: _fare,
       driverBonus: WaybillRecord.bonusLabel(widget.driverBonus),
+      pickupPay: WaybillRecord.bonusLabel(widget.pickupPay),
       service: widget.category,
       riderName: _riderName,
       pickup: _pickupAddress,
@@ -294,8 +296,13 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   /// The server's money on the waybill (v0.18.10: one driver number with
   /// its lines, the tip, an old fee, an early end).
-  WaybillRecord _withMoney(WaybillRecord paid, LiveTripMoney money) =>
-      paid.copyWith(
+  WaybillRecord _withMoney(WaybillRecord paid, LiveTripMoney money) => paid
+      // BQ-F1b: the bonus and pickup pay lines are the projection's own.
+      .withServerLines(
+        driverBonus: money.driverBonus,
+        pickupPay: money.pickupPay,
+      )
+      .copyWith(
         fare: money.driverPay?.formatted ?? '—',
         riderFare: money.riderFare.formatted,
         waitingFee: money.waitingFee?.formatted,
@@ -327,6 +334,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       // The total the card showed, pickup pay in it (driver-12).
       fare: offer.terms.fare,
       driverBonus: WaybillRecord.bonusLabel(offer.terms.driverBonus),
+      pickupPay: WaybillRecord.bonusLabel(offer.terms.pickupPay),
       service: offer.category,
       riderName: offer.riderName,
       pickup: offer.pickup,

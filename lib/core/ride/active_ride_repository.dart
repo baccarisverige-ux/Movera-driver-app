@@ -124,6 +124,7 @@ class PersistedActiveRide {
     this.cashToCollect,
     this.riderFare,
     this.driverBonus,
+    this.pickupPay,
     this.category,
     this.matchedVia,
     this.pickupAddress,
@@ -183,6 +184,12 @@ class PersistedActiveRide {
 
   /// Movera's bonus already in [fare] (contract `driverBonus`, Q16/Q18).
   final Money? driverBonus;
+
+  /// BQ-F1b: the server's pickup pay for this trip (`Offer.pickupPay` /
+  /// `TripProjection.pickupPay`), already in [fare]; the waybill shows it
+  /// as its own line. Null for none (and on a demo trip, whose pickup pay
+  /// is in [driverBonus]).
+  final Money? pickupPay;
   final String? category;
   final String? matchedVia;
   final String? pickupAddress;
@@ -277,6 +284,7 @@ class PersistedActiveRide {
       cashToCollect: cashToCollect,
       riderFare: riderFare,
       driverBonus: driverBonus,
+      pickupPay: pickupPay,
       category: category,
       matchedVia: matchedVia,
       pickupAddress: pickupAddress,
@@ -327,6 +335,7 @@ class PersistedActiveRide {
     if (cashToCollect != null) 'cashToCollect': cashToCollect,
     if (riderFare != null) 'riderFare': riderFare,
     if (driverBonus != null) 'driverBonus': driverBonus!.toJson(),
+    if (pickupPay != null) 'pickupPay': pickupPay!.toJson(),
     if (category != null) 'category': category,
     if (matchedVia != null) 'matchedVia': matchedVia,
     if (pickupAddress != null) 'pickupAddress': pickupAddress,
@@ -491,6 +500,7 @@ class PersistedActiveRide {
           ? json['riderFare'] as String
           : null,
       driverBonus: _money(json['driverBonus']),
+      pickupPay: _money(json['pickupPay']),
       category: json['category'] as String?,
       matchedVia: json['matchedVia'] as String?,
       pickupAddress: json['pickupAddress'] as String?,

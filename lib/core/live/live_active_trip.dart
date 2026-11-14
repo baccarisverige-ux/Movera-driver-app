@@ -73,6 +73,8 @@ class LiveActiveTrip {
     ];
     final riderFare = _money(trip['fare']);
     final bonus = _money(trip['driverBonus']);
+    // BQ-F1b: the server's own pickup pay line, for the waybill.
+    final pickupPay = _money(trip['pickupPay']);
     // Contract v0.18.89 §90 (supervisor M1, Rules
     // audits/impact/pd2-pf-supervisor.md): "You get" is the server's
     // `driverTotal` and the cash is its `cashToCollect` (a wallet part is
@@ -130,6 +132,9 @@ class LiveActiveTrip {
       cashToCollect: cash ? cashDue?.formatted : null,
       riderFare: riderFare?.formatted,
       driverBonus: bonus,
+      pickupPay: pickupPay != null && pickupPay.minorUnits > 0
+          ? pickupPay
+          : null,
       category: category is String ? CategoryCatalog.labelOf(category) : null,
       pickupAddress: pickup.address,
       dropoffAddress: dropoff.address,

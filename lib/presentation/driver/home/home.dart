@@ -781,6 +781,7 @@ class _DriverHomeState extends State<DriverHome>
       fare: snapshot.fare ?? '—',
       riderFare: snapshot.riderFare,
       driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
+      pickupPay: WaybillRecord.bonusLabel(snapshot.pickupPay),
       service: snapshot.category ?? 'Movera',
       riderName: snapshot.riderName ?? WaybillRecord.riderUnavailable,
       pickup: snapshot.pickupAddress ?? '',

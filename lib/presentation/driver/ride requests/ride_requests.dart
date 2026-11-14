@@ -497,6 +497,7 @@ class _RideRequestsState extends State<RideRequests> {
         paidByCash: paidByCash,
         cashToCollect: terms.cashToCollect,
         driverBonus: terms.driverBonus,
+        pickupPay: terms.pickupPay,
         riderFare: rider.fareLabel,
         category: trip.category,
         matchedVia: 'Movera Radar',

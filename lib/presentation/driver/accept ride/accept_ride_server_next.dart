@@ -161,6 +161,7 @@ class _ServerNextOffers {
     serverPickupPay:
         offer.pickupPay ?? Money(minorUnits: 0, currency: offer.fare.currency),
     serverDriverTotal: offer.driverTotal,
+    serverDriverBonus: offer.driverBonus,
     expiresAt: offer.expiresAt,
   );
 

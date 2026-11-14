@@ -959,7 +959,9 @@ extension _HomeOfferRadar on _DriverHomeState {
             fare: pay,
             leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
             serverTotal: offer.serverDriverTotal,
-            acceptedPickupPay: acceptedPickupPay,
+            // BQ-F1b: the started trip's own pickup pay (server), else
+            // the claim's `Offer.pickupPay` kept at accept.
+            acceptedPickupPay: offer.serverPickupPay ?? acceptedPickupPay,
             driverBonus: offer.driverBonus,
             cashToCollect: cash,
           )
@@ -995,6 +997,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           paidByCash: offer.cash,
           cashToCollect: terms.cashToCollect,
           driverBonus: terms.driverBonus,
+          pickupPay: terms.pickupPay,
           riderFare: offer.fare,
           category: offer.category,
           matchedVia: matchedVia,
