@@ -70,8 +70,34 @@ void main() {
       expect(ride.pickupAddress, 'Drottninggatan 1');
       expect(ride.dropoffAddress, 'Odenplan');
       expect(ride.paidByCash, isFalse);
-      // The driver's own pay: earnings plus pickup pay.
-      expect(ride.fare, contains('121,55'));
+      // v0.18.89: no driverTotal in this projection, so no pay worked out.
+      expect(ride.fare, isNull);
+    });
+
+    // Supervisor M1 (Rules audits/impact/pd2-pf-supervisor.md, contract
+    // v0.18.89 §90): a trip restored after a restart shows the server's
+    // TripProjection.driverTotal and cashToCollect; nothing is added up on
+    // the phone and the whole fare is not the cash when a wallet paid part.
+    test("restored money is the server's driverTotal and cashToCollect", () {
+      final trip = projection('in_trip')
+        ..['paymentMethod'] = 'cash'
+        ..['driverBonus'] = {'amountMinor': 1000, 'currency': 'SEK'}
+        // An admin pay change: driverTotal is not earnings + pickup + bonus.
+        ..['driverTotal'] = {'amountMinor': 12655, 'currency': 'SEK'}
+        // 25,00 kr paid from the wallet: cash is not the whole fare.
+        ..['cashToCollect'] = {'amountMinor': 12500, 'currency': 'SEK'};
+      final ride = LiveActiveTrip.snapshotOf(trip)!;
+      expect(ride.fare, '126,55 kr');
+      expect(ride.cashToCollect, '125,00 kr');
+      expect(ride.riderFare, '150,00 kr');
+    });
+
+    test('restored without the server numbers: none ("—"), never summed', () {
+      final ride = LiveActiveTrip.snapshotOf(
+        projection('in_trip')..['paymentMethod'] = 'cash',
+      )!;
+      expect(ride.fare, isNull);
+      expect(ride.cashToCollect, isNull);
     });
 
     test(
