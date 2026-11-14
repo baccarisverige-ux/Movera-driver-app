@@ -223,6 +223,14 @@
   "walletLiveUnavailable": "Could not load your earnings. Try again later.",
   "walletPayoutPaid": "Paid",
   "walletPayoutPending": "Waiting",
+  "walletPayoutDriverGets": "Driver gets",
+  "@walletPayoutDriverGets": {
+    "description": "BQ-M22 payout card line (contract v0.18.92 priceDisplay.payoutSummary.texts.driverGets)."
+  },
+  "walletPayoutMoveraGets": "Movera gets",
+  "@walletPayoutMoveraGets": {
+    "description": "BQ-M22 payout card line (contract v0.18.92 priceDisplay.payoutSummary.texts.moveraGets)."
+  },
   "contactChangePhone": "Change phone number",
   "@contactChangePhone": {
     "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."

@@ -587,43 +587,56 @@ class _LivePayoutsState extends State<_LivePayouts> {
               for (final payout in items)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${DriverDates.dayMonth(payout.periodStart.toLocal())} – '
+                                  '${DriverDates.dayMonth(payout.periodEnd.toLocal().subtract(const Duration(seconds: 1)))}',
+                                  style: const TextStyle(
+                                    color: WalletScreen._text,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  payout.paid
+                                      ? tr.walletPayoutPaid
+                                      : tr.walletPayoutPending,
+                                  style: const TextStyle(
+                                    color: WalletScreen._muted,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // BQ-M22 (contract.json#priceDisplay.payoutSummary):
+                          // the server's two lines when sent (below, full
+                          // width), else the amount.
+                          if (payout.summary == null)
                             Text(
-                              '${DriverDates.dayMonth(payout.periodStart.toLocal())} – '
-                              '${DriverDates.dayMonth(payout.periodEnd.toLocal().subtract(const Duration(seconds: 1)))}',
+                              payout.amount.formatted,
                               style: const TextStyle(
                                 color: WalletScreen._text,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              payout.paid
-                                  ? tr.walletPayoutPaid
-                                  : tr.walletPayoutPending,
-                              style: const TextStyle(
-                                color: WalletScreen._muted,
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
-                      Text(
-                        payout.amount.formatted,
-                        style: const TextStyle(
-                          color: WalletScreen._text,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+                      if (payout.summary != null) ...[
+                        const SizedBox(height: 6),
+                        _PayoutSummaryLines(summary: payout.summary!),
+                      ],
                     ],
                   ),
                 ),
@@ -633,4 +646,56 @@ class _LivePayoutsState extends State<_LivePayouts> {
       ),
     );
   }
+}
+
+/// The payout card's two lines (owner 2026-11-14 "U show how much driver get
+/// and how much movera get thats all no details"): amounts only, never a %.
+class _PayoutSummaryLines extends StatelessWidget {
+  const _PayoutSummaryLines({required this.summary});
+
+  final PayoutSummary summary;
+
+  Widget _line(String key, String label, Money amount) => Row(
+    key: ValueKey<String>(key),
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: WalletScreen._muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Text(
+        amount.formatted,
+        style: const TextStyle(
+          color: WalletScreen._text,
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _line(
+        'wallet-payout-driver-gets',
+        tr.walletPayoutDriverGets,
+        summary.driverGets,
+      ),
+      const SizedBox(height: 2),
+      _line(
+        'wallet-payout-movera-gets',
+        tr.walletPayoutMoveraGets,
+        summary.moveraGets,
+      ),
+    ],
+  );
 }

@@ -952,6 +952,18 @@ abstract class AppLocalizations {
   /// **'Waiting'**
   String get walletPayoutPending;
 
+  /// BQ-M22 payout card line (contract v0.18.92 priceDisplay.payoutSummary.texts.driverGets).
+  ///
+  /// In en, this message translates to:
+  /// **'Driver gets'**
+  String get walletPayoutDriverGets;
+
+  /// BQ-M22 payout card line (contract v0.18.92 priceDisplay.payoutSummary.texts.moveraGets).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera gets'**
+  String get walletPayoutMoveraGets;
+
   /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
   ///
   /// In en, this message translates to:

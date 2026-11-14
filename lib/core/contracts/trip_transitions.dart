@@ -129,7 +129,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.18.89';
+  static const String contractVersion = '0.18.92';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [

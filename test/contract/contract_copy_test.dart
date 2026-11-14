@@ -43,12 +43,12 @@ void main() {
     }
   });
 
-  test('the copy is contract v0.18.89', () {
+  test('the copy is contract v0.18.92', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
-      contains('"version": "0.18.89"'),
+      contains('"version": "0.18.92"'),
     );
-    expect(TripTransitions.contractVersion, '0.18.89');
+    expect(TripTransitions.contractVersion, '0.18.92');
   });
 
   // v0.18.87 (owner 2026-11-13 "Movera commission is how much movera
@@ -85,5 +85,22 @@ void main() {
       expect(price[key], isNotNull, reason: key);
     }
     expect(price['owedToMovera'] as String, contains('driverTotal'));
+  });
+
+  // v0.18.92 (BQ-M22 / BQ-M24): Payout.summary (Driver gets / Movera gets),
+  // the payout card's 2 lines, and lostDriverPaid are in the copy.
+  test('v0.18.92: Payout.summary and lostDriverPaid are in the copy', () {
+    final openapi = File('contracts/openapi.yaml').readAsStringSync();
+    for (final field in ['driverGets', 'moveraGets', 'lostDriverPaid']) {
+      expect(openapi, contains(field));
+    }
+    final contract =
+        jsonDecode(File('contracts/contract.json').readAsStringSync())
+            as Map<String, dynamic>;
+    final price = contract['priceDisplay'] as Map<String, dynamic>;
+    final summary = price['payoutSummary'] as Map<String, dynamic>;
+    expect(summary['texts'], isNotNull);
+    final moneyBase = contract['moneyBase'] as Map<String, dynamic>;
+    expect(moneyBase['lostDriverPaid'], isNotNull);
   });
 }
