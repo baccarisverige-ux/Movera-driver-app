@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The last good DriverAppConfig, kept on the device as the raw document so
@@ -194,13 +195,32 @@ class LiveDriverConfig extends ChangeNotifier {
 
   /// Owner 2026-11-10: a refused stream waits [retryAfter] (5 s), then
   /// doubles each failure (10, 20, 40) up to [retryMax] (60 s), with a
-  /// small random jitter (±10 %); a successful connect starts again at 5 s.
+  /// small random jitter (±10 %); a connected stream starts again at 5 s.
+  /// Owner 2026-11-13 (R3 "Yes, update rule", contract v0.18.83
+  /// `realtime.connectedRule`): connected means the stream delivered an
+  /// event or stayed up [streamConnectedAfter] (30 s); a 200 alone is not
+  /// connected, so a stream the busy server ends right after it opened
+  /// is one more failed try and quick repeated closes back off.
   final Duration retryMax;
   final math.Random _random;
   int _failures = 0;
 
-  /// The wait before the next reconnect (counts one more failure).
+  /// When the open stream answered 200; null while none is open.
+  DateTime? _openedAt;
+
+  /// The Retry-After of the last refused stream (503 / 429, at most 60 s).
+  Duration? _refusedFor;
+
+  /// The wait before the next reconnect (counts one more failure); never
+  /// sooner than a Retry-After the server sent.
   Duration nextRetryWait() {
+    final floor = _refusedFor;
+    _refusedFor = null;
+    final wait = _backoffWait();
+    return floor != null && floor > wait ? floor : wait;
+  }
+
+  Duration _backoffWait() {
     final doubled = retryAfter * math.pow(2, math.min(_failures, 16)).toInt();
     _failures++;
     final capped = doubled > retryMax ? retryMax : doubled;
@@ -427,6 +447,7 @@ class LiveDriverConfig extends ChangeNotifier {
       }
       if (response.statusCode != 200) {
         unawaited(response.stream.drain<void>().catchError((_) {}));
+        _refusedFor = streamRetryAfter(response.statusCode, response.headers);
         if (response.statusCode == 401) {
           await renewSession?.call();
           // A 401 is never retried in a loop: the stream opens again only
@@ -441,7 +462,11 @@ class LiveDriverConfig extends ChangeNotifier {
         return;
       }
       final data = StringBuffer();
-      _failures = 0;
+      // Owner R3: a 200 alone is not connected; the backoff starts again
+      // only after an event or [streamConnectedAfter] up ([_endUptime]).
+      // A stream a resume or a zone change replaced counts its own uptime.
+      _endUptime();
+      _openedAt = _now();
       // §68: every (re)connect reads the booked rides again.
       onReservationsChanged?.call();
       // D12-5: only a received line shows the stream is alive.
@@ -461,6 +486,8 @@ class LiveDriverConfig extends ChangeNotifier {
               data.clear();
               try {
                 final event = jsonDecode(raw);
+                // A real event: the stream is connected (owner R3).
+                if (event is Map && !stale()) _failures = 0;
                 if (event is Map &&
                     event['kind'] == 'driver_reservations_changed') {
                   onReservationsChanged?.call();
@@ -537,13 +564,25 @@ class LiveDriverConfig extends ChangeNotifier {
   void stop() {
     _watching = false;
     _generation++;
+    _openedAt = null;
     _retry?.cancel();
     _retry = null;
     unawaited(_stream?.cancel());
     _stream = null;
   }
 
+  /// Owner R3: a stream that stayed open [streamConnectedAfter] was
+  /// connected, so the next wait is the shortest again.
+  void _endUptime() {
+    final opened = _openedAt;
+    _openedAt = null;
+    if (opened != null && _now().difference(opened) >= streamConnectedAfter) {
+      _failures = 0;
+    }
+  }
+
   void _reconnect() {
+    _endUptime();
     _stream = null;
     if (_disposed || !_watching) return;
     _retry?.cancel();

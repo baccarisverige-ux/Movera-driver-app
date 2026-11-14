@@ -18,6 +18,14 @@ import 'package:movera/core/zones/driver_zone.dart';
 /// read only while online and in a queue or near an airport; (b) the
 /// settings stream reconnects with backoff 5 → 10 → 20 → 40 → 60 s
 /// (jitter ±10 %), back to 5 s after a successful connect.
+///
+/// Owner 2026-11-13 12:23 UTC "Yes, update rule (Rec.)" (contract v0.18.83
+/// `realtime.connectedRule`, one rule for the driver and rider apps; it
+/// replaces the 2026-11-10 reading of "a successful connect"): a connect
+/// is successful (connected) only once the stream delivered an event or
+/// stayed up 30 s. So the reset step of (b) uses a 200 that delivers an
+/// event; a 200 that ends at once keeps backing off
+/// (test/live/config_stream_connected_test.dart).
 void main() {
   const airport = DriverZone(
     id: 'ARN',
@@ -104,7 +112,16 @@ void main() {
             opens.add(async.elapsed);
             return refuse
                 ? http.StreamedResponse(Stream.value(utf8.encode('{}')), 503)
-                : http.StreamedResponse(const Stream.empty(), 200);
+                // Owner R3 2026-11-13: a connected stream (it delivered an
+                // event) that then ends; before R3 this was an empty 200.
+                : http.StreamedResponse(
+                    Stream.value(
+                      utf8.encode(
+                        'data: {"kind":"driver_reservations_changed"}\n\n',
+                      ),
+                    ),
+                    200,
+                  );
           }
           return http.StreamedResponse(Stream.value(utf8.encode('{}')), 200);
         }),
@@ -130,7 +147,8 @@ void main() {
           lessThanOrEqualTo(expected[i] == 60 ? 60 : expected[i] * 1.1),
         );
       }
-      // The server is back: a connect that opens (then ends) resets the wait.
+      // The server is back: a connected stream (an event, then it ends)
+      // resets the wait.
       refuse = false;
       async.elapse(const Duration(seconds: 61));
       final reset = opens.length;
