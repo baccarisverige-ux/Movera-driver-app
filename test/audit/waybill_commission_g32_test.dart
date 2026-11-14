@@ -35,6 +35,9 @@ WaybillRecord _record({
     paidByCash: cash,
     riderFare: riderFare,
     commission: commission,
+    // v0.18.87 commissionRow: the server also sends what Movera keeps now
+    // (moveraKeepsNow); with no later change it equals the commission.
+    moveraKeepsNow: commission,
   );
 }
 

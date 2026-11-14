@@ -299,6 +299,9 @@ extension _AcceptRideTrip on _AcceptRideState {
         // G32: the server's commission for the waybill.
         commission: money.commission?.formatted,
         clearCommission: money.commission == null,
+        // v0.18.87 commissionRow: the rows show what Movera keeps now.
+        moveraKeepsNow: money.moveraKeepsNow?.formatted,
+        clearMoveraKeepsNow: money.moveraKeepsNow == null,
       );
 
   WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {

@@ -7,8 +7,13 @@ import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart'
 
 /// Owner decision 2026-10-27: Ride completed shows exactly three money
 /// lines, Trip total, Movera commission (minus) and You get, and they add
-/// up. No waiting, pickup pay or bonus line.
-WaybillRecord _record({String? riderFare = '184,00 kr'}) => WaybillRecord(
+/// up. No waiting, pickup pay or bonus line. S5 J5d (contract v0.18.82
+/// moneyBase.commission): the commission is the server's number on the
+/// record; without it the row is not shown (never worked out on the phone).
+WaybillRecord _record({
+  String? riderFare = '184,00 kr',
+  String? commission = '17,00 kr',
+}) => WaybillRecord(
   tripId: 'trip-rc',
   statusLabel: WaybillRecord.completed,
   issuedAt: DateTime(2026, 10, 27, 14, 5),
@@ -26,6 +31,10 @@ WaybillRecord _record({String? riderFare = '184,00 kr'}) => WaybillRecord(
   waitingFee: '9,00 kr',
   driverBonus: '20 kr',
   riderFare: riderFare,
+  commission: commission,
+  // v0.18.87 commissionRow: the server also sends what Movera keeps now
+  // (moveraKeepsNow); with no later change it equals the commission.
+  moveraKeepsNow: commission,
 );
 
 Future<void> _pump(WidgetTester tester, WaybillRecord record) async {
@@ -87,6 +96,22 @@ void main() {
     expect(find.text('Moveras provision'), findsOneWidget);
     expect(find.text('Din andel'), findsOneWidget);
   });
+
+  testWidgets(
+    'S5 J5d: no server commission on the record → no commission row, never computed',
+    (tester) async {
+      await _pump(tester, _record(commission: null));
+      expect(_text(tester, 'ride-completed-total'), '184,00 kr');
+      expect(_text(tester, 'ride-completed-fare'), '167,00 kr');
+      expect(
+        find.byKey(const ValueKey('ride-completed-commission')),
+        findsNothing,
+      );
+      expect(find.text('Movera commission'), findsNothing);
+      expect(find.textContaining('17,00'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('an older save without the rider fare shows the amount only', (
     tester,

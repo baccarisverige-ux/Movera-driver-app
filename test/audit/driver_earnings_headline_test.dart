@@ -351,13 +351,12 @@ void main() {
           .data,
       '200,00 kr',
     );
+    // S5 J5d (contract v0.18.82 moneyBase.commission): this trip never got
+    // the server's commission (no live finish in this test), so the phone
+    // shows no commission row instead of working it out (was "−21,00 kr").
     expect(
-      tester
-          .widget<Text>(
-            find.byKey(const ValueKey<String>('ride-completed-commission')),
-          )
-          .data,
-      '−21,00 kr',
+      find.byKey(const ValueKey<String>('ride-completed-commission')),
+      findsNothing,
     );
     expect(tester.takeException(), isNull);
   });
