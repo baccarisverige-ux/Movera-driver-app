@@ -4,11 +4,15 @@ import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
+import 'package:movera/presentation/driver/ride history/history detail/history_detail.dart';
+import 'package:movera/presentation/driver/ride history/ride_history.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -23,9 +27,14 @@ class ServerNotificationsScreen extends StatefulWidget {
     super.key,
     required this.account,
     this.openNotificationId,
+    this.loadHistory,
   });
 
   final DriverAccountSession account;
+
+  /// Job A7: the rides on this phone, to open the trip of a
+  /// `driver_refund_taken` notice ([PrefsTripHistoryRepository] by default).
+  final Future<List<TripHistoryRecord>> Function()? loadHistory;
 
   /// Contract v0.18.3 R7: the notice of the push the driver tapped; it
   /// opens like a tap on its row once the list is read.
@@ -147,6 +156,24 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
       await pushSingle(
         context,
         RightToLeftTransition(const ScheduledRidesScreen()),
+      );
+      if (mounted) await _load();
+    } else if (notice.isRefundTaken) {
+      // Job A7 (contract v0.18.91 deep link movera-driver://trips/{tripId}):
+      // the trip the refund was taken from; Ride history when it is not
+      // on this phone.
+      final tripId = notice.tripId;
+      final rides =
+          await (widget.loadHistory ?? PrefsTripHistoryRepository().list)();
+      if (!mounted) return;
+      final ride = rides.where((r) => r.tripId == tripId).firstOrNull;
+      await pushSingle(
+        context,
+        RightToLeftTransition(
+          ride != null
+              ? DriverRideHistoryDetail(record: ride)
+              : DriverRideHistory(loadHistory: widget.loadHistory),
+        ),
       );
       if (mounted) await _load();
     } else if (notice.opensDocuments) {
@@ -329,7 +356,9 @@ class _NotificationRow extends StatelessWidget {
                   ],
                 ),
               ),
-              if (notice.opensFleet || notice.opensDocuments)
+              if (notice.opensFleet ||
+                  notice.opensDocuments ||
+                  notice.isRefundTaken)
                 const Padding(
                   padding: EdgeInsets.only(left: 6, top: 8),
                   child: Icon(
