@@ -103,5 +103,6 @@
   "schedBookedBadge": "Bokad resa · {time}",
   "leaveNowTimeToDriveName": "Dags att köra till upphämtningen · {name}",
   "remEmailNotVerified": "Din e-post är inte verifierad. Tryck för att verifiera den.",
-  "remEmailNotVerifiedApproval": "Din e-post är inte verifierad. Det behövs för att bli godkänd. Tryck för att verifiera den."
+  "remEmailNotVerifiedApproval": "Din e-post är inte verifierad. Det behövs för att bli godkänd. Tryck för att verifiera den.",
+  "remOwesMoveraOverLimit": "Du är skyldig Movera {owed} (gräns {limit}). Du får inga resor som betalas i bilen förrän du betalar Movera."
 }

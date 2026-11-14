@@ -8710,6 +8710,12 @@ abstract class AppLocalizations {
   /// **'Your e-mail is not verified. It is needed for approval. Tap to verify it.'**
   String get remEmailNotVerifiedApproval;
 
+  /// J11 (contract v0.18.84 debtModel.driverOwes.homeLine, owner Q-S5-1 + 2026-11-13 14:54): Home reminder owes_movera_over_limit, orange (due_soon), never blocks going online; also the Accept refusal driver_owes_movera; = contract reminders.texts.owes_movera_over_limit (debtModel.texts.owesMoveraLine).
+  ///
+  /// In en, this message translates to:
+  /// **'You owe Movera {owed} (limit {limit}). You get no cash trips until you pay Movera.'**
+  String remOwesMoveraOverLimit(String owed, String limit);
+
   /// No description provided for @safetyToolkit.
   ///
   /// In en, this message translates to:
