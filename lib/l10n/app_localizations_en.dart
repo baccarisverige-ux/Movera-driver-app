@@ -5765,6 +5765,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportCommentThanks => 'Thanks for your comment.';
 
   @override
+  String get noticeRefundTakenTitle => 'Deduction from your payout';
+
+  @override
+  String get noticeRefundTakenBody =>
+      'Money was taken from your next payout because the rider got money back for a trip.';
+
+  @override
   String tripMinutesMinTrip(Object tripMinutes) {
     return '$tripMinutes min trip';
   }

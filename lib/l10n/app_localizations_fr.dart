@@ -5878,6 +5878,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportCommentThanks => 'Merci pour votre commentaire.';
 
   @override
+  String get noticeRefundTakenTitle => 'Retenue sur votre versement';
+
+  @override
+  String get noticeRefundTakenBody =>
+      'Une somme a été retenue sur votre prochain versement car le passager a été remboursé pour une course.';
+
+  @override
   String tripMinutesMinTrip(Object tripMinutes) {
     return 'Durée de la course : $tripMinutes min';
   }

@@ -1631,6 +1631,8 @@
   "supportCommentHint": "Har du en kommentar eller idé till oss? (valfritt)",
   "supportCommentSend": "Skicka kommentar",
   "supportCommentThanks": "Tack för din kommentar.",
+  "noticeRefundTakenTitle": "Avdrag från din utbetalning",
+  "noticeRefundTakenBody": "Pengar drogs från din nästa utbetalning eftersom resenären fick pengar tillbaka för en resa.",
   "tripMinutesMinTrip": "{tripMinutes} min resa",
   "pickupWhenLabel": "Upphämtning {whenLabel}",
   "exclusive": "Exklusiv",

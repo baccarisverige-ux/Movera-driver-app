@@ -295,5 +295,13 @@
   "supportNewTicket": "New ticket",
   "supportCommentHint": "Any comment or idea for us? (optional)",
   "supportCommentSend": "Send comment",
-  "supportCommentThanks": "Thanks for your comment."
+  "supportCommentThanks": "Thanks for your comment.",
+  "noticeRefundTakenTitle": "Deduction from your payout",
+  "@noticeRefundTakenTitle": {
+    "description": "Job A7 (contract v0.18.91 finish.refund.driverNotice): bell title when a refund was taken from the driver and the row has no text."
+  },
+  "noticeRefundTakenBody": "Money was taken from your next payout because the rider got money back for a trip.",
+  "@noticeRefundTakenBody": {
+    "description": "Job A7: bell body fallback for driver_refund_taken."
+  }
 }

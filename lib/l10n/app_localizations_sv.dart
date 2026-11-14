@@ -5771,6 +5771,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get supportCommentThanks => 'Tack för din kommentar.';
 
   @override
+  String get noticeRefundTakenTitle => 'Avdrag från din utbetalning';
+
+  @override
+  String get noticeRefundTakenBody =>
+      'Pengar drogs från din nästa utbetalning eftersom resenären fick pengar tillbaka för en resa.';
+
+  @override
   String tripMinutesMinTrip(Object tripMinutes) {
     return '$tripMinutes min resa';
   }

@@ -711,6 +711,13 @@ class ServerNotification {
       kind == 'reservation_taken_back' ||
       kind == 'trip_taken_back';
 
+  /// Job A7 (contract v0.18.91 `finish.refund.driverNotice`; owner
+  /// 2026-11-02 "driver sees why"): an admin refund was taken from his
+  /// earnings (`driver_refund_taken`). The server's title / body say how
+  /// much (his share) and why (the admin's reason); the bell list shows
+  /// them with a money icon.
+  bool get isRefundTaken => kind == 'driver_refund_taken';
+
   /// Contract v0.18.3 `reviewNotices` (R6): the document of a
   /// `document_approved` / `document_rejected` notice, from its deep link
   /// `movera-driver://documents/{type}[?vehicleId=]`; null otherwise.

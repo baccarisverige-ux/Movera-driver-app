@@ -4,11 +4,15 @@ import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
+import 'package:movera/presentation/driver/ride history/history detail/history_detail.dart';
+import 'package:movera/presentation/driver/ride history/ride_history.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -23,9 +27,14 @@ class ServerNotificationsScreen extends StatefulWidget {
     super.key,
     required this.account,
     this.openNotificationId,
+    this.loadHistory,
   });
 
   final DriverAccountSession account;
+
+  /// Job A7: the rides on this phone, to open the trip of a
+  /// `driver_refund_taken` notice ([PrefsTripHistoryRepository] by default).
+  final Future<List<TripHistoryRecord>> Function()? loadHistory;
 
   /// Contract v0.18.3 R7: the notice of the push the driver tapped; it
   /// opens like a tap on its row once the list is read.
@@ -149,6 +158,24 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
         RightToLeftTransition(const ScheduledRidesScreen()),
       );
       if (mounted) await _load();
+    } else if (notice.isRefundTaken) {
+      // Job A7 (contract v0.18.91 deep link movera-driver://trips/{tripId}):
+      // the trip the refund was taken from; Ride history when it is not
+      // on this phone.
+      final tripId = notice.tripId;
+      final rides =
+          await (widget.loadHistory ?? PrefsTripHistoryRepository().list)();
+      if (!mounted) return;
+      final ride = rides.where((r) => r.tripId == tripId).firstOrNull;
+      await pushSingle(
+        context,
+        RightToLeftTransition(
+          ride != null
+              ? DriverRideHistoryDetail(record: ride)
+              : DriverRideHistory(loadHistory: widget.loadHistory),
+        ),
+      );
+      if (mounted) await _load();
     } else if (notice.opensDocuments) {
       await pushSingle(
         context,
@@ -229,13 +256,22 @@ class _NotificationRow extends StatelessWidget {
   final ServerNotification notice;
   final VoidCallback onTap;
 
+  /// The server's words; job A7: built-in sv / fr / en texts for a
+  /// `driver_refund_taken` row that came without them.
+  String get _title => notice.title.isEmpty && notice.isRefundTaken
+      ? tr.noticeRefundTakenTitle
+      : notice.title;
+  String get _body => notice.body.isEmpty && notice.isRefundTaken
+      ? tr.noticeRefundTakenBody
+      : notice.body;
+
   @override
   Widget build(BuildContext context) {
     final at = notice.at.toLocal();
     final when = '${DriverDates.weekdayDayMonth(at)} · ${DriverDates.time(at)}';
     return Semantics(
       button: true,
-      label: '${notice.title}. ${notice.body}. $when',
+      label: '$_title. $_body. $when',
       hint: notice.opensFleet
           ? tr.myFleet
           : notice.opensDocuments
@@ -263,6 +299,8 @@ class _NotificationRow extends StatelessWidget {
                 child: Icon(
                   notice.isTripWarning
                       ? Icons.warning_amber_rounded
+                      : notice.isRefundTaken
+                      ? Icons.payments_outlined
                       : notice.opensFleet
                       ? Icons.groups_outlined
                       : notice.opensDocuments
@@ -281,7 +319,7 @@ class _NotificationRow extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            notice.title,
+                            _title,
                             style: AuthText.urbanist(
                               size: 15.5,
                               weight: notice.read
@@ -306,7 +344,7 @@ class _NotificationRow extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(notice.body, style: AccountStyle.body()),
+                    Text(_body, style: AccountStyle.body()),
                     const SizedBox(height: 4),
                     Text(
                       when,
@@ -318,7 +356,9 @@ class _NotificationRow extends StatelessWidget {
                   ],
                 ),
               ),
-              if (notice.opensFleet || notice.opensDocuments)
+              if (notice.opensFleet ||
+                  notice.opensDocuments ||
+                  notice.isRefundTaken)
                 const Padding(
                   padding: EdgeInsets.only(left: 6, top: 8),
                   child: Icon(

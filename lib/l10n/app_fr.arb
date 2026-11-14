@@ -1631,6 +1631,8 @@
   "supportCommentHint": "Un commentaire ou une idée pour nous ? (facultatif)",
   "supportCommentSend": "Envoyer le commentaire",
   "supportCommentThanks": "Merci pour votre commentaire.",
+  "noticeRefundTakenTitle": "Retenue sur votre versement",
+  "noticeRefundTakenBody": "Une somme a été retenue sur votre prochain versement car le passager a été remboursé pour une course.",
   "tripMinutesMinTrip": "Durée de la course : {tripMinutes} min",
   "pickupWhenLabel": "Prise en charge prévue {whenLabel}",
   "exclusive": "Offre exclusive",
