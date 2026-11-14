@@ -114,7 +114,7 @@ class RideOffer {
     return RideOffer(
       id: reservation.id,
       category: reservation.category,
-      fare: _amount(reservation.fare, 'fare')!,
+      fare: _amount(reservation.fare, 'fare', reservation.currency)!,
       rating: reservation.rating,
       pickupMinutes: 16,
       pickupKm: 2.1,
@@ -131,12 +131,20 @@ class RideOffer {
       riderName: reservation.riderName,
       riderTrips: reservation.riderTrips,
       stops: reservation.stops,
-      fareBoost: _amount(reservation.fareBoost, 'fareBoost'),
+      fareBoost: _amount(
+        reservation.fareBoost,
+        'fareBoost',
+        reservation.currency,
+      ),
       cashToCollect: !cash
           ? null
           : startedCash != null
           ? Money.parseLabel(startedCash)
-          : _amount(reservation.cashToCollect, 'cashToCollect'),
+          : _amount(
+              reservation.cashToCollect,
+              'cashToCollect',
+              reservation.currency,
+            ),
       // The server's earnings + pickup pay + bonus (the started trip's
       // driverTotal, as the restore path `LiveActiveTrip.snapshotOf`, else
       // the booked ride's [driverTotal]): no commission taken on the
@@ -147,7 +155,10 @@ class RideOffer {
           total ??
           (reservation.earnings == null
               ? null
-              : Money.parseLabel(reservation.earnings!)),
+              : Money.parseLabel(
+                  reservation.earnings!,
+                  currency: reservation.currency,
+                )),
       driverBonus: started?.driverBonus,
       driverTotal: total,
     );
@@ -157,10 +168,13 @@ class RideOffer {
   /// (a server row's `earnings.formatted`: "224,50 kr", "12,50 €",
   /// "12.350 DT"); the currency comes from the symbol, else the zone. F2
   /// (M23 supervisor): reading them as SEK only threw on a TN or FR booked
-  /// ride at "Leave now", so the ride could not open.
-  static Money? _amount(String? label, String field) {
+  /// ride at "Leave now", so the ride could not open. BQ-F2b: [currency]
+  /// is the ride's own (`ReservationRequestPreview.currency`), so a label
+  /// with no symbol is read in it, never in the zone's (SEK before a zone
+  /// config); null (a demo ride): the symbol, else the zone.
+  static Money? _amount(String? label, String field, String? currency) {
     if (label == null) return null;
-    return Money.parseLabel(label) ??
+    return Money.parseLabel(label, currency: currency) ??
         (throw ArgumentError.value(label, field, 'Not an amount'));
   }
 
