@@ -1223,11 +1223,8 @@ extension _HomeMapSheet on _DriverHomeState {
     }
 
     final update = _adminHomeConfig.update;
-    if (!update.enabled ||
-        !_isVersionNewer(
-          update.latestVersion,
-          _DriverHomeState._currentAppVersion,
-        )) {
+    // BQ-V46 (G6): against the real build version, not a hard-coded one.
+    if (!appUpdateOffered(update)) {
       return;
     }
 

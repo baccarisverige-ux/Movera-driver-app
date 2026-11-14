@@ -1,13 +1,62 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/logging/crash_reports.dart';
+import 'package:movera/presentation/driver/profile/app_version_line.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// BQ-V46 (G6; owner 2026-11-11 set 2 "App version + build number inside
+/// both apps": "Yes, both apps"): the admin's latest version is offered
+/// only when it is newer than the version this build really is
+/// ([driverAppVersion], `MOVERA_APP_VERSION`, the same source as the Account
+/// "Version x (build)" line; was a hard-coded '1.0.0'). A local build
+/// ("dev") has no version and is never offered an update.
+bool appUpdateOffered(
+  AppUpdateAdminConfig update, {
+  String installed = driverAppVersion,
+}) {
+  if (!update.enabled) return false;
+  final current = _versionNumbers(CrashReports.splitVersion(installed).version);
+  final latest = _versionNumbers(update.latestVersion);
+  if (current == null || latest == null) return false;
+  final length = math.max(current.length, latest.length);
+  for (var i = 0; i < length; i++) {
+    final a = i < latest.length ? latest[i] : 0;
+    final b = i < current.length ? current[i] : 0;
+    if (a != b) return a > b;
+  }
+  return false;
+}
+
+/// "1.4.0" → [1, 4, 0]; null when it is not a dotted number ("dev").
+List<int>? _versionNumbers(String value) {
+  final parts = value.trim().split('.');
+  final numbers = <int>[];
+  for (final part in parts) {
+    final n = int.tryParse(part);
+    if (n == null || n < 0) return null;
+    numbers.add(n);
+  }
+  return numbers;
+}
+
 class AppUpdateSheet extends StatefulWidget {
-  const AppUpdateSheet({super.key, required this.update, this.launchUpdate});
+  const AppUpdateSheet({
+    super.key,
+    required this.update,
+    this.launchUpdate,
+    this.installed = driverAppVersion,
+  });
 
   final AppUpdateAdminConfig update;
+  final String installed;
+
+  /// "Installed: 1.4.0 (583)": the version and build number on this phone.
+  static String installedText(String raw) =>
+      tr.versionInstalled(AppVersionLine.short(raw));
   final Future<bool> Function(Uri)? launchUpdate;
 
   @override
@@ -112,6 +161,17 @@ class _AppUpdateSheetState extends State<AppUpdateSheet> {
                 color: Color(0xFF19865C),
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppUpdateSheet.installedText(widget.installed),
+              key: const ValueKey<String>('app-update-installed'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF7D898F),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 18),

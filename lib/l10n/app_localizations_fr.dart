@@ -2746,6 +2746,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String versionInstalled(String version) {
+    return 'Installée : $version';
+  }
+
+  @override
   String get openingUpdateEllipsis => 'Ouverture de la mise à jour…';
 
   @override

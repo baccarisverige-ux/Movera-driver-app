@@ -30,37 +30,6 @@ extension _HomeMapPanels on _DriverHomeState {
     );
   }
 
-  bool _isVersionNewer(String candidate, String current) {
-    List<int> parse(String value) {
-      return value
-          .split('.')
-          .map((part) => int.tryParse(part) ?? 0)
-          .toList(growable: true);
-    }
-
-    final a = parse(candidate);
-    final b = parse(current);
-    final length = math.max(a.length, b.length);
-
-    while (a.length < length) {
-      a.add(0);
-    }
-    while (b.length < length) {
-      b.add(0);
-    }
-
-    for (var index = 0; index < length; index++) {
-      if (a[index] > b[index]) {
-        return true;
-      }
-      if (a[index] < b[index]) {
-        return false;
-      }
-    }
-
-    return false;
-  }
-
   /// One quiet row of the Home sheet list: line icon, label, and a value
   /// or a chevron when the row opens something.
   Widget _todayRow({

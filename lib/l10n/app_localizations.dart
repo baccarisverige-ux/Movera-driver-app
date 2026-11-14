@@ -4662,6 +4662,12 @@ abstract class AppLocalizations {
   /// **'Version {latestVersion}'**
   String versionLatestVersion(Object latestVersion);
 
+  /// BQ-V46: the update prompt line with the version and build number on this phone, e.g. Installed: 1.4.0 (583).
+  ///
+  /// In en, this message translates to:
+  /// **'Installed: {version}'**
+  String versionInstalled(String version);
+
   /// No description provided for @openingUpdateEllipsis.
   ///
   /// In en, this message translates to:

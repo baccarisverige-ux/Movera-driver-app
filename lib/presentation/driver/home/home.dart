@@ -357,7 +357,6 @@ class _DriverHomeState extends State<DriverHome>
   List<RideOffer> _latestDispatchOffers = const <RideOffer>[];
   late final bool _ownsDispatch;
   late final DriverHomeAdminConfig _adminHomeConfig;
-  static const String _currentAppVersion = '1.0.0';
   bool _updatePromptShown = false;
 
   GoogleMapController? _mapController;

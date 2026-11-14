@@ -67,7 +67,7 @@ void main() {
   test(
     'the split kept every message (2813 en entries, 2116 fr / sv; +V42 arrive hint distance; +A5 next payout; +0.18.93 C9 waiting paused + no-show away; +A7 refund-taken notice; +SV break, +G30 e-mail verified, +G32 waybill commission, +0.18.66 call hint + version line, +0.18.65 next trips switch, +0.18.56 chat, +0.18.57 emergency numbers, +0.18.58 arrived distance; +job 9 airport_queue, +go_offline, +job 8 calls, +job 10 blocked_pairs, +L8 driver early end, +0.18.51 beforePickup, +M22 payout summary)',
     () {
-      const counts = {'en': 2813, 'fr': 2116, 'sv': 2116};
+      const counts = {'en': 2815, 'fr': 2117, 'sv': 2117};
       for (final lang in _langs) {
         final arb =
             jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())

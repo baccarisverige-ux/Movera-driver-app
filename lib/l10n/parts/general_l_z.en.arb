@@ -14,6 +14,15 @@
       }
     }
   },
+  "versionInstalled": "Installed: {version}",
+  "@versionInstalled": {
+    "description": "BQ-V46: the update prompt line with the version and build number on this phone, e.g. Installed: 1.4.0 (583).",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "openingUpdateEllipsis": "Opening update…",
   "updating": "UPDATING",
   "slideToOpen": "SLIDE TO OPEN",
