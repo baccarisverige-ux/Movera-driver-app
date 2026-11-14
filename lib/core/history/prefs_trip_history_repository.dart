@@ -260,9 +260,11 @@ class PrefsTripHistoryRepository {
         'dropoff': record.dropoff,
         'fare': record.fare,
         'status': status.wireName,
-        if (status == TripStatus.completed &&
-            Money.parseSekLabel(record.fare) != null)
-          'fareMinorUnits': Money.parseSekLabel(record.fare)!.minorUnits,
+        // BQ-F2c: the fare in its own currency ("12.350 DT", "24,50 €",
+        // "224,50 kr"), so TN and FR trips keep exact minor units too.
+        if (status == TripStatus.completed)
+          if (Money.parseLabel(record.fare) case final fare?)
+            'fareMinorUnits': fare.minorUnits,
         if (cancellationActor != null) 'cancellationActor': cancellationActor,
         if (cancellationReasonCode != null)
           'cancellationReasonCode': cancellationReasonCode,
