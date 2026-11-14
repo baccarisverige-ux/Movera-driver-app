@@ -19,6 +19,7 @@ WaybillRecord _record({
   required Money riderFare,
   required Money driverTotal,
   required Money? commission,
+  Money? moveraKeepsNow,
   List<EarningsLine> lines = const [],
 }) => WaybillRecord(
   tripId: 'trip-j5d',
@@ -39,7 +40,7 @@ WaybillRecord _record({
   commission: commission?.formatted,
   // v0.18.87 commissionRow: the server also sends what Movera keeps now
   // (moveraKeepsNow); with no later change it equals the commission.
-  moveraKeepsNow: commission?.formatted,
+  moveraKeepsNow: (moveraKeepsNow ?? commission)?.formatted,
 );
 
 Future<void> _pump(WidgetTester tester, WaybillRecord record) async {
@@ -76,7 +77,7 @@ void main() {
   });
 
   testWidgets(
-    'run P6 + Movera pay change: 95 kr trip, server commission 24,73 kr is shown, not 95 − 80,27',
+    'run P6 + Movera pay change: 95 kr trip, the row shows what Movera keeps now (14,73 kr = 95 − 80,27), not the stored commission 24,73 kr',
     (tester) async {
       // Earnings 69,22 + pickup pay 1,05 + Movera's +10,00 kr pay change.
       await _pump(
@@ -85,6 +86,9 @@ void main() {
           riderFare: _sek(9500),
           driverTotal: _sek(8027),
           commission: _sek(2473),
+          // Movera's own +10,00 kr pay change comes out of what it keeps:
+          // the server's moveraKeepsNow is 95,00 − 80,27 = 14,73 kr.
+          moveraKeepsNow: _sek(1473),
           lines: [
             EarningsLine('trip', _sek(6922)),
             EarningsLine('pickup_pay', _sek(105)),
@@ -93,7 +97,7 @@ void main() {
         ),
       );
       expect(_text(tester, 'ride-completed-total'), '95,00 kr');
-      expect(_text(tester, 'ride-completed-commission'), '−24,73 kr');
+      expect(_text(tester, 'ride-completed-commission'), '−14,73 kr');
       expect(_text(tester, 'ride-completed-fare'), '80,27 kr');
       expect(tester.takeException(), isNull);
     },
