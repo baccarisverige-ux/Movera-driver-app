@@ -155,6 +155,7 @@ class DriverDrivingTime {
     required this.maxMinutes,
     this.reached = false,
     this.canDriveAt,
+    this.resetAfterOfflineHours,
   });
 
   factory DriverDrivingTime.fromJson(Map<String, dynamic> json) =>
@@ -163,12 +164,19 @@ class DriverDrivingTime {
         maxMinutes: _whole(json['maxMinutes']),
         reached: json['reached'] == true,
         canDriveAt: _time(json['canDriveAt']),
+        resetAfterOfflineHours: json['resetAfterOfflineHours'] is num
+            ? (json['resetAfterOfflineHours'] as num).toDouble()
+            : null,
       );
 
   final int drivenMinutes;
   final int maxMinutes;
   final bool reached;
   final DateTime? canDriveAt;
+
+  /// BQ-V21: the admin's per-country offline reset (hours); null from an
+  /// older server.
+  final double? resetAfterOfflineHours;
 }
 
 /// `Driver` (`GET /driver/profile`).

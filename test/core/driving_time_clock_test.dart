@@ -3,12 +3,15 @@ import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 
 void main() {
-  test('counts only while online, against the 12 h work rule', () {
+  test('counts only while online and driving, against the 12 h rule', () {
     var now = DateTime(2026, 10, 14, 8);
     final clock = DrivingTimeClock(now: () => now);
     expect(clock.worked, Duration.zero);
 
-    clock.sync(online: true);
+    // SV: online alone does not count; a ride in a driving stage does.
+    clock
+      ..sync(online: true)
+      ..syncDriving(true);
     now = now.add(const Duration(hours: 4, minutes: 12, seconds: 36));
     expect(clock.worked, const Duration(hours: 4, minutes: 12, seconds: 36));
     expect(DrivingTimeClock.hoursMinutes(clock.left), '7 h 47 min');

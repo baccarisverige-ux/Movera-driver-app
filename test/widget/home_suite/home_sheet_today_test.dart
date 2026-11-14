@@ -57,8 +57,22 @@ void main() {
     expect(find.text('Driving time'), findsOneWidget);
     expect(find.text('Worked'), findsOneWidget);
     expect(find.text('Left before rest'), findsOneWidget);
-    expect(find.text('12 h'), findsOneWidget);
-    expect(find.text('6 h'), findsOneWidget);
+    // SV: the limit and the offline reset as the clock has them (the
+    // server's once read), and the admin's break (default 30 min).
+    expect(find.text('12 h 00 min'), findsWidgets);
+    expect(find.text('6 h 00 min'), findsOneWidget);
+    expect(find.text('Break'), findsOneWidget);
+    expect(find.text('30 min'), findsOneWidget);
+    // SV supervisor round 3: the note says the owner's rule (driving only)
+    // with the clock's limit and reset, never "while Radar is on".
+    expect(
+      find.text(
+        'Counts only while you drive to the pickup and on the trip. After '
+        '12 h you can go online again once you have been offline 6 h in a row.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Radar is on'), findsNothing);
     expectNoException(tester);
   });
 

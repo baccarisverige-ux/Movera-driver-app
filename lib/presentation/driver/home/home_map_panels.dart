@@ -352,7 +352,9 @@ extension _HomeMapPanels on _DriverHomeState {
           children: [
             DrivingTimeRow(
               clock: DrivingTimeClock.instance,
-              running: _isOnline,
+              // SV: the seconds run only while the clock counts (driving
+              // to the pickup or on the trip), not while just online.
+              running: _isOnline && DrivingTimeClock.instance.running,
               onTap: _openDrivingTime,
             ),
             // Q23: cash rides on or off. Off: no cash offers. One node,
@@ -427,7 +429,9 @@ extension _HomeMapPanels on _DriverHomeState {
       ),
       builder: (sheetContext) => SafeArea(
         top: false,
-        child: Padding(
+        // SV: the Driving time sheet has five rows (+ Break); on a small
+        // phone the default sheet height is too short, so the rows scroll.
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,

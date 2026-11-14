@@ -122,6 +122,9 @@ class DriverAccountSession extends ChangeNotifier {
       DrivingTimeClock.instance.loadServer(
         drivenMinutes: driving.drivenMinutes,
         maxMinutes: driving.maxMinutes,
+        reached: driving.reached,
+        canDriveAt: driving.canDriveAt,
+        resetAfterOfflineHours: driving.resetAfterOfflineHours,
       );
     }
     // Contract v0.18.2 `auth.firstLanguage`: an account's language wins

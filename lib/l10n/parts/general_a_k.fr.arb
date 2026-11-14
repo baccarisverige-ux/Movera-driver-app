@@ -24,7 +24,7 @@
   "acceptance": "Acceptation",
   "cancellation": "Annulation",
   "drivingTime": "Temps de conduite",
-  "countsWhileRadarIsOnAfter": "Compte tant que le Radar est actif. Après {workHours} h, vous vous reposez {restHours} h avant de repasser en ligne. Une pause de {restHours} h le remet à zéro.",
+  "countsOnlyWhileDriving": "Compte seulement quand vous roulez vers la prise en charge et pendant la course. Après {workHours} h, vous pouvez repasser en ligne après {restHours} h hors ligne d’affilée.",
   "closeSheet": "Fermer le panneau",
   "closeTrip": "Clôturer la course",
   "closeUnreadableTrip": "Clôturer cette course inaccessible",

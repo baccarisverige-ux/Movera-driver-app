@@ -29,6 +29,10 @@ class _HomeAccountState {
   VoidCallback? remindersListener;
   VoidCallback? categoriesListener;
 
+  /// SV: a ride stage starts / stops the driving clock (only driving
+  /// counts); Home plans the warnings and the limit again.
+  VoidCallback? drivingListener;
+
   /// The rest that ended, so "Rest over" comes once.
   DateTime? restEnding;
 
@@ -56,6 +60,9 @@ class _HomeAccountState {
     if (categoriesListener case final listener?) {
       DriverCategoryChoice.off.removeListener(listener);
     }
+    if (drivingListener case final listener?) {
+      DrivingTimeClock.instance.removeListener(listener);
+    }
   }
 }
 
@@ -82,6 +89,15 @@ extension _HomeAccount on _DriverHomeState {
       this,
     )._onCategoriesChanged;
     DriverCategoryChoice.off.addListener(onCategories);
+    // SV: after the current build (a ride controller may start the clock
+    // while its screen builds).
+    final onDriving = account.drivingListener = () => scheduleMicrotask(() {
+      if (mounted) {
+        _syncDrivingLimit();
+        _rebuild(() {});
+      }
+    });
+    _drivingClock.addListener(onDriving);
     _syncDrivingLimit();
     account.refreshTimer = Timer.periodic(onboardingRefreshEvery, (_) {
       if (mounted && _liveVisible) {

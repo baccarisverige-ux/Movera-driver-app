@@ -8,7 +8,8 @@ import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/widgets/driving_time_gauge.dart';
 
 /// Driving time row: the small stopwatch, time left before the rest (or
-/// "Rest until 04:30") and the seconds running while Radar is on.
+/// "Rest until 04:30") and the seconds running while the driver drives to
+/// the pickup or is on the trip (only driving counts).
 class DrivingTimeRow extends StatefulWidget {
   const DrivingTimeRow({
     super.key,

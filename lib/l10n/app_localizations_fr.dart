@@ -1737,8 +1737,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get drivingTime => 'Temps de conduite';
 
   @override
-  String countsWhileRadarIsOnAfter(Object workHours, Object restHours) {
-    return 'Compte tant que le Radar est actif. Après $workHours h, vous vous reposez $restHours h avant de repasser en ligne. Une pause de $restHours h le remet à zéro.';
+  String countsOnlyWhileDriving(Object workHours, Object restHours) {
+    return 'Compte seulement quand vous roulez vers la prise en charge et pendant la course. Après $workHours h, vous pouvez repasser en ligne après $restHours h hors ligne d’affilée.';
   }
 
   @override
@@ -2827,6 +2827,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get restAfterIt => 'Repos ensuite';
+
+  @override
+  String get suggestedBreak => 'Pause';
 
   @override
   String get today => 'Aujourd’hui';
