@@ -1631,6 +1631,8 @@
   "supportCommentHint": "Un commentaire ou une idée pour nous ? (facultatif)",
   "supportCommentSend": "Envoyer le commentaire",
   "supportCommentThanks": "Merci pour votre commentaire.",
+  "noticeRefundTakenTitle": "Retenue sur votre versement",
+  "noticeRefundTakenBody": "Une somme a été retenue sur votre prochain versement car le passager a été remboursé pour une course.",
   "tripMinutesMinTrip": "Durée de la course : {tripMinutes} min",
   "pickupWhenLabel": "Prise en charge prévue {whenLabel}",
   "exclusive": "Offre exclusive",
@@ -2106,7 +2108,5 @@
   "docExpiryTooFar": "Vérifiez la date de fin",
   "docRenewalWaiting": "Nouveau document en attente de vérification",
   "docRenewalRejected": "Nouveau document refusé",
-  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée.",
-  "noticeRefundTakenTitle": "Retenue sur votre versement",
-  "noticeRefundTakenBody": "Une somme a été retenue sur votre prochain versement car le passager a été remboursé pour une course."
+  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée."
 }
