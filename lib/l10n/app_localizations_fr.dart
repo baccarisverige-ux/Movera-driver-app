@@ -3753,12 +3753,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get searchCountry => 'Rechercher un pays';
 
   @override
-  String get moveWithin100MOfPickup =>
-      'Approchez-vous à moins de 100 m du point de prise en charge pour confirmer l’arrivée.';
+  String moveWithin100MOfPickup(int meters) {
+    return 'Approchez-vous à moins de $meters m du point de prise en charge pour confirmer l’arrivée.';
+  }
 
   @override
-  String get moveWithin100MOfStop =>
-      'Approchez-vous à moins de 100 m de l’arrêt pour confirmer l’arrivée.';
+  String moveWithin100MOfStop(int meters) {
+    return 'Approchez-vous à moins de $meters m de l’arrêt pour confirmer l’arrivée.';
+  }
 
   @override
   String get recordAudioStarting => 'démarrage…';

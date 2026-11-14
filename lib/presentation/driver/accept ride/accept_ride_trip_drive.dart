@@ -37,8 +37,10 @@ extension _AcceptRideTripDrive on _AcceptRideState {
       SnackBar(
         content: Text(
           _stage == ActiveRideStage.onTrip
-              ? tr.moveWithin100MOfStop
-              : tr.moveWithin100MOfPickup,
+              ? tr.moveWithin100MOfStop(_AcceptRidePickup(this)._arriveMeters)
+              : tr.moveWithin100MOfPickup(
+                  _AcceptRidePickup(this)._arriveMeters,
+                ),
         ),
         backgroundColor: _AcceptRideState._ink,
         behavior: SnackBarBehavior.floating,

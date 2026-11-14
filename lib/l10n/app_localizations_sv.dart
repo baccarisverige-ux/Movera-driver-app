@@ -3682,12 +3682,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get searchCountry => 'Sök land';
 
   @override
-  String get moveWithin100MOfPickup =>
-      'Kom inom 100 m från upphämtningsplatsen för att vara framme.';
+  String moveWithin100MOfPickup(int meters) {
+    return 'Kom inom $meters m från upphämtningsplatsen för att vara framme.';
+  }
 
   @override
-  String get moveWithin100MOfStop =>
-      'Kom inom 100 m från stoppet för att vara framme.';
+  String moveWithin100MOfStop(int meters) {
+    return 'Kom inom $meters m från stoppet för att vara framme.';
+  }
 
   @override
   String get recordAudioStarting => 'startar…';

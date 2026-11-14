@@ -174,8 +174,13 @@ extension _AcceptRidePickup on _AcceptRideState {
   /// `autoArrive.texts.driverPaused` with the trip's own distances; the
   /// contract defaults (200 / 100 m) only for a trip booked before v0.18.93,
   /// whose terms carry none.
-  String get _waitPausedText => tr.waitingPausedAway(
-    _live?.terms?.leaveMeters ?? 200,
-    _live?.terms?.autoArriveMeters ?? 100,
-  );
+  String get _waitPausedText =>
+      tr.waitingPausedAway(_live?.terms?.leaveMeters ?? 200, _arriveMeters);
+
+  /// BQ-V42 (contract v0.18.93 `TripTerms.autoArriveMeters`, the zone's
+  /// admin setting kept at booking; decisions/driver-g7.md:84 "tap Framme
+  /// himself (only within that distance)"): how near the pickup or a stop
+  /// counts for the Arrive button and what its hint names. 100 m (the
+  /// contract default) only when the server sends none.
+  int get _arriveMeters => _live?.terms?.autoArriveMeters ?? 100;
 }
