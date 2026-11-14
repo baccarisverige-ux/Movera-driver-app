@@ -231,6 +231,15 @@
   "@walletPayoutMoveraGets": {
     "description": "BQ-M22 payout card line (contract v0.18.92 priceDisplay.payoutSummary.texts.moveraGets)."
   },
+  "walletNextPayout": "Next payout: {when}",
+  "@walletNextPayout": {
+    "description": "Job A5 / BQ-M13 (contract v0.18.94 payouts.schedule.nextPayout, owner decisions/driver-g10.md:6): Wallet line; when = short weekday + HH:MM of the payout zone time, e.g. Mon 08:00.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "contactChangePhone": "Change phone number",
   "@contactChangePhone": {
     "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."

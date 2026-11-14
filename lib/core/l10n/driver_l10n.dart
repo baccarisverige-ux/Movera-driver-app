@@ -72,6 +72,10 @@ abstract final class DriverDates {
   static String weekdayDayMonth(DateTime at) =>
       DateFormat('EEE d MMM', _locale).format(at);
 
+  /// "Mon 08:00" · "lun. 08:00" · "mån 08:00" (job A5, the next payout).
+  static String weekdayTime(DateTime at) =>
+      DateFormat('EEE HH:mm', _locale).format(at);
+
   /// "Monday" · "lundi" · "måndag".
   static String weekday(DateTime at) => DateFormat('EEEE', _locale).format(at);
 

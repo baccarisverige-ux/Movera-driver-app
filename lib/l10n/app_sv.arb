@@ -143,6 +143,7 @@
   "walletPayoutPending": "Väntar",
   "walletPayoutDriverGets": "Föraren får",
   "walletPayoutMoveraGets": "Movera får",
+  "walletNextPayout": "Nästa utbetalning: {when}",
   "contactChangePhone": "Ändra telefonnummer",
   "contactChangeEmail": "Ändra e-post",
   "contactNewPhone": "Nytt telefonnummer",

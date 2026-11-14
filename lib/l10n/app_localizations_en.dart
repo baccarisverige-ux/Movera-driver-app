@@ -501,6 +501,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletPayoutMoveraGets => 'Movera gets';
 
   @override
+  String walletNextPayout(String when) {
+    return 'Next payout: $when';
+  }
+
+  @override
   String get contactChangePhone => 'Change phone number';
 
   @override

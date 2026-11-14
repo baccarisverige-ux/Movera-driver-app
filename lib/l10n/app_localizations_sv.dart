@@ -499,6 +499,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get walletPayoutMoveraGets => 'Movera får';
 
   @override
+  String walletNextPayout(String when) {
+    return 'Nästa utbetalning: $when';
+  }
+
+  @override
   String get contactChangePhone => 'Ändra telefonnummer';
 
   @override

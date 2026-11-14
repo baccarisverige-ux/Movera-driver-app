@@ -510,6 +510,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walletPayoutMoveraGets => 'Movera reçoit';
 
   @override
+  String walletNextPayout(String when) {
+    return 'Prochain versement : $when';
+  }
+
+  @override
   String get contactChangePhone => 'Changer de numéro de téléphone';
 
   @override

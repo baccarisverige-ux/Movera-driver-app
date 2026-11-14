@@ -67,16 +67,16 @@ class LiveEarnings {
 
   /// `GET /driver/payouts` (newest first): the driver's own payouts.
   /// Throws when the server could not answer.
-  Future<List<DriverPayout>> payouts({int limit = 10}) async {
-    final page = await _api.get('/api/v1/driver/payouts?limit=$limit');
-    final items = page['items'];
-    if (items is! List) return const [];
-    return [
-      for (final item in items)
-        if (item is Map)
-          ?DriverPayout.tryParse(Map<String, dynamic>.from(item)),
-    ];
-  }
+  Future<List<DriverPayout>> payouts({int limit = 10}) async =>
+      (await payoutPage(limit: limit)).items;
+
+  /// `GET /driver/payouts` with the page's next payout moment (contract
+  /// v0.18.94 `DriverPayoutPage`, job A5). Throws when the server could
+  /// not answer.
+  Future<DriverPayoutPage> payoutPage({int limit = 10}) async =>
+      DriverPayoutPage.of(
+        await _api.get('/api/v1/driver/payouts?limit=$limit'),
+      );
 
   /// The period holding [now] (else the newest one) of an
   /// `EarningsReport`; its `net`. Null when there is none.
@@ -105,6 +105,43 @@ class LiveEarnings {
       return null;
     }
   }
+}
+
+/// The page of `GET /driver/payouts` (contract v0.18.94 `DriverPayoutPage`,
+/// job A5 / BQ-M13, owner decisions/driver-g10.md:6): the payouts and when
+/// the next one is made.
+class DriverPayoutPage {
+  const DriverPayoutPage({required this.items, this.nextPayoutLocal});
+
+  factory DriverPayoutPage.of(Map<String, dynamic> page) {
+    final items = page['items'];
+    return DriverPayoutPage(
+      items: [
+        if (items is List)
+          for (final item in items)
+            if (item is Map)
+              ?DriverPayout.tryParse(Map<String, dynamic>.from(item)),
+      ],
+      nextPayoutLocal: _wallClock(page['nextPayoutLocal']),
+    );
+  }
+
+  final List<DriverPayout> items;
+
+  /// The next payout as wall-clock time in the payout zone
+  /// (`nextPayoutLocal`, "2026-11-16T08:00"), held as a UTC [DateTime]
+  /// whose fields are that wall clock: shown as it is, never moved to the
+  /// phone's time zone, and never shifted by the phone's own summer-time
+  /// gap (a phone-local 02:30 on its spring-forward night would read as
+  /// 03:30). Null when the server sends none (paused payouts, older server).
+  final DateTime? nextPayoutLocal;
+
+  static final _pattern = RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$');
+
+  static DateTime? _wallClock(Object? value) =>
+      value is String && _pattern.hasMatch(value)
+      ? DateTime.tryParse('$value:00Z')
+      : null;
 }
 
 /// One payout of `GET /driver/payouts` (contract Payout, driver view).
