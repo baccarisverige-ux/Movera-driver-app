@@ -588,7 +588,19 @@ extension _AcceptRidePanel on _AcceptRideState {
                                       this,
                                     )._onBackAtPickupTap(),
                                   ),
-                            child: Text(tr.waitingBackAtPickup),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF146B45),
+                              side: const BorderSide(color: Color(0xFF146B45)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              tr.waitingBackAtPickup,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
