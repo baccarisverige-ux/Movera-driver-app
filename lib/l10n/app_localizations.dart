@@ -964,6 +964,12 @@ abstract class AppLocalizations {
   /// **'Movera gets'**
   String get walletPayoutMoveraGets;
 
+  /// Job A5 / BQ-M13 (contract v0.18.94 payouts.schedule.nextPayout, owner decisions/driver-g10.md:6): Wallet line; when = short weekday + HH:MM of the payout zone time, e.g. Mon 08:00.
+  ///
+  /// In en, this message translates to:
+  /// **'Next payout: {when}'**
+  String walletNextPayout(String when);
+
   /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
   ///
   /// In en, this message translates to:

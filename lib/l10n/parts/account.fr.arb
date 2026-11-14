@@ -143,6 +143,7 @@
   "walletPayoutPending": "En attente",
   "walletPayoutDriverGets": "Le chauffeur reçoit",
   "walletPayoutMoveraGets": "Movera reçoit",
+  "walletNextPayout": "Prochain versement : {when}",
   "contactChangePhone": "Changer de numéro de téléphone",
   "contactChangeEmail": "Changer d’e-mail",
   "contactNewPhone": "Nouveau numéro de téléphone",

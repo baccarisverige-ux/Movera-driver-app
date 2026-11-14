@@ -49,13 +49,19 @@ class WalletScreen extends StatelessWidget {
                   children: [
                     _balanceHero(),
                     const SizedBox(height: 14),
-                    _payoutInfoStrip(context),
-                    const SizedBox(height: 28),
-                    // driver-u147: no 'See all' until there is a payouts list;
-                    // it opened My bank.
-                    _sectionHeader(title: tr.recentPayouts),
-                    const SizedBox(height: 12),
-                    _recentPayouts(),
+                    // Job A5: live, the strip and the list share one
+                    // GET /driver/payouts (its nextPayoutLocal).
+                    if (LiveDriverServices.active)
+                      const _LivePayouts()
+                    else ...[
+                      _payoutInfoStrip(context),
+                      const SizedBox(height: 28),
+                      // driver-u147: no 'See all' until there is a payouts
+                      // list; it opened My bank.
+                      _sectionHeader(title: tr.recentPayouts),
+                      const SizedBox(height: 12),
+                      _recentPayouts(),
+                    ],
                     const SizedBox(height: 22),
                     _bankCard(),
                   ],
@@ -213,7 +219,10 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _payoutInfoStrip(BuildContext context) {
+  /// [next] (job A5, contract v0.18.94 `nextPayoutLocal`): the next payout
+  /// as the payout zone's wall clock → "Next payout: Mon 08:00" and its
+  /// date; null → the old "no automatic payout" line.
+  static Widget _payoutInfoStrip(BuildContext context, {DateTime? next}) {
     // Large text (release evidence b8bd860, F3): the "not set" chip moves
     // under the texts so the subtitle keeps the width of the strip, and
     // the strip's scale is capped so its longest word ("Utbetalningsdatum")
@@ -263,7 +272,12 @@ class WalletScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr.noAutomaticPayout,
+                    next == null
+                        ? tr.noAutomaticPayout
+                        : tr.walletNextPayout(DriverDates.weekdayTime(next)),
+                    key: next == null
+                        ? null
+                        : const ValueKey<String>('wallet-next-payout'),
                     style: TextStyle(
                       color: _text,
                       fontSize: 13.5,
@@ -272,25 +286,30 @@ class WalletScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 3),
                   Text(
-                    tr.payoutDateIsNotAvailable,
+                    next == null
+                        ? tr.payoutDateIsNotAvailable
+                        : DriverDates.dayMonthYear(next),
                     style: TextStyle(
                       color: _muted,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (large) ...[const SizedBox(height: 8), chip],
+                  if (large && next == null) ...[
+                    const SizedBox(height: 8),
+                    chip,
+                  ],
                 ],
               ),
             ),
-            if (!large) chip,
+            if (!large && next == null) chip,
           ],
         ),
       ),
     );
   }
 
-  Widget _sectionHeader({required String title}) {
+  static Widget _sectionHeader({required String title}) {
     return Text(
       title,
       style: const TextStyle(
@@ -303,7 +322,6 @@ class WalletScreen extends StatelessWidget {
   }
 
   Widget _recentPayouts() {
-    if (LiveDriverServices.active) return const _LivePayouts();
     return Container(
       decoration: BoxDecoration(
         color: _white,
@@ -520,7 +538,8 @@ class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
   }
 }
 
-/// Audit 2026-11-01: the driver's own payouts from `GET /driver/payouts`.
+/// Audit 2026-11-01: the driver's own payouts from `GET /driver/payouts`;
+/// job A5 (contract v0.18.94): the same read gives the "Next payout" strip.
 class _LivePayouts extends StatefulWidget {
   const _LivePayouts();
 
@@ -529,13 +548,37 @@ class _LivePayouts extends StatefulWidget {
 }
 
 class _LivePayoutsState extends State<_LivePayouts> {
-  late Future<List<DriverPayout>> _payouts = _load();
+  late Future<DriverPayoutPage> _payouts = _load();
 
-  Future<List<DriverPayout>> _load() =>
-      LiveDriverServices.instance!.earnings.payouts();
+  Future<DriverPayoutPage> _load() =>
+      LiveDriverServices.instance!.earnings.payoutPage();
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<DriverPayoutPage>(
+      future: _payouts,
+      builder: (context, snap) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Never the old "not available" line while the read is on its way.
+          if (snap.connectionState != ConnectionState.done)
+            const SizedBox(height: 64)
+          else
+            WalletScreen._payoutInfoStrip(
+              context,
+              next: snap.data?.nextPayoutLocal,
+            ),
+          const SizedBox(height: 28),
+          // driver-u147: no 'See all' until there is a payouts list.
+          WalletScreen._sectionHeader(title: tr.recentPayouts),
+          const SizedBox(height: 12),
+          _list(snap),
+        ],
+      ),
+    );
+  }
+
+  Widget _list(AsyncSnapshot<DriverPayoutPage> snap) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -544,9 +587,8 @@ class _LivePayoutsState extends State<_LivePayouts> {
         border: Border.all(color: WalletScreen._line),
       ),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: FutureBuilder<List<DriverPayout>>(
-        future: _payouts,
-        builder: (context, snap) {
+      child: Builder(
+        builder: (context) {
           if (snap.connectionState != ConnectionState.done) {
             return const SizedBox(
               height: 24,
@@ -559,7 +601,7 @@ class _LivePayoutsState extends State<_LivePayouts> {
               ),
             );
           }
-          final items = snap.data ?? const <DriverPayout>[];
+          final items = snap.data?.items ?? const <DriverPayout>[];
           if (snap.hasError || items.isEmpty) {
             final note = Text(
               snap.hasError ? tr.walletLiveUnavailable : tr.walletLiveNoPayouts,
