@@ -461,6 +461,9 @@ void main() {
         worked: rule.work - const Duration(hours: 1),
         offlineSince: ScheduledClock.realNow(),
       );
+      // SV: only driving counts (owner "not online time"); this driver is on
+      // a ride stage that drives, so the limit can land while he is online.
+      DrivingTimeClock.instance.syncDriving(true);
       final home = await _pumpHome(tester);
       expect(home.session.availableForOffers, isTrue);
       _sleep(tester, const Duration(hours: 2), jump);

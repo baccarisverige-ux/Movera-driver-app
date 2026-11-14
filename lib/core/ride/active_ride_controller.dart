@@ -6,6 +6,7 @@ import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/session/driving_time_clock.dart';
 
 export 'package:movera/core/ride/active_ride_repository.dart'
     show ActiveRideStage;
@@ -27,7 +28,15 @@ class ActiveRideController extends ChangeNotifier {
   }) : _repository = repository ?? MemoryActiveRideRepository(),
        _stage = initialStage {
     RestartWatch.noteStage(tripStatus.name);
+    _noteDriving();
   }
+
+  /// SV (owner "It's 12 hours driving (mean driving to pickup or on trip)
+  /// not online time"): the app's driving-time clock counts only in the
+  /// driving stages of a ride that is still this driver's.
+  void _noteDriving() => DrivingTimeClock.instance.syncDriving(
+    !_disposed && !terminal && _stage != ActiveRideStage.waitingForRider,
+  );
 
   final String? tripId;
 
@@ -392,6 +401,7 @@ class ActiveRideController extends ChangeNotifier {
   @override
   void notifyListeners() {
     RestartWatch.noteStage(tripStatus.name);
+    _noteDriving();
     super.notifyListeners();
   }
 
@@ -400,6 +410,7 @@ class ActiveRideController extends ChangeNotifier {
     _disposed = true;
     _revision++;
     RestartWatch.noteStage(null);
+    _noteDriving();
     super.dispose();
   }
 

@@ -295,6 +295,9 @@ void main() {
         worked: rule.work - const Duration(minutes: 30, seconds: 3),
         offlineSince: ScheduledClock.realNow(),
       );
+      // SV: only driving counts (owner "not online time"); this driver is on
+      // a ride stage that drives, so the limit can land while he is online.
+      DrivingTimeClock.instance.syncDriving(true);
       await _pumpHome(tester);
       await _frames(tester, const Duration(milliseconds: 500));
       final navigator = await _cover(tester);
@@ -529,6 +532,9 @@ void main() {
         worked: rule.work - const Duration(seconds: 32),
         offlineSince: ScheduledClock.realNow(),
       );
+      // SV: only driving counts (owner "not online time"); this driver is on
+      // a ride stage that drives, so the limit can land while he is online.
+      DrivingTimeClock.instance.syncDriving(true);
       final home = await _pumpHome(tester);
       home.dispatch.publish([_trip('a'), _trip('b')]);
       await _frames(tester, const Duration(seconds: 20));

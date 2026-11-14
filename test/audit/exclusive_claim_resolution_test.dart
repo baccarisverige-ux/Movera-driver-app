@@ -380,6 +380,9 @@ void main() {
         worked: rule.work - after,
         offlineSince: ScheduledClock.realNow(),
       );
+      // SV: only driving counts (owner "not online time"); this driver is on
+      // a ride stage that drives, so the limit can land while he is online.
+      DrivingTimeClock.instance.syncDriving(true);
     }
 
     Future<void> untilRest(WidgetTester tester, _Home home) async {

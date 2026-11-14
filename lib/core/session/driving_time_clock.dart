@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
@@ -9,10 +10,14 @@ import 'package:movera/core/scheduled/scheduled_clock.dart';
 /// `Driver.drivingTime` the limit, the offline reset and "Rest until" shown
 /// are its own (see [loadServer]); the 12 h / 6 h here are only the fallback.
 ///
-/// It runs while the driver is online (on a trip too) and stops when they
-/// go offline. A full rest starts the count from zero again. This demo
-/// keeps it in memory; a backend would own the real count.
-class DrivingTimeClock {
+/// It runs only while the driver drives to the pickup or is on the trip
+/// ([syncDriving], fed by the ride stage), never while he is just online or
+/// waits at the pickup (owner: "It's 12 hours driving … not online time");
+/// going offline starts the rest. A full rest starts the count from zero
+/// again. Every server read ([loadServer]) corrects it.
+/// SV: a [ChangeNotifier] that tells listeners (Home's limit timers) when
+/// the count starts or stops, since a ride stage can start it.
+class DrivingTimeClock extends ChangeNotifier {
   DrivingTimeClock({DateTime Function()? now, DrivingRestRule? rule})
     : _now = now ?? (() => ScheduledClock.realNow()),
       _rule = rule;
@@ -51,6 +56,11 @@ class DrivingTimeClock {
 
   bool get running => _since != null;
 
+  /// SV: the driver's availability ([sync]) and whether a ride is in a
+  /// driving stage ([syncDriving]); the clock counts only when both hold.
+  bool _online = false;
+  bool _driving = false;
+
   /// A full rest clears the count.
   void _settleRest(DateTime now) {
     final off = _offSince;
@@ -69,21 +79,55 @@ class DrivingTimeClock {
     _since = now;
     _serverReached = null;
     _serverCanDriveAt = null;
+    notifyListeners();
   }
 
+  /// Stops the count and starts the offline rest.
   void stop() {
+    final now = _now();
+    _pause(now);
+    _offSince ??= now;
+  }
+
+  /// Stops the count without starting a rest (online, not driving).
+  void _pause(DateTime now) {
     final since = _since;
     if (since == null) {
       return;
     }
-    final now = _now();
     _banked += now.difference(since);
     _since = null;
-    _offSince = now;
+    notifyListeners();
   }
 
-  /// Follow the driver's availability.
-  void sync({required bool online}) => online ? start() : stop();
+  /// Follow the driver's availability. Online alone does not count (SV):
+  /// it ends an offline rest, and the count runs only while [syncDriving]
+  /// says a ride is in a driving stage.
+  void sync({required bool online}) {
+    _online = online;
+    if (!online) {
+      stop();
+      return;
+    }
+    final now = _now();
+    _settleRest(now);
+    _offSince = null;
+    if (_driving) {
+      start();
+    }
+  }
+
+  /// SV: true while the driver drives to the pickup or is on the trip
+  /// (ActiveRideController's stage), false while he waits at the pickup or
+  /// has no ride.
+  void syncDriving(bool driving) {
+    _driving = driving;
+    if (driving && _online) {
+      start();
+    } else {
+      _pause(_now());
+    }
+  }
 
   /// Sets the count, e.g. from a backend: [worked] since the last full
   /// rest, offline since [offlineSince] (now when null).
@@ -124,6 +168,8 @@ class DrivingTimeClock {
 
   /// Back to zero and offline.
   void reset() {
+    _online = false;
+    _driving = false;
     _serverLimit = null;
     _serverRest = null;
     _serverReached = null;

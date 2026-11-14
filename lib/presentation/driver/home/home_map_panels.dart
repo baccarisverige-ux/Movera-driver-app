@@ -352,7 +352,9 @@ extension _HomeMapPanels on _DriverHomeState {
           children: [
             DrivingTimeRow(
               clock: DrivingTimeClock.instance,
-              running: _isOnline,
+              // SV: the seconds run only while the clock counts (driving
+              // to the pickup or on the trip), not while just online.
+              running: _isOnline && DrivingTimeClock.instance.running,
               onTap: _openDrivingTime,
             ),
             // Q23: cash rides on or off. Off: no cash offers. One node,
