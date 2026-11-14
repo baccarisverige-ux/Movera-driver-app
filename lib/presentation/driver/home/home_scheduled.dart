@@ -434,6 +434,9 @@ extension _HomeScheduled on _DriverHomeState {
     final offer = RideOffer.reservation(
       ride,
       started: LiveDriverServices.instance?.reservations.startedTrip(ride.id),
+      // BQ-F1: the server's total for it (row after a resync, else the
+      // claim's Offer.driverTotal); the started trip's wins.
+      driverTotal: ScheduledRideStore.acceptedDriverTotal(ride.id),
     );
     // The trip knows its pickup time: from here to the pickup it watches
     // the driver's ETA (admin "Late ETA").
@@ -683,9 +686,13 @@ extension _HomeScheduled on _DriverHomeState {
     if (result.isSuccess && ride != null) {
       // The pickup pay its card showed is paid at "Leave now"
       // (driver-r5-12).
+      final quote = _HomeOfferRadar(this)._pickupPayOf(offer);
       ScheduledRideStore.acceptAssigned(
         ride,
-        pickupPay: _HomeOfferRadar(this)._pickupPayOf(offer).pay,
+        pickupPay: quote.pay,
+        // BQ-F1 (owner R2): the claim's Offer.driverTotal, pickup pay in
+        // it; the phone adds nothing.
+        driverTotal: result.offer?.driverTotal ?? quote.serverTotal,
       );
       IslandMessages.show(
         HomeIslandNotices.assignmentAccepted.forRide(offer.id),

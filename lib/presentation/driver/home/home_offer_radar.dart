@@ -950,26 +950,29 @@ extension _HomeOfferRadar on _DriverHomeState {
     // (driver-r5-12).
     final pay = offer.driverPay;
     final cash = offer.cash ? offer.riderCash : null;
-    final quote = scheduledPickupAt == null && scheduledRideId == null
-        ? _pickupPayOf(
+    final leaveNow = scheduledPickupAt != null || scheduledRideId != null;
+    // BQ-F1 (owner R2): "Leave now" opens with the server's driverTotal
+    // as it is (its pickup pay already in it, never added twice), or "—"
+    // on live without one.
+    final terms = leaveNow
+        ? PickupPayQuote.leaveNowTermsOf(
+            fare: pay,
+            leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
+            serverTotal: offer.serverDriverTotal,
+            acceptedPickupPay: acceptedPickupPay,
+            driverBonus: offer.driverBonus,
+            cashToCollect: cash,
+          )
+        : _pickupPayOf(
             offer,
             onRadar:
                 matchedVia == WaybillRecord.moveraRadarSource ||
                 _radarHomeOffers.any((item) => item.id == offer.id),
-          )
-        : acceptedPickupPay == null
-        ? null
-        : PickupPayQuote(
-            pay: acceptedPickupPay,
-            leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
+          ).termsOf(
+            fare: pay,
+            driverBonus: offer.driverBonus,
+            cashToCollect: cash,
           );
-    final terms =
-        quote?.termsOf(
-          fare: pay,
-          driverBonus: offer.driverBonus,
-          cashToCollect: cash,
-        ) ??
-        (fare: pay, driverBonus: offer.driverBonus, cashToCollect: cash);
 
     pushSingle(
       context,

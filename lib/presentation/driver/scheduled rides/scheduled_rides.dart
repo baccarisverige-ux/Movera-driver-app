@@ -961,6 +961,12 @@ class ScheduledRideStore {
       ..addAll({
         for (final r in [...page.open, ...page.accepted]) r.tripId: r,
       });
+    _acceptedRowTotals
+      ..clear()
+      ..addAll({
+        for (final r in page.accepted)
+          if (r.driverTotal case final total?) r.tripId: total,
+      });
     _changed();
   }
 
@@ -1039,17 +1045,29 @@ class ScheduledRideStore {
   /// Reservation [id] was taken. By this driver for later ([upcoming]) it
   /// moves to Accepted; taken now (an Exclusive or Radar trip) or by
   /// another driver it only leaves the requests (notes R23).
-  static void take(String id, {bool upcoming = false, Money? pickupPay}) {
+  static void take(
+    String id, {
+    bool upcoming = false,
+    Money? pickupPay,
+    Money? driverTotal,
+  }) {
     final index = _requests.indexWhere((ride) => ride.id == id);
     if (id.isEmpty || index < 0) {
       return;
     }
     final ride = _requests.removeAt(index);
     if (upcoming) {
-      _keepPickupPay(id, pickupPay);
+      _keepPickupPay(id, pickupPay, driverTotal);
       _accepted.insert(
         0,
-        ride.copyWith(accepted: true, price: _withPay(ride.price, pickupPay)),
+        ride.copyWith(
+          accepted: true,
+          price: priceAfterAccept(
+            ride.price,
+            pickupPay: pickupPay,
+            driverTotal: driverTotal,
+          ),
+        ),
       );
     }
     _changed();
@@ -1064,22 +1082,68 @@ class ScheduledRideStore {
   /// The pickup pay accepted with ride [id]; null for none.
   static Money? acceptedPickupPay(String id) => _pickupPays[id];
 
-  static void _keepPickupPay(String id, Money? pay) {
+  /// BQ-F1 (owner R2): the server's driverTotal for accepted ride [id],
+  /// pickup pay and Movera's bonus in it: the row's
+  /// (`DriverReservation.driverTotal`) after a resync, else the claim
+  /// result's `Offer.driverTotal` kept at accept. Null when the server
+  /// sent none. "Leave now" opens the trip with it, adding nothing. Only
+  /// an ACCEPTED row counts (supervisor should-fix 1): an open row's total
+  /// is the pre-accept one, without the pickup pay of an Exclusive accept.
+  static Money? acceptedDriverTotal(String id) =>
+      _acceptedRowTotals[id] ?? _driverTotals[id];
+
+  /// The accepted rows' `DriverReservation.driverTotal` of the last
+  /// [syncFromServer], by trip id.
+  static final Map<String, Money> _acceptedRowTotals = <String, Money>{};
+
+  static final Map<String, Money> _driverTotals = <String, Money>{};
+
+  /// The price accepted ride [id] shows in the list; null when it is not
+  /// among the accepted rides.
+  @visibleForTesting
+  static String? acceptedPriceOf(String id) {
+    for (final ride in _accepted) {
+      if (ride.id == id) return ride.price;
+    }
+    return null;
+  }
+
+  static void _keepPickupPay(String id, Money? pay, [Money? total]) {
     if (id.isEmpty) return;
     if (pay == null || pay.minorUnits <= 0) {
       _pickupPays.remove(id);
     } else {
       _pickupPays[id] = pay;
     }
+    if (total == null) {
+      _driverTotals.remove(id);
+    } else {
+      _driverTotals[id] = total;
+    }
   }
 
-  /// [price] with [pay] in it, as the card showed one total.
-  static String _withPay(String price, Money? pay) => pay == null
-      ? price
-      : PickupPayQuote(
-          pay: pay,
-          leg: const PickupLeg(km: 0, minutes: 0),
-        ).totalOf(price);
+  /// BQ-F1 (owner R2, the apps never work money out): what a row shows
+  /// once accepted. The server's [driverTotal] (the claim's
+  /// `Offer.driverTotal`, its pickup pay in it) when sent; else [price]
+  /// itself when there is no pickup pay; else, against a live server
+  /// ([live], default: one is on), "—" until the next sync brings the
+  /// row's own total. Only the demo still adds its local pickup pay to its
+  /// written-out sample, as its card showed.
+  @visibleForTesting
+  static String priceAfterAccept(
+    String price, {
+    Money? pickupPay,
+    Money? driverTotal,
+    bool? live,
+  }) {
+    if (driverTotal != null) return driverTotal.formatted;
+    if (pickupPay == null || pickupPay.minorUnits <= 0) return price;
+    if (live ?? LiveDriverServices.active) return '—';
+    return PickupPayQuote(
+      pay: pickupPay,
+      leg: const PickupLeg(km: 0, minutes: 0),
+    ).totalOf(price);
+  }
 
   /// A request answered outside this screen, found by its pickup. Taken
   /// by this driver ([accepted]) it moves to Accepted; otherwise it only
@@ -1117,13 +1181,23 @@ class ScheduledRideStore {
   static void acceptAssigned(
     ReservationRequestPreview ride, {
     Money? pickupPay,
+    Money? driverTotal,
   }) {
     if (_accepted.any((item) => identical(item.route, ride))) {
       return;
     }
-    _keepPickupPay(ride.id, pickupPay);
+    _keepPickupPay(ride.id, pickupPay, driverTotal);
     final kept = _ScheduledRide.fromRoute(ride, assigned: true);
-    _accepted.insert(0, kept.copyWith(price: _withPay(kept.price, pickupPay)));
+    _accepted.insert(
+      0,
+      kept.copyWith(
+        price: priceAfterAccept(
+          kept.price,
+          pickupPay: pickupPay,
+          driverTotal: driverTotal,
+        ),
+      ),
+    );
     _changed();
   }
 
@@ -1333,6 +1407,7 @@ class ScheduledRideStore {
     _requests.clear();
     _accepted.clear();
     _serverRows.clear();
+    _acceptedRowTotals.clear();
     _claims.clear();
     keepQuestions.value = const [];
     _changed();
@@ -1356,6 +1431,8 @@ class ScheduledRideStore {
     _pauseUntil = null;
     _driving = null;
     _pickupPays.clear();
+    _driverTotals.clear();
+    _acceptedRowTotals.clear();
     reminder.value = null;
     _reminderRide = null;
     backupNote.value = null;

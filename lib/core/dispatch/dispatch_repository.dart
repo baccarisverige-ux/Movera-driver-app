@@ -92,17 +92,29 @@ class RideOffer {
   /// as its fare (live 5+5 run 2, 4-booked-p4 283/305: a cash ride opened
   /// as paid in the app, with no cash step, and its card took Movera's
   /// commission from the earnings again: 94,23 kr for 125,64 kr).
+  ///
+  /// [driverTotal] (BQ-F1, owner R2): the server's driverTotal for the
+  /// booked ride before it started (`ScheduledRideStore.acceptedDriverTotal`:
+  /// the row's after a resync, else the claim's `Offer.driverTotal`). The
+  /// started trip's own `driverTotal` wins. Either one is the offer's
+  /// [RideOffer.driverTotal]: pickup pay and Movera's bonus are in it, so
+  /// "Leave now" shows it as it is and never falls back to `earnings`
+  /// (without the bonus) when the server sent it.
   factory RideOffer.reservation(
     ReservationRequestPreview reservation, {
     PersistedActiveRide? started,
+    Money? driverTotal,
   }) {
     final cash = started?.paidByCash ?? reservation.paidByCash;
     final startedCash = started?.cashToCollect;
     final startedPay = started?.fare;
+    final total =
+        (startedPay == null ? null : Money.parseLabel(startedPay)) ??
+        driverTotal;
     return RideOffer(
       id: reservation.id,
       category: reservation.category,
-      fare: _amount(reservation.fare, 'fare')!,
+      fare: _amount(reservation.fare, 'fare', reservation.currency)!,
       rating: reservation.rating,
       pickupMinutes: 16,
       pickupKm: 2.1,
@@ -119,22 +131,36 @@ class RideOffer {
       riderName: reservation.riderName,
       riderTrips: reservation.riderTrips,
       stops: reservation.stops,
-      fareBoost: _amount(reservation.fareBoost, 'fareBoost'),
+      fareBoost: _amount(
+        reservation.fareBoost,
+        'fareBoost',
+        reservation.currency,
+      ),
       cashToCollect: !cash
           ? null
           : startedCash != null
           ? Money.parseLabel(startedCash)
-          : _amount(reservation.cashToCollect, 'cashToCollect'),
-      // The server's earnings + pickup pay + bonus, as the restore path
-      // (`LiveActiveTrip.snapshotOf`): no commission taken on the phone.
-      // Else the reservation's own earnings (server, or demo written out);
+          : _amount(
+              reservation.cashToCollect,
+              'cashToCollect',
+              reservation.currency,
+            ),
+      // The server's earnings + pickup pay + bonus (the started trip's
+      // driverTotal, as the restore path `LiveActiveTrip.snapshotOf`, else
+      // the booked ride's [driverTotal]): no commission taken on the
+      // phone. Else the reservation's own earnings (a demo written out; a
+      // live "Leave now" shows "—" then, PickupPayQuote.leaveNowTermsOf);
       // never a share worked out here (owner decision 2026-11-10).
-      driverEarnings: startedPay != null
-          ? Money.parseLabel(startedPay)
-          : reservation.earnings == null
-          ? null
-          : Money.parseLabel(reservation.earnings!),
+      driverEarnings:
+          total ??
+          (reservation.earnings == null
+              ? null
+              : Money.parseLabel(
+                  reservation.earnings!,
+                  currency: reservation.currency,
+                )),
       driverBonus: started?.driverBonus,
+      driverTotal: total,
     );
   }
 
@@ -142,10 +168,13 @@ class RideOffer {
   /// (a server row's `earnings.formatted`: "224,50 kr", "12,50 €",
   /// "12.350 DT"); the currency comes from the symbol, else the zone. F2
   /// (M23 supervisor): reading them as SEK only threw on a TN or FR booked
-  /// ride at "Leave now", so the ride could not open.
-  static Money? _amount(String? label, String field) {
+  /// ride at "Leave now", so the ride could not open. BQ-F2b: [currency]
+  /// is the ride's own (`ReservationRequestPreview.currency`), so a label
+  /// with no symbol is read in it, never in the zone's (SEK before a zone
+  /// config); null (a demo ride): the symbol, else the zone.
+  static Money? _amount(String? label, String field, String? currency) {
     if (label == null) return null;
-    return Money.parseLabel(label) ??
+    return Money.parseLabel(label, currency: currency) ??
         (throw ArgumentError.value(label, field, 'Not an amount'));
   }
 

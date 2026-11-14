@@ -433,7 +433,12 @@ extension _HomeReservation on _DriverHomeState {
       return;
     }
     if (result.isSuccess) {
-      ScheduledRideStore.take(request.id, upcoming: true);
+      ScheduledRideStore.take(
+        request.id,
+        upcoming: true,
+        // BQ-F1: the claim's Offer.driverTotal, when the server sent one.
+        driverTotal: result.offer?.driverTotal,
+      );
       IslandMessages.show(
         HomeIslandNotices.reservationAcceptedAt(
           request.pickupTime,
@@ -569,11 +574,15 @@ extension _HomeReservation on _DriverHomeState {
             !_HomeScheduled(this)._exclusiveStepReached(offer.id)) {
           // Pickup is not near yet by the real clock: it is only saved
           // for later, like an Accept on the popup.
+          final quote = _HomeOfferRadar(this)._pickupPayOf(offer);
           ScheduledRideStore.take(
             offer.id,
             upcoming: true,
             // Its card's pickup pay, paid at "Leave now" (driver-r5-12).
-            pickupPay: _HomeOfferRadar(this)._pickupPayOf(offer).pay,
+            pickupPay: quote.pay,
+            // BQ-F1 (owner R2): the claim's Offer.driverTotal, its pickup
+            // pay in it; the phone adds nothing.
+            driverTotal: result.offer?.driverTotal ?? quote.serverTotal,
           );
           IslandMessages.show(
             HomeIslandNotices.reservationAcceptedAt(

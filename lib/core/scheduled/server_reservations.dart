@@ -179,6 +179,7 @@ class ServerReservation {
       pickup: pickup,
       dropoff: dropoff,
       id: tripId,
+      currency: earnings.currency,
       scheduledAt: scheduledAt.toLocal(),
       riderName: riderFirstName,
     );

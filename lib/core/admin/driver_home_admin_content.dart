@@ -244,6 +244,7 @@ class ReservationRequestPreview {
     this.stops = const <ReservationStop>[],
     this.id = '',
     this.paidByCash = false,
+    this.currency,
     this.cashToCollect,
     this.rating = '',
     this.riderName = '',
@@ -261,6 +262,13 @@ class ReservationRequestPreview {
 
   /// The rider pays cash in the car (not in the app).
   final bool paidByCash;
+
+  /// BQ-F2b: the ride's own currency code ("SEK", "EUR", "TND"): a
+  /// server row's `earnings.currency`. Its labels ([fare], [fareBoost],
+  /// [cashToCollect]) are read in it, so one with no symbol never falls
+  /// back to the zone currency (SEK before a zone config). Null for a
+  /// demo ride: its labels carry their symbol.
+  final String? currency;
 
   /// R8-4: on a cash ride, the cash to take from the rider when it is not
   /// [fare] (rider promotions), e.g. "300,00 kr". Null: the fare.
@@ -443,6 +451,7 @@ class ReservationRequestPreview {
         stops: stops,
         id: id,
         paidByCash: paidByCash,
+        currency: currency,
         cashToCollect: cashToCollect,
         rating: rating,
         riderName: riderName,
