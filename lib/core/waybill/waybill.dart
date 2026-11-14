@@ -28,6 +28,7 @@ class WaybillRecord {
     this.debtCollected,
     this.endedEarlyBy,
     this.commission,
+    this.moveraKeepsNow,
   });
 
   final String tripId;
@@ -85,12 +86,18 @@ class WaybillRecord {
   /// null when not known. The waybill shows [commissionText].
   final String? commission;
 
-  /// Movera's commission for the waybill: the server's [commission] only
-  /// (supervisor G32: a figure worked out on the phone is wrong after an
-  /// admin pay change, an offline finish with a waiting fee, or an old
-  /// unpaid fee in the offer fare); null, so no row, without it. A bonus
-  /// larger than the commission makes it negative: "−5,00 kr".
-  String? get commissionText => commission;
+  /// Contract v0.18.87 `moneyBase.commissionRow`: what Movera keeps NOW on
+  /// the trip as the server sent it (`TripProjection.moveraKeepsNow`), e.g.
+  /// "35,00 kr"; null when the server did not send it.
+  final String? moveraKeepsNow;
+
+  /// The "Movera commission" row (waybill, Ride completed): the server's
+  /// [moveraKeepsNow] only (owner 2026-11-13 "Movera commission is how much
+  /// movera keep"). Never the stored [commission] (what Movera kept at the
+  /// paid end, higher after a later admin bonus) and never worked out on
+  /// the phone (supervisor G32); null, so no row, without it. Negative when
+  /// Movera pays more than its part: "−5,00 kr".
+  String? get commissionText => moveraKeepsNow;
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.
@@ -212,6 +219,8 @@ class WaybillRecord {
     bool clearEndedEarlyBy = false,
     String? commission,
     bool clearCommission = false,
+    String? moveraKeepsNow,
+    bool clearMoveraKeepsNow = false,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -240,6 +249,9 @@ class WaybillRecord {
           ? null
           : endedEarlyBy ?? this.endedEarlyBy,
       commission: clearCommission ? null : commission ?? this.commission,
+      moveraKeepsNow: clearMoveraKeepsNow
+          ? null
+          : moveraKeepsNow ?? this.moveraKeepsNow,
     );
   }
 }

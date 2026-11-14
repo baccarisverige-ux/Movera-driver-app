@@ -37,6 +37,9 @@ WaybillRecord _record({
   riderFare: riderFare.formatted,
   earningsBreakdown: lines,
   commission: commission?.formatted,
+  // v0.18.87 commissionRow: the server also sends what Movera keeps now
+  // (moveraKeepsNow); with no later change it equals the commission.
+  moveraKeepsNow: commission?.formatted,
 );
 
 Future<void> _pump(WidgetTester tester, WaybillRecord record) async {
@@ -96,19 +99,20 @@ void main() {
     },
   );
 
-  testWidgets('a big Movera bonus: the server\'s negative commission shows as +', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      _record(
-        riderFare: _sek(10000),
-        driverTotal: _sek(11000),
-        commission: _sek(-1000),
-      ),
-    );
-    expect(_text(tester, 'ride-completed-commission'), '+10,00 kr');
-  });
+  testWidgets(
+    'a big Movera bonus: the server\'s negative commission shows as +',
+    (tester) async {
+      await _pump(
+        tester,
+        _record(
+          riderFare: _sek(10000),
+          driverTotal: _sek(11000),
+          commission: _sek(-1000),
+        ),
+      );
+      expect(_text(tester, 'ride-completed-commission'), '+10,00 kr');
+    },
+  );
 
   testWidgets('Tunisia (TND, 3 decimals): the server\'s 2.750 DT', (
     tester,
@@ -126,7 +130,10 @@ void main() {
         ],
       ),
     );
-    expect(_text(tester, 'ride-completed-commission'), '−${_tnd(2750).formatted}');
+    expect(
+      _text(tester, 'ride-completed-commission'),
+      '−${_tnd(2750).formatted}',
+    );
     expect(_text(tester, 'ride-completed-fare'), _tnd(10250).formatted);
   });
 }

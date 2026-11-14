@@ -25,6 +25,7 @@ class LiveTripMoney {
     this.debtCollected,
     this.finish,
     this.commission,
+    this.moveraKeepsNow,
   }) : _cashToCollect = cashToCollect;
 
   /// The projection's money, or null without a `fare` and
@@ -61,8 +62,10 @@ class LiveTripMoney {
     final total = money(projection['driverTotal']) ?? finish?.driverTotal;
     final debt = money(projection['debtCollected']);
     final commission = money(projection['commission']);
+    final keepsNow = money(projection['moveraKeepsNow']);
     return LiveTripMoney(
       commission: commission?.currency == fare.currency ? commission : null,
+      moveraKeepsNow: keepsNow?.currency == fare.currency ? keepsNow : null,
       driverTotal: total != null && total.currency == earnings.currency
           ? total
           : null,
@@ -131,6 +134,14 @@ class LiveTripMoney {
   /// (`TripProjection.commission` = fare − debtCollected − driverEarnings
   /// − pickupPay − driverBonus); null when it did not send one.
   final Money? commission;
+
+  /// Contract v0.18.87 `moneyBase.commissionRow` (owner 2026-11-13 "Movera
+  /// commission is how much movera keep"): what Movera keeps NOW on the
+  /// trip (`TripProjection.moveraKeepsNow`, the admin's moneySplit.movera:
+  /// a later admin bonus or pay change already off). The "Movera
+  /// commission" rows show only this; null (row hidden) when the server
+  /// does not send it — never [commission] as a fallback.
+  final Money? moveraKeepsNow;
 
   /// The driver's own money for the trip ("You get"): earnings plus
   /// pickup pay plus bonus, so `fare − commission` is exactly this.

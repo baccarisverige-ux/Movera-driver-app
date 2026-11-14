@@ -76,6 +76,8 @@ void main() {
     ],
     'driverEarnings': money(3920),
     'commission': money(1400),
+    // v0.18.87 commissionRow: what Movera keeps now (no later change).
+    'moveraKeepsNow': money(1400),
     'pickupPay': money(80),
     'paymentMethod': 'cash',
     'driverTotal': money(4000),
@@ -374,6 +376,7 @@ void main() {
       completed['driverEarnings'] = money(10598);
       completed['pickupPay'] = money(80);
       completed['commission'] = money(3222);
+      completed['moveraKeepsNow'] = money(3222);
       completed['driverTotal'] = money(10678);
       completed['earningsBreakdown'] = [
         {'code': 'trip', 'amount': money(10598)},

@@ -67,6 +67,8 @@ void main() {
     ],
     'driverEarnings': money(3920),
     'commission': money(1400),
+    // v0.18.87 commissionRow: what Movera keeps now (no later change).
+    'moveraKeepsNow': money(1400),
     'pickupPay': money(80),
     'paymentMethod': 'cash',
   };

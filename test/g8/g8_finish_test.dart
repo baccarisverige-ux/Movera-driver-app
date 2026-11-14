@@ -61,6 +61,9 @@ WaybillRecord _record({
   // S5 J5d (v0.18.82 moneyBase.commission): the server's number, as the
   // live finish keeps it (accept_ride_trip.dart); the phone never works it out.
   commission: commission,
+  // v0.18.87 commissionRow: the server also sends what Movera keeps now
+  // (moveraKeepsNow); with no later change it equals the commission.
+  moveraKeepsNow: commission,
 );
 
 void main() {

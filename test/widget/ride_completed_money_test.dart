@@ -32,6 +32,9 @@ WaybillRecord _record({
   driverBonus: '20 kr',
   riderFare: riderFare,
   commission: commission,
+  // v0.18.87 commissionRow: the server also sends what Movera keeps now
+  // (moveraKeepsNow); with no later change it equals the commission.
+  moveraKeepsNow: commission,
 );
 
 Future<void> _pump(WidgetTester tester, WaybillRecord record) async {

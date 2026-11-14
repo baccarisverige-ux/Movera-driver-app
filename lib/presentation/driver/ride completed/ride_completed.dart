@@ -436,9 +436,12 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     );
   }
 
-  /// The server's commission in the trip's currency; null when unknown.
+  /// What Movera keeps now, as the server sent it
+  /// (`TripProjection.moveraKeepsNow`, contract v0.18.87 commissionRow) in
+  /// the trip's currency; null (no row) when unknown — never the stored
+  /// commission.
   static Money? _serverCommission(WaybillRecord record, String currency) {
-    final label = record.commission;
+    final label = record.commissionText;
     return label == null ? null : Money.parseLabel(label, currency: currency);
   }
 
