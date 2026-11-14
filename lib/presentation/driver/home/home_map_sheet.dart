@@ -1314,16 +1314,24 @@ extension _HomeMapSheet on _DriverHomeState {
             },
             last: last,
           ),
+          // SV: the server's limit and offline reset (Driver.drivingTime)
+          // once read, and the admin's break (drivingLimits.restMinutes).
           (last) => _todayRow(
             mark: MoveraMark.calendar,
             label: tr.workLimit,
-            value: '${clock.rule.workHours} h',
+            value: DrivingTimeClock.hoursMinutes(clock.workLimit),
             last: last,
           ),
           (last) => _todayRow(
             mark: MoveraMark.timer,
             label: tr.restAfterIt,
-            value: '${clock.rule.restHours} h',
+            value: DrivingTimeClock.hoursMinutes(clock.restLength),
+            last: last,
+          ),
+          (last) => _todayRow(
+            mark: MoveraMark.timer,
+            label: tr.suggestedBreak,
+            value: '${clock.rule.breakMinutes} min',
             last: last,
           ),
         ],

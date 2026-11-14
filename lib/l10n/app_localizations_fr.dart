@@ -2829,6 +2829,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get restAfterIt => 'Repos ensuite';
 
   @override
+  String get suggestedBreak => 'Pause';
+
+  @override
   String get today => 'Aujourd’hui';
 
   @override

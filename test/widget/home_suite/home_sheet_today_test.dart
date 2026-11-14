@@ -57,8 +57,12 @@ void main() {
     expect(find.text('Driving time'), findsOneWidget);
     expect(find.text('Worked'), findsOneWidget);
     expect(find.text('Left before rest'), findsOneWidget);
-    expect(find.text('12 h'), findsOneWidget);
-    expect(find.text('6 h'), findsOneWidget);
+    // SV: the limit and the offline reset as the clock has them (the
+    // server's once read), and the admin's break (default 30 min).
+    expect(find.text('12 h 00 min'), findsWidgets);
+    expect(find.text('6 h 00 min'), findsOneWidget);
+    expect(find.text('Break'), findsOneWidget);
+    expect(find.text('30 min'), findsOneWidget);
     expectNoException(tester);
   });
 

@@ -1,3 +1,4 @@
+import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
@@ -54,6 +55,7 @@ class DriverAppConfig {
     this.missedExclusiveBeforeOffline =
         ZoneDefaults.missedExclusiveBeforeOffline,
     this.noFixMinutes = defaultNoFixMinutes,
+    this.restMinutes = DrivingRestRule.defaultBreakMinutes,
     this.driverBonus,
     this.reservations = const ScheduledRideRules(),
     this.parts = const DriverConfigParts(),
@@ -102,6 +104,10 @@ class DriverAppConfig {
   /// offline after this many minutes without a position (0 = never).
   final int noFixMinutes;
 
+  /// SV: `drivingLimits.restMinutes`, the break length the app shows
+  /// (admin per country, contract default 30; not enforced by the server).
+  final int restMinutes;
+
   /// Contract `configDefaults.noFixMinutesBeforeOffline`.
   static const defaultNoFixMinutes = 5;
 
@@ -149,6 +155,7 @@ class DriverAppConfig {
     final autoOffline = _map(_map(json['offers'])?['autoOffline']);
     final missed = _int(autoOffline?['missedExclusive']);
     final noFix = _int(autoOffline?['noFixMinutes']);
+    final breakMinutes = _int(_map(json['drivingLimits'])?['restMinutes']);
     return DriverAppConfig(
       version: _int(json['version']) ?? seed.version,
       publishedAt: published is String ? DateTime.tryParse(published) : null,
@@ -191,6 +198,9 @@ class DriverAppConfig {
           ? missed
           : seed.missedExclusiveBeforeOffline,
       noFixMinutes: noFix != null && noFix >= 0 ? noFix : seed.noFixMinutes,
+      restMinutes: breakMinutes != null && breakMinutes >= 0
+          ? breakMinutes
+          : seed.restMinutes,
       driverBonus: _bonus(_map(json['driverBonus']), currency),
       reservations: _reservations(json),
       parts: DriverConfigParts.fromJson(json, currency),
@@ -218,6 +228,11 @@ class DriverAppConfig {
     DestinationModeRules.current = destinationMode;
     NextTripRules.current = nextTrips;
     ScheduledRideRules.current = reservations;
+    // SV: the admin's break length (drivingLimits.restMinutes).
+    DriverAccountRules.current = DriverAccountRules(
+      country: DriverAccountRules.current.country,
+      rest: DriverAccountRules.current.rest.withBreak(restMinutes),
+    );
     // G3-D2: admin's `features.performance` (on when not sent).
     DriverPerformanceConfig.featureOn = feature('performance', fallback: true);
   }

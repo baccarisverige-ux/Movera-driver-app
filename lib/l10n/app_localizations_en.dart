@@ -2776,6 +2776,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restAfterIt => 'Rest after it';
 
   @override
+  String get suggestedBreak => 'Break';
+
+  @override
   String get today => 'Today';
 
   @override

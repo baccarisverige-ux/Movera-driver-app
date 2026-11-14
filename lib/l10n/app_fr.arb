@@ -785,6 +785,7 @@
   "restUntil": "Pause jusqu’à",
   "workLimit": "Durée maximale de conduite",
   "restAfterIt": "Repos ensuite",
+  "suggestedBreak": "Pause",
   "today": "Aujourd’hui",
   "moveraRadar": "Movera Radar",
   "savedTripCouldNotBeOpened": "Impossible d’ouvrir la course enregistrée.",

@@ -4818,6 +4818,12 @@ abstract class AppLocalizations {
   /// **'Rest after it'**
   String get restAfterIt;
 
+  /// Driving time sheet: the break length the admin set for the country (contract drivingLimits.restMinutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Break'**
+  String get suggestedBreak;
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:

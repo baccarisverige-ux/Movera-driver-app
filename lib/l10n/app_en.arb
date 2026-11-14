@@ -2091,6 +2091,10 @@
   "restUntil": "Rest until",
   "workLimit": "Work limit",
   "restAfterIt": "Rest after it",
+  "suggestedBreak": "Break",
+  "@suggestedBreak": {
+    "description": "Driving time sheet: the break length the admin set for the country (contract drivingLimits.restMinutes)."
+  },
   "today": "Today",
   "moveraRadar": "Movera Radar",
   "savedTripCouldNotBeOpened": "The saved trip could not be opened.",

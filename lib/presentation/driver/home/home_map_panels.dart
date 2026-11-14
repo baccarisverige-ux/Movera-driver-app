@@ -429,7 +429,9 @@ extension _HomeMapPanels on _DriverHomeState {
       ),
       builder: (sheetContext) => SafeArea(
         top: false,
-        child: Padding(
+        // SV: the Driving time sheet has five rows (+ Break); on a small
+        // phone the default sheet height is too short, so the rows scroll.
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,

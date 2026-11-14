@@ -14,6 +14,7 @@ class DrivingRestRule {
     this.restHours = 6,
     this.warnMinutesLeft = const <int>[30, 10],
     this.blockAtLimit = true,
+    this.breakMinutes = defaultBreakMinutes,
   });
 
   final bool on;
@@ -25,6 +26,24 @@ class DrivingRestRule {
 
   /// At the limit the driver can't go online until the rest is over.
   final bool blockAtLimit;
+
+  /// SV (contract.json#drivingLimits.restMinutes, "the break length the app
+  /// shows"; owner "Rest rules (break length) as admin setting with
+  /// default"): the zone's break, shown on the Driving time sheet.
+  final int breakMinutes;
+
+  /// Contract `configDefaults.drivingLimits.restMinutes`.
+  static const defaultBreakMinutes = 30;
+
+  /// This rule with the admin's break.
+  DrivingRestRule withBreak(int minutes) => DrivingRestRule(
+    on: on,
+    workHours: workHours,
+    restHours: restHours,
+    warnMinutesLeft: warnMinutesLeft,
+    blockAtLimit: blockAtLimit,
+    breakMinutes: minutes,
+  );
 
   Duration get work => Duration(hours: workHours);
   Duration get rest => Duration(hours: restHours);

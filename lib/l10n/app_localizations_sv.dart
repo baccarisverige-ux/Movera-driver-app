@@ -2772,6 +2772,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get restAfterIt => 'Vila efteråt';
 
   @override
+  String get suggestedBreak => 'Paus';
+
+  @override
   String get today => 'Idag';
 
   @override
