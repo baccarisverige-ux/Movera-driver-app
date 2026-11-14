@@ -6995,6 +6995,18 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String waitingPausedAway(int leave, int arrive) {
+    return 'Väntetiden är pausad: du är mer än $leave m från upphämtningen. Kör tillbaka inom $arrive m för att fortsätta.';
+  }
+
+  @override
+  String get noShowAwayFromPickup =>
+      'Kör tillbaka till upphämtningen innan du markerar att resenären inte kom.';
+
+  @override
+  String get waitingBackAtPickup => 'Jag är tillbaka vid upphämtningen';
+
+  @override
   String get docInsuranceLetter => 'Försäkringsbrev';
 
   @override

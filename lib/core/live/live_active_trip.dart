@@ -6,6 +6,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/ride/trip_live_details.dart';
 
 /// D-3 (audit Phase 5): the server's own trip for this driver.
 ///
@@ -106,8 +107,13 @@ class LiveActiveTrip {
           : null,
       arrivedAt: arrivedAt,
       // The trip screen's waiting clock restores from these seconds.
+      // v0.18.93 (contract.json#autoArrive): the server's clock, without
+      // the stopped time and standing still while the driver is away.
       waitSeconds: stage == ActiveRideStage.waitingForRider && arrivedAt != null
-          ? math.max(0, DateTime.now().difference(arrivedAt).inSeconds)
+          ? TripWaitingNow.tryParse(
+                  waiting,
+                )?.waitingClockAt(DateTime.now().toUtc()) ??
+                math.max(0, DateTime.now().difference(arrivedAt).inSeconds)
           : null,
       riderName: riderName is String && riderName.trim().isNotEmpty
           ? riderName.trim()

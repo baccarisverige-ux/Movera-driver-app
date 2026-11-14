@@ -563,6 +563,48 @@ extension _AcceptRidePanel on _AcceptRideState {
                         ),
                         const SizedBox(height: 8),
                       ],
+                      // v0.18.93 (contract.json#autoArrive): the server
+                      // stopped the pickup waiting; say so on this sheet.
+                      if (_AcceptRidePickup(this)._waitPausedAway) ...[
+                        _waitPhaseChip(
+                          key: const ValueKey<String>(
+                            'active-ride-wait-paused',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Round 2 (autoArrive.texts.driverBack, M2): the
+                        // contract's "or his tap" restart.
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            key: const ValueKey<String>(
+                              'active-ride-back-at-pickup',
+                            ),
+                            onPressed: _stepBusy
+                                ? null
+                                : () => unawaited(
+                                    _AcceptRidePickup(
+                                      this,
+                                    )._onBackAtPickupTap(),
+                                  ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF146B45),
+                              side: const BorderSide(color: Color(0xFF146B45)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              tr.waitingBackAtPickup,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       _buildPrimaryAction(),
                     ],
                   ),

@@ -11995,6 +11995,24 @@ abstract class AppLocalizations {
   /// **'You are {m} m from the destination – the trip ends early'**
   String arrivedFarWarning(int m);
 
+  /// Contract v0.18.93 (contract.json#autoArrive.texts.driverPaused, job C9): wait bar while the server stopped the waiting clock (waiting.away); leave = terms.leaveMeters, arrive = terms.autoArriveMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting paused: you are more than {leave} m from the pickup. Drive back within {arrive} m to continue.'**
+  String waitingPausedAway(int leave, int arrive);
+
+  /// Contract v0.18.93 (contract.json#autoArrive.texts.noShowAway): the server refused the no-show with driver_away_from_pickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive back to the pickup before marking a no-show.'**
+  String get noShowAwayFromPickup;
+
+  /// Contract v0.18.93 round 2 (contract.json#autoArrive.texts.driverBack, supervisor M2): button under the paused note while the server stopped the waiting clock (waiting.away); the server counts the tap only within terms.leaveMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m back at the pickup'**
+  String get waitingBackAtPickup;
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:

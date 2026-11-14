@@ -7119,6 +7119,19 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String waitingPausedAway(int leave, int arrive) {
+    return 'Attente en pause : vous êtes à plus de $leave m du point de prise en charge. Revenez à moins de $arrive m pour continuer.';
+  }
+
+  @override
+  String get noShowAwayFromPickup =>
+      'Revenez au point de prise en charge avant de signaler l’absence du passager.';
+
+  @override
+  String get waitingBackAtPickup =>
+      'Je suis de retour au point de prise en charge';
+
+  @override
   String get docInsuranceLetter => 'Attestation d’assurance';
 
   @override

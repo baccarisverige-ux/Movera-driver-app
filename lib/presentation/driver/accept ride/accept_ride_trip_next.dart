@@ -327,6 +327,8 @@ extension _AcceptRideTripNext on _AcceptRideState {
     if (!_countingWait || anchor == null) {
       return;
     }
+    // v0.18.93 (contract.json#autoArrive): the server's clock stands still.
+    if (_AcceptRidePickup(this)._waitPausedAway) return;
     final now = widget.waitNow?.call() ?? DateTime.now();
     final elapsed = math.max(0, now.difference(anchor).inSeconds);
     _waitSeconds = math.max(_waitSeconds, _waitAnchorSeconds + elapsed);

@@ -6983,6 +6983,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String waitingPausedAway(int leave, int arrive) {
+    return 'Waiting paused: you are more than $leave m from the pickup. Drive back within $arrive m to continue.';
+  }
+
+  @override
+  String get noShowAwayFromPickup =>
+      'Drive back to the pickup before marking a no-show.';
+
+  @override
+  String get waitingBackAtPickup => 'I\'m back at the pickup';
+
+  @override
   String get docInsuranceLetter => 'Insurance letter';
 
   @override

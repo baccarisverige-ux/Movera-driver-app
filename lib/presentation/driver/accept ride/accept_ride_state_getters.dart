@@ -154,6 +154,10 @@ extension _AcceptRideStateGetters on _AcceptRideState {
       case ActiveRideStage.headingToPickup:
         return tr.pickingUpRiderName(_riderName);
       case ActiveRideStage.waitingForRider:
+        // v0.18.93 (contract.json#autoArrive.texts.driverPaused).
+        if (_AcceptRidePickup(this)._waitPausedAway) {
+          return _AcceptRidePickup(this)._waitPausedText;
+        }
         return _riderOnTheWay
             ? tr.riderNameIsOnWay(_riderName)
             : tr.waitingForRiderName(_riderName);
@@ -174,6 +178,10 @@ extension _AcceptRideStateGetters on _AcceptRideState {
       case ActiveRideStage.headingToPickup:
         return tr.pickUpRiderName(_riderName);
       case ActiveRideStage.waitingForRider:
+        // v0.18.93 (contract.json#autoArrive.texts.driverPaused).
+        if (_AcceptRidePickup(this)._waitPausedAway) {
+          return _AcceptRidePickup(this)._waitPausedText;
+        }
         return _riderOnTheWay
             ? tr.riderNameIsOnWay(_riderName)
             : tr.waitingForRiderName(_riderName);
@@ -300,6 +308,10 @@ extension _AcceptRideStateGetters on _AcceptRideState {
 
   String get _waitBarStatus {
     if (_paidStopWait) return _AcceptRideRouteChange(this)._stopWaitStatus();
+    // v0.18.93 (contract.json#autoArrive.texts.driverPaused).
+    if (_AcceptRidePickup(this)._waitPausedAway) {
+      return _AcceptRidePickup(this)._waitPausedText;
+    }
     // v0.18.51 §73: before a booked ride's pickup time nothing runs yet.
     if (_waitSeconds < _waitTerms.beforeSeconds) {
       return tr.waitingBeforePickup;

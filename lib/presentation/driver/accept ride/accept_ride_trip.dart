@@ -464,6 +464,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
     }
     final alert = _newWaitingAlert(next.waiting, initial: initial);
+    // v0.18.93 (contract.json#autoArrive): the server's stopped / moved clock.
+    _AcceptRidePickup(this)._followServerWaitClock();
     // G7 (contract v0.18.9): the server's ride check and route change.
     _AcceptRideRouteChange(this)._onTripExtras(next, initial: initial);
     if (initial) return;
