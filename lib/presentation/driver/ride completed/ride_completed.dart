@@ -436,12 +436,6 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     );
   }
 
-  /// The server's commission in the trip's currency; null when unknown.
-  static Money? _serverCommission(WaybillRecord record, String currency) {
-    final label = record.commission;
-    return label == null ? null : Money.parseLabel(label, currency: currency);
-  }
-
   static const TextStyle _value = TextStyle(
     color: _ink,
     fontSize: 15,
@@ -453,11 +447,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   /// the driver's money is "Din andel" (driverTotal) with its lines under
   /// it; an earlier unpaid fee the rider paid with this trip is its own
   /// line and never Movera's commission (live bug 318 kr / −257,95 kr); a
-  /// tip is all the driver's, outside the fare.
-  /// S5 J5d (contract v0.18.82 `moneyBase.commission`): the commission is
-  /// the server's number (`TripProjection.commission`, kept on the record)
-  /// and is never worked out on the phone: a record without it (an older
-  /// save, a sample trip) shows no commission row.
+  /// tip is all the driver's, outside the fare. The commission is what is
+  /// left, so the lines always add up.
   Widget _money(WaybillRecord? record) {
     final get = record == null ? null : Money.parseLabel(record.fare);
     final paid = record?.riderFare == null || get == null
@@ -470,10 +461,10 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     final tip = record.tip?.amount.currency == get.currency
         ? record.tip!.amount
         : null;
-    final commission = _serverCommission(record, get.currency);
-    final share = commission == null
-        ? null
-        : commission.minorUnits < 0
+    var commission = paid - get;
+    if (debt != null) commission = commission - debt;
+    if (tip != null) commission = commission + tip;
+    final share = commission.minorUnits < 0
         ? '+${Money(minorUnits: -commission.minorUnits, currency: get.currency).formatted}'
         : '−${commission.formatted}';
     final lines = record.earningsBreakdown;
@@ -508,15 +499,14 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
               style: const TextStyle(fontSize: 12, color: Color(0xFF6F7B82)),
             ),
           ),
-        if (share != null)
-          _row(
-            tr.rcMoveraCommission,
-            Text(
-              share,
-              key: const ValueKey<String>('ride-completed-commission'),
-              style: _value,
-            ),
+        _row(
+          tr.rcMoveraCommission,
+          Text(
+            share,
+            key: const ValueKey<String>('ride-completed-commission'),
+            style: _value,
           ),
+        ),
         if (tip != null)
           _row(
             tr.g8LineTip,

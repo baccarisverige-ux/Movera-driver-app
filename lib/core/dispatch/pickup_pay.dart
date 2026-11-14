@@ -33,13 +33,17 @@ class PickupPayQuote {
 
   bool get hasPay => pay.ore > 0;
 
-  /// [fare] (a "142,30 kr" label) plus the pickup pay. Unchanged when
-  /// there is no pickup pay or the label is not an amount.
+  /// [fare] (a "142,30 kr", "12,50 €" or "12.500 DT" label) plus the
+  /// pickup pay. Unchanged when there is no pickup pay or the label is not
+  /// an amount.
   String totalOf(String fare) {
     if (!hasPay) {
       return fare;
     }
-    final base = Money.parseSekLabel(fare);
+    // Price audit 2026-11-14 gap 1: read in the pay's own currency with
+    // its decimals ("12,50 €", "12.500 DT"); a SEK-only reader dropped the
+    // pickup pay of every euro and dinar offer.
+    final base = Money.parseLabel(fare, currency: pay.currency);
     return base == null ? fare : (base + pay).formatted;
   }
 
@@ -57,7 +61,7 @@ class PickupPayQuote {
     Money? driverBonus,
     String? cashToCollect,
   }) {
-    final base = hasPay ? Money.parseSekLabel(fare) : null;
+    final base = hasPay ? Money.parseLabel(fare, currency: pay.currency) : null;
     if (base == null) {
       return (
         fare: fare,
