@@ -7433,4 +7433,11 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera väljer resetyperna när bilen godkänns.';
+
+  @override
+  String get noticeRefundTakenTitle => 'Avdrag från din utbetalning';
+
+  @override
+  String get noticeRefundTakenBody =>
+      'Pengar drogs från din nästa utbetalning eftersom resenären fick pengar tillbaka för en resa.';
 }

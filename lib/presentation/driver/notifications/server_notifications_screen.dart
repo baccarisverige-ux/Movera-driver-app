@@ -229,13 +229,22 @@ class _NotificationRow extends StatelessWidget {
   final ServerNotification notice;
   final VoidCallback onTap;
 
+  /// The server's words; job A7: built-in sv / fr / en texts for a
+  /// `driver_refund_taken` row that came without them.
+  String get _title => notice.title.isEmpty && notice.isRefundTaken
+      ? tr.noticeRefundTakenTitle
+      : notice.title;
+  String get _body => notice.body.isEmpty && notice.isRefundTaken
+      ? tr.noticeRefundTakenBody
+      : notice.body;
+
   @override
   Widget build(BuildContext context) {
     final at = notice.at.toLocal();
     final when = '${DriverDates.weekdayDayMonth(at)} · ${DriverDates.time(at)}';
     return Semantics(
       button: true,
-      label: '${notice.title}. ${notice.body}. $when',
+      label: '$_title. $_body. $when',
       hint: notice.opensFleet
           ? tr.myFleet
           : notice.opensDocuments
@@ -263,6 +272,8 @@ class _NotificationRow extends StatelessWidget {
                 child: Icon(
                   notice.isTripWarning
                       ? Icons.warning_amber_rounded
+                      : notice.isRefundTaken
+                      ? Icons.payments_outlined
                       : notice.opensFleet
                       ? Icons.groups_outlined
                       : notice.opensDocuments
@@ -281,7 +292,7 @@ class _NotificationRow extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            notice.title,
+                            _title,
                             style: AuthText.urbanist(
                               size: 15.5,
                               weight: notice.read
@@ -306,7 +317,7 @@ class _NotificationRow extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(notice.body, style: AccountStyle.body()),
+                    Text(_body, style: AccountStyle.body()),
                     const SizedBox(height: 4),
                     Text(
                       when,

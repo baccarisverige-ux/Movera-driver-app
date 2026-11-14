@@ -5565,5 +5565,13 @@
   "carTypesByMovera": "Movera chooses the ride types when it approves the car.",
   "@carTypesByMovera": {
     "description": "Contract v0.18.5 vehicleRules.categoriesByAdmin (G2-D5.3)."
+  },
+  "noticeRefundTakenTitle": "Deduction from your payout",
+  "@noticeRefundTakenTitle": {
+    "description": "Job A7 (contract v0.18.91 finish.refund.driverNotice): bell title when a refund was taken from the driver and the row has no text."
+  },
+  "noticeRefundTakenBody": "Money was taken from your next payout because the rider got money back for a trip.",
+  "@noticeRefundTakenBody": {
+    "description": "Job A7: bell body fallback for driver_refund_taken."
   }
 }

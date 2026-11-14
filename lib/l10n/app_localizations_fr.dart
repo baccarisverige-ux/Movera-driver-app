@@ -7567,4 +7567,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera choisit les types de course quand la voiture est validée.';
+
+  @override
+  String get noticeRefundTakenTitle => 'Retenue sur votre versement';
+
+  @override
+  String get noticeRefundTakenBody =>
+      'Une somme a été retenue sur votre prochain versement car le passager a été remboursé pour une course.';
 }

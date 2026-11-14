@@ -12762,6 +12762,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera chooses the ride types when it approves the car.'**
   String get carTypesByMovera;
+
+  /// Job A7 (contract v0.18.91 finish.refund.driverNotice): bell title when a refund was taken from the driver and the row has no text.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduction from your payout'**
+  String get noticeRefundTakenTitle;
+
+  /// Job A7: bell body fallback for driver_refund_taken.
+  ///
+  /// In en, this message translates to:
+  /// **'Money was taken from your next payout because the rider got money back for a trip.'**
+  String get noticeRefundTakenBody;
 }
 
 class _AppLocalizationsDelegate

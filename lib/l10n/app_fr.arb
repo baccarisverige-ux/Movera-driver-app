@@ -2106,5 +2106,7 @@
   "docExpiryTooFar": "Vérifiez la date de fin",
   "docRenewalWaiting": "Nouveau document en attente de vérification",
   "docRenewalRejected": "Nouveau document refusé",
-  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée."
+  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée.",
+  "noticeRefundTakenTitle": "Retenue sur votre versement",
+  "noticeRefundTakenBody": "Une somme a été retenue sur votre prochain versement car le passager a été remboursé pour une course."
 }

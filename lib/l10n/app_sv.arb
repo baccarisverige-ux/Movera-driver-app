@@ -2106,5 +2106,7 @@
   "docExpiryTooFar": "Kontrollera slutdatumet",
   "docRenewalWaiting": "Nytt dokument väntar på granskning",
   "docRenewalRejected": "Nytt dokument avvisat",
-  "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns."
+  "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns.",
+  "noticeRefundTakenTitle": "Avdrag från din utbetalning",
+  "noticeRefundTakenBody": "Pengar drogs från din nästa utbetalning eftersom resenären fick pengar tillbaka för en resa."
 }

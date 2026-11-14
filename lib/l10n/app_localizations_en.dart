@@ -7420,4 +7420,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera chooses the ride types when it approves the car.';
+
+  @override
+  String get noticeRefundTakenTitle => 'Deduction from your payout';
+
+  @override
+  String get noticeRefundTakenBody =>
+      'Money was taken from your next payout because the rider got money back for a trip.';
 }
