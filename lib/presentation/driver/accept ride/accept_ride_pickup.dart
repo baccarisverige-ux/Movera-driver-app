@@ -43,8 +43,10 @@ extension _AcceptRidePickup on _AcceptRideState {
     // Checker round 1: the free / no-show moments are the server's
     // (`waiting.freeUntil` / `noShowAt`); the local count only without them.
     final waiting = _live?.waiting;
-    final free = waiting?.secondsAfterArrival(waiting.freeUntil);
-    final noShow = waiting?.secondsAfterArrival(waiting.noShowAt);
+    // v0.18.93 (contract.json#autoArrive): on the clock without the stopped
+    // time (the server moved freeUntil / noShowAt by waiting.pausedSeconds).
+    final free = waiting?.clockSecondsOf(waiting.freeUntil);
+    final noShow = waiting?.clockSecondsOf(waiting.noShowAt);
     // v0.18.51 §73: a booked ride reached early counts down to `waitFrom`
     // first. Seconds after Arrived (server − server), so the phone's own
     // clock and any offset to the server's never enter.
@@ -131,4 +133,36 @@ extension _AcceptRidePickup on _AcceptRideState {
         return tr.stop1OfStopAddressesLength(_stopAddresses.length);
     }
   }
+
+  /// v0.18.93 (`contract.json#autoArrive`, job C9): while the server's
+  /// waiting clock stands still (`waiting.away`) or after it moved it
+  /// (`waiting.pausedSeconds`), the trip screen's clock is the server's:
+  /// from arrival, without the stopped time, standing still while away.
+  /// No distance is measured on the phone.
+  void _followServerWaitClock() {
+    final waiting = _live?.waiting;
+    if (_stage != ActiveRideStage.waitingForRider || waiting == null) return;
+    if (!waiting.paused && waiting.pausedSeconds == 0) return;
+    final now = widget.waitNow?.call() ?? DateTime.now();
+    final seconds = waiting.waitingClockAt(now.toUtc());
+    if (seconds == null) return;
+    _waitSeconds = seconds;
+    _waitAnchorAt = now;
+    _waitAnchorSeconds = seconds;
+  }
+
+  /// True while the server stopped the pickup waiting (the driver is more
+  /// than `terms.leaveMeters` from the pickup before the rider got in).
+  bool get _waitPausedAway =>
+      !_paidStopWait &&
+      _stage == ActiveRideStage.waitingForRider &&
+      _live?.waiting?.paused == true;
+
+  /// `autoArrive.texts.driverPaused` with the trip's own distances; the
+  /// contract defaults (200 / 100 m) only for a trip booked before v0.18.93,
+  /// whose terms carry none.
+  String get _waitPausedText => tr.waitingPausedAway(
+    _live?.terms?.leaveMeters ?? 200,
+    _live?.terms?.autoArriveMeters ?? 100,
+  );
 }

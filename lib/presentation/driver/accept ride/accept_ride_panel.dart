@@ -563,6 +563,16 @@ extension _AcceptRidePanel on _AcceptRideState {
                         ),
                         const SizedBox(height: 8),
                       ],
+                      // v0.18.93 (contract.json#autoArrive): the server
+                      // stopped the pickup waiting; say so on this sheet.
+                      if (_AcceptRidePickup(this)._waitPausedAway) ...[
+                        _waitPhaseChip(
+                          key: const ValueKey<String>(
+                            'active-ride-wait-paused',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       _buildPrimaryAction(),
                     ],
                   ),

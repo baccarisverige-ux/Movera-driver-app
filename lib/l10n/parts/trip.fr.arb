@@ -342,5 +342,7 @@
   "nextTripPopupLive": "{rider} vous attend à {pickup}. Allez-y maintenant.",
   "nextTripPopupBooked": "Course programmée à {time} · {pickup}. Allez à la prise en charge maintenant.",
   "waitingBeforePickup": "Avant l’heure de prise en charge",
-  "arrivedFarWarning": "Vous êtes à {m} m de la destination – la course se termine plus tôt"
+  "arrivedFarWarning": "Vous êtes à {m} m de la destination – la course se termine plus tôt",
+  "waitingPausedAway": "Attente en pause : vous êtes à plus de {leave} m du point de prise en charge. Revenez à moins de {arrive} m pour continuer.",
+  "noShowAwayFromPickup": "Revenez au point de prise en charge avant de signaler l’absence du passager."
 }

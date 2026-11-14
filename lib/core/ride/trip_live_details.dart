@@ -212,6 +212,8 @@ class TripTerms {
     this.maxPickupMoveMeters = 200,
     this.stopFreeWaitMinutes = 0,
     this.stopWaitPerMin,
+    this.autoArriveMeters,
+    this.leaveMeters,
   });
 
   static TripTerms? tryParse(Object? json) {
@@ -247,8 +249,13 @@ class TripTerms {
       maxPickupMoveMeters: move is num && move >= 0 ? move.toInt() : 200,
       stopFreeWaitMinutes: _minutes(json['stopFreeWaitMin']) ?? 0,
       stopWaitPerMin: _money(json['stopWaitPerMin'], currency),
+      autoArriveMeters: _meters(json['autoArriveMeters']),
+      leaveMeters: _meters(json['leaveMeters']),
     );
   }
+
+  static int? _meters(Object? value) =>
+      value is num && value.isFinite && value > 0 ? value.toInt() : null;
 
   /// Free wait, price per minute, no-show time and fee and the driver's
   /// share, for the waiting sheet and the island.
@@ -273,6 +280,13 @@ class TripTerms {
   /// Contract v0.18.9 `terms.stopWaitPerMin` (G7 decision 4): the price of
   /// each waiting minute at a middle stop; null from an older server.
   final Money? stopWaitPerMin;
+
+  /// Contract v0.18.93 `terms.autoArriveMeters` / `terms.leaveMeters`
+  /// (`contract.json#autoArrive`, job C9): where the server marks the
+  /// driver arrived, and beyond which his waiting stops counting. Shown
+  /// in the paused note only; the phone never measures them itself.
+  final int? autoArriveMeters;
+  final int? leaveMeters;
 }
 
 /// `TripEta` (Q4): the server's road-route ETA to the pickup or drop-off.
@@ -374,6 +388,9 @@ class TripWaitingNow {
     this.chargedSoFar,
     this.rules,
     this.alerts = const <String>{},
+    this.arrivedBy,
+    this.awaySince,
+    this.pausedSeconds = 0,
   });
 
   /// [scheduledAt]: a booked ride's pickup time (`kind` scheduled), for the
@@ -410,6 +427,18 @@ class TripWaitingNow {
           : null,
       chargedSoFar: _money(json['chargedSoFar']),
       rules: json['rules'] is List ? _ruleIds(json['rules']) : null,
+      // Contract v0.18.93 (`contract.json#autoArrive`, job C9): how the
+      // driver arrived, the stopped clock while he is away, the stops so far.
+      arrivedBy: json['arrivedBy'] == 'auto' || json['arrivedBy'] == 'tap'
+          ? json['arrivedBy'] as String
+          : null,
+      awaySince: json['away'] is Map && (json['away'] as Map)['since'] is String
+          ? DateTime.tryParse((json['away'] as Map)['since'] as String)?.toUtc()
+          : null,
+      pausedSeconds:
+          json['pausedSeconds'] is num && (json['pausedSeconds'] as num) >= 0
+          ? (json['pausedSeconds'] as num).toInt()
+          : 0,
       alerts: {
         if (json['alerts'] case final List list)
           for (final alert in list)
@@ -448,6 +477,39 @@ class TripWaitingNow {
     final arrived = arrivedAt;
     if (arrived == null || moment == null) return null;
     return math.max(0, moment.difference(arrived).inSeconds);
+  }
+
+  /// Contract v0.18.93 `waiting.arrivedBy`: `auto` (the server marked him
+  /// arrived from his position) or `tap`; null from an older server.
+  final String? arrivedBy;
+
+  /// Contract v0.18.93 `waiting.away.since`: the waiting clock stands still
+  /// from here while the driver is away from the pickup; null otherwise.
+  final DateTime? awaySince;
+
+  /// Contract v0.18.93 `waiting.pausedSeconds`: how far the server moved
+  /// [freeUntil] / [noShowAt] for the stops so far.
+  final int pausedSeconds;
+
+  /// True while the server's waiting clock stands still (the driver drove
+  /// more than `terms.leaveMeters` away before the rider got in).
+  bool get paused => awaySince != null;
+
+  /// The waiting clock in seconds at [now], as the server counts it: from
+  /// arrival, without the stopped time, standing still at [awaySince].
+  int? waitingClockAt(DateTime now) {
+    final arrived = arrivedAt;
+    if (arrived == null) return null;
+    final away = awaySince;
+    final end = away != null && away.isBefore(now) ? away : now;
+    return math.max(0, end.difference(arrived).inSeconds - pausedSeconds);
+  }
+
+  /// A server moment ([freeUntil], [noShowAt]) on the same clock as
+  /// [waitingClockAt]: seconds after arrival less the stopped time.
+  int? clockSecondsOf(DateTime? moment) {
+    final seconds = secondsAfterArrival(moment);
+    return seconds == null ? null : math.max(0, seconds - pausedSeconds);
   }
 
   final Money? noShowFee;

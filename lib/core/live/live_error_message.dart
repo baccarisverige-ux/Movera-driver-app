@@ -71,6 +71,8 @@ String liveTripErrorMessage(Object? error) {
         'position_stale' => tr.liveTripPositionStale,
         'price_changed' => tr.cashPriceChanged,
         'no_show_too_early' => tr.liveTripNoShowTooEarly,
+        // v0.18.93 (contract.json#autoArrive.noShow): the waiting is stopped.
+        'driver_away_from_pickup' => tr.noShowAwayFromPickup,
         'version_mismatch' || 'invalid_transition' => tr.liveTripChanged,
         _ => tr.liveTripFailed,
       };
