@@ -961,6 +961,12 @@ class ScheduledRideStore {
       ..addAll({
         for (final r in [...page.open, ...page.accepted]) r.tripId: r,
       });
+    _acceptedRowTotals
+      ..clear()
+      ..addAll({
+        for (final r in page.accepted)
+          if (r.driverTotal case final total?) r.tripId: total,
+      });
     _changed();
   }
 
@@ -1080,9 +1086,15 @@ class ScheduledRideStore {
   /// pickup pay and Movera's bonus in it: the row's
   /// (`DriverReservation.driverTotal`) after a resync, else the claim
   /// result's `Offer.driverTotal` kept at accept. Null when the server
-  /// sent none. "Leave now" opens the trip with it, adding nothing.
+  /// sent none. "Leave now" opens the trip with it, adding nothing. Only
+  /// an ACCEPTED row counts (supervisor should-fix 1): an open row's total
+  /// is the pre-accept one, without the pickup pay of an Exclusive accept.
   static Money? acceptedDriverTotal(String id) =>
-      _serverRows[id]?.driverTotal ?? _driverTotals[id];
+      _acceptedRowTotals[id] ?? _driverTotals[id];
+
+  /// The accepted rows' `DriverReservation.driverTotal` of the last
+  /// [syncFromServer], by trip id.
+  static final Map<String, Money> _acceptedRowTotals = <String, Money>{};
 
   static final Map<String, Money> _driverTotals = <String, Money>{};
 
@@ -1395,6 +1407,7 @@ class ScheduledRideStore {
     _requests.clear();
     _accepted.clear();
     _serverRows.clear();
+    _acceptedRowTotals.clear();
     _claims.clear();
     keepQuestions.value = const [];
     _changed();
@@ -1419,6 +1432,7 @@ class ScheduledRideStore {
     _driving = null;
     _pickupPays.clear();
     _driverTotals.clear();
+    _acceptedRowTotals.clear();
     reminder.value = null;
     _reminderRide = null;
     backupNote.value = null;

@@ -34,6 +34,7 @@ Map<String, dynamic> _row(
   String tripId, {
   required Money earnings,
   Money? driverTotal,
+  String status = 'accepted',
 }) => {
   'tripId': tripId,
   'version': 3,
@@ -47,7 +48,7 @@ Map<String, dynamic> _row(
   'durationSeconds': 1080,
   'earnings': earnings.toJson(),
   'driverTotal': ?driverTotal?.toJson(),
-  'status': 'accepted',
+  'status': status,
   'mustBeOnlineAt': '2026-11-20T13:00:00Z',
   'canStartAt': '2026-11-20T13:00:00Z',
 };
@@ -65,15 +66,15 @@ PersistedActiveRide _started(String tripId, Money total, Money bonus) =>
       driverBonus: bonus,
     );
 
-LiveReservations _live(List<Map<String, dynamic>> accepted) => LiveReservations(
+LiveReservations _live(
+  List<Map<String, dynamic>> accepted, {
+  List<Map<String, dynamic>> open = const [],
+}) => LiveReservations(
   api: ApiClient(
     client: MockClient((request) async {
       final isAccepted = request.url.query.contains('accepted');
       return http.Response(
-        jsonEncode({
-          'items': isAccepted ? accepted : const <Object>[],
-          'nextCursor': null,
-        }),
+        jsonEncode({'items': isAccepted ? accepted : open, 'nextCursor': null}),
         200,
         headers: {'content-type': 'application/json'},
       );
@@ -246,4 +247,33 @@ void main() {
     expect(ScheduledRideStore.acceptedDriverTotal('trp_sek_row'), _sek(22450));
     expect(ScheduledRideStore.acceptedDriverTotal('trp_tnd_row'), _tnd(15000));
   });
+
+  // Supervisor should-fix 1 (audits/impact/f1-f2bc-driver-supervisor.md):
+  // right after a take, before the next resync, the OPEN row's pre-accept
+  // total (no pickup pay) must not win over the claim's total.
+  for (final (label, open, claim, pay) in [
+    ('SEK', _sek(20000), _sek(21395), _sek(1395)),
+    ('TND', _tnd(12000), _tnd(13250), _tnd(1250)),
+  ]) {
+    testWidgets('$label: taken from the open list, the claim total wins over '
+        'the open row', (tester) async {
+      final id = 'trp_open_$label';
+      final live = _live(
+        const [],
+        open: [
+          _row(id, earnings: open, driverTotal: open, status: 'requested'),
+        ],
+      );
+      await tester.runAsync(() => ScheduledRideStore.syncFromServer(live));
+      expect(ScheduledRideStore.routeOf(id), isNotNull);
+      ScheduledRideStore.take(
+        id,
+        upcoming: true,
+        pickupPay: pay,
+        driverTotal: claim,
+      );
+      expect(ScheduledRideStore.acceptedPriceOf(id), claim.formatted);
+      expect(ScheduledRideStore.acceptedDriverTotal(id), claim);
+    });
+  }
 }
