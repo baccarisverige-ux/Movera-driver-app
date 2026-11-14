@@ -495,6 +495,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walletPayoutPending => 'Waiting';
 
   @override
+  String get walletPayoutDriverGets => 'Driver gets';
+
+  @override
+  String get walletPayoutMoveraGets => 'Movera gets';
+
+  @override
   String get contactChangePhone => 'Change phone number';
 
   @override

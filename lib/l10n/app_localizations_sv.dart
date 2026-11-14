@@ -493,6 +493,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get walletPayoutPending => 'Väntar';
 
   @override
+  String get walletPayoutDriverGets => 'Föraren får';
+
+  @override
+  String get walletPayoutMoveraGets => 'Movera får';
+
+  @override
   String get contactChangePhone => 'Ändra telefonnummer';
 
   @override

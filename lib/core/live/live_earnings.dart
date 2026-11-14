@@ -115,9 +115,15 @@ class DriverPayout {
     required this.periodStart,
     required this.periodEnd,
     required this.tripCount,
+    this.summary,
   });
 
   final Money amount;
+
+  /// v0.18.92 (BQ-M22, contract.json#priceDisplay.payoutSummary): the
+  /// server's two numbers for this payout, his view; null from an older
+  /// server (the card then shows [amount] only). Never worked out here.
+  final PayoutSummary? summary;
   final bool paid;
   final DateTime periodStart;
   final DateTime periodEnd;
@@ -135,6 +141,33 @@ class DriverPayout {
         periodStart: start,
         periodEnd: end,
         tripCount: (json['tripCount'] as num?)?.toInt() ?? 0,
+        summary: PayoutSummary.tryParse(json['summary']),
+      );
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// `Payout.summary { driverGets, moveraGets }` (contract v0.18.92, owner
+/// 2026-11-14 "how much driver get and how much movera get thats all no
+/// details"): two amounts, shown as they come.
+class PayoutSummary {
+  const PayoutSummary({required this.driverGets, required this.moveraGets});
+
+  final Money driverGets;
+  final Money moveraGets;
+
+  /// Null when absent or not two valid amounts (never a half summary).
+  static PayoutSummary? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final driver = json['driverGets'];
+    final movera = json['moveraGets'];
+    if (driver is! Map || movera is! Map) return null;
+    try {
+      return PayoutSummary(
+        driverGets: Money.fromJson(Map<String, dynamic>.from(driver)),
+        moveraGets: Money.fromJson(Map<String, dynamic>.from(movera)),
       );
     } on FormatException {
       return null;

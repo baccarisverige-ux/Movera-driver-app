@@ -504,6 +504,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get walletPayoutPending => 'En attente';
 
   @override
+  String get walletPayoutDriverGets => 'Le chauffeur reçoit';
+
+  @override
+  String get walletPayoutMoveraGets => 'Movera reçoit';
+
+  @override
   String get contactChangePhone => 'Changer de numéro de téléphone';
 
   @override

@@ -141,6 +141,8 @@
   "walletLiveUnavailable": "Impossible de charger vos gains. Réessayez plus tard.",
   "walletPayoutPaid": "Versé",
   "walletPayoutPending": "En attente",
+  "walletPayoutDriverGets": "Le chauffeur reçoit",
+  "walletPayoutMoveraGets": "Movera reçoit",
   "contactChangePhone": "Changer de numéro de téléphone",
   "contactChangeEmail": "Changer d’e-mail",
   "contactNewPhone": "Nouveau numéro de téléphone",
