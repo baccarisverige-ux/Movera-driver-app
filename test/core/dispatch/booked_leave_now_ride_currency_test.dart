@@ -92,4 +92,19 @@ void main() {
       'SEK',
     );
   });
+
+  test('scheduledFor keeps the ride currency (TND and SEK)', () {
+    final at = DateTime.utc(2026, 11, 21, 9);
+    for (final code in ['TND', 'SEK']) {
+      final moved = _bare(fare: '12.350', currency: code).scheduledFor(at);
+      expect(moved.currency, code);
+      expect(moved.scheduledAt, at);
+    }
+    expect(
+      RideOffer.reservation(
+        _bare(fare: '12.350', currency: 'TND').scheduledFor(at),
+      ).fare,
+      const Money(minorUnits: 12350, currency: 'TND'),
+    );
+  });
 }

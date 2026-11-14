@@ -451,6 +451,7 @@ class ReservationRequestPreview {
         stops: stops,
         id: id,
         paidByCash: paidByCash,
+        currency: currency,
         cashToCollect: cashToCollect,
         rating: rating,
         riderName: riderName,
