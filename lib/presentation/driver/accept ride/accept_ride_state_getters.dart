@@ -27,7 +27,8 @@ extension _AcceptRideStateGetters on _AcceptRideState {
   Money? get _serverDriverTotal => _serverMoney?.driverTotal;
 
   /// Contract v0.18.89 `TripFinish.owedToMovera`: this trip's balance with
-  /// Movera as the server sent it (above 0 he owes Movera), or null.
+  /// Movera as the server sent it (above 0 he owes Movera), or null:
+  /// the cash he holds for the trip (counted cash + a cash tip) − driverTotal.
   Money? get _serverOwedToMovera => _serverMoney?.owedToMovera;
 
   bool get _arrivalDemo => DriverRuntimeConfig.current.simulatedArrival;

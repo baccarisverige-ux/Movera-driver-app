@@ -165,6 +165,9 @@ class LiveTripMoney {
   Money? get cashToCollect => _cashToCollect;
 
   /// Contract v0.18.89 `TripFinish.owedToMovera`: this trip's balance with
-  /// Movera (above 0 the driver owes Movera); null when not sent.
+  /// Movera (above 0 the driver owes Movera); null when not sent. Server
+  /// P89S: the cash he holds for the trip (counted cash + a cash tip) − driverTotal,
+  /// so a cash tip already in his hand is not owed to him again. The app
+  /// never works it out.
   Money? get owedToMovera => finish?.owedToMovera;
 }

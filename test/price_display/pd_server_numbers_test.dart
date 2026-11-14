@@ -209,6 +209,51 @@ void main() {
     });
   });
 
+  // Server P89S (ef7757e, Rules audits/impact/server-p89-fields-supervisor.md
+  // re-check): owedToMovera = cash he holds for the trip (counted cash + a
+  // cash tip) − driverTotal. The app shows that number as it comes, never
+  // share − cash worked out from the sheet's rows.
+  group('owedToMovera: cash held incl. a cash tip − driverTotal', () {
+    testWidgets('SEK cash trip + 20 kr cash tip: Movera owes 1,10 kr', (
+      tester,
+    ) async {
+      installLive();
+      // driverTotal 183,60 (tip inside), cash 162,50 + tip 20,00 held.
+      final money = LiveTripMoney.tryParse({
+        'fare': _m(18750),
+        'driverEarnings': _m(15000),
+        'driverTotal': _m(18360),
+        'cashToCollect': _m(16250),
+        'finish': {'endedEarly': false, 'owedToMovera': _m(-110)},
+      })!;
+      expect(money.owedToMovera?.formatted, '−1,10 kr');
+      await _pump(
+        tester,
+        CashCollectSheet(
+          fare: money.driverPay!.formatted,
+          cash: money.cash.formatted,
+          riderName: 'Anna',
+          owedToMovera: money.owedToMovera,
+        ),
+      );
+      expect(find.text('Movera owes you'), findsOneWidget);
+      expect(find.text('+1,10 kr'), findsOneWidget);
+      // Not the old cash − driverTotal (162,50 − 183,60).
+      expect(find.text('+21,10 kr'), findsNothing);
+    });
+
+    test('TND short count: the server number in 3 decimals', () {
+      installLive();
+      final balance = CashBalance.fromServer(
+        fare: const Money(minorUnits: 11505, currency: 'TND'),
+        cashCollected: const Money(minorUnits: 10000, currency: 'TND'),
+        owedToMovera: const Money(minorUnits: -1505, currency: 'TND'),
+      );
+      expect(balance.signedLabel, '+1.505 DT');
+      expect(balance.moveraOwesDriver, isTrue);
+    });
+  });
+
   group('gap 16: route change', () {
     test('TripRouteChange.driverTotal from the server', () {
       final change = TripRouteChange.tryParse({

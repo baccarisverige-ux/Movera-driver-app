@@ -8,7 +8,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/ride/trip_live_details.dart';
 import 'package:movera/presentation/driver/accept ride/cash_collect_sheet.dart';
+import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
 /// Price audit 2026-11-14: widget renders of the offer card (EUR, TND) and
@@ -35,7 +37,7 @@ void main() {
       }
     }
 
-    Future<void> shot(String name, Widget child) async {
+    Future<void> shot(String name, Widget child, {bool scroll = false}) async {
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(
         ScreenUtilInit(
@@ -55,6 +57,14 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
+      if (scroll) {
+        // The balance card sits under the cash case: scroll to it.
+        await tester.drag(
+          find.byType(SingleChildScrollView).first,
+          const Offset(0, -400),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+      }
       expect(tester.takeException(), isNull, reason: name);
       if (_shots.isEmpty) return;
       final boundary = tester.renderObject<RenderRepaintBoundary>(
@@ -70,24 +80,26 @@ void main() {
       });
     }
 
-    RadarOfferView offer(String earnings, Money pickup) => RadarOfferView(
-      id: 'pd-${pickup.currency}',
-      category: 'Movera',
-      payment: 'Card',
-      rating: '4.90',
-      fare: earnings,
-      driverEarnings: earnings,
-      pickupMinutes: 6,
-      pickupKm: 2.4,
-      tripMinutes: 14,
-      tripKm: 7.8,
-      pickup: 'Rue de Rivoli 12, Paris',
-      dropoff: 'Avenue Habib Bourguiba 5, Tunis',
-      pickupPay: PickupPayQuote(
-        pay: pickup,
-        leg: const PickupLeg(km: 2.4, minutes: 6),
-      ),
-    );
+    RadarOfferView offer(String earnings, Money pickup, {Money? serverTotal}) =>
+        RadarOfferView(
+          id: 'pd-${pickup.currency}',
+          category: 'Movera',
+          payment: 'Card',
+          rating: '4.90',
+          fare: earnings,
+          driverEarnings: earnings,
+          pickupMinutes: 6,
+          pickupKm: 2.4,
+          tripMinutes: 14,
+          tripKm: 7.8,
+          pickup: 'Rue de Rivoli 12, Paris',
+          dropoff: 'Avenue Habib Bourguiba 5, Tunis',
+          pickupPay: PickupPayQuote(
+            pay: pickup,
+            leg: const PickupLeg(km: 2.4, minutes: 6),
+            serverTotal: serverTotal,
+          ),
+        );
 
     Widget card(RadarOfferView view) => Padding(
       padding: const EdgeInsets.all(16),
@@ -124,6 +136,83 @@ void main() {
         riderName: 'Anna',
         category: 'Movera',
       ),
+    );
+    // v0.18.89 §90: Offer.driverTotal is the only number on the card.
+    await shot(
+      'offer-card-SEK-driverTotal',
+      card(
+        offer(
+          '150,00 kr',
+          const Money(minorUnits: 360, currency: 'SEK'),
+          serverTotal: const Money(minorUnits: 15360, currency: 'SEK'),
+        ),
+      ),
+    );
+    await shot(
+      'offer-card-TND-driverTotal',
+      card(
+        offer(
+          '12.500 DT',
+          const Money(minorUnits: 1250, currency: 'TND'),
+          serverTotal: const Money(minorUnits: 13750, currency: 'TND'),
+        ),
+      ),
+    );
+    // TripRouteChange.driverTotal: the whole trip with the new route.
+    Map<String, Object?> m(int minor, String currency) => {
+      'amountMinor': minor,
+      'currency': currency,
+    };
+    final asked = DateTime.utc(2026, 11, 14, 12);
+    for (final (currency, earnings, total, difference) in [
+      ('SEK', 4956, 10456, 1200),
+      ('TND', 9800, 11050, 1500),
+    ]) {
+      await shot(
+        'route-change-$currency',
+        RouteChangeSheet(
+          change: TripRouteChange.tryParse({
+            'changeId': 'rc-$currency',
+            'status': 'pending',
+            'driverEarnings': m(earnings, currency),
+            'driverTotal': m(total, currency),
+            'earningsDifference': m(difference, currency),
+            'askedAt': asked.toIso8601String(),
+            'answerBy': asked
+                .add(const Duration(seconds: 45))
+                .toIso8601String(),
+            'dropoff': {'address': 'Storgatan 8', 'lat': 59.33, 'lng': 18.07},
+          })!,
+          maxStops: 3,
+          onAnswer: (_) async {},
+          now: () => asked.add(const Duration(seconds: 15)),
+        ),
+      );
+    }
+    // TripFinish.owedToMovera (server P89S): cash held incl. a cash tip −
+    // driverTotal. SEK: 162,50 + 20,00 tip − 183,60 = −1,10 (Movera owes).
+    await shot(
+      'finish-owed-SEK',
+      const CashCollectSheet(
+        fare: '183,60 kr',
+        cash: '162,50 kr',
+        riderName: 'Anna',
+        category: 'Movera',
+        owedToMovera: Money(minorUnits: -110, currency: 'SEK'),
+      ),
+      scroll: true,
+    );
+    // TND: 15.000 cash − 11.505 driverTotal = 3.495 DT he owes Movera.
+    await shot(
+      'finish-owed-TND',
+      const CashCollectSheet(
+        fare: '11.505 DT',
+        cash: '15.000 DT',
+        riderName: 'Anna',
+        category: 'Movera',
+        owedToMovera: Money(minorUnits: 3495, currency: 'TND'),
+      ),
+      scroll: true,
     );
   });
 }

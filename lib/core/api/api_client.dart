@@ -47,7 +47,7 @@ class ApiClient {
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
   /// G30 (v0.18.76): `GET /driver/reminders` sends the line
   /// `email_not_verified` only to apps at 0.18.76 or later.
-  static const contractVersion = '0.18.87';
+  static const contractVersion = '0.18.89';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);

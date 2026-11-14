@@ -43,12 +43,12 @@ void main() {
     }
   });
 
-  test('the copy is contract v0.18.87', () {
+  test('the copy is contract v0.18.89', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
-      contains('"version": "0.18.87"'),
+      contains('"version": "0.18.89"'),
     );
-    expect(TripTransitions.contractVersion, '0.18.87');
+    expect(TripTransitions.contractVersion, '0.18.89');
   });
 
   // v0.18.87 (owner 2026-11-13 "Movera commission is how much movera
@@ -69,4 +69,21 @@ void main() {
       expect(row['driver'] as String, contains('moveraKeepsNow'));
     },
   );
+
+  // v0.18.89 §90 (price display): the fields PD-2 reads are in the copy, and
+  // owedToMovera is the server's balance (the app never works it out).
+  test('v0.18.89: priceDisplay fields are in the copy', () {
+    final openapi = File('contracts/openapi.yaml').readAsStringSync();
+    for (final field in ['driverTotal', 'cashToCollect', 'owedToMovera']) {
+      expect(openapi, contains(field));
+    }
+    final contract =
+        jsonDecode(File('contracts/contract.json').readAsStringSync())
+            as Map<String, dynamic>;
+    final price = contract['priceDisplay'] as Map<String, dynamic>;
+    for (final key in ['offer', 'tripCashToCollect', 'routeChange']) {
+      expect(price[key], isNotNull, reason: key);
+    }
+    expect(price['owedToMovera'] as String, contains('driverTotal'));
+  });
 }

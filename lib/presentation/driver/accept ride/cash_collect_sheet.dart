@@ -102,7 +102,9 @@ class CashCollectSheet extends StatelessWidget {
   bool get _ended => riderEnded || driverEnded;
 
   /// Contract v0.18.89 `TripFinish.owedToMovera` (§90): the trip's
-  /// balance with Movera from the server (above 0 the driver owes Movera).
+  /// balance with Movera from the server (above 0 the driver owes Movera):
+  /// the cash he holds for the trip (counted cash + a cash tip) − driverTotal (server
+  /// P89S), so it need not equal the sheet's share − cash rows.
   /// The "You owe Movera" / "Movera owes you" line shows only this.
   final Money? owedToMovera;
 
