@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
@@ -49,4 +50,23 @@ void main() {
     );
     expect(TripTransitions.contractVersion, '0.18.87');
   });
+
+  // v0.18.87 (owner 2026-11-13 "Movera commission is how much movera
+  // keep", moneyBase.commissionRow): the "Movera commission" rows read
+  // TripProjection.moveraKeepsNow; the copy must carry the field and the
+  // driver row rule.
+  test(
+    'v0.18.87: TripProjection.moveraKeepsNow and commissionRow are in the copy',
+    () {
+      final openapi = File('contracts/openapi.yaml').readAsStringSync();
+      expect(openapi, contains('moveraKeepsNow'));
+      final contract =
+          jsonDecode(File('contracts/contract.json').readAsStringSync())
+              as Map<String, dynamic>;
+      final moneyBase = contract['moneyBase'] as Map<String, dynamic>;
+      final row = moneyBase['commissionRow'] as Map<String, dynamic>;
+      expect(row['driver'], isA<String>());
+      expect(row['driver'] as String, contains('moveraKeepsNow'));
+    },
+  );
 }
