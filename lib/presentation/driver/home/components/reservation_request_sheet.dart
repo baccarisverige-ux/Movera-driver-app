@@ -224,8 +224,12 @@ class ReservationRequestSheet extends StatelessWidget {
   /// the driver's share of the ride's fare, never the fare itself (owner
   /// decision 2026-10-26; [ReservationRequestPreview.driverPayLabel]).
   (String, String) _fareParts() {
-    // Only the ride's own earnings (server, or demo written out); "—"
-    // without them (owner decision 2026-11-10).
+    // v0.18.96 (BQ-M23): a server ride shows only its driverTotal ("—"
+    // without it), with its pickup pay already in it: nothing is added.
+    final total = request.driverTotal;
+    if (total != null) return OfferSheetBody.fareParts(total);
+    // A demo ride: its own written-out earnings; "—" without them (owner
+    // decision 2026-11-10).
     final base = _show.fare(request.fareLabel, earnings: request.earnings);
     // One total, like the Radar and Exclusive cards.
     return OfferSheetBody.fareParts(pickupPay?.totalOf(base) ?? base);

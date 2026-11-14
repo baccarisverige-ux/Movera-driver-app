@@ -22,6 +22,7 @@ class ServerReservation {
     required this.earnings,
     required this.status,
     required this.mustBeOnlineAt,
+    this.driverTotal,
     this.popup = false,
     this.changeAskUntil,
     this.previousAt,
@@ -56,7 +57,22 @@ class ServerReservation {
   final GeoPoint dropoff;
   final int distanceMeters;
   final int durationSeconds;
+
+  /// The trip's earnings line (`DriverReservation.earnings`): without
+  /// Movera's bonus and pickup pay. Kept, never shown (v0.18.96).
   final Money earnings;
+
+  /// Contract v0.18.96 `DriverReservation.driverTotal` (BQ-M23, owner
+  /// s06:1164 "only how much he get"): what the driver gets for this
+  /// booked ride, from the server (earnings + pickup pay + Movera's
+  /// bonus). Null from a server before v0.18.96 or when it does not parse.
+  final Money? driverTotal;
+
+  /// The one number the Booked rides list, its sheet, the ride-changed
+  /// notice and "Keep it at the new time?" show: [driverTotal], else "—".
+  /// Never [earnings], never worked out on the phone.
+  String get driverPayLabel => driverTotal?.formatted ?? '—';
+
   final String status;
   final DateTime mustBeOnlineAt;
   final bool popup;
@@ -90,6 +106,15 @@ class ServerReservation {
     if (earnings is! Map) {
       throw const FormatException('DriverReservation.earnings missing');
     }
+    Money? driverTotal;
+    final total = json['driverTotal'];
+    if (total is Map) {
+      try {
+        driverTotal = Money.fromJson(Map<String, dynamic>.from(total));
+      } on FormatException {
+        driverTotal = null;
+      }
+    }
     final reservation = json['reservation'];
     final ask =
         json['changeAsk'] ??
@@ -111,6 +136,7 @@ class ServerReservation {
       distanceMeters: (json['distanceMeters'] as num?)?.toInt() ?? 0,
       durationSeconds: (json['durationSeconds'] as num?)?.toInt() ?? 0,
       earnings: Money.fromJson(Map<String, dynamic>.from(earnings)),
+      driverTotal: driverTotal,
       status: text('status'),
       mustBeOnlineAt: time('mustBeOnlineAt'),
       leaveAt: reservation is Map && reservation['leaveAt'] is String
@@ -142,6 +168,7 @@ class ServerReservation {
       category: CategoryCatalog.labelOf(categoryId),
       fare: earnings.formatted,
       earnings: earnings.formatted,
+      driverTotal: driverPayLabel,
       pickupLabel: pickupLabel(time),
       pickupAddress: pickupAddress,
       dropoffAddress: dropoffAddress,

@@ -252,6 +252,7 @@ class ReservationRequestPreview {
     this.kind,
     this.scheduledAt,
     this.earnings,
+    this.driverTotal,
   });
 
   /// Dispatch id; claiming it decides which driver gets the reservation.
@@ -292,8 +293,17 @@ class ReservationRequestPreview {
   /// Scheduled rides list show (owner decision 2026-10-26): only
   /// [earnings], never worked out on the phone; "—" without them (owner
   /// decision 2026-11-10). Pickup pay, when the ride has it, comes on top.
+  /// A server row (contract v0.18.96, BQ-M23) shows only [driverTotal].
   String get driverPayLabel =>
+      driverTotal ??
       DriverOfferRules.current.card.fare(fareLabel, earnings: earnings);
+
+  /// Contract v0.18.96 `DriverReservation.driverTotal` (BQ-M23): what the
+  /// driver gets for a booked ride of `GET /driver/reservations`, as the
+  /// server sent it, or "—" when that server sent none. Null for a demo
+  /// ride (it shows its written-out [earnings]). Pickup pay and Movera's
+  /// bonus are already in it: nothing is added on the phone.
+  final String? driverTotal;
 
   /// Contract v0.18.17 (`DriverReservation.earnings`): the server's own
   /// driver money for a booked ride from `GET /driver/reservations`; for
