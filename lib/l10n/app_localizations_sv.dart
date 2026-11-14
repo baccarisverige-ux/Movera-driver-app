@@ -1695,8 +1695,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get drivingTime => 'Körtid';
 
   @override
-  String countsWhileRadarIsOnAfter(Object workHours, Object restHours) {
-    return 'Räknas medan Radar är på. Efter $workHours h vilar du $restHours h innan du går online igen. En paus på $restHours h nollställer den.';
+  String countsOnlyWhileDriving(Object workHours, Object restHours) {
+    return 'Räknas bara när du kör till upphämtningen och under resan. Efter $workHours h kan du gå online igen när du har varit offline $restHours h i rad.';
   }
 
   @override

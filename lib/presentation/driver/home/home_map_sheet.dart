@@ -1335,10 +1335,12 @@ extension _HomeMapSheet on _DriverHomeState {
             last: last,
           ),
         ],
-        // Q25: the admin's rule for the country.
-        note: tr.countsWhileRadarIsOnAfter(
-          clock.rule.workHours,
-          clock.rule.restHours,
+        // SV (owner "It's 12 hours driving (mean driving to pickup or on
+        // trip) not online time"): only driving counts; the limit and the
+        // offline reset are the clock's (the server's once read).
+        note: tr.countsOnlyWhileDriving(
+          clock.workLimit.inHours,
+          clock.restLength.inHours,
         ),
       ),
     );

@@ -2943,11 +2943,11 @@ abstract class AppLocalizations {
   /// **'Driving time'**
   String get drivingTime;
 
-  /// No description provided for @countsWhileRadarIsOnAfter.
+  /// No description provided for @countsOnlyWhileDriving.
   ///
   /// In en, this message translates to:
-  /// **'Counts while Radar is on. After {workHours} h you rest {restHours} h before going online again. A {restHours} h break starts it from zero.'**
-  String countsWhileRadarIsOnAfter(Object workHours, Object restHours);
+  /// **'Counts only while you drive to the pickup and on the trip. After {workHours} h you can go online again once you have been offline {restHours} h in a row.'**
+  String countsOnlyWhileDriving(Object workHours, Object restHours);
 
   /// No description provided for @closeSheet.
   ///
