@@ -5280,6 +5280,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'SMS to emergency contacts on SOS is not on yet. Call them from this page.';
 
   @override
+  String waitingPausedAtStop(int leave, int arrive) {
+    return 'Waiting paused: you are more than $leave m from the stop. Drive back within $arrive m to continue.';
+  }
+
+  @override
+  String get waitingBackAtStop => 'I\'m back at the stop';
+
+  @override
+  String get liveTripNotAtStop => 'You are not at the stop yet.';
+
+  @override
   String get call112 => 'Call 112';
 
   @override

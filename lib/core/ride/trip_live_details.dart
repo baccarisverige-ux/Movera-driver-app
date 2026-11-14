@@ -86,11 +86,16 @@ class TripLiveDetails {
 
   /// The server's arrival at middle stop [index] while the driver has not
   /// left it yet; null otherwise.
-  DateTime? openStopArrival(int index) {
+  DateTime? openStopArrival(int index) => openStopVisit(index)?.arrivedAt;
+
+  /// Contract v0.18.98 (`contract.json#autoArrive.stops`, job C9b): the
+  /// server's visit of middle stop [index] while the driver is at it
+  /// (arrived, not left); null otherwise.
+  TripStopVisit? openStopVisit(int index) {
     final visits = stopVisits;
     if (visits == null || index < 0 || index >= visits.length) return null;
     final visit = visits[index];
-    return visit.leftAt == null ? visit.arrivedAt : null;
+    return visit.leftAt == null && visit.arrivedAt != null ? visit : null;
   }
 
   bool get isEmpty =>
@@ -137,7 +142,14 @@ class TripLiveDetails {
 
 /// One `TripProjection.stops[i]`: when the driver arrived at and left it.
 class TripStopVisit {
-  const TripStopVisit({this.arrivedAt, this.leftAt});
+  const TripStopVisit({
+    this.arrivedAt,
+    this.leftAt,
+    this.arrivedBy,
+    this.awaySince,
+    this.pausedSeconds = 0,
+    this.pauseCount = 0,
+  });
 
   /// Contract `TripProjection.stops[i].arrivedAt / leftAt` (canonical,
   /// `contract.json#stopWaits.projection`). G7 live fix 3: a server that
@@ -156,23 +168,64 @@ class TripStopVisit {
     return [
       for (final (i, stop) in json.indexed)
         if (stop is Map && stop['arrivedAt'] != null)
-          TripStopVisit(
-            arrivedAt: _time(stop['arrivedAt']),
-            leftAt: _time(stop['leftAt']),
-          )
+          _fromMap(stop)
         else
-          TripStopVisit(
-            arrivedAt: _time(mirror[i]?['arrivedAt']),
-            leftAt: _time(mirror[i]?['leftAt']),
-          ),
+          _fromMap(mirror[i] ?? const {}),
     ];
+  }
+
+  static TripStopVisit _fromMap(Map<Object?, Object?> json) {
+    final away = json['away'];
+    final by = json['arrivedBy'];
+    return TripStopVisit(
+      arrivedAt: _time(json['arrivedAt']),
+      leftAt: _time(json['leftAt']),
+      arrivedBy: by is String ? by : null,
+      awaySince: away is Map ? _time(away['since']) : null,
+      pausedSeconds: _count(json['pausedSeconds']),
+      pauseCount: _count(json['pauseCount']),
+    );
   }
 
   static DateTime? _time(Object? value) =>
       value is String ? DateTime.tryParse(value)?.toUtc() : null;
 
+  static int _count(Object? value) =>
+      value is num && value >= 0 ? value.toInt() : 0;
+
   final DateTime? arrivedAt;
   final DateTime? leftAt;
+
+  /// Contract v0.18.98 `stops[i].arrivedBy`: "auto" (the server) or "tap";
+  /// null on a stop arrived before v0.18.98.
+  final String? arrivedBy;
+
+  /// Contract v0.18.98 `stops[i].away.since`: the stop wait stands still
+  /// from here while the driver is more than `terms.leaveMeters` from the
+  /// stop; null otherwise.
+  final DateTime? awaySince;
+
+  /// Contract v0.18.98 `stops[i].pausedSeconds`: seconds of finished away
+  /// spells at this stop.
+  final int pausedSeconds;
+
+  /// Contract v0.18.98 `stops[i].pauseCount`: finished away spells.
+  final int pauseCount;
+
+  /// True while the server's stop wait stands still (the driver is away).
+  bool get paused => awaySince != null;
+
+  /// The stop clock in seconds at [now], as the server counts it
+  /// (`contract.json#stopWaits.projection`): (min(now, away.since) −
+  /// arrivedAt) − pausedSeconds, at least 0. Server stamps only: no
+  /// distance and no money are worked out here.
+  int? clockAt(DateTime now) {
+    final arrived = arrivedAt;
+    if (arrived == null) return null;
+    final away = awaySince;
+    final end = away != null && away.isBefore(now) ? away : now;
+    return math.max(0, end.difference(arrived).inSeconds - pausedSeconds);
+  }
 }
 
 /// `RiderSummary { firstName, rating? }` (Q1).

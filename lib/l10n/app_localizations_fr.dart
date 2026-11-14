@@ -5371,6 +5371,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le SMS aux contacts d’urgence lors d’un SOS n’est pas encore actif. Appelez-les depuis cette page.';
 
   @override
+  String waitingPausedAtStop(int leave, int arrive) {
+    return 'Attente en pause : vous êtes à plus de $leave m de l’arrêt. Revenez à moins de $arrive m pour continuer.';
+  }
+
+  @override
+  String get waitingBackAtStop => 'Je suis de retour à l’arrêt';
+
+  @override
+  String get liveTripNotAtStop => 'Vous n’êtes pas encore à l’arrêt.';
+
+  @override
   String get call112 => 'Appeler le 112';
 
   @override
