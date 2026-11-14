@@ -92,13 +92,25 @@ class RideOffer {
   /// as its fare (live 5+5 run 2, 4-booked-p4 283/305: a cash ride opened
   /// as paid in the app, with no cash step, and its card took Movera's
   /// commission from the earnings again: 94,23 kr for 125,64 kr).
+  ///
+  /// [driverTotal] (BQ-F1, owner R2): the server's driverTotal for the
+  /// booked ride before it started (`ScheduledRideStore.acceptedDriverTotal`:
+  /// the row's after a resync, else the claim's `Offer.driverTotal`). The
+  /// started trip's own `driverTotal` wins. Either one is the offer's
+  /// [RideOffer.driverTotal]: pickup pay and Movera's bonus are in it, so
+  /// "Leave now" shows it as it is and never falls back to `earnings`
+  /// (without the bonus) when the server sent it.
   factory RideOffer.reservation(
     ReservationRequestPreview reservation, {
     PersistedActiveRide? started,
+    Money? driverTotal,
   }) {
     final cash = started?.paidByCash ?? reservation.paidByCash;
     final startedCash = started?.cashToCollect;
     final startedPay = started?.fare;
+    final total =
+        (startedPay == null ? null : Money.parseLabel(startedPay)) ??
+        driverTotal;
     return RideOffer(
       id: reservation.id,
       category: reservation.category,
@@ -125,16 +137,19 @@ class RideOffer {
           : startedCash != null
           ? Money.parseLabel(startedCash)
           : _amount(reservation.cashToCollect, 'cashToCollect'),
-      // The server's earnings + pickup pay + bonus, as the restore path
-      // (`LiveActiveTrip.snapshotOf`): no commission taken on the phone.
-      // Else the reservation's own earnings (server, or demo written out);
+      // The server's earnings + pickup pay + bonus (the started trip's
+      // driverTotal, as the restore path `LiveActiveTrip.snapshotOf`, else
+      // the booked ride's [driverTotal]): no commission taken on the
+      // phone. Else the reservation's own earnings (a demo written out; a
+      // live "Leave now" shows "—" then, PickupPayQuote.leaveNowTermsOf);
       // never a share worked out here (owner decision 2026-11-10).
-      driverEarnings: startedPay != null
-          ? Money.parseLabel(startedPay)
-          : reservation.earnings == null
-          ? null
-          : Money.parseLabel(reservation.earnings!),
+      driverEarnings:
+          total ??
+          (reservation.earnings == null
+              ? null
+              : Money.parseLabel(reservation.earnings!)),
       driverBonus: started?.driverBonus,
+      driverTotal: total,
     );
   }
 
