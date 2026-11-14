@@ -142,6 +142,15 @@ class HomeIslandNotices {
     group: 'radar-match',
   );
 
+  /// D4 (owner 2026-11-13 "Show \"No connection\""): online, the offer
+  /// feed down for more than 10 s. Kept on the island until the feed is
+  /// back (OfferFeedDownWatch), not queued.
+  static IslandMessage get offerFeedDown => IslandMessage(
+    title: driverText(DriverTexts.islandNoConnection),
+    tone: IslandTone.warning,
+    group: 'offer-feed',
+  );
+
   static IslandMessage get accountOnHold => IslandMessage(
     title: driverText(DriverTexts.islandContactSupport),
     tone: IslandTone.alert,

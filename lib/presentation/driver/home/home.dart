@@ -69,6 +69,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
+import 'package:movera/presentation/driver/home/components/offer_feed_down.dart';
 import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
@@ -301,6 +302,8 @@ class _DriverHomeState extends State<DriverHome>
       setState(() {});
     }
   }
+
+  late final _noFeed = OfferFeedDownWatch.of(_dispatch, _islandWaitingListener);
 
   void _islandMessagesListener() =>
       _HomeMapSheet(this)._onIslandMessagesChanged();
@@ -1369,6 +1372,7 @@ class _DriverHomeState extends State<DriverHome>
     RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
     _islandWaiting.dispose();
+    _noFeed.dispose();
     _radarListClaiming.removeListener(_syncClaimLock);
     _radarListClaiming.dispose();
     ClaimLock.set(false);

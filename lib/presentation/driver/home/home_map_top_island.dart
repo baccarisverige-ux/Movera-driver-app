@@ -35,6 +35,18 @@ extension _HomeMapTopIsland on _DriverHomeState {
             _HomeExclusive(this)._exclusiveOnIsland
         ? _exclusive.shown!.pickupMinutes
         : null;
+    // D4 (owner 2026-11-13 "Show \"No connection\""): online with the
+    // offer feed down for more than 10 s, the island says "No connection"
+    // until the feed is back. A passing message, an offer or a
+    // reservation to answer goes first; menu and search stay.
+    final feedDown =
+        _noFeed.sync(_isOnline && _driverSession.activeTripId == null) &&
+            message == null &&
+            reservation == null &&
+            exclusive == null &&
+            _islandWake >= 2
+        ? HomeIslandNotices.offerFeedDown
+        : null;
     // Radar offers open (owner N1, live test 2026-10-26): the middle
     // says "1 offer · radar" and opens the full-screen radar; the menu
     // and the search keep their own jobs. It stays while offers remain
@@ -43,6 +55,7 @@ extension _HomeMapTopIsland on _DriverHomeState {
         message == null &&
             reservation == null &&
             exclusive == null &&
+            feedDown == null &&
             _isOnline &&
             _radarHomeOffers.isNotEmpty
         ? _HomeOfferRadar(this)._radarTripTotal()
@@ -53,6 +66,7 @@ extension _HomeMapTopIsland on _DriverHomeState {
         message == null &&
         reservation == null &&
         exclusive == null &&
+        feedDown == null &&
         !radar &&
         _destinationModeActive;
     // R13-1: online on Home with no offer and no trip, the island says
@@ -65,13 +79,22 @@ extension _HomeMapTopIsland on _DriverHomeState {
         message == null &&
         reservation == null &&
         exclusive == null &&
+        feedDown == null &&
         !radar &&
         !destination;
     final waitingTitle = waitingTip?.title ?? DigitalWaitingFace.findingTitle;
     // A message sizes the island to its words (never taller): the normal
     // size for short words, a little longer for longer ones. 14 + 14 for the
     // tucked sides, 2 for the border and some air on both ends.
-    final width = hold != null
+    final width = feedDown != null
+        ? (DigitalMessageFace.widthFor(context, feedDown.title) +
+                  54 +
+                  54 +
+                  2 +
+                  8)
+              .clamp(math.min(244.0, maxWidth), maxWidth)
+              .toDouble()
+        : hold != null
         ? (DigitalMessageFace.widthFor(context, hold.title, tappable: true) +
                   54 +
                   54 +
@@ -214,6 +237,7 @@ extension _HomeMapTopIsland on _DriverHomeState {
                         message == null &&
                         reservation == null &&
                         exclusive == null &&
+                        feedDown == null &&
                         !radar &&
                         !waiting &&
                         !destination &&
@@ -232,7 +256,9 @@ extension _HomeMapTopIsland on _DriverHomeState {
                             ? hold.onTap
                             : message != null
                             ? () => _onIslandMessageTap(message)
-                            : reservation != null || exclusive != null
+                            : reservation != null ||
+                                  exclusive != null ||
+                                  feedDown != null
                             ? null
                             : radar
                             ? _openRideOffers
@@ -262,6 +288,8 @@ extension _HomeMapTopIsland on _DriverHomeState {
                                 ? _islandMessageView(hold, hold: true)
                                 : message != null
                                 ? _islandMessageView(message)
+                                : feedDown != null
+                                ? _islandFeedDownView(feedDown)
                                 : reservation != null
                                 ? DigitalReservationFace(
                                     key: const ValueKey<String>(
@@ -350,6 +378,18 @@ extension _HomeMapTopIsland on _DriverHomeState {
           ),
         ),
       ),
+    );
+  }
+
+  /// D4: "No connection" while the offer feed stays down; one face for
+  /// the whole outage (no replay of the switch on every build).
+  Widget _islandFeedDownView(IslandMessage line) {
+    final (color, toneIcon) = DigitalIslandParts.toneLook(line.tone);
+    return DigitalMessageFace(
+      key: const ValueKey<String>('island-offer-feed-down'),
+      title: line.title,
+      color: color,
+      icon: toneIcon,
     );
   }
 
