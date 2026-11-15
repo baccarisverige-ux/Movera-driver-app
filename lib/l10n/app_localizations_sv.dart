@@ -941,6 +941,57 @@ class AppLocalizationsSv extends AppLocalizations {
       'Kunde inte ansluta. Kontrollera nätverket eller använd chatten.';
 
   @override
+  String get campaignsTitle => 'Kampanjer';
+
+  @override
+  String campaignProgressTrips(String done, String target) {
+    return '$done av $target resor';
+  }
+
+  @override
+  String campaignProgressHours(String done, String target) {
+    return '$done av $target online';
+  }
+
+  @override
+  String get campaignEarned => 'Intjänad – läggs till nästa utbetalning';
+
+  @override
+  String campaignStartsOn(String date) {
+    return 'Börjar $date';
+  }
+
+  @override
+  String campaignEndsOn(String date) {
+    return 'Slutar $date';
+  }
+
+  @override
+  String get campaignPaused => 'Pausad';
+
+  @override
+  String get campaignEnded => 'Avslutad';
+
+  @override
+  String get campaignsEmpty => 'Inga kampanjer just nu';
+
+  @override
+  String campaignDuration(int h, int m) {
+    return '$h h $m min';
+  }
+
+  @override
+  String campaignDurationWholeHours(int h) {
+    return '$h h';
+  }
+
+  @override
+  String get campaignsCouldNotLoad => 'Kampanjerna kunde inte läsas in.';
+
+  @override
+  String get earningsBonusIncluded => 'Bonusar (ingår)';
+
+  @override
   String get cancelNextTripQuestion => 'Avboka nästa resa?';
 
   @override

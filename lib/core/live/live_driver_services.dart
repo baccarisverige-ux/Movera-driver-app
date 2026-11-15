@@ -20,6 +20,7 @@ import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_content.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
+import 'package:movera/core/live/live_bonuses.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
@@ -95,6 +96,7 @@ class LiveDriverServices {
     // becomes the current trip like an accepted offer.
     reservations = LiveReservations(api: api, onStarted: trips.observe);
     earnings = LiveEarnings(api: api);
+    bonuses = LiveBonuses(api: api);
     surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
@@ -214,6 +216,9 @@ class LiveDriverServices {
 
   /// Today's earnings from the server (audit R3).
   late final LiveEarnings earnings;
+
+  /// BQ-V44: the driver's bonus campaigns (Campaigns screen, NEW badge).
+  late final LiveBonuses bonuses;
 
   /// The coloured surge zones of Home's map (contract v0.7.2 §17).
   late final ApiSurgeMapSource surgeMap;

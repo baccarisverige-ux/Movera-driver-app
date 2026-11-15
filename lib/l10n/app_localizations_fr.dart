@@ -957,6 +957,57 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connexion impossible. Vérifiez votre réseau ou utilisez le chat.';
 
   @override
+  String get campaignsTitle => 'Campagnes';
+
+  @override
+  String campaignProgressTrips(String done, String target) {
+    return '$done sur $target courses';
+  }
+
+  @override
+  String campaignProgressHours(String done, String target) {
+    return '$done sur $target en ligne';
+  }
+
+  @override
+  String get campaignEarned => 'Gagnée – ajoutée au prochain versement';
+
+  @override
+  String campaignStartsOn(String date) {
+    return 'Commence le $date';
+  }
+
+  @override
+  String campaignEndsOn(String date) {
+    return 'Se termine le $date';
+  }
+
+  @override
+  String get campaignPaused => 'En pause';
+
+  @override
+  String get campaignEnded => 'Terminée';
+
+  @override
+  String get campaignsEmpty => 'Aucune campagne pour le moment';
+
+  @override
+  String campaignDuration(int h, int m) {
+    return '$h h $m min';
+  }
+
+  @override
+  String campaignDurationWholeHours(int h) {
+    return '$h h';
+  }
+
+  @override
+  String get campaignsCouldNotLoad => 'Impossible de charger les campagnes.';
+
+  @override
+  String get earningsBonusIncluded => 'Bonus (inclus)';
+
+  @override
   String get cancelNextTripQuestion => 'Annuler la prochaine course ?';
 
   @override

@@ -1,6 +1,6 @@
-import 'package:movera/widgets/live_soon_notice.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/presentation/driver/promotions/live_campaigns.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,8 +14,13 @@ class Promotions extends StatefulWidget {
 
   /// G3-D6: the side menu's "NEW" shows only while a campaign was not
   /// opened yet. The demo's sample campaigns count until this screen is
-  /// opened once; a live build has no campaign source, so never.
-  static bool get hasUnopened => !LiveDriverServices.active && !_opened;
+  /// opened once. A live build asks the server (BQ-V44: `isNew` of
+  /// `GET /driver/bonuses`, see [CampaignsNewBadge]).
+  static bool get hasUnopened {
+    final live = LiveDriverServices.instance;
+    return live != null ? live.bonuses.hasNew.value : !_opened;
+  }
+
   static bool _opened = false;
 
   /// Tests: the demo's campaigns unopened again.
@@ -79,7 +84,7 @@ class _PromotionsState extends State<Promotions> {
   @override
   void initState() {
     super.initState();
-    Promotions._opened = true;
+    if (!LiveDriverServices.active) Promotions._opened = true;
   }
 
   final Set<String> _saved = {'airport'};
@@ -119,9 +124,10 @@ class _PromotionsState extends State<Promotions> {
 
   @override
   Widget build(BuildContext context) {
-    // Audit 2026-11-01: a live build has no campaign source yet, so it
-    // shows no example campaigns or codes.
-    if (LiveDriverServices.active) return _liveSoon(context);
+    // BQ-V44: a live build shows the server's campaigns, never the demo's
+    // example campaigns or codes (R5, G3-D6).
+    final live = LiveDriverServices.instance;
+    if (live != null) return LiveCampaigns(bonuses: live.bonuses);
     final items = _visible;
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F7),
@@ -301,37 +307,6 @@ class _PromotionsState extends State<Promotions> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _liveSoon(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F7),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: tr.back,
-          onPressed: () => maybePopOwned(context),
-          icon: const Icon(Icons.arrow_back_rounded, color: _ink),
-        ),
-        titleSpacing: 0,
-        title: Text(
-          tr.promotions,
-          style: const TextStyle(
-            color: _ink,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.3,
-          ),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-        children: [LiveSoonNotice(message: tr.livePromotionsSoon)],
       ),
     );
   }
