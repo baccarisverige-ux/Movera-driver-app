@@ -51,5 +51,10 @@
   "safetyAudioComingSoon": "Ljudinspelning kommer snart.",
   "safetyTripSharingComingSoon": "Delning av resa kommer snart.",
   "emergencyCallNumber": "Ring {label} {number}",
-  "emergencyGeneralLabel": "Nödnummer"
+  "emergencyGeneralLabel": "Nödnummer",
+  "safetySosContactsSmsSent": "Dina nödkontakter fick ett sms med din position.",
+  "safetySosContactsSmsNotConnected": "Sms till dina nödkontakter är inte anslutet än.",
+  "safetySosContactsSmsFailed": "Sms till dina nödkontakter kunde inte skickas.",
+  "emergencyContactsSosSmsOn": "När du trycker på SOS under en resa får de ett sms med din position.",
+  "emergencyContactsSosSmsOff": "Sms till nödkontakter vid SOS är inte på än. Ring dem från den här sidan."
 }

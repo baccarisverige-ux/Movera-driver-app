@@ -5,6 +5,9 @@ import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_trip_commands.dart' show LiveFix;
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/safety/sos_contacts_sms.dart';
+
+export 'package:movera/core/safety/sos_contacts_sms.dart';
 
 /// What the SOS to Movera came to.
 enum DriverSosOutcome {
@@ -16,6 +19,16 @@ enum DriverSosOutcome {
 
   /// Every try failed: the driver is told to rely on the 112 call.
   failed,
+}
+
+/// The SOS outcome with what the server said about the SMS to the
+/// driver's emergency contacts (v0.18.101 §92 `SosReceipt.contactsSms`;
+/// null when the answer has none).
+class DriverSosResult {
+  const DriverSosResult(this.outcome, {this.contactsSms});
+
+  final DriverSosOutcome outcome;
+  final SosContactsSms? contactsSms;
 }
 
 /// Contract v0.7.0 §15 (owner safety part 1, 2026-10-27): the driver's SOS
@@ -63,7 +76,16 @@ class DriverSos {
 
   /// Sends the SOS for [tripId] (or the trip the server holds for this
   /// driver when null) with [fix], the phone's last GPS.
-  Future<DriverSosOutcome> send({String? tripId, LiveFix? fix}) async {
+  Future<DriverSosOutcome> send({String? tripId, LiveFix? fix}) async =>
+      (await sendWithReceipt(tripId: tripId, fix: fix)).outcome;
+
+  /// [send], with the receipt's `contactsSms` (v0.18.101 §92).
+  Future<DriverSosResult> sendWithReceipt({
+    String? tripId,
+    LiveFix? fix,
+  }) async {
+    const noTrip = DriverSosResult(DriverSosOutcome.noTrip);
+    const failed = DriverSosResult(DriverSosOutcome.failed);
     final key = _key();
     final body = <String, Object?>{
       'at': _now().toUtc().toIso8601String(),
@@ -73,25 +95,28 @@ class DriverSos {
     for (var attempt = 0; ; attempt++) {
       try {
         id ??= await _activeTripId();
-        if (id == null) return DriverSosOutcome.noTrip;
-        await _api.post(
+        if (id == null) return noTrip;
+        final receipt = await _api.post(
           '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
           body: body,
           idempotencyKey: key,
         );
-        return DriverSosOutcome.sent;
+        return DriverSosResult(
+          DriverSosOutcome.sent,
+          contactsSms: SosContactsSms.fromJson(receipt['contactsSms']),
+        );
       } on ApiError catch (error) {
         if (error.statusCode == 409 || error.statusCode == 404) {
-          return DriverSosOutcome.noTrip;
+          return noTrip;
         }
         if (!_retryable(error) || attempt >= retryDelays.length) {
           DriverLog.warn('sos not sent: ${error.code}', name: 'safety');
-          return DriverSosOutcome.failed;
+          return failed;
         }
       } catch (error) {
         if (attempt >= retryDelays.length) {
           DriverLog.warn('sos not sent: ${error.runtimeType}', name: 'safety');
-          return DriverSosOutcome.failed;
+          return failed;
         }
       }
       await _sleep(retryDelays[attempt]);
@@ -114,15 +139,20 @@ class DriverSos {
   /// The SOS from the app: the live build sends it with the last fix the
   /// app reported (or a fresh one); the demo, which has no server, answers
   /// sent so it shows what drivers see.
-  static Future<DriverSosOutcome> fromApp() async {
+  static Future<DriverSosOutcome> fromApp() async =>
+      (await fromAppWithReceipt()).outcome;
+
+  /// [fromApp] with the receipt's `contactsSms`; the demo has none (so
+  /// "SOS sent" alone, as before).
+  static Future<DriverSosResult> fromAppWithReceipt() async {
     final live = LiveDriverServices.instance;
-    if (live == null) return DriverSosOutcome.sent;
+    if (live == null) return const DriverSosResult(DriverSosOutcome.sent);
     final fix =
         live.reporter.lastFix ??
         await live.reporter.freshFix().timeout(
           const Duration(seconds: 3),
           onTimeout: () => null,
         );
-    return DriverSos(api: live.api).send(fix: fix);
+    return DriverSos(api: live.api).sendWithReceipt(fix: fix);
   }
 }

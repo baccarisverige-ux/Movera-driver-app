@@ -51,5 +51,10 @@
   "safetyAudioComingSoon": "L’enregistrement audio arrive bientôt.",
   "safetyTripSharingComingSoon": "Le partage de course arrive bientôt.",
   "emergencyCallNumber": "Appeler {label} {number}",
-  "emergencyGeneralLabel": "Numéro d’urgence"
+  "emergencyGeneralLabel": "Numéro d’urgence",
+  "safetySosContactsSmsSent": "Vos contacts d’urgence ont reçu un SMS avec votre position.",
+  "safetySosContactsSmsNotConnected": "Le SMS à vos contacts d’urgence n’est pas encore connecté.",
+  "safetySosContactsSmsFailed": "Le SMS à vos contacts d’urgence n’a pas pu être envoyé.",
+  "emergencyContactsSosSmsOn": "Quand vous appuyez sur SOS pendant une course, ils reçoivent un SMS avec votre position.",
+  "emergencyContactsSosSmsOff": "Le SMS aux contacts d’urgence lors d’un SOS n’est pas encore actif. Appelez-les depuis cette page."
 }

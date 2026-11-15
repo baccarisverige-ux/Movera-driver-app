@@ -5351,6 +5351,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emergencyGeneralLabel => 'Numéro d’urgence';
 
   @override
+  String get safetySosContactsSmsSent =>
+      'Vos contacts d’urgence ont reçu un SMS avec votre position.';
+
+  @override
+  String get safetySosContactsSmsNotConnected =>
+      'Le SMS à vos contacts d’urgence n’est pas encore connecté.';
+
+  @override
+  String get safetySosContactsSmsFailed =>
+      'Le SMS à vos contacts d’urgence n’a pas pu être envoyé.';
+
+  @override
+  String get emergencyContactsSosSmsOn =>
+      'Quand vous appuyez sur SOS pendant une course, ils reçoivent un SMS avec votre position.';
+
+  @override
+  String get emergencyContactsSosSmsOff =>
+      'Le SMS aux contacts d’urgence lors d’un SOS n’est pas encore actif. Appelez-les depuis cette page.';
+
+  @override
   String get call112 => 'Appeler le 112';
 
   @override

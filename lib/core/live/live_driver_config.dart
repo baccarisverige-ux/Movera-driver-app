@@ -1,4 +1,5 @@
 import 'package:movera/core/safety/emergency_numbers.dart';
+import 'package:movera/core/safety/sos_contacts_sms.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -314,6 +315,7 @@ class LiveDriverConfig extends ChangeNotifier {
       // Never another country's numbers while the zone's own load (a
       // country the zone list does not name counts as another).
       EmergencyNumbers.reset();
+      SosContactsSmsConfig.reset();
     }
     if (_watching) {
       _retry?.cancel();
@@ -337,6 +339,8 @@ class LiveDriverConfig extends ChangeNotifier {
   bool _take(Map<String, dynamic> document) {
     // v0.18.57 §79: the country's emergency numbers, offline too.
     EmergencyNumbers.accept(document['emergencyNumbers']);
+    // v0.18.101 §92 (BQ-V34): whether SOS texts the emergency contacts.
+    SosContactsSmsConfig.accept(document['sosContactsSms']);
     return _use(DriverAppConfig.fromJson(document), zone: _zoneOf(document));
   }
 

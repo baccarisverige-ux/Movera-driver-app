@@ -5260,6 +5260,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emergencyGeneralLabel => 'Emergency number';
 
   @override
+  String get safetySosContactsSmsSent =>
+      'Your emergency contacts got an SMS with your position.';
+
+  @override
+  String get safetySosContactsSmsNotConnected =>
+      'SMS to your emergency contacts is not connected yet.';
+
+  @override
+  String get safetySosContactsSmsFailed =>
+      'The SMS to your emergency contacts could not be sent.';
+
+  @override
+  String get emergencyContactsSosSmsOn =>
+      'When you press SOS during a trip, they get an SMS with your position.';
+
+  @override
+  String get emergencyContactsSosSmsOff =>
+      'SMS to emergency contacts on SOS is not on yet. Call them from this page.';
+
+  @override
   String get call112 => 'Call 112';
 
   @override

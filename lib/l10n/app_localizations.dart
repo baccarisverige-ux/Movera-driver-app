@@ -9016,6 +9016,36 @@ abstract class AppLocalizations {
   /// **'Emergency number'**
   String get emergencyGeneralLabel;
 
+  /// v0.18.101 §92 (BQ-V34): line under "SOS sent" when SosReceipt.contactsSms.status is queued or sent (contract texts.driver.sent).
+  ///
+  /// In en, this message translates to:
+  /// **'Your emergency contacts got an SMS with your position.'**
+  String get safetySosContactsSmsSent;
+
+  /// v0.18.101 §92 (BQ-V34): line under "SOS sent" when contactsSms.status is not_connected (no SMS company yet; contract texts.driver.notConnected).
+  ///
+  /// In en, this message translates to:
+  /// **'SMS to your emergency contacts is not connected yet.'**
+  String get safetySosContactsSmsNotConnected;
+
+  /// v0.18.101 §92 (BQ-V34): line under "SOS sent" when contactsSms.status is failed (contract texts.driver.failed).
+  ///
+  /// In en, this message translates to:
+  /// **'The SMS to your emergency contacts could not be sent.'**
+  String get safetySosContactsSmsFailed;
+
+  /// v0.18.101 §92 (BQ-V34): emergency contacts screen when DriverAppConfig.sosContactsSms is on and connected (contract texts.driverContactsOn). Replaces "Trusted contacts stay on this device".
+  ///
+  /// In en, this message translates to:
+  /// **'When you press SOS during a trip, they get an SMS with your position.'**
+  String get emergencyContactsSosSmsOn;
+
+  /// v0.18.101 §92 (BQ-V34): emergency contacts screen when DriverAppConfig.sosContactsSms is off or no SMS company is connected (contract texts.driverContactsOff).
+  ///
+  /// In en, this message translates to:
+  /// **'SMS to emergency contacts on SOS is not on yet. Call them from this page.'**
+  String get emergencyContactsSosSmsOff;
+
   /// No description provided for @call112.
   ///
   /// In en, this message translates to:
