@@ -18,6 +18,8 @@ import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/history/trip_path.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/presentation/common/chat/call_window_gate.dart';
+import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_check_history_entry.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -259,6 +261,48 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
           ),
           child: _header(),
         ),
+        // v0.18.113 BQ-S13 (owner "Keep call open for 1 hour but not chat"):
+        // a trip that ended a short while ago can still call its rider,
+        // until the server's callOpenUntil.
+        if (_ride.status == TripStatus.completed)
+          CallWindowGate(
+            tripId: _ride.tripId,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                screenHorizPadding,
+                0,
+                screenHorizPadding,
+                16,
+              ),
+              child: SizedBox(
+                height: 48,
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: const ValueKey<String>('history-call-rider'),
+                  onPressed: () => callRider(
+                    context,
+                    tripId: _ride.tripId,
+                    riderName: _ride.riderName,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _ink,
+                    side: const BorderSide(color: _ink, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: const Icon(Icons.call),
+                  label: Text(
+                    tr.callRider,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         _divider(),
         16.height,
         Padding(

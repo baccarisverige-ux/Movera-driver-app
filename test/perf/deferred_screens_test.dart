@@ -199,6 +199,16 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  // v0.18.113 BQ-S13: Profile loads on first open (web size budget).
+  testWidgets('Profile still opens, through its loader', (tester) async {
+    await open(tester, profileScreen);
+    expect(screenNamed('DriverProfile'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  });
+
   testWidgets('Help still opens, through its loader', (tester) async {
     await open(tester, () => supportScreen());
     expect(screenNamed('SupportScreen'), findsOneWidget);

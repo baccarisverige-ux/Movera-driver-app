@@ -14,7 +14,6 @@ import 'package:movera/presentation/driver/notifications/server_notifications_sc
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
-import 'package:movera/presentation/driver/profile/profile.dart';
 import 'package:movera/presentation/driver/promotions/promotions_badge.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
@@ -135,7 +134,7 @@ class DriverSideMenu extends StatelessWidget {
                         asset: AppAssets.menuProfile,
                         title: tr.profile,
                         subtitle: tr.accountVehicleAndDocuments,
-                        onTap: () => _open(context, const DriverProfile()),
+                        onTap: () => _open(context, profileScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuWallet,
@@ -265,7 +264,7 @@ class DriverSideMenu extends StatelessWidget {
               // hold, white once active.
               InkWell(
                 key: const ValueKey<String>('menu-profile-avatar'),
-                onTap: () => _open(context, const DriverProfile()),
+                onTap: () => _open(context, profileScreen()),
                 customBorder: const CircleBorder(),
                 child: Container(
                   key: ValueKey<String>(
@@ -310,7 +309,7 @@ class DriverSideMenu extends StatelessWidget {
               Expanded(
                 child: InkWell(
                   key: const ValueKey<String>('menu-profile-header'),
-                  onTap: () => _open(context, const DriverProfile()),
+                  onTap: () => _open(context, profileScreen()),
                   borderRadius: BorderRadius.circular(14),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),

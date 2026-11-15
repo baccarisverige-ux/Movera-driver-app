@@ -10,6 +10,8 @@ import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart'
     deferred as driving_logs;
 import 'package:movera/presentation/driver/promotions/promotions.dart'
     deferred as promotions;
+import 'package:movera/presentation/driver/profile/profile.dart'
+    deferred as profile;
 import 'package:movera/presentation/driver/settings/settings.dart'
     deferred as settings;
 import 'package:movera/presentation/driver/support/support_inbox.dart'
@@ -74,6 +76,13 @@ Widget supportInboxScreen() => DeferredScreen(
   builder: (_) => support.SupportInboxScreen(),
 );
 
+/// v0.18.113 BQ-S13: Profile (side menu) loads on first open too, the
+/// same way, so the call window on Trip finished fits the web size budget.
+Widget profileScreen() => DeferredScreen(
+  load: profile.loadLibrary,
+  builder: (_) => profile.DriverProfile(),
+);
+
 /// Loads all of them now (tests: a deferred load does not finish inside a
 /// widget test's fake clock).
 @visibleForTesting
@@ -86,4 +95,5 @@ Future<void> loadDeferredScreens() => Future.wait([
   driving_logs.loadLibrary(),
   promotions.loadLibrary(),
   support.loadLibrary(),
+  profile.loadLibrary(),
 ]);
