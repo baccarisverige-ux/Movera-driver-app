@@ -37,7 +37,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
   /// G7 decision 4 (`terms.stopWaitPerMin`): the stop's price per minute
   /// from the first minute (or after its free ones).
   String _stopWaitStatus() {
-    // v0.18.98 (contract.json#autoArrive.stops.texts.driverStopPaused).
+    // v0.18.108 (contract.json#autoArrive.stops.texts.driverStopPaused).
     if (_stopPausedAway) return _stopPausedText;
     final free = _live?.terms?.stopFreeWaitMinutes ?? 0;
     final perMin = _live?.terms?.stopWaitPerMin?.formatted;
@@ -63,7 +63,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
       );
     }
     _adoptServerStopArrival(next);
-    // v0.18.98 (contract.json#autoArrive.stops): the server's stopped /
+    // v0.18.108 (contract.json#autoArrive.stops): the server's stopped /
     // moved stop clock.
     _followServerStopClock();
     final change = next.routeChange;
@@ -137,7 +137,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     final now = (widget.waitNow?.call() ?? DateTime.now()).toUtc();
     _rebuild(() {
       _paidStopWait = true;
-      // v0.18.98: (min(now, away.since) − arrivedAt) − pausedSeconds.
+      // v0.18.108: (min(now, away.since) − arrivedAt) − pausedSeconds.
       _waitSeconds = visit.clockAt(now) ?? 0;
       _waitAnchorAt = null;
       _startWaitTimer();
@@ -145,7 +145,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     unawaited(_rideLifecycle.persistNow());
   }
 
-  /// v0.18.98 (`contract.json#autoArrive.stops`, job C9b): the server's
+  /// v0.18.108 (`contract.json#autoArrive.stops`, job C9b): the server's
   /// visit of the stop the driver waits at; null when not waiting at one.
   TripStopVisit? get _openStopVisit =>
       _paidStopWait && _stage == ActiveRideStage.onTrip
@@ -179,7 +179,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     _waitAnchorSeconds = seconds;
   }
 
-  /// v0.18.98 (`contract.json#autoArrive.stops.back`): "I'm back at the
+  /// v0.18.108 (`contract.json#autoArrive.stops.back`): "I'm back at the
   /// stop" while the stop wait is paused — the server's back tap (within
   /// the trip's leaveMeters; farther it says "You are not at the stop
   /// yet"). The clock goes on from the server's answer.

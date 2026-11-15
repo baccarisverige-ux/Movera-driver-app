@@ -88,7 +88,7 @@ class TripLiveDetails {
   /// left it yet; null otherwise.
   DateTime? openStopArrival(int index) => openStopVisit(index)?.arrivedAt;
 
-  /// Contract v0.18.98 (`contract.json#autoArrive.stops`, job C9b): the
+  /// Contract v0.18.108 (`contract.json#autoArrive.stops`, job C9b): the
   /// server's visit of middle stop [index] while the driver is at it
   /// (arrived, not left); null otherwise.
   TripStopVisit? openStopVisit(int index) {
@@ -196,20 +196,20 @@ class TripStopVisit {
   final DateTime? arrivedAt;
   final DateTime? leftAt;
 
-  /// Contract v0.18.98 `stops[i].arrivedBy`: "auto" (the server) or "tap";
-  /// null on a stop arrived before v0.18.98.
+  /// Contract v0.18.108 `stops[i].arrivedBy`: "auto" (the server) or "tap";
+  /// null on a stop arrived before v0.18.108.
   final String? arrivedBy;
 
-  /// Contract v0.18.98 `stops[i].away.since`: the stop wait stands still
+  /// Contract v0.18.108 `stops[i].away.since`: the stop wait stands still
   /// from here while the driver is more than `terms.leaveMeters` from the
   /// stop; null otherwise.
   final DateTime? awaySince;
 
-  /// Contract v0.18.98 `stops[i].pausedSeconds`: seconds of finished away
+  /// Contract v0.18.108 `stops[i].pausedSeconds`: seconds of finished away
   /// spells at this stop.
   final int pausedSeconds;
 
-  /// Contract v0.18.98 `stops[i].pauseCount`: finished away spells.
+  /// Contract v0.18.108 `stops[i].pauseCount`: finished away spells.
   final int pauseCount;
 
   /// True while the server's stop wait stands still (the driver is away).

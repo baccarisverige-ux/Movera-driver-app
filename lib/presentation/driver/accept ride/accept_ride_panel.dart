@@ -563,7 +563,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                         ),
                         const SizedBox(height: 8),
                       ],
-                      // v0.18.98 (autoArrive.stops.texts.driverStopBack):
+                      // v0.18.108 (autoArrive.stops.texts.driverStopBack):
                       // the server stopped the stop wait; his tap restarts
                       // it within the trip's leaveMeters.
                       if (_AcceptRideRouteChange(this)._stopPausedAway) ...[

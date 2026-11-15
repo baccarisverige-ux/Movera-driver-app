@@ -9046,19 +9046,19 @@ abstract class AppLocalizations {
   /// **'SMS to emergency contacts on SOS is not on yet. Call them from this page.'**
   String get emergencyContactsSosSmsOff;
 
-  /// Contract v0.18.98 (contract.json#autoArrive.stops.texts.driverStopPaused, job C9b): wait line at a middle stop while the server stopped the stop wait (stops[i].away); leave = terms.leaveMeters, arrive = terms.autoArriveMeters.
+  /// Contract v0.18.108 (contract.json#autoArrive.stops.texts.driverStopPaused, job C9b): wait line at a middle stop while the server stopped the stop wait (stops[i].away); leave = terms.leaveMeters, arrive = terms.autoArriveMeters.
   ///
   /// In en, this message translates to:
   /// **'Waiting paused: you are more than {leave} m from the stop. Drive back within {arrive} m to continue.'**
   String waitingPausedAtStop(int leave, int arrive);
 
-  /// Contract v0.18.98 (contract.json#autoArrive.stops.texts.driverStopBack, job C9b): button under the paused note at a middle stop (stops[i].away); the server counts the tap only within terms.leaveMeters.
+  /// Contract v0.18.108 (contract.json#autoArrive.stops.texts.driverStopBack, job C9b): button under the paused note at a middle stop (stops[i].away); the server counts the tap only within terms.leaveMeters.
   ///
   /// In en, this message translates to:
   /// **'I\'m back at the stop'**
   String get waitingBackAtStop;
 
-  /// Contract v0.18.98 (contract.json#autoArrive.stops.texts.notAtStop, job C9b): the server refused the stop tap or the back tap with 409 not_at_stop.
+  /// Contract v0.18.108 (contract.json#autoArrive.stops.texts.notAtStop, job C9b): the server refused the stop tap or the back tap with 409 not_at_stop.
   ///
   /// In en, this message translates to:
   /// **'You are not at the stop yet.'**

@@ -163,7 +163,7 @@ extension _AcceptRideStateGetters on _AcceptRideState {
             : tr.waitingForRiderName(_riderName);
       case ActiveRideStage.onTrip:
         if (_paidStopWait) {
-          // v0.18.98 (contract.json#autoArrive.stops.texts.driverStopPaused).
+          // v0.18.108 (contract.json#autoArrive.stops.texts.driverStopPaused).
           if (_AcceptRideRouteChange(this)._stopPausedAway) {
             return _AcceptRideRouteChange(this)._stopPausedText;
           }
@@ -191,7 +191,7 @@ extension _AcceptRideStateGetters on _AcceptRideState {
             : tr.waitingForRiderName(_riderName);
       case ActiveRideStage.onTrip:
         if (_paidStopWait) {
-          // v0.18.98 (contract.json#autoArrive.stops.texts.driverStopPaused).
+          // v0.18.108 (contract.json#autoArrive.stops.texts.driverStopPaused).
           if (_AcceptRideRouteChange(this)._stopPausedAway) {
             return _AcceptRideRouteChange(this)._stopPausedText;
           }

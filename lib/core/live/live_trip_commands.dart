@@ -490,7 +490,7 @@ class LiveTripCommands {
 
   /// "Framme vid stoppet" (contract v0.7.1 §3.8): the paid wait at the
   /// middle stop [stopIndex] (0-based) starts now; there are no free
-  /// minutes at a stop. v0.18.98 (`contract.json#autoArrive.stops.tap`,
+  /// minutes at a stop. v0.18.108 (`contract.json#autoArrive.stops.tap`,
   /// job C9b): the tap carries the latest fix (`StopCommand.location`);
   /// the server counts it only within 300 m of the stop (else 409
   /// `not_at_stop`). On `409 position_stale` one fresh fix is asked now and
@@ -509,7 +509,7 @@ class LiveTripCommands {
     return _stopStep(tripId, stopIndex, 'arrive', fix: fresh);
   }
 
-  /// v0.18.98 (`contract.json#autoArrive.stops.back`, job C9b): "I'm back
+  /// v0.18.108 (`contract.json#autoArrive.stops.back`, job C9b): "I'm back
   /// at the stop" while the server's stop wait stands still
   /// (`stops[i].away`): the same `arrive` command, with the latest fix. The
   /// server counts it only within the trip's `terms.leaveMeters` (else 409

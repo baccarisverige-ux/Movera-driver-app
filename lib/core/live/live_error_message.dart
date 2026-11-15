@@ -67,7 +67,7 @@ String liveTripErrorMessage(Object? error) {
   return _transportMessage(error) ??
       switch (error.detail) {
         'not_at_pickup' => tr.liveTripNotAtPickup,
-        // v0.18.98 (contract.json#autoArrive.stops): stop tap or back tap too far.
+        // v0.18.108 (contract.json#autoArrive.stops): stop tap or back tap too far.
         'not_at_stop' => tr.liveTripNotAtStop,
         // v0.18.14 `positionMaxAge`: arrive with a too old position.
         'position_stale' => tr.liveTripPositionStale,

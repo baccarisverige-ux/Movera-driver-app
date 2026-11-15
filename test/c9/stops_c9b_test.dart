@@ -30,7 +30,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
-/// Job C9b (contract v0.18.98 §92, `contract.json#autoArrive.stops`; owner
+/// Job C9b (contract v0.18.108 §93, `contract.json#autoArrive.stops`; owner
 /// 2026-11-02 "At the pickup AND at stops", Rules decisions/driver-g7.md:84):
 /// at a middle stop the server marks the driver arrived and stops the stop
 /// wait while he is more than `terms.leaveMeters` from the stop
@@ -40,8 +40,8 @@ import '../../integration_test/headless_map_platform.dart';
 /// again, with the latest fix), and the stop tap sends the latest fix.
 /// No distance and no money are worked out on the phone.
 
-/// `contract.json#autoArrive.stops.texts` at v0.18.98 (movera-contracts
-/// e81132a). The app's contract copy is synced from the tag after 0.18.98
+/// `contract.json#autoArrive.stops.texts` at v0.18.108 (movera-contracts
+/// 0acefe8). The app's contract copy is synced from the tag after 0.18.108
 /// merges; once it carries `autoArrive.stops`, the copy is checked too.
 const _contractTexts = {
   'driverStopPaused': {
@@ -207,7 +207,7 @@ void main() {
     }
   });
 
-  group('model (TripStopVisit, stops[i] v0.18.98)', () {
+  group('model (TripStopVisit, stops[i] v0.18.108)', () {
     test('arrivedBy, away, pausedSeconds, pauseCount and the clock as the '
         'server counts it', () {
       final live = TripLiveDetails.fromProjection(
