@@ -21,6 +21,7 @@ class WaybillRecord {
     required this.passengerCapacity,
     this.waitingFee,
     this.driverBonus,
+    this.pickupPay,
     this.paidByCash = false,
     this.riderFare,
     this.earningsBreakdown = const [],
@@ -54,7 +55,15 @@ class WaybillRecord {
   final String? waitingFee;
 
   /// Movera's bonus in [fare] (Q16/Q18), e.g. "40 kr"; null without one.
+  /// Live (BQ-F1b, owner R2): the server's `driverBonus` as it is, never
+  /// with the pickup pay added on the phone.
   final String? driverBonus;
+
+  /// BQ-F1b (owner s06:1164, "all details in waybill"): the server's
+  /// pickup pay in [fare] (`Offer.pickupPay`, `TripProjection.pickupPay`),
+  /// e.g. "13,95 kr"; null without one (and on a demo trip, whose pickup
+  /// pay is in [driverBonus]).
+  final String? pickupPay;
 
   /// The rider pays the driver in the car; otherwise in the app.
   final bool paidByCash;
@@ -197,6 +206,15 @@ class WaybillRecord {
   static String? bonusLabel(Money? bonus) =>
       bonus == null || bonus.minorUnits <= 0 ? null : bonus.formattedShort;
 
+  /// BQ-F1b: this record with the server's own bonus and pickup pay lines
+  /// (a live trip's projection: `driverBonus`, `pickupPay`); a line the
+  /// server did not send is dropped, never kept from the accept.
+  WaybillRecord withServerLines({Money? driverBonus, Money? pickupPay}) =>
+      _with(
+        driverBonus: bonusLabel(driverBonus),
+        pickupPay: bonusLabel(pickupPay),
+      );
+
   WaybillRecord copyWith({
     String? fare,
     String? waitingFee,
@@ -238,6 +256,7 @@ class WaybillRecord {
       passengerCapacity: passengerCapacity,
       waitingFee: clearWaitingFee ? null : waitingFee ?? this.waitingFee,
       driverBonus: driverBonus,
+      pickupPay: pickupPay,
       paidByCash: paidByCash ?? this.paidByCash,
       riderFare: riderFare ?? this.riderFare,
       earningsBreakdown: earningsBreakdown ?? this.earningsBreakdown,
@@ -254,6 +273,34 @@ class WaybillRecord {
           : moveraKeepsNow ?? this.moveraKeepsNow,
     );
   }
+
+  WaybillRecord _with({String? driverBonus, String? pickupPay}) =>
+      WaybillRecord(
+        tripId: tripId,
+        statusLabel: statusLabel,
+        issuedAt: issuedAt,
+        fare: fare,
+        service: service,
+        riderName: riderName,
+        pickup: pickup,
+        dropoff: dropoff,
+        source: source,
+        driverName: driverName,
+        vehicle: vehicle,
+        licensePlate: licensePlate,
+        passengerCapacity: passengerCapacity,
+        waitingFee: waitingFee,
+        driverBonus: driverBonus,
+        pickupPay: pickupPay,
+        paidByCash: paidByCash,
+        riderFare: riderFare,
+        earningsBreakdown: earningsBreakdown,
+        tip: tip,
+        debtCollected: debtCollected,
+        endedEarlyBy: endedEarlyBy,
+        commission: commission,
+        moveraKeepsNow: moveraKeepsNow,
+      );
 }
 
 abstract interface class WaybillRepository {

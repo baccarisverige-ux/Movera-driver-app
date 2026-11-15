@@ -94,6 +94,7 @@ extension _HomeRecovery on _DriverHomeState {
       riderRating: next.rating,
       fare: terms?.fare ?? next.fare,
       driverBonus: terms?.driverBonus,
+      pickupPay: terms?.pickupPay,
       category: next.category,
       matchedVia: WaybillRecord.exclusiveOfferSource,
       pickupAddress: next.pickup,

@@ -160,6 +160,8 @@ class RideOffer {
                   currency: reservation.currency,
                 )),
       driverBonus: started?.driverBonus,
+      // BQ-F1b: the started trip's own pickup pay line (server).
+      pickupPay: started?.pickupPay,
       driverTotal: total,
     );
   }

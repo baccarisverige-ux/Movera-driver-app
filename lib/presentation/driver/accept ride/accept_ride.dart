@@ -163,6 +163,7 @@ class AcceptRide extends StatefulWidget {
     this.cashToCollect,
     this.riderFare,
     this.driverBonus,
+    this.pickupPay,
     this.category = 'Movera',
     this.matchedVia = WaybillRecord.demoRadarSource,
     this.pickupAddress = 'Odlarvägen 22',
@@ -259,6 +260,10 @@ class AcceptRide extends StatefulWidget {
 
   /// Q16/Q18: Movera's bonus already in [fare]; earnings say "incl. +X".
   final Money? driverBonus;
+
+  /// BQ-F1b: the server's pickup pay in [fare] (live), its own waybill
+  /// line; null for none or a demo trip.
+  final Money? pickupPay;
   final String category;
   final String matchedVia;
   final String pickupAddress;
@@ -340,6 +345,7 @@ class AcceptRide extends StatefulWidget {
       cashToCollect: snapshot.cashToCollect,
       riderFare: snapshot.riderFare,
       driverBonus: snapshot.driverBonus,
+      pickupPay: snapshot.pickupPay,
       category: snapshot.category ?? 'Movera',
       matchedVia: snapshot.matchedVia ?? WaybillRecord.demoRadarSource,
       pickupAddress: pickup,

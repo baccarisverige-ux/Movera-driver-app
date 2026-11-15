@@ -60,26 +60,44 @@ class PickupPayQuote {
   /// The accepted trip's terms with this pickup pay in them, so the trip,
   /// its waybill and history keep the total the card showed (driver-12).
   /// [fare] is the driver's own money for the trip (`RideOffer.driverPay`,
-  /// owner decision 2026-10-26), never the rider's fare. Movera pays the
-  /// pickup pay from its commission, like a bonus: it is added to
-  /// [driverBonus] (no fee on it, all of it the driver's). [cashToCollect],
+  /// owner decision 2026-10-26), never the rider's fare. [cashToCollect],
   /// the rider's cash on a cash trip (`RideOffer.riderCash`), is kept as
-  /// given: the rider pays their own fare, never this total. Unchanged
-  /// without pickup pay. The fare is [totalOf], so the trip keeps the
-  /// card's own number ([serverTotal] when the server sent one).
-  ({String fare, Money? driverBonus, String? cashToCollect}) termsOf({
+  /// given: the rider pays their own fare, never this total. The fare is
+  /// [totalOf], so the trip keeps the card's own number ([serverTotal]
+  /// when the server sent one).
+  ///
+  /// BQ-F1b (owner R2: the apps never work money out; owner s06:1164: the
+  /// waybill shows all the details): [live] (default: a live server is on)
+  /// keeps the server's own lines apart. [driverBonus] is the server's
+  /// `driverBonus` as it is and `pickupPay` the server's pickup pay
+  /// ([pay], null when 0); nothing is added up on the phone. The demo
+  /// keeps its written-out sample: its pickup pay joins [driverBonus]
+  /// (Movera pays it from its commission, like a bonus) and `pickupPay`
+  /// is null.
+  AcceptedTerms termsOf({
     required String fare,
     Money? driverBonus,
     String? cashToCollect,
+    bool? live,
   }) {
     final total = serverTotal;
     final base = hasPay && total == null
         ? Money.parseLabel(fare, currency: pay.currency)
         : null;
+    if (live ?? LiveDriverServices.active) {
+      return (
+        fare:
+            total?.formatted ?? (base == null ? fare : (base + pay).formatted),
+        driverBonus: driverBonus,
+        pickupPay: hasPay ? pay : null,
+        cashToCollect: cashToCollect,
+      );
+    }
     if (total == null && base == null) {
       return (
         fare: fare,
         driverBonus: driverBonus,
+        pickupPay: null,
         cashToCollect: cashToCollect,
       );
     }
@@ -93,6 +111,7 @@ class PickupPayQuote {
     return (
       fare: total?.formatted ?? (base! + pay).formatted,
       driverBonus: bonus,
+      pickupPay: null,
       cashToCollect: cashToCollect,
     );
   }
@@ -102,12 +121,14 @@ class PickupPayQuote {
   /// driverTotal for it (the started trip's, the row's after a resync, or
   /// the claim's `Offer.driverTotal`): the trip shows it as it is, with
   /// the [acceptedPickupPay] already in it, so that pay is never added a
-  /// second time (it only joins the bonus line, as on every accept).
-  /// [live] (default: a live server is on) and no server total: "—", never
-  /// the earnings line (without Movera's bonus) plus a pickup pay worked
-  /// out here. The demo keeps its written-out sample plus its local pay.
-  static ({String fare, Money? driverBonus, String? cashToCollect})
-  leaveNowTermsOf({
+  /// second time. [live] (default: a live server is on) and no server
+  /// total: "—", never the earnings line (without Movera's bonus) plus a
+  /// pickup pay worked out here. The demo keeps its written-out sample
+  /// plus its local pay. BQ-F1b: on live the bonus line is the server's
+  /// [driverBonus] as it is and the pickup pay line the server's
+  /// [acceptedPickupPay] (the started trip's `pickupPay`, else the claim's
+  /// `Offer.pickupPay`), never one sum.
+  static AcceptedTerms leaveNowTermsOf({
     required String fare,
     required PickupLeg leg,
     Money? serverTotal,
@@ -116,6 +137,7 @@ class PickupPayQuote {
     String? cashToCollect,
     bool? live,
   }) {
+    final onServer = live ?? LiveDriverServices.active;
     if (serverTotal != null) {
       return PickupPayQuote(
         pay:
@@ -127,12 +149,16 @@ class PickupPayQuote {
         fare: fare,
         driverBonus: driverBonus,
         cashToCollect: cashToCollect,
+        live: onServer,
       );
     }
-    if (live ?? LiveDriverServices.active) {
+    if (onServer) {
       return (
         fare: '—',
         driverBonus: driverBonus,
+        pickupPay: acceptedPickupPay != null && acceptedPickupPay.minorUnits > 0
+            ? acceptedPickupPay
+            : null,
         cashToCollect: cashToCollect,
       );
     }
@@ -143,10 +169,26 @@ class PickupPayQuote {
           fare: fare,
           driverBonus: driverBonus,
           cashToCollect: cashToCollect,
+          live: false,
         ) ??
-        (fare: fare, driverBonus: driverBonus, cashToCollect: cashToCollect);
+        (
+          fare: fare,
+          driverBonus: driverBonus,
+          pickupPay: null,
+          cashToCollect: cashToCollect,
+        );
   }
 }
+
+/// The terms an accepted trip opens with ([PickupPayQuote.termsOf]): the
+/// driver's [fare], Movera's [driverBonus], the [pickupPay] line (live:
+/// the server's, BQ-F1b) and a cash rider's [cashToCollect].
+typedef AcceptedTerms = ({
+  String fare,
+  Money? driverBonus,
+  Money? pickupPay,
+  String? cashToCollect,
+});
 
 /// Pure pickup pay maths:
 /// `max(0, km − freeKm) × kr/km + max(0, min − freeMin) × kr/min`,

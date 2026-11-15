@@ -70,9 +70,11 @@ Future<void> showMoveraWaybillSheet(
 const _ink = Color(0xFF303A3F);
 const _muted = Color(0xFF7D898F);
 
-// Owner decision 2026-10-27: no breakdown lines. How the rider pays, what
-// the rider pays, (G32, owner 2026-11-12) Movera's commission, then what
-// the driver gets (pickup pay, waiting fee and any bonus are in it).
+// How the rider pays, what the rider pays, (G32, owner 2026-11-12)
+// Movera's commission, then (BQ-F1b, owner s06:1164 "all details in
+// waybill") the server's own bonus and pickup pay lines when there are
+// any, then what the driver gets (pickup pay, waiting fee and any bonus
+// are in it). The lines are the server's, never worked out here.
 List<Widget> _rows(WaybillRecord record) {
   return [
     _Row(tr.trip, record.tripId),
@@ -91,6 +93,8 @@ List<Widget> _rows(WaybillRecord record) {
     // G32 (owner 2026-11-12, "all details in waybill"): Movera's share.
     if (record.commissionText case final share?)
       _Row(tr.waybillMoveraCommission, share),
+    if (record.driverBonus case final bonus?) _Row(tr.g8LineBonus, bonus),
+    if (record.pickupPay case final pay?) _Row(tr.g8LinePickupPay, pay),
     _Row(tr.yourEarnings, record.fare),
   ];
 }

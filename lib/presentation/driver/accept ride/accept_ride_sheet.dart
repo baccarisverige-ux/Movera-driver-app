@@ -371,6 +371,7 @@ class _NextTripRadarOffer {
     this.serverOfferId,
     this.serverPickupPay,
     this.serverDriverTotal,
+    this.serverDriverBonus,
     this.expiresAt,
   });
 
@@ -387,6 +388,10 @@ class _NextTripRadarOffer {
   /// Contract v0.18.89 `Offer.driverTotal`: what the driver gets, pickup
   /// pay included; when sent, the only number the card shows.
   final Money? serverDriverTotal;
+
+  /// BQ-F1b: the server offer's own `Offer.driverBonus` (Movera's bonus,
+  /// inside its earnings); null for none or a demo offer.
+  final Money? serverDriverBonus;
 
   final String id;
   final String category;
@@ -440,10 +445,11 @@ class _NextTripRadarOffer {
   /// The driver's pay plus the pickup pay: one total.
   String get shownFare => pickupPay.totalOf(driverPay);
 
-  /// The trip's terms once accepted: the total the card showed, with the
-  /// pickup pay as Movera's bonus (driver-12).
-  ({String fare, Money? driverBonus, String? cashToCollect}) get terms =>
-      pickupPay.termsOf(fare: driverPay);
+  /// The trip's terms once accepted: the total the card showed (driver-12).
+  /// BQ-F1b: on live the server offer's own bonus and pickup pay lines
+  /// ([serverDriverBonus], [serverPickupPay]), never one sum.
+  AcceptedTerms get terms =>
+      pickupPay.termsOf(fare: driverPay, driverBonus: serverDriverBonus);
 
   /// This offer, secured: its pickup pay no longer changes.
   _NextTripRadarOffer secured() => _NextTripRadarOffer(
@@ -464,6 +470,7 @@ class _NextTripRadarOffer {
     serverOfferId: serverOfferId,
     serverPickupPay: serverPickupPay,
     serverDriverTotal: serverDriverTotal,
+    serverDriverBonus: serverDriverBonus,
     expiresAt: expiresAt,
   );
   final int tripMinutes;
