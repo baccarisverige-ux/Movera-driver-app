@@ -1280,6 +1280,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fleetAlreadyIn => 'You’re already in a fleet. Leave it first.';
 
   @override
+  String get fleetOtherCountry =>
+      'The driver and the fleet are in different countries. A fleet works in one country only.';
+
+  @override
   String get fleetAccountHasOwn => 'A fleet account has its own fleet.';
 
   @override

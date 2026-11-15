@@ -5,6 +5,7 @@
   "fleetJoined": "Du är med i {name}.",
   "fleetJoinMismatch": "Koden, ägarens namn och e-post matchar inget åkeri. Kontrollera dem med ägaren.",
   "fleetAlreadyIn": "Du är redan med i ett åkeri. Lämna det först.",
+  "fleetOtherCountry": "Föraren och åkeriet är i olika länder. Ett åkeri arbetar bara i ett land.",
   "fleetAccountHasOwn": "Ett åkerikonto har sitt eget åkeri.",
   "fleetOnTrip": "Avsluta resan först.",
   "fleetOwnerCannotLeave": "Ägaren kan inte lämna åkeriet.",

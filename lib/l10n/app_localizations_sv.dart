@@ -1281,6 +1281,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get fleetAlreadyIn => 'Du är redan med i ett åkeri. Lämna det först.';
 
   @override
+  String get fleetOtherCountry =>
+      'Föraren och åkeriet är i olika länder. Ett åkeri arbetar bara i ett land.';
+
+  @override
   String get fleetAccountHasOwn => 'Ett åkerikonto har sitt eget åkeri.';
 
   @override
