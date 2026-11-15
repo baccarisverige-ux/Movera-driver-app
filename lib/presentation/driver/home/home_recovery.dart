@@ -77,32 +77,9 @@ extension _HomeRecovery on _DriverHomeState {
   }
 
   /// [next] as the trip it becomes, heading to its pickup, with the
-  /// pickup pay accepted with it (driver-12). Its fare is the driver's
-  /// pay, as saved.
-  PersistedActiveRide _queuedAsActive(PersistedQueuedTrip next) {
-    final pay = next.pickupPay;
-    final terms = pay == null
-        ? null
-        : PickupPayQuote(
-            pay: pay,
-            leg: PickupLeg(km: 0, minutes: next.pickupMinutes),
-          ).termsOf(fare: next.fare);
-    return PersistedActiveRide(
-      tripId: next.tripId,
-      stage: ActiveRideStage.headingToPickup,
-      riderName: next.riderName,
-      riderRating: next.rating,
-      fare: terms?.fare ?? next.fare,
-      driverBonus: terms?.driverBonus,
-      pickupPay: terms?.pickupPay,
-      category: next.category,
-      matchedVia: WaybillRecord.exclusiveOfferSource,
-      pickupAddress: next.pickup,
-      dropoffAddress: next.dropoff,
-      pickupLat: next.pickupLat,
-      pickupLng: next.pickupLng,
-      dropoffLat: next.dropoffLat,
-      dropoffLng: next.dropoffLng,
-    );
-  }
+  /// terms its secured offer had (driver-12): on live the server's saved
+  /// driverTotal, bonus and pickup pay, never a sum worked out on the
+  /// phone (BQ-F1c, [PersistedQueuedTrip.asHeadingToPickup]).
+  PersistedActiveRide _queuedAsActive(PersistedQueuedTrip next) =>
+      next.asHeadingToPickup(matchedVia: WaybillRecord.exclusiveOfferSource);
 }
