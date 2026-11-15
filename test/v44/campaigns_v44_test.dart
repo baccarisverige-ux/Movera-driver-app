@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
@@ -19,7 +20,10 @@ import 'package:movera/presentation/driver/promotions/promotions.dart';
 import 'package:movera/presentation/driver/promotions/promotions_badge.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
+import 'package:movera/widgets/custom_google_map.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 /// BQ-V44 driver part (contract v0.18.110 `bonusCampaigns`, Rules
 /// audits/impact/v44-driver-bonuses.md §8): the Campaigns screen on live
@@ -141,7 +145,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  late GoogleMapsFlutterPlatform maps;
+
   setUp(() {
+    maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     seen = [];
     routes = {
       'POST /api/v1/driver/bonuses/opened': (_) => http.Response('', 204),
@@ -151,6 +159,7 @@ void main() {
   });
 
   tearDown(() {
+    GoogleMapsFlutterPlatform.instance = maps;
     LiveDriverServices.instance = null;
     DriverAppTexts.language = 'en';
     PromotionsBadge.resetOpened();
@@ -351,6 +360,85 @@ void main() {
       expect(jsonDecode(opened().single.body), {
         'bonusIds': ['t1'],
       });
+    });
+  });
+
+  group('the campaign area on a small map (plan §8)', () {
+    testWidgets(
+      'a card with the server area shows it; one without shows none',
+      (tester) async {
+        final withArea = bonus(
+          id: 'a1',
+          en: 'Inner city',
+          done: 1,
+          target: 5,
+          amount: money(10000, 'SEK'),
+        );
+        final noArea =
+            bonus(
+                id: 'a2',
+                en: 'No outline',
+                done: 1,
+                target: 5,
+                amount: money(10000, 'SEK'),
+              )
+              ..remove('polygon')
+              ..remove('bounds');
+        final badArea =
+            bonus(
+                id: 'a3',
+                en: 'Two points',
+                done: 1,
+                target: 5,
+                amount: money(10000, 'SEK'),
+              )
+              ..['polygon'] = [
+                [59.3, 18.0],
+                [59.4, 18.0],
+              ];
+        routes['GET /api/v1/driver/bonuses'] = (_) => json(200, {
+          'items': [withArea, noArea, badArea],
+        });
+        installLive();
+        await openScreen(tester);
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('No outline'), findsOneWidget);
+        expect(find.text('Two points'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey<String>('campaign-map-a1')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey<String>('campaign-map-a2')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey<String>('campaign-map-a3')),
+          findsNothing,
+        );
+        final map = tester.widget<CustomGoogleMap>(
+          find.byType(CustomGoogleMap),
+        );
+        final area = map.polygons!.single;
+        expect(
+          [
+            for (final p in area.points) [p.latitude, p.longitude],
+          ],
+          [
+            [59.30, 18.00],
+            [59.40, 18.00],
+            [59.40, 18.10],
+          ],
+        );
+        expect(map.scrollGesturesEnabled, isFalse);
+        expect(map.zoomGesturesEnabled, isFalse);
+      },
+    );
+
+    testWidgets('the demo shows no map', (tester) async {
+      await openScreen(tester);
+      expect(find.byType(CustomGoogleMap), findsNothing);
     });
   });
 

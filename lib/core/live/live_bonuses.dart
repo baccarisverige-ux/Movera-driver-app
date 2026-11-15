@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
 
@@ -88,6 +89,7 @@ class DriverBonus {
     required this.target,
     required this.earned,
     required this.isNew,
+    this.area,
   });
 
   final String bonusId;
@@ -111,6 +113,25 @@ class DriverBonus {
   final int target;
   final bool earned;
   final bool isNew;
+
+  /// The campaign's own area (`polygon`, [lat, lng] points, plan §8 small
+  /// map); null when it is missing or not a real outline (under 3 valid
+  /// points): the card then shows no map.
+  final List<GeoPoint>? area;
+
+  static List<GeoPoint>? _area(Object? polygon) {
+    if (polygon is! List) return null;
+    final points = <GeoPoint>[];
+    for (final point in polygon) {
+      if (point is! List || point.length < 2) return null;
+      final lat = point[0], lng = point[1];
+      if (lat is! num || lng is! num) return null;
+      final p = GeoPoint(lat.toDouble(), lng.toDouble());
+      if (!p.isValid) return null;
+      points.add(p);
+    }
+    return points.length < 3 ? null : List.unmodifiable(points);
+  }
 
   /// The name in [language]; English, then any, when that one is empty.
   String nameIn(String language) {
@@ -186,6 +207,7 @@ class DriverBonus {
         target: target,
         earned: json['earned'] == true,
         isNew: json['isNew'] == true,
+        area: _area(json['polygon']),
       );
     } on FormatException {
       return null;
