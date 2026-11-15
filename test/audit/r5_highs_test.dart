@@ -17,7 +17,7 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/home/home.dart';
-import 'package:movera/presentation/driver/promotions/promotions.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -185,6 +185,10 @@ class _NoGps implements DriverLocationRepository {
 }
 
 void main() {
+  // Promotions loads on first open (deferred_screens.dart); the part loads
+  // for real outside the fake clock, as on a phone.
+  setUpAll(loadDeferredScreens);
+
   testWidgets('driver-r5-28: the trip and the side menu pause Home; a sheet '
       'does not', (tester) async {
     _setUp(tester);
@@ -241,7 +245,11 @@ void main() {
     await _frames(tester, 10);
     await tester.tap(find.text('Promotions'));
     await _frames(tester, 10);
-    expect(find.byType(Promotions), findsOneWidget);
+    // By name: through a deferred import the Type is not always the same.
+    expect(
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == 'Promotions'),
+      findsOneWidget,
+    );
     expect(homeGps.listening, isFalse);
     navigator.currentState!.pop();
     await _frames(tester, 10);

@@ -5279,6 +5279,17 @@ class AppLocalizationsSv extends AppLocalizations {
       'Sms till nödkontakter vid SOS är inte på än. Ring dem från den här sidan.';
 
   @override
+  String waitingPausedAtStop(int leave, int arrive) {
+    return 'Väntetiden är pausad: du är mer än $leave m från stoppet. Kör tillbaka inom $arrive m för att fortsätta.';
+  }
+
+  @override
+  String get waitingBackAtStop => 'Jag är tillbaka vid stoppet';
+
+  @override
+  String get liveTripNotAtStop => 'Du är inte vid stoppet än.';
+
+  @override
   String get call112 => 'Ring 112';
 
   @override

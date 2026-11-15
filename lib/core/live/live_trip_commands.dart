@@ -490,41 +490,97 @@ class LiveTripCommands {
 
   /// "Framme vid stoppet" (contract v0.7.1 §3.8): the paid wait at the
   /// middle stop [stopIndex] (0-based) starts now; there are no free
-  /// minutes at a stop.
-  Future<LiveTripOutcome> arriveAtStop(String tripId, int stopIndex) =>
-      _stopStep(tripId, stopIndex, 'arrive');
+  /// minutes at a stop. v0.18.108 (`contract.json#autoArrive.stops.tap`,
+  /// job C9b): the tap carries the latest fix (`StopCommand.location`);
+  /// the server counts it only within 300 m of the stop (else 409
+  /// `not_at_stop`). On `409 position_stale` one fresh fix is asked now and
+  /// the tap is sent again, as at the pickup.
+  Future<LiveTripOutcome> arriveAtStop(String tripId, int stopIndex) async {
+    final fix = _lastFix();
+    final first = await _stopStep(tripId, stopIndex, 'arrive', fix: fix);
+    final refused = first.error;
+    if (refused is! ApiError ||
+        refused.detail != 'position_stale' ||
+        _freshFix == null) {
+      return first;
+    }
+    final fresh = await _freshFix();
+    if (fresh == null) return first;
+    return _stopStep(tripId, stopIndex, 'arrive', fix: fresh);
+  }
 
-  /// The trip goes on from the middle stop [stopIndex]: its paid wait ends.
+  /// v0.18.108 (`contract.json#autoArrive.stops.back`, job C9b): "I'm back
+  /// at the stop" while the server's stop wait stands still
+  /// (`stops[i].away`): the same `arrive` command, with the latest fix. The
+  /// server counts it only within the trip's `terms.leaveMeters` (else 409
+  /// `not_at_stop`). Already going on (a fix brought him back first) or the
+  /// stop left = done, nothing is sent.
+  Future<LiveTripOutcome> resumeStopWaiting(String tripId, int stopIndex) =>
+      _stopStep(
+        tripId,
+        stopIndex,
+        'arrive',
+        fix: _lastFix(),
+        isDone: () {
+          final visit = _stopVisit(tripId, stopIndex);
+          return visit == null ||
+              visit['leftAt'] != null ||
+              visit['away'] is! Map;
+        },
+      );
+
+  /// The trip leaves the middle stop [stopIndex]: its paid wait ends.
   Future<LiveTripOutcome> leaveStop(String tripId, int stopIndex) =>
       _stopStep(tripId, stopIndex, 'leave');
+
+  /// The server's record of stop [stopIndex]: `stops[i]` (canonical) when it
+  /// carries the arrival, else the `stopVisits` mirror.
+  Map<Object?, Object?>? _stopVisit(String tripId, int stopIndex) {
+    final trip = _trips[tripId];
+    final stops = trip?['stops'];
+    if (stops is List && stopIndex >= 0 && stopIndex < stops.length) {
+      final stop = stops[stopIndex];
+      if (stop is Map && stop['arrivedAt'] != null) return stop;
+    }
+    final visits = trip?['stopVisits'];
+    if (visits is! List) return null;
+    for (final visit in visits) {
+      if (visit is Map && visit['stopIndex'] == stopIndex) return visit;
+    }
+    return null;
+  }
 
   /// True when the projection already has the stop's tap (a retry after a
   /// lost answer).
   bool _stopDone(String tripId, int stopIndex, String verb) {
-    final visits = _trips[tripId]?['stopVisits'];
-    if (visits is! List) return false;
-    for (final visit in visits) {
-      if (visit is Map && visit['stopIndex'] == stopIndex) {
-        return verb == 'arrive'
-            ? visit['arrivedAt'] != null
-            : visit['leftAt'] != null;
-      }
-    }
-    return false;
+    final visit = _stopVisit(tripId, stopIndex);
+    if (visit == null) return false;
+    return verb == 'arrive'
+        ? visit['arrivedAt'] != null
+        : visit['leftAt'] != null;
   }
 
+  /// [isDone]: replaces the "already tapped" check (the back tap goes to an
+  /// arrived stop).
   Future<LiveTripOutcome> _stopStep(
     String tripId,
     int stopIndex,
-    String verb,
-  ) async {
+    String verb, {
+    LiveFix? fix,
+    bool Function()? isDone,
+  }) async {
     final path =
         '/api/v1/driver/trips/${Uri.encodeComponent(tripId)}/stops/$stopIndex/$verb';
     for (var attempt = 0; attempt < 2; attempt++) {
       final current = await _current(tripId);
       if (current == null) return _unknown;
-      if (_stopDone(tripId, stopIndex, verb)) return const LiveTripOutcome.ok();
-      final payload = {'expectedVersion': versionOf(tripId)};
+      if (isDone?.call() ?? _stopDone(tripId, stopIndex, verb)) {
+        return const LiveTripOutcome.ok();
+      }
+      final payload = {
+        if (fix != null) 'location': fix,
+        'expectedVersion': versionOf(tripId),
+      };
       final signature = '$path ${jsonEncode(payload)}';
       final key = _keys.putIfAbsent(signature, ApiClient.randomKey);
       try {
@@ -535,7 +591,8 @@ class LiveTripCommands {
         if (!error.isRetryable) _keys.remove(signature);
         final projection = error.projection;
         if (projection != null) observe({'tripId': tripId, ...projection});
-        // Already recorded (another screen, or a lost answer): nothing to do.
+        // Already recorded (another screen, or a lost answer; the back tap:
+        // the server resumed the stop wait first): nothing to do.
         if (error.reason == 'stop_already_arrived' && verb == 'arrive' ||
             error.reason == 'stop_already_left' && verb == 'leave') {
           return const LiveTripOutcome.ok();

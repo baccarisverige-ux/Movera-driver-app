@@ -6,6 +6,10 @@ import 'package:movera/presentation/driver/ride%20history/ride_history.dart'
     deferred as ride_history;
 import 'package:movera/presentation/driver/documents/documents.dart'
     deferred as documents;
+import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart'
+    deferred as driving_logs;
+import 'package:movera/presentation/driver/promotions/promotions.dart'
+    deferred as promotions;
 import 'package:movera/presentation/driver/settings/settings.dart'
     deferred as settings;
 import 'package:movera/presentation/driver/support/support_inbox.dart'
@@ -46,6 +50,18 @@ Widget driverDocumentsScreen() => DeferredScreen(
   builder: (_) => documents.DriverDocuments(),
 );
 
+/// Driving log and Promotions (side menu) load on first open too, the same
+/// way, so the first download stays inside the web size budget (owner Q51).
+Widget drivingLogsScreen() => DeferredScreen(
+  load: driving_logs.loadLibrary,
+  builder: (_) => driving_logs.DrivingLogs(),
+);
+
+Widget promotionsScreen() => DeferredScreen(
+  load: promotions.loadLibrary,
+  builder: (_) => promotions.Promotions(),
+);
+
 /// [openTicketId]: contract v0.18.53 §75, a `support_reply` push tap opens
 /// that ticket over the Support list.
 Widget supportScreen({String? openTicketId}) => DeferredScreen(
@@ -67,5 +83,7 @@ Future<void> loadDeferredScreens() => Future.wait([
   chat.loadLibrary(),
   settings.loadLibrary(),
   documents.loadLibrary(),
+  driving_logs.loadLibrary(),
+  promotions.loadLibrary(),
   support.loadLibrary(),
 ]);

@@ -22,7 +22,7 @@ import 'package:movera/presentation/driver/destination%20mode/destination_picker
 import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
-import 'package:movera/presentation/driver/promotions/promotions.dart';
+import 'package:movera/presentation/driver/promotions/promotions_badge.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,7 +81,7 @@ void main() {
     DriverPerformanceConfig.featureOn = true;
     DriverPerformanceConfig.liveBuild = false;
     DriverNotificationFeed.instance.reset();
-    Promotions.resetOpened();
+    PromotionsBadge.resetOpened();
   });
 
   Future<void> pumpMenu(

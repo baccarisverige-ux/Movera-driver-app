@@ -37,6 +37,8 @@ extension _AcceptRideRouteChange on _AcceptRideState {
   /// G7 decision 4 (`terms.stopWaitPerMin`): the stop's price per minute
   /// from the first minute (or after its free ones).
   String _stopWaitStatus() {
+    // v0.18.108 (contract.json#autoArrive.stops.texts.driverStopPaused).
+    if (_stopPausedAway) return _stopPausedText;
     final free = _live?.terms?.stopFreeWaitMinutes ?? 0;
     final perMin = _live?.terms?.stopWaitPerMin?.formatted;
     if (free > 0 && _waitSeconds < _stopFreeSeconds) {
@@ -61,6 +63,9 @@ extension _AcceptRideRouteChange on _AcceptRideState {
       );
     }
     _adoptServerStopArrival(next);
+    // v0.18.108 (contract.json#autoArrive.stops): the server's stopped /
+    // moved stop clock.
+    _followServerStopClock();
     final change = next.routeChange;
     if (change == null || change.pending) return;
     if (!_routeChangesSeen.add('${change.changeId}:${change.status}')) return;
@@ -127,16 +132,65 @@ extension _AcceptRideRouteChange on _AcceptRideState {
         _stopCursor >= _stopAddresses.length) {
       return;
     }
-    final arrivedAt = next.openStopArrival(_stopCursor);
-    if (arrivedAt == null) return;
+    final visit = next.openStopVisit(_stopCursor);
+    if (visit == null) return;
     final now = (widget.waitNow?.call() ?? DateTime.now()).toUtc();
     _rebuild(() {
       _paidStopWait = true;
-      _waitSeconds = math.max(0, now.difference(arrivedAt).inSeconds);
+      // v0.18.108: (min(now, away.since) − arrivedAt) − pausedSeconds.
+      _waitSeconds = visit.clockAt(now) ?? 0;
       _waitAnchorAt = null;
       _startWaitTimer();
     });
     unawaited(_rideLifecycle.persistNow());
+  }
+
+  /// v0.18.108 (`contract.json#autoArrive.stops`, job C9b): the server's
+  /// visit of the stop the driver waits at; null when not waiting at one.
+  TripStopVisit? get _openStopVisit =>
+      _paidStopWait && _stage == ActiveRideStage.onTrip
+      ? _live?.openStopVisit(_stopCursor)
+      : null;
+
+  /// True while the server stopped the stop wait (the driver is more than
+  /// `terms.leaveMeters` from the stop, `stops[i].away`).
+  bool get _stopPausedAway => _openStopVisit?.paused == true;
+
+  /// `autoArrive.stops.texts.driverStopPaused` with the trip's own
+  /// distances; the contract defaults (200 / 100 m) only for a trip whose
+  /// terms carry none.
+  String get _stopPausedText => tr.waitingPausedAtStop(
+    _live?.terms?.leaveMeters ?? 200,
+    _live?.terms?.autoArriveMeters ?? 100,
+  );
+
+  /// While the server's stop wait stands still (`stops[i].away`) or after
+  /// it moved it (`stops[i].pausedSeconds`), the stop clock is the
+  /// server's: (min(now, away.since) − arrivedAt) − pausedSeconds. No
+  /// distance is measured and no money is worked out on the phone.
+  void _followServerStopClock() {
+    final visit = _openStopVisit;
+    if (visit == null || (!visit.paused && visit.pausedSeconds == 0)) return;
+    final now = widget.waitNow?.call() ?? DateTime.now();
+    final seconds = visit.clockAt(now.toUtc());
+    if (seconds == null) return;
+    _waitSeconds = seconds;
+    _waitAnchorAt = now;
+    _waitAnchorSeconds = seconds;
+  }
+
+  /// v0.18.108 (`contract.json#autoArrive.stops.back`): "I'm back at the
+  /// stop" while the stop wait is paused — the server's back tap (within
+  /// the trip's leaveMeters; farther it says "You are not at the stop
+  /// yet"). The clock goes on from the server's answer.
+  Future<void> _onBackAtStopTap() async {
+    if (!_stopPausedAway || !LiveDriverServices.active) return;
+    final stop = _stopCursor;
+    await _whileStepBusy(
+      () => _AcceptRideLive(
+        this,
+      )._serverStep((trips) => trips.resumeStopWaiting(widget.tripId, stop)),
+    );
   }
 
   void _openServerRideCheck(TripRideCheck check) {
