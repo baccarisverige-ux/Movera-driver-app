@@ -1,8 +1,10 @@
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/waybill/waybill.dart';
 
 enum ActiveRideStage { headingToPickup, waitingForRider, onTrip }
 
@@ -23,6 +25,8 @@ class PersistedQueuedTrip {
     this.pickupMinutes = 4,
     this.tripMinutes = 16,
     this.pickupPay,
+    this.driverTotal,
+    this.driverBonus,
   });
 
   final String tripId;
@@ -45,6 +49,79 @@ class PersistedQueuedTrip {
   /// The pickup pay accepted with it, on top of [fare] (driver-12).
   final Money? pickupPay;
 
+  /// BQ-F1c (owner R2): the secured offer's own `Offer.driverTotal` (what
+  /// the driver gets, pickup pay and Movera's bonus in it) and
+  /// `Offer.driverBonus`, as the server sent them; null for a demo offer,
+  /// an older server or a trip saved before BQ-F1c.
+  final Money? driverTotal;
+  final Money? driverBonus;
+
+  /// This trip as the trip it becomes, heading to its pickup (a restored
+  /// queued trip, home_recovery), with the terms its secured offer had:
+  /// on live the server's [driverTotal] (else the saved pay with no
+  /// pickup pay, or "—"), [driverBonus] and [pickupPay] lines, never a sum
+  /// worked out here (BQ-F1c). The demo keeps its sample sum.
+  /// BQ-F1d (owner R2; owner s06:1164: the waybill shows all the details):
+  /// the "next trip secured" waybill of this restored trip (Home): the
+  /// fare and the bonus and pickup pay lines of [asHeadingToPickup] (the
+  /// server's [driverTotal]; "—" on live for an older save with a pickup
+  /// pay), never a sum worked out on the phone.
+  WaybillRecord securedWaybill({DateTime? issuedAt}) {
+    final terms = asHeadingToPickup(
+      matchedVia: WaybillRecord.exclusiveOfferSource,
+    );
+    return WaybillRecord(
+      tripId: tripId,
+      statusLabel: WaybillRecord.nextTripSecured,
+      issuedAt: issuedAt ?? DateTime.now(),
+      fare: terms.fare ?? fare,
+      driverBonus: WaybillRecord.bonusLabel(terms.driverBonus),
+      pickupPay: WaybillRecord.bonusLabel(terms.pickupPay),
+      service: category,
+      riderName: riderName,
+      pickup: pickup,
+      dropoff: dropoff,
+      source: WaybillRecord.moveraRadarSource,
+      driverName: WaybillRecord.moveraDriverName,
+      vehicle: WaybillRecord.vehicleUnavailable,
+      licensePlate: WaybillRecord.plateUnavailable,
+      passengerCapacity: 4,
+    );
+  }
+
+  PersistedActiveRide asHeadingToPickup({required String matchedVia}) {
+    final terms = PickupPayQuote(
+      pay:
+          pickupPay ??
+          Money(
+            minorUnits: 0,
+            currency:
+                driverTotal?.currency ??
+                driverBonus?.currency ??
+                Money.zoneCurrency,
+          ),
+      leg: PickupLeg(km: 0, minutes: pickupMinutes),
+      serverTotal: driverTotal,
+    ).termsOf(fare: fare, driverBonus: driverBonus);
+    return PersistedActiveRide(
+      tripId: tripId,
+      stage: ActiveRideStage.headingToPickup,
+      riderName: riderName,
+      riderRating: rating,
+      fare: terms.fare,
+      driverBonus: terms.driverBonus,
+      pickupPay: terms.pickupPay,
+      category: category,
+      matchedVia: matchedVia,
+      pickupAddress: pickup,
+      dropoffAddress: dropoff,
+      pickupLat: pickupLat,
+      pickupLng: pickupLng,
+      dropoffLat: dropoffLat,
+      dropoffLng: dropoffLng,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'tripId': tripId,
     'riderName': riderName,
@@ -60,6 +137,8 @@ class PersistedQueuedTrip {
     'pickupMinutes': pickupMinutes,
     'tripMinutes': tripMinutes,
     if (pickupPay != null) 'pickupPay': pickupPay!.toJson(),
+    if (driverTotal != null) 'driverTotal': driverTotal!.toJson(),
+    if (driverBonus != null) 'driverBonus': driverBonus!.toJson(),
   };
 
   static PersistedQueuedTrip? fromJson(Map<String, dynamic>? json) {
@@ -103,6 +182,8 @@ class PersistedQueuedTrip {
       pickupMinutes: (json['pickupMinutes'] as num?)?.toInt() ?? 4,
       tripMinutes: (json['tripMinutes'] as num?)?.toInt() ?? 16,
       pickupPay: PersistedActiveRide._money(json['pickupPay']),
+      driverTotal: PersistedActiveRide._money(json['driverTotal']),
+      driverBonus: PersistedActiveRide._money(json['driverBonus']),
     );
   }
 }

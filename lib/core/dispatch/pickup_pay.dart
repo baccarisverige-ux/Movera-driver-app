@@ -48,11 +48,16 @@ class PickupPayQuote {
   /// with its decimals (price audit 2026-11-14 gap 1: a SEK-only reader
   /// dropped the pickup pay of every euro and dinar offer). Unchanged when
   /// there is no pickup pay or the label is not an amount in it.
-  String totalOf(String fare) {
+  ///
+  /// BQ-F1d (owner R2: the apps never work money out): [live] (default: a
+  /// live server is on) with a pickup pay and no [serverTotal] (an older
+  /// server) shows "—", never the sum worked out here. Only the demo adds.
+  String totalOf(String fare, {bool? live}) {
     if (serverTotal case final total?) return total.formatted;
     if (!hasPay) {
       return fare;
     }
+    if (live ?? LiveDriverServices.active) return '—';
     final base = Money.parseLabel(fare, currency: pay.currency);
     return base == null ? fare : (base + pay).formatted;
   }
@@ -70,7 +75,8 @@ class PickupPayQuote {
   /// waybill shows all the details): [live] (default: a live server is on)
   /// keeps the server's own lines apart. [driverBonus] is the server's
   /// `driverBonus` as it is and `pickupPay` the server's pickup pay
-  /// ([pay], null when 0); nothing is added up on the phone. The demo
+  /// ([pay], null when 0); nothing is added up on the phone. BQ-F1c: on
+  /// live with a pickup pay and no [serverTotal] the fare is "—". The demo
   /// keeps its written-out sample: its pickup pay joins [driverBonus]
   /// (Movera pays it from its commission, like a bonus) and `pickupPay`
   /// is null.
@@ -81,18 +87,19 @@ class PickupPayQuote {
     bool? live,
   }) {
     final total = serverTotal;
-    final base = hasPay && total == null
-        ? Money.parseLabel(fare, currency: pay.currency)
-        : null;
     if (live ?? LiveDriverServices.active) {
       return (
-        fare:
-            total?.formatted ?? (base == null ? fare : (base + pay).formatted),
+        // BQ-F1c: no server total and a pickup pay (an older server): "—",
+        // never the earnings plus the pickup pay added up on the phone.
+        fare: total?.formatted ?? (hasPay ? '—' : fare),
         driverBonus: driverBonus,
         pickupPay: hasPay ? pay : null,
         cashToCollect: cashToCollect,
       );
     }
+    final base = hasPay && total == null
+        ? Money.parseLabel(fare, currency: pay.currency)
+        : null;
     if (total == null && base == null) {
       return (
         fare: fare,

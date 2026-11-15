@@ -98,6 +98,8 @@ extension _AcceptRideTrip on _AcceptRideState {
               // The driver's pay, as the live ride's fare is.
               fare: securedOffer.driverPay,
               pickupPay: securedOffer.securedPickupPay,
+              driverTotal: securedOffer.serverDriverTotal,
+              driverBonus: securedOffer.serverDriverBonus,
               category: securedOffer.category,
               pickup: securedOffer.pickup,
               dropoff: securedOffer.dropoff,
@@ -230,6 +232,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       pickupPosition: LatLng(next.pickupLat, next.pickupLng),
       dropoffPosition: LatLng(next.dropoffLat, next.dropoffLng),
       securedPickupPay: next.pickupPay,
+      // BQ-F1c: the server's numbers it was secured with.
+      serverDriverTotal: next.driverTotal,
+      serverDriverBonus: next.driverBonus,
     );
   }
 

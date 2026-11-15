@@ -795,23 +795,9 @@ class _DriverHomeState extends State<DriverHome>
     );
   }
 
-  WaybillRecord _waybillFromQueued(PersistedQueuedTrip next) {
-    return WaybillRecord(
-      tripId: next.tripId,
-      statusLabel: WaybillRecord.nextTripSecured,
-      issuedAt: DateTime.now(),
-      fare: next.fare,
-      service: next.category,
-      riderName: next.riderName,
-      pickup: next.pickup,
-      dropoff: next.dropoff,
-      source: 'Movera Radar',
-      driverName: WaybillRecord.moveraDriverName,
-      vehicle: WaybillRecord.vehicleUnavailable,
-      licensePlate: WaybillRecord.plateUnavailable,
-      passengerCapacity: 4,
-    );
-  }
+  /// BQ-F1d: the server's saved total and lines, never a phone sum.
+  WaybillRecord _waybillFromQueued(PersistedQueuedTrip next) =>
+      next.securedWaybill();
 
   void _onDriverSessionChanged() {
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
