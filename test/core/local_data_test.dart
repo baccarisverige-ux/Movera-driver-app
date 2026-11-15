@@ -59,4 +59,19 @@ void main() {
       ]),
     );
   });
+
+  test('logout clear removes the recent destinations (often a home '
+      'address) and the inventory lists them', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'driver.destination.recent.v1':
+          '[{"name":"Home","address":"Storgatan 1","lat":59.2,"lng":17.6}]',
+    });
+    await clearLocalUserData();
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('driver.destination.recent.v1'), isNull);
+    expect(
+      localDataInventory.map((record) => record.key),
+      contains('driver.destination.recent.v1'),
+    );
+  });
 }

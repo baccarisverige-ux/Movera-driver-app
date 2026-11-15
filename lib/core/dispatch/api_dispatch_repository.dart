@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
+import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -522,17 +523,13 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     final http.StreamedResponse response;
     try {
       // Owner 2026-11-15: the cursor is one driver's (the token's `sub`),
-      // also when no sign-out came first.
-      Object? driver;
-      try {
-        // A JWT's middle part: base64url without its padding.
-        final part = (await _token())!.split('.')[1];
-        driver = jsonDecode(
-          utf8.decode(base64.decode(part.padRight(part.length + 3 & ~3, '='))),
-        )['sub'];
-      } catch (_) {}
-      if (driver != _driver) forget();
-      _driver = driver;
+      // also when no sign-out came first. A token that cannot be read is
+      // not another driver: his cursor and offers stay.
+      final driver = tokenDriver(await _token());
+      if (driver != null) {
+        if (driver != _driver) forget();
+        _driver = driver;
+      }
       final headers = await _headers();
       final request =
           http.Request(

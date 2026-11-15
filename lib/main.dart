@@ -222,10 +222,17 @@ class _MoveraAppState extends State<MoveraApp> {
       repository: AuthRepository(api: _api, tokens: _tokens),
       // Contract v0.18.2 `auth.beforeSignIn`: the signed-in calls start
       // after the sign-in, not on the sign-in screen.
-      onSignedIn: () => _live?.signedIn(),
+      onSignedIn: _signedIn,
       onSignedOut: () => _live?.signedOut(),
     );
     _account = DriverAccountSession(repository: DriverAccountRepository(_api));
+    // A session kept from an earlier start: the local data is his.
+    unawaited(
+      _tokens.readAccess().then(
+        (token) => claimLocalData(tokenDriver(token)),
+        onError: (Object _) {},
+      ),
+    );
     // G9 live 2026-11-02: a language pick is saved to the account (live).
     DriverLanguage.saveToAccount = DriverRuntimeConfig.current.authRequired
         ? _account.saveLanguage
@@ -569,6 +576,22 @@ class _MoveraAppState extends State<MoveraApp> {
     );
   }
 
+  /// A sign-in. A refused session ([_sessionExpired]) keeps the local data
+  /// for the same driver; another driver's sign-in clears it first, and
+  /// without that there is no session.
+  Future<void> _signedIn() async {
+    try {
+      await claimLocalData(tokenDriver(await _tokens.readAccess()), () {
+        _account.clear();
+        return _clearLocal();
+      });
+    } catch (_) {
+      await _tokens.clear();
+      rethrow;
+    }
+    _live?.signedIn();
+  }
+
   Future<void> _logout() async {
     // Round 4: the server's session first, while the token is still there;
     // the tokens go whatever it answers. The demo (no session required,
@@ -591,6 +614,11 @@ class _MoveraAppState extends State<MoveraApp> {
       await _push?.signingOut(server: false);
       _account.clear();
     }
+    await _clearLocal();
+  }
+
+  /// Everything one driver left on this phone, in storage and in memory.
+  Future<void> _clearLocal() async {
     await PrefsActiveRideRepository.settle();
     await CompletionJournal.settle();
     await SettingsRepository.settle();

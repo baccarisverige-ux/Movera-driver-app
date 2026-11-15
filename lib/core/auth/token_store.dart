@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Where the session's tokens live. Tokens never go in SharedPreferences,
 /// URLs, logs or git.
 abstract class TokenStore {
@@ -29,5 +31,19 @@ class MemoryTokenStore implements TokenStore {
   Future<void> clear() async {
     _access = null;
     _refresh = null;
+  }
+}
+
+/// The driver id in an access token (a JWT's `sub`, movera-server
+/// `src/auth/service.ts`); null when the token cannot be read.
+Object? tokenDriver(String? token) {
+  try {
+    // A JWT's middle part: base64url without its padding.
+    final part = token!.split('.')[1];
+    return jsonDecode(
+      utf8.decode(base64.decode(part.padRight(part.length + 3 & ~3, '='))),
+    )['sub'];
+  } catch (_) {
+    return null;
   }
 }

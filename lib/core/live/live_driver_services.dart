@@ -315,6 +315,7 @@ class LiveDriverServices {
     _signedInStarted = false;
     config.stop();
     events.events.clear();
+    presence.signedOut();
     // Owner 2026-11-15: the next driver on this phone gets his own offer
     // feed, Cash rides switch and TODAY.
     dispatch.forget();
@@ -715,6 +716,22 @@ class LivePresence {
         return liveAvailabilityErrorMessage(error, online: false);
       }
     });
+  }
+
+  /// The session ended, also refused while online with no Go offline:
+  /// nothing stays online for the next driver (the last driver's feed
+  /// closes, Home shows offline, and the next Home sets the server offline
+  /// as after a restart). The server is not asked: there is no session. A
+  /// trip under way is left as it is.
+  void signedOut() {
+    if (onTrip) return;
+    _wantOnline = false;
+    serverOnline = false;
+    _settled = false;
+    _stopOnline();
+    if (_session?.status == DriverOnlineStatus.online) {
+      _session?.setOnline(false);
+    }
   }
 
   /// The feed is open (or reconnecting by itself) until [_stopOnline].
