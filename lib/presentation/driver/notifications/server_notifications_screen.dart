@@ -11,8 +11,7 @@ import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
-import 'package:movera/presentation/driver/ride history/history detail/history_detail.dart';
-import 'package:movera/presentation/driver/ride history/ride_history.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -171,8 +170,8 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
         context,
         RightToLeftTransition(
           ride != null
-              ? DriverRideHistoryDetail(record: ride)
-              : DriverRideHistory(loadHistory: widget.loadHistory),
+              ? rideHistoryDetailScreen(record: ride)
+              : rideHistoryScreen(loadHistory: widget.loadHistory),
         ),
       );
       if (mounted) await _load();

@@ -1,9 +1,14 @@
 import 'package:flutter/widgets.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/presentation/common/chat/chat.dart' deferred as chat;
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart'
     deferred as wallet;
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart'
     deferred as ride_history;
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart'
+    deferred as history_detail;
+import 'package:movera/presentation/driver/profile/profile.dart'
+    deferred as profile;
 import 'package:movera/presentation/driver/documents/documents.dart'
     deferred as documents;
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart'
@@ -26,9 +31,29 @@ Widget walletScreen() => DeferredScreen(
   builder: (_) => wallet.WalletScreen(),
 );
 
-Widget rideHistoryScreen() => DeferredScreen(
+/// [loadHistory]: the same seam as `DriverRideHistory.loadHistory` (tests).
+Widget rideHistoryScreen({
+  Future<List<TripHistoryRecord>> Function()? loadHistory,
+}) => DeferredScreen(
   load: ride_history.loadLibrary,
-  builder: (_) => ride_history.DriverRideHistory(),
+  builder: (_) => ride_history.DriverRideHistory(loadHistory: loadHistory),
+);
+
+/// One trip of Ride history (a refund-taken notification opens it). Web
+/// headroom (owner Q51, 2026-11-15): it loads on first open, like Ride
+/// history.
+Widget rideHistoryDetailScreen({required TripHistoryRecord record}) =>
+    DeferredScreen(
+      load: history_detail.loadLibrary,
+      builder: (_) => history_detail.DriverRideHistoryDetail(record: record),
+    );
+
+/// Profile (side menu) and what only it opens (Analytics, Earning stats,
+/// Vehicles, Add vehicle, My bank) load on first open too (web headroom,
+/// owner Q51, 2026-11-15).
+Widget driverProfileScreen() => DeferredScreen(
+  load: profile.loadLibrary,
+  builder: (_) => profile.DriverProfile(),
 );
 
 Widget chatScreen({required String riderDisplayName, String? tripId}) =>
@@ -80,6 +105,8 @@ Widget supportInboxScreen() => DeferredScreen(
 Future<void> loadDeferredScreens() => Future.wait([
   wallet.loadLibrary(),
   ride_history.loadLibrary(),
+  history_detail.loadLibrary(),
+  profile.loadLibrary(),
   chat.loadLibrary(),
   settings.loadLibrary(),
   documents.loadLibrary(),
