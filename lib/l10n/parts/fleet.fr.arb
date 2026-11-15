@@ -5,6 +5,7 @@
   "fleetJoined": "Vous faites partie de {name}.",
   "fleetJoinMismatch": "Le code, le nom et l’e-mail du responsable ne correspondent à aucune flotte. Vérifiez-les avec votre responsable.",
   "fleetAlreadyIn": "Vous faites déjà partie d’une flotte. Quittez-la d’abord.",
+  "fleetOtherCountry": "Le chauffeur et la flotte sont dans des pays différents. Une flotte travaille dans un seul pays.",
   "fleetAccountHasOwn": "Un compte flotte a sa propre flotte.",
   "fleetOnTrip": "Terminez d’abord la course.",
   "fleetOwnerCannotLeave": "Le responsable ne peut pas quitter la flotte.",

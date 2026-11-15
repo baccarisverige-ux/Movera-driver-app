@@ -12,6 +12,10 @@
   },
   "fleetJoinMismatch": "The code, the owner’s name and e-mail don’t match a fleet. Check them with your fleet owner.",
   "fleetAlreadyIn": "You’re already in a fleet. Leave it first.",
+  "fleetOtherCountry": "The driver and the fleet are in different countries. A fleet works in one country only.",
+  "@fleetOtherCountry": {
+    "description": "Contract v0.18.109 (BQ-FLEETCUR, owner 2026-11-15): 409 fleet_other_country, a fleet works in one country."
+  },
   "fleetAccountHasOwn": "A fleet account has its own fleet.",
   "fleetOnTrip": "Finish the trip first.",
   "fleetOwnerCannotLeave": "The owner can’t leave the fleet.",

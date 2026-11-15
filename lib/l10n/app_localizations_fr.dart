@@ -1311,6 +1311,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous faites déjà partie d’une flotte. Quittez-la d’abord.';
 
   @override
+  String get fleetOtherCountry =>
+      'Le chauffeur et la flotte sont dans des pays différents. Une flotte travaille dans un seul pays.';
+
+  @override
   String get fleetAccountHasOwn => 'Un compte flotte a sa propre flotte.';
 
   @override

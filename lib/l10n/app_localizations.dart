@@ -2284,6 +2284,12 @@ abstract class AppLocalizations {
   /// **'You’re already in a fleet. Leave it first.'**
   String get fleetAlreadyIn;
 
+  /// Contract v0.18.109 (BQ-FLEETCUR, owner 2026-11-15): 409 fleet_other_country, a fleet works in one country.
+  ///
+  /// In en, this message translates to:
+  /// **'The driver and the fleet are in different countries. A fleet works in one country only.'**
+  String get fleetOtherCountry;
+
   /// No description provided for @fleetAccountHasOwn.
   ///
   /// In en, this message translates to:

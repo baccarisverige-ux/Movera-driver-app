@@ -82,6 +82,8 @@ String accountErrorMessage(
     'invitation_expired' => tr.fleetInvitationExpired,
     'invalid_transition' when status == 409 => tr.fleetInvitationGone,
     'already_in_fleet' => tr.fleetAlreadyIn,
+    // v0.18.109 (BQ-FLEETCUR, owner 2026-11-15): a fleet works in one country.
+    'fleet_other_country' => tr.fleetOtherCountry,
     'fleet_account' => tr.fleetAccountHasOwn,
     'on_trip' => tr.fleetOnTrip,
     'fleet_owner' => tr.fleetOwnerCannotLeave,
