@@ -24,7 +24,12 @@ class DriverSessionGate extends StatefulWidget {
     required this.signInBuilder,
     this.account,
     this.supportBuilder,
+    this.ready,
   });
+
+  /// Done when the local data belongs to the kept session's driver
+  /// (`main.dart` `_claimKeptSession`); the session is read after it.
+  final Future<void>? ready;
 
   /// Owner 2026-10-29, decision 2: how long the start waits in silence
   /// before a spinner shows.
@@ -78,6 +83,7 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
   Future<_Root> _decide() async {
     final bool signedIn;
     try {
+      await widget.ready;
       signedIn = await widget.auth.hasSession();
     } catch (_) {
       return _Root.signIn;

@@ -177,6 +177,30 @@ class AuthRepository {
   /// Forgets the session on this device only.
   Future<void> clearLocalSession() => _tokens.clear();
 
+  /// A session this phone must not keep (post-merge S1 round 2, SF1: the
+  /// last driver's data could not be cleared for it). The tokens go
+  /// FIRST, so a kill during the server call leaves no session here; then
+  /// the server ends that session (with its token, best effort: an
+  /// unanswered call only leaves it to expire). [session]: the access
+  /// token of the session judged (default: the stored one).
+  Future<void> endSessionHereFirst({String? session}) async {
+    final access = session ?? await _tokens.readAccess();
+    await _tokens.clear();
+    if (access == null || access.isEmpty) return;
+    try {
+      await _api.post(
+        signOutPath,
+        bearer: access,
+        timeout: const Duration(seconds: 5),
+      );
+    } catch (error) {
+      DriverLog.warn(
+        'refused session not ended: ${error.runtimeType}',
+        name: 'auth',
+      );
+    }
+  }
+
   /// Ends the session: `POST /api/v1/auth/sign-out` while the token is
   /// still there, then the tokens go, whatever the server answered (or
   /// did not). Without a session nothing is sent.

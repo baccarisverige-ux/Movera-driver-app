@@ -11,6 +11,7 @@ import 'package:movera/core/destination/destination_search.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
@@ -52,8 +53,22 @@ void main() {
   /// call is refused (401, and the refresh too).
   String? driver;
 
+  /// The phone's token store (each test's own).
+  var tokens = MemoryTokenStore();
+
+  /// Each `POST /auth/sign-out`: its bearer, and the access token the
+  /// phone still held while the server was asked.
+  final signOuts = <({String? bearer, String? stored})>[];
+
   http.Client server() => MockClient((request) async {
     final path = request.url.path;
+    if (path.endsWith('/auth/sign-out')) {
+      signOuts.add((
+        bearer: request.headers['Authorization'],
+        stored: await tokens.readAccess(),
+      ));
+      return http.Response('{}', 200);
+    }
     http.Response json(Object body, [int status = 200]) => http.Response(
       jsonEncode(body),
       status,
@@ -70,7 +85,14 @@ void main() {
     return json({'code': 'unauthorized', 'message': 'no session'}, 401);
   });
 
-  Future<AuthController> start(WidgetTester tester, {_Store? store}) async {
+  /// Starts the app on [store] (the phone's storage) with [kept] (a
+  /// session kept from an earlier start) in the token store.
+  Future<void> boot(WidgetTester tester, {_Store? store, String? kept}) async {
+    signOuts.clear();
+    tokens = MemoryTokenStore();
+    if (kept != null) {
+      await tokens.save(access: _jwt(kept), refresh: 'refresh-$kept');
+    }
     SharedPreferences.setMockInitialValues({});
     if (store != null) {
       final original = SharedPreferencesStorePlatform.instance;
@@ -97,12 +119,16 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MoveraApp(
-        tokenStore: MemoryTokenStore(),
+        tokenStore: tokens,
         httpClient: server(),
         locationRepository: FixedGps(),
       ),
     );
     await settle(tester);
+  }
+
+  Future<AuthController> start(WidgetTester tester, {_Store? store}) async {
+    await boot(tester, store: store);
     return DriverRuntimeScope.maybeOf(
       tester.element(find.byType(DriverSignIn)),
     )!.auth!;
@@ -247,6 +273,15 @@ void main() {
     await settle(tester);
     expect(error, isNotNull);
     expect(await tester.runAsync(auth.hasSession), isFalse);
+    // Round 2 (SF1): the phone's tokens go FIRST, then the server ends the
+    // refused session (a kill in between leaves no session here).
+    expect(signOuts, hasLength(1));
+    expect(signOuts.single.bearer, 'Bearer ${_jwt('drv_B')}');
+    expect(signOuts.single.stored, isNull);
+    expect(
+      (await SharedPreferences.getInstance()).getString(localDataOwnerKey),
+      'drv_A',
+    );
 
     store.failing = null;
     await signIn(tester, auth, 'drv_B');
@@ -258,6 +293,129 @@ void main() {
     expect(DriverCategoryChoice.off.value, isEmpty);
     expect(InMemoryWaybillRepository.instance.last, isNull);
     expect(DriverNotificationFeed.instance.items, isEmpty);
+    await close(tester);
+  });
+
+  /// What A left on the phone, A recorded as its owner.
+  Future<_Store> phoneOfDriverA() async {
+    final store = _Store();
+    await store.setValue('String', 'flutter.$localDataOwnerKey', 'drv_A');
+    await store.setValue(
+      'String',
+      'flutter.${PrefsTripHistoryRepository.key}',
+      '{"schemaVersion":1,"rows":[]}',
+    );
+    await store.setValue(
+      'String',
+      'flutter.${RecentDestinations.key}',
+      '[{"name":"Home","address":"Storgatan 1","lat":59.2,"lng":17.6}]',
+    );
+    await store.setValue(
+      'String',
+      'flutter.$_categories',
+      '{"schemaVersion":1,"values":{"selected":[false]}}',
+    );
+    return store;
+  }
+
+  // Round 2, supervisor SF1 (Rules audits/impact/driver-s1-supervisor.md):
+  // B's tokens are saved before the clean-up of A's data. An app killed in
+  // that clean-up started again signed in as B, next to what was left,
+  // with A still recorded.
+  testWidgets('start with ANOTHER driver\'s kept session: the clean-up is '
+      'finished before Home reads local data, then he is recorded', (
+    tester,
+  ) async {
+    final store = await phoneOfDriverA();
+    await boot(tester, store: store, kept: 'drv_B');
+    final prefs = await SharedPreferences.getInstance();
+    await tester.runAsync(prefs.reload);
+    expect(prefs.getString(PrefsTripHistoryRepository.key), isNull);
+    expect(prefs.getString(RecentDestinations.key), isNull);
+    expect(prefs.getString(_categories), isNull);
+    expect(DriverCategoryChoice.off.value, isEmpty);
+    expect(prefs.getString(localDataOwnerKey), 'drv_B');
+    expect(signOuts, isEmpty);
+    await close(tester);
+  });
+
+  testWidgets('start with ANOTHER driver\'s kept session and a clean-up '
+      'that cannot finish: the tokens go first, the session is ended, Sign '
+      'in shows, A stays recorded', (tester) async {
+    final store = await phoneOfDriverA();
+    store.failing = 'flutter.$_categories';
+    await boot(tester, store: store, kept: 'drv_B');
+    expect(await tester.runAsync(tokens.readAccess), isNull);
+    expect(await tester.runAsync(tokens.readRefresh), isNull);
+    expect(signOuts, hasLength(1));
+    expect(signOuts.single.bearer, 'Bearer ${_jwt('drv_B')}');
+    expect(signOuts.single.stored, isNull);
+    final prefs = await SharedPreferences.getInstance();
+    await tester.runAsync(prefs.reload);
+    expect(prefs.getString(localDataOwnerKey), 'drv_A');
+    expect(DriverCategoryChoice.off.value, isEmpty);
+    expect(find.byType(DriverSignIn), findsOneWidget);
+    await close(tester);
+  });
+
+  testWidgets('start with the recorded driver\'s own kept session: '
+      'nothing is cleared', (tester) async {
+    final store = await phoneOfDriverA();
+    await boot(tester, store: store, kept: 'drv_A');
+    final prefs = await SharedPreferences.getInstance();
+    await tester.runAsync(prefs.reload);
+    expect(prefs.getString(RecentDestinations.key), isNotNull);
+    expect(prefs.getString(_categories), isNotNull);
+    expect(prefs.getString(localDataOwnerKey), 'drv_A');
+    expect(signOuts, isEmpty);
+    await close(tester);
+  });
+
+  // Round 2, supervisor SF2: the main.dart half. The owner key must outlive
+  // the in-memory resets of `_clearLocal` (keepOwner: true) and go at its
+  // very end (forgetLocalDataOwner()).
+  String? ownerDuringResets;
+  Future<void> watchResets(WidgetTester tester) async {
+    ownerDuringResets = 'not reset';
+    final prefs = (await tester.runAsync(SharedPreferences.getInstance))!;
+    // Read at once (the cache), in the middle of `_clearLocal`.
+    void seen() => ownerDuringResets = prefs.getString(localDataOwnerKey);
+    DriverNotificationFeed.instance.changes.addListener(seen);
+    addTearDown(
+      () => DriverNotificationFeed.instance.changes.removeListener(seen),
+    );
+  }
+
+  testWidgets('another driver\'s sign-in: A stays recorded while the '
+      'in-memory state is reset', (tester) async {
+    final auth = await start(tester);
+    await signIn(tester, auth, 'drv_A');
+    await tester.runAsync(driverAUsesTheApp);
+    await sessionRefused(tester);
+    await watchResets(tester);
+    await signIn(tester, auth, 'drv_B');
+    expect(ownerDuringResets, 'drv_A');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(localDataOwnerKey), 'drv_B');
+    await close(tester);
+  });
+
+  testWidgets('Log out: the owner goes last, after the in-memory resets', (
+    tester,
+  ) async {
+    final auth = await start(tester);
+    await signIn(tester, auth, 'drv_A');
+    await tester.runAsync(driverAUsesTheApp);
+    final logout = DriverRuntimeScope.maybeOf(
+      tester.element(find.byType(Navigator).first),
+    )!.logout!;
+    await watchResets(tester);
+    await tester.runAsync(logout);
+    await settle(tester);
+    expect(ownerDuringResets, 'drv_A');
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(localDataOwnerKey), isNull);
+    expect(prefs.getString(_categories), isNull);
     await close(tester);
   });
 

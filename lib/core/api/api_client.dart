@@ -90,12 +90,17 @@ class ApiClient {
   /// `POST path` with a JSON [body] and an `Idempotency-Key`. Sign-in calls
   /// pass `authenticated: false`: no bearer token, and their 401 is a
   /// refusal, never an expired session.
+  ///
+  /// [bearer] sends that access token instead of the stored one, with no
+  /// refresh on a 401 (a session already gone from this phone, told to
+  /// the server: `AuthRepository.endSessionHereFirst`).
   Future<Map<String, dynamic>> post(
     String path, {
     Map<String, dynamic>? body,
     String? idempotencyKey,
     bool authenticated = true,
     Duration? timeout,
+    String? bearer,
   }) => _send(
     'POST',
     path,
@@ -103,6 +108,7 @@ class ApiClient {
     idempotencyKey: idempotencyKey ?? _idempotencyKey(),
     authenticated: authenticated,
     timeout: timeout,
+    bearer: bearer,
   );
 
   /// `PATCH path` with a JSON [body] and an `Idempotency-Key`.
@@ -189,6 +195,7 @@ class ApiClient {
     required bool authenticated,
     http.BaseRequest Function(Uri uri)? build,
     Duration? timeout,
+    String? bearer,
   }) async {
     if (_preview.active) {
       if (method != 'GET') {
@@ -205,7 +212,8 @@ class ApiClient {
     final requestId = _requestId();
     final uri = uriFor(path);
     try {
-      final access = authenticated ? await _tokens.readAccess() : null;
+      final access =
+          bearer ?? (authenticated ? await _tokens.readAccess() : null);
       final headers = <String, String>{
         'Accept': 'application/json',
         // A multipart request writes its own Content-Type (the boundary).
@@ -225,7 +233,10 @@ class ApiClient {
         build,
         timeout: timeout,
       );
-      if (response.statusCode == 401 && access != null && access.isNotEmpty) {
+      if (response.statusCode == 401 &&
+          bearer == null &&
+          access != null &&
+          access.isNotEmpty) {
         final refresh = await _refreshAccess(access);
         if (refresh.unavailable) {
           // Offline, timed out or a server fault: the refresh token may still
