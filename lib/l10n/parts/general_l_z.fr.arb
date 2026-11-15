@@ -7,6 +7,7 @@
   "showRoute": "Afficher l’itinéraire",
   "turnOffDestination": "Désactiver la destination",
   "versionLatestVersion": "Version {latestVersion}",
+  "versionInstalled": "Installée : {version}",
   "openingUpdateEllipsis": "Ouverture de la mise à jour…",
   "updating": "MISE À JOUR",
   "slideToOpen": "GLISSEZ POUR OUVRIR",

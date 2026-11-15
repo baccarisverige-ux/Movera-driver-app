@@ -759,6 +759,7 @@
   "showRoute": "Visa rutt",
   "turnOffDestination": "Stäng av destination",
   "versionLatestVersion": "Version {latestVersion}",
+  "versionInstalled": "Installerad: {version}",
   "openingUpdateEllipsis": "Öppnar uppdateringen…",
   "updating": "UPPDATERAR",
   "slideToOpen": "DRA FÖR ATT ÖPPNA",
