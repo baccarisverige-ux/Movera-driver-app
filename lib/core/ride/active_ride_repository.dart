@@ -4,6 +4,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/waybill/waybill.dart';
 
 enum ActiveRideStage { headingToPickup, waitingForRider, onTrip }
 
@@ -60,6 +61,34 @@ class PersistedQueuedTrip {
   /// on live the server's [driverTotal] (else the saved pay with no
   /// pickup pay, or "—"), [driverBonus] and [pickupPay] lines, never a sum
   /// worked out here (BQ-F1c). The demo keeps its sample sum.
+  /// BQ-F1d (owner R2; owner s06:1164: the waybill shows all the details):
+  /// the "next trip secured" waybill of this restored trip (Home): the
+  /// fare and the bonus and pickup pay lines of [asHeadingToPickup] (the
+  /// server's [driverTotal]; "—" on live for an older save with a pickup
+  /// pay), never a sum worked out on the phone.
+  WaybillRecord securedWaybill({DateTime? issuedAt}) {
+    final terms = asHeadingToPickup(
+      matchedVia: WaybillRecord.exclusiveOfferSource,
+    );
+    return WaybillRecord(
+      tripId: tripId,
+      statusLabel: WaybillRecord.nextTripSecured,
+      issuedAt: issuedAt ?? DateTime.now(),
+      fare: terms.fare ?? fare,
+      driverBonus: WaybillRecord.bonusLabel(terms.driverBonus),
+      pickupPay: WaybillRecord.bonusLabel(terms.pickupPay),
+      service: category,
+      riderName: riderName,
+      pickup: pickup,
+      dropoff: dropoff,
+      source: WaybillRecord.moveraRadarSource,
+      driverName: WaybillRecord.moveraDriverName,
+      vehicle: WaybillRecord.vehicleUnavailable,
+      licensePlate: WaybillRecord.plateUnavailable,
+      passengerCapacity: 4,
+    );
+  }
+
   PersistedActiveRide asHeadingToPickup({required String matchedVia}) {
     final terms = PickupPayQuote(
       pay:

@@ -63,6 +63,9 @@ void main() {
     'fare': money(14000),
     'driverEarnings': money(11200),
     'pickupPay': money(1500),
+    // As the server sends it (offers.ts:37): earnings + bonus + pickup pay.
+    // BQ-F1d (owner R2): the card shows this number, never a phone sum.
+    'driverTotal': money(12700),
     'pickup': {'address': 'Odenplan 1, Stockholm', 'lat': 59.343, 'lng': 18.05},
     'dropoff': {'address': 'Slussen, Stockholm', 'lat': 59.319, 'lng': 18.072},
     'stops': <Object>[],
@@ -228,8 +231,9 @@ void main() {
     await frames(tester);
     expect(card, findsOneWidget, reason: 'the offer is shown on the trip');
     expect(find.text('Odenplan 1, Stockholm'), findsOneWidget);
-    // The server's own time (20 s), the Exclusive mark, its pickup pay in
-    // the driver's total (112 + 15 kr).
+    // The server's own time (20 s), the Exclusive mark, and the server's
+    // driverTotal with its pickup pay in it (127 kr = 112 + 15, worked out
+    // by the server).
     expect(find.text(tr.exclusiveSecondsS(20)), findsOneWidget);
     expect(find.textContaining('127'), findsWidgets);
 

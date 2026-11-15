@@ -48,11 +48,16 @@ class PickupPayQuote {
   /// with its decimals (price audit 2026-11-14 gap 1: a SEK-only reader
   /// dropped the pickup pay of every euro and dinar offer). Unchanged when
   /// there is no pickup pay or the label is not an amount in it.
-  String totalOf(String fare) {
+  ///
+  /// BQ-F1d (owner R2: the apps never work money out): [live] (default: a
+  /// live server is on) with a pickup pay and no [serverTotal] (an older
+  /// server) shows "—", never the sum worked out here. Only the demo adds.
+  String totalOf(String fare, {bool? live}) {
     if (serverTotal case final total?) return total.formatted;
     if (!hasPay) {
       return fare;
     }
+    if (live ?? LiveDriverServices.active) return '—';
     final base = Money.parseLabel(fare, currency: pay.currency);
     return base == null ? fare : (base + pay).formatted;
   }

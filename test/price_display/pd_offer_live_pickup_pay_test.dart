@@ -33,6 +33,10 @@ void main() {
       leg: const PickupLeg(km: 25, minutes: 40),
       serverPay: const Money(minorUnits: 2500, currency: 'TND'),
     );
-    expect(quote.totalOf('10.000 DT'), '12.500 DT');
+    // BQ-F1d (owner R2: the apps never work money out): the server's pay
+    // is the pickup pay line, but with no Offer.driverTotal the card shows
+    // "—", never the earnings plus that pay added up on the phone.
+    expect(quote.pay, const Money(minorUnits: 2500, currency: 'TND'));
+    expect(quote.totalOf('10.000 DT'), '—');
   });
 }
