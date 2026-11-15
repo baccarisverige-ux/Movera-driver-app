@@ -283,6 +283,25 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// made while the phone was away is skipped.
   bool _hasCursor = false;
 
+  /// The driver the cursor and the offers belong to.
+  Object? _driver;
+
+  /// Sign-out, or another driver's token: offer sequences are per driver,
+  /// so the cursor and the offers of the last one are let go.
+  void forget() {
+    _lastSequence = 0;
+    _hasCursor = false;
+    _clear();
+  }
+
+  void _clear() {
+    if (_offers.isNotEmpty || _nextTrips.isNotEmpty) {
+      _offers.clear();
+      _nextTrips.clear();
+      _emit();
+    }
+  }
+
   /// Set when the feed was lost: the next open feed also reloads the open
   /// offers (`GET /driver/offers`), in case events were missed.
   bool _reloadOnOpen = false;
@@ -502,6 +521,19 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     if (_disposed || generation != _generation) return;
     final http.StreamedResponse response;
     try {
+      // Owner 2026-11-15: the cursor is one driver's (the token's `sub`),
+      // also when no sign-out came first.
+      Object? driver;
+      try {
+        // A JWT's middle part: base64url without its padding.
+        final part = (await _token())!.split('.')[1];
+        driver = jsonDecode(
+          utf8.decode(base64.decode(part.padRight(part.length + 3 & ~3, '='))),
+        )['sub'];
+      } catch (_) {}
+      if (driver != _driver) forget();
+      _driver = driver;
+      final headers = await _headers();
       final request =
           http.Request(
               'GET',
@@ -510,7 +542,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
               }),
             )
             ..headers.addAll({
-              ...await _headers(),
+              ...headers,
               'Accept': 'text/event-stream',
               if (_hasCursor) 'Last-Event-ID': '$_lastSequence',
             });
@@ -660,11 +692,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     final feed = _feed;
     _feed = null;
     _setLive(false);
-    if (_offers.isNotEmpty || _nextTrips.isNotEmpty) {
-      _offers.clear();
-      _nextTrips.clear();
-      _emit();
-    }
+    _clear();
     await feed?.cancel();
   }
 

@@ -76,6 +76,5 @@ class TodayEarnings {
     ).formatted;
   }
 
-  @visibleForTesting
   static void reset() => _label.value = null;
 }

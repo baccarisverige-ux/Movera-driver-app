@@ -274,7 +274,6 @@ class DriverOfferPreferences {
   /// Q23: cash rides on or off, from the Home sheet. Off: no cash offers.
   static final ValueNotifier<bool> acceptsCash = ValueNotifier<bool>(true);
 
-  @visibleForTesting
   static void reset() {
     acceptsCash.value = true;
     ExclusiveAnswers.instance.reset();

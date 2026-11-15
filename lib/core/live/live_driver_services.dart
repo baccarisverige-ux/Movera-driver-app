@@ -14,6 +14,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/history/today_earnings.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/live/live_driver_config.dart';
@@ -314,6 +315,11 @@ class LiveDriverServices {
     _signedInStarted = false;
     config.stop();
     events.events.clear();
+    // Owner 2026-11-15: the next driver on this phone gets his own offer
+    // feed, Cash rides switch and TODAY.
+    dispatch.forget();
+    DriverOfferPreferences.reset();
+    TodayEarnings.reset();
   }
 
   /// The app is on screen again ([LivePresence.resumed]); the events are
