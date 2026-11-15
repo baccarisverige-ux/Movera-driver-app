@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/deferred_screen.dart';
@@ -161,15 +162,25 @@ void main() {
 
   test('only deferred_screens.dart imports Wallet, Ride history and Chat', () {
     final direct = RegExp(
-      r"import '[^']*(my%20wallet/wallet|ride%20history/ride_history|"
-      r"common/chat/chat|driving%20logs/driving_logs|"
-      r"promotions/promotions)\.dart'(?!\s*deferred)",
+      // `(%20| )`: a path written with a plain space is the same file.
+      r"import '[^']*(my(%20| )wallet/wallet|ride(%20| )history/ride_history|"
+      r"ride(%20| )history/history(%20| )detail/history_detail|"
+      r"common/chat/chat|driving(%20| )logs/driving_logs|"
+      r"promotions/promotions|driver/profile/profile)\.dart'(?!\s*deferred)",
     );
     final offenders = [
       for (final file in Directory('lib').listSync(recursive: true))
         if (file is File &&
             file.path.endsWith('.dart') &&
-            direct.hasMatch(file.readAsStringSync()))
+            direct
+                .allMatches(file.readAsStringSync())
+                // Ride history may open one of its own trips: both are in
+                // the same deferred part.
+                .any(
+                  (m) =>
+                      !(file.path.endsWith('ride_history.dart') &&
+                          m.group(0)!.contains('history_detail')),
+                ))
           file.path,
     ];
     expect(offenders, isEmpty);
@@ -203,5 +214,35 @@ void main() {
     await open(tester, () => supportScreen());
     expect(screenNamed('SupportScreen'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  // Web headroom (owner Q51, 2026-11-15): Profile and one trip of Ride
+  // history load on first open too.
+  testWidgets('Profile still opens, through its loader', (tester) async {
+    await open(tester, driverProfileScreen);
+    expect(screenNamed('DriverProfile'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a past trip still opens, through its loader', (tester) async {
+    await open(
+      tester,
+      () => rideHistoryDetailScreen(
+        record: const TripHistoryRecord(
+          tripId: 't-1',
+          riderName: 'Karin',
+          whenLabel: 'Today',
+          pickup: 'A',
+          dropoff: 'B',
+          fare: '100 kr',
+          category: 'Movera',
+        ),
+      ),
+    );
+    expect(screenNamed('DriverRideHistoryDetail'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
   });
 }

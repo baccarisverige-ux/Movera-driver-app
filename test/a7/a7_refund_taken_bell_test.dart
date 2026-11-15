@@ -12,6 +12,7 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/ride history/history detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride history/ride_history.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
@@ -26,6 +27,9 @@ import '../../integration_test/headless_map_platform.dart';
 /// (bell + push) with how much and why. The bell list shows the server's
 /// words with a money icon; built-in sv / fr / en texts if a row has none.
 void main() {
+  // Ride history and a past trip load on first open (deferred_screens.dart);
+  // a deferred load does not finish inside the fake clock.
+  setUpAll(loadDeferredScreens);
   // The contract's texts, as the server writes them in his language.
   const rows = [
     (
