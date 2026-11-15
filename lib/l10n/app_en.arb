@@ -368,6 +368,10 @@
   "@contactEmailVerifiedDone": {
     "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): snackbar after the current address was verified."
   },
+  "menuNewDriver": "New driver",
+  "@menuNewDriver": {
+    "description": "BQ-V15 (owner driver-g12.md:4): side menu header instead of the rating until the driver's first rating."
+  },
   "airportQueueTitle": "Airport queue",
   "airportQueuePlace": "You are number {place} in line",
   "@airportQueuePlace": {

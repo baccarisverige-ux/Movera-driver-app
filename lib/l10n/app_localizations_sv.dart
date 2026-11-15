@@ -595,6 +595,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contactEmailVerifiedDone => 'E-postadressen är verifierad';
 
   @override
+  String get menuNewDriver => 'Ny förare';
+
+  @override
   String get airportQueueTitle => 'Flygplatskö';
 
   @override

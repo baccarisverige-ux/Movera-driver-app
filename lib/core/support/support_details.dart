@@ -1,8 +1,8 @@
 /// Movera's support contact, shown under "Need help?" before sign-in
 /// (owner 2026-10-29: "Add help and add email and phone and details for
-/// company, we add missing info later"). The values are built into the app;
-/// the owner sends them later, so fill them in here. While all are empty
-/// the box says "Contact details coming soon".
+/// company, we add missing info later"). BQ-V14: the admin's Content ›
+/// Legal company details are shown; the built-in values below are only the
+/// fallback. While all are empty the box says "Contact details coming soon".
 class SupportDetails {
   const SupportDetails({this.email = '', this.phone = '', this.company = ''});
 
@@ -15,9 +15,23 @@ class SupportDetails {
   /// Company details as they should read: name, org. number, address.
   final String company;
 
+  /// BQ-V14: from the admin's `LegalCompany` (Content › Legal), as the
+  /// rider app does.
+  factory SupportDetails.fromLegalCompany(Map<String, String> c) =>
+      SupportDetails(
+        email: c['supportEmail'] ?? '',
+        phone: c['supportPhone'] ?? '',
+        company: [
+          c['companyName'],
+          c['orgNumber'],
+          c['address'],
+        ].whereType<String>().where((s) => s.trim().isNotEmpty).join('\n'),
+      );
+
   bool get isEmpty =>
       email.trim().isEmpty && phone.trim().isEmpty && company.trim().isEmpty;
 }
 
-/// The one place to fill in when the owner sends the details.
+/// The built-in fallback, used while no admin details were ever read
+/// (BQ-V14: the admin's Content › Legal company details win).
 const moveraSupportDetails = SupportDetails(email: '', phone: '', company: '');

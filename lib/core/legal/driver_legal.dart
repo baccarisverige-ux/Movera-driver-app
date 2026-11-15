@@ -55,6 +55,7 @@ class LegalTexts {
     required this.privacy,
     this.source = 'default',
     this.reacceptFrom,
+    this.company = const {},
   });
 
   factory LegalTexts.fromJson(Map<String, dynamic> json) => LegalTexts(
@@ -69,6 +70,10 @@ class LegalTexts {
     privacy: LegalDocument.fromJson(
       Map<String, dynamic>.from(json['privacy'] as Map? ?? const {}),
     ),
+    company: {
+      for (final e in (json['company'] as Map? ?? const {}).entries)
+        if (e.value is String) '${e.key}': e.value as String,
+    },
   );
 
   final String country;
@@ -88,6 +93,10 @@ class LegalTexts {
   final LegalDocument terms;
   final LegalDocument privacy;
 
+  /// v0.18.14 `LegalCompany` from admin Content › Legal (companyName,
+  /// orgNumber, address, supportEmail, supportPhone): "Need help?" (BQ-V14).
+  final Map<String, String> company;
+
   Map<String, dynamic> toJson() => {
     'country': country,
     'version': version,
@@ -96,6 +105,7 @@ class LegalTexts {
     'reacceptFrom': reacceptFrom,
     'terms': terms.toJson(),
     'privacy': privacy.toJson(),
+    'company': company,
   };
 }
 

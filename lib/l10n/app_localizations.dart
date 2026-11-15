@@ -1120,6 +1120,12 @@ abstract class AppLocalizations {
   /// **'E-mail verified'**
   String get contactEmailVerifiedDone;
 
+  /// BQ-V15 (owner driver-g12.md:4): side menu header instead of the rating until the driver's first rating.
+  ///
+  /// In en, this message translates to:
+  /// **'New driver'**
+  String get menuNewDriver;
+
   /// No description provided for @airportQueueTitle.
   ///
   /// In en, this message translates to:

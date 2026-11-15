@@ -169,6 +169,7 @@
   "contactCodeSentTo": "Nous avons envoyé un code à {email}.",
   "contactCodeNotSentYet": "Les codes par e-mail ne peuvent pas encore être envoyés. Réessayez plus tard.",
   "contactEmailVerifiedDone": "E-mail vérifié",
+  "menuNewDriver": "Nouveau chauffeur",
   "airportQueueTitle": "File de l'aéroport",
   "airportQueuePlace": "Vous êtes numéro {place} dans la file",
   "airportQueueAheadWaiting": "{ahead} chauffeurs devant vous · attente {minutes} min",

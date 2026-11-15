@@ -595,6 +595,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactEmailVerifiedDone => 'E-mail verified';
 
   @override
+  String get menuNewDriver => 'New driver';
+
+  @override
   String get airportQueueTitle => 'Airport queue';
 
   @override

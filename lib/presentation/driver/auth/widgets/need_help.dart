@@ -1,6 +1,7 @@
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/support/support_details.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 
@@ -11,9 +12,15 @@ import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 class NeedHelpLink extends StatelessWidget {
   const NeedHelpLink({super.key, this.details = moveraSupportDetails});
 
+  /// The built-in details, used while no admin details were ever read.
   final SupportDetails details;
 
   void _show(BuildContext context) {
+    // BQ-V14: the admin's Content › Legal company (`GET /legal/{country}`,
+    // kept offline) wins over the built-in details.
+    final c = DriverLegal.instance.current?.company ?? const {};
+    final admin = SupportDetails.fromLegalCompany(c);
+    final details = admin.isEmpty ? this.details : admin;
     showDialog<void>(
       context: context,
       builder: (context) => MoveraDialogTheme(
