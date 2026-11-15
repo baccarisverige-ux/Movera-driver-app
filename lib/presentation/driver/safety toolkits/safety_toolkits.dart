@@ -37,6 +37,7 @@ class SafetyToolKits extends StatefulWidget {
     this.launchEmergencyDial,
     this.dialNumber,
     this.sendSos,
+    this.sendSosResult,
     this.web = kIsWeb,
   });
 
@@ -52,6 +53,11 @@ class SafetyToolKits extends StatefulWidget {
 
   /// Contract v0.7.0: the SOS to Movera ([DriverSos.fromApp] by default).
   final Future<DriverSosOutcome> Function()? sendSos;
+
+  /// v0.18.101 §92 (BQ-V34): the SOS with the receipt's `contactsSms`
+  /// ([DriverSos.fromAppWithReceipt] by default; [sendSos] when only that
+  /// is given).
+  final Future<DriverSosResult> Function()? sendSosResult;
 
   /// A browser build: its tel: launch reports success whether or not a
   /// dialer opened (url_launcher_web), so the sheet never says it did.
@@ -143,15 +149,21 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
       );
       if (send != true || !_ownsRoute) return;
       // Both at once: the dialer does not wait for the network.
-      final alert = (widget.sendSos ?? DriverSos.fromApp)();
+      final sendSos = widget.sendSos;
+      final alert =
+          (widget.sendSosResult ??
+          (sendSos == null
+              ? DriverSos.fromAppWithReceipt
+              : () async => DriverSosResult(await sendSos())))();
       final dial = await handoffEmergencyDial(
         () => _launch(EmergencyNumbers.main.number),
       );
-      final outcome = await alert;
+      final result = await alert;
+      final outcome = result.outcome;
       if (!_ownsRoute) return;
       if (outcome == DriverSosOutcome.sent) setState(() => _sosSent = true);
       final dialed = dial == EmergencyDialResult.opened;
-      _showMessage(switch (outcome) {
+      final message = switch (outcome) {
         // A browser reports a tel: launch as opened whether or not a dialer
         // opened (url_launcher_web), so it never says it did.
         DriverSosOutcome.sent =>
@@ -162,11 +174,29 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
               : tr.safetySosSent,
         DriverSosOutcome.noTrip => tr.safetySosNoTrip,
         DriverSosOutcome.failed => tr.safetySosNotSent,
-      }, ok: outcome == DriverSosOutcome.sent && dialed && !widget.web);
+      };
+      final smsLine = outcome == DriverSosOutcome.sent
+          ? _contactsSmsLine(result.contactsSms)
+          : null;
+      _showMessage(
+        smsLine == null ? message : '$message\n$smsLine',
+        ok: outcome == DriverSosOutcome.sent && dialed && !widget.web,
+      );
     } finally {
       _emergencyInFlight = false;
     }
   }
+
+  /// v0.18.101 §92 (BQ-V34): the line about the SMS to the driver's
+  /// emergency contacts (contract texts.driver); off, no contacts or no
+  /// field: none.
+  static String? _contactsSmsLine(SosContactsSms? sms) => switch (sms?.status) {
+    SosContactsSmsStatus.queued ||
+    SosContactsSmsStatus.sent => tr.safetySosContactsSmsSent,
+    SosContactsSmsStatus.notConnected => tr.safetySosContactsSmsNotConnected,
+    SosContactsSmsStatus.failed => tr.safetySosContactsSmsFailed,
+    _ => null,
+  };
 
   /// No trip: "Call 112" opens the phone's dialer; nothing goes to Movera
   /// (the server takes an SOS only during a live trip).

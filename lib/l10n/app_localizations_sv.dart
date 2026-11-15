@@ -5259,6 +5259,26 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emergencyGeneralLabel => 'Nödnummer';
 
   @override
+  String get safetySosContactsSmsSent =>
+      'Dina nödkontakter fick ett sms med din position.';
+
+  @override
+  String get safetySosContactsSmsNotConnected =>
+      'Sms till dina nödkontakter är inte anslutet än.';
+
+  @override
+  String get safetySosContactsSmsFailed =>
+      'Sms till dina nödkontakter kunde inte skickas.';
+
+  @override
+  String get emergencyContactsSosSmsOn =>
+      'När du trycker på SOS under en resa får de ett sms med din position.';
+
+  @override
+  String get emergencyContactsSosSmsOff =>
+      'Sms till nödkontakter vid SOS är inte på än. Ring dem från den här sidan.';
+
+  @override
   String get call112 => 'Ring 112';
 
   @override

@@ -3,6 +3,7 @@ import 'package:movera/widgets/owned_external_action.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/safety/emergency_numbers.dart';
+import 'package:movera/core/safety/sos_contacts_sms.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
@@ -240,10 +241,18 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
               onPressed: _restore,
               child: Text(tr.couldNotLoadTrustedContactsRetry),
             ),
-          Text(
-            tr.trustedContactsStayOnThisDevice,
-            style: TextStyle(color: _muted, fontSize: 12.5, height: 1.4),
-          ),
+          // v0.18.101 §92 (BQ-V34): the old "Trusted contacts stay on this
+          // device" was wrong since v0.18.26 (server copy). The line says
+          // whether SOS texts them (DriverAppConfig.sosContactsSms); none
+          // while the server never sent the field.
+          if (SosContactsSmsConfig.current case final sms?)
+            Text(
+              sms.promised
+                  ? tr.emergencyContactsSosSmsOn
+                  : tr.emergencyContactsSosSmsOff,
+              key: const ValueKey<String>('emergency-contacts-sos-sms'),
+              style: TextStyle(color: _muted, fontSize: 12.5, height: 1.4),
+            ),
           const SizedBox(height: 16),
           for (final contact in _contacts)
             Padding(
