@@ -102,6 +102,11 @@ class AuthController {
 
   Future<bool> hasSession() => _auth.hasSession();
 
+  /// A session this phone must not keep: the tokens go first, then the
+  /// server ends it ([AuthRepository.endSessionHereFirst]).
+  Future<void> endSessionHereFirst({String? session}) =>
+      _auth.endSessionHereFirst(session: session);
+
   /// Contract v0.15.0 (decision 5): `POST /auth/waitlist`.
   Future<void> joinWaitlist(String phone, {String? locale}) =>
       _auth.joinWaitlist(phone, locale: locale);
