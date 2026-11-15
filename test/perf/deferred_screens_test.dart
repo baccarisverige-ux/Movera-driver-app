@@ -162,7 +162,8 @@ void main() {
   test('only deferred_screens.dart imports Wallet, Ride history and Chat', () {
     final direct = RegExp(
       r"import '[^']*(my%20wallet/wallet|ride%20history/ride_history|"
-      r"common/chat/chat)\.dart'(?!\s*deferred)",
+      r"common/chat/chat|driving%20logs/driving_logs|"
+      r"promotions/promotions)\.dart'(?!\s*deferred)",
     );
     final offenders = [
       for (final file in Directory('lib').listSync(recursive: true))
@@ -183,6 +184,18 @@ void main() {
   testWidgets('Documents still opens, through its loader', (tester) async {
     await open(tester, () => driverDocumentsScreen());
     expect(screenNamed('DriverDocuments'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Driving log still opens, through its loader', (tester) async {
+    await open(tester, drivingLogsScreen);
+    expect(screenNamed('DrivingLogs'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Promotions still opens, through its loader', (tester) async {
+    await open(tester, promotionsScreen);
+    expect(screenNamed('Promotions'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

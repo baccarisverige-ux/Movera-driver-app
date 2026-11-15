@@ -8,7 +8,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
@@ -16,7 +15,7 @@ import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/profile/profile.dart';
-import 'package:movera/presentation/driver/promotions/promotions.dart';
+import 'package:movera/presentation/driver/promotions/promotions_badge.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
 class DriverSideMenu extends StatelessWidget {
@@ -185,18 +184,18 @@ class DriverSideMenu extends StatelessWidget {
                       _MenuAction(
                         asset: AppAssets.menuTag,
                         // G3-D6: "NEW" only for an unopened campaign.
-                        badge: session == null && Promotions.hasUnopened
+                        badge: session == null && PromotionsBadge.hasUnopened
                             ? tr.orbNew
                             : null,
                         title: tr.promotions,
                         subtitle: tr.bonusesAndCampaignOffers,
-                        onTap: () => _open(context, const Promotions()),
+                        onTap: () => _open(context, promotionsScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuTimer,
                         title: tr.drivingLogs,
                         subtitle: tr.hoursOnlineAndRestRules,
-                        onTap: () => _open(context, const DrivingLogs()),
+                        onTap: () => _open(context, drivingLogsScreen()),
                       ),
                     ],
                   ),
