@@ -18,6 +18,7 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/main.dart';
 import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'phase5/live_fixture.dart';
 
@@ -36,6 +37,15 @@ String _jwt(String driverId) {
 }
 
 const _categories = 'movera_driver_settings_section_categories';
+
+/// The phone's storage; [failing] (a platform key) cannot be removed.
+class _Store extends InMemorySharedPreferencesStore {
+  _Store() : super.empty();
+  String? failing;
+  @override
+  Future<bool> remove(String key) async =>
+      key == failing ? false : super.remove(key);
+}
 
 void main() {
   /// The driver the next verified code signs in; null = every signed-in
@@ -60,8 +70,13 @@ void main() {
     return json({'code': 'unauthorized', 'message': 'no session'}, 401);
   });
 
-  Future<AuthController> start(WidgetTester tester) async {
+  Future<AuthController> start(WidgetTester tester, {_Store? store}) async {
     SharedPreferences.setMockInitialValues({});
+    if (store != null) {
+      final original = SharedPreferencesStorePlatform.instance;
+      SharedPreferencesStorePlatform.instance = store;
+      addTearDown(() => SharedPreferencesStorePlatform.instance = original);
+    }
     final previous = DriverRuntimeConfig.current;
     DriverRuntimeConfig.current = const DriverRuntimeConfig(
       simulatedArrival: true,
@@ -193,6 +208,53 @@ void main() {
     expect(prefs.getString(PrefsTripHistoryRepository.key), isNull);
     expect(prefs.getString(RecentDestinations.key), isNull);
     expect(prefs.getString(_categories), isNull);
+    expect(DriverCategoryChoice.off.value, isEmpty);
+    expect(InMemoryWaybillRepository.instance.last, isNull);
+    expect(DriverNotificationFeed.instance.items, isEmpty);
+    await close(tester);
+  });
+
+  // Rules audits/impact/post-merge-2026-11-15d.md S1: the owner key went
+  // before the section keys and the in-memory resets. A clean-up that
+  // stopped there left nobody recorded: B's next sign-in cleared nothing
+  // and he saw A's category choice, LAST TRIP and notifications.
+  testWidgets('a clean-up that fails part-way is finished at the next '
+      'driver\'s next sign-in', (tester) async {
+    final store = _Store();
+    final auth = await start(tester, store: store);
+    await signIn(tester, auth, 'drv_A');
+    await tester.runAsync(driverAUsesTheApp);
+    await sessionRefused(tester);
+
+    store.failing = 'flutter.$_categories';
+    driver = 'drv_B';
+    Object? error;
+    await tester.runAsync(() async {
+      try {
+        await auth.verify(
+          challenge: OtpChallenge(
+            phone: '+46700000000',
+            sessionId: 'otp-1',
+            expiresAt: DateTime(2030),
+            retryAfter: Duration.zero,
+          ),
+          code: '1234',
+        );
+      } catch (e) {
+        error = e;
+      }
+    });
+    await settle(tester);
+    expect(error, isNotNull);
+    expect(await tester.runAsync(auth.hasSession), isFalse);
+
+    store.failing = null;
+    await signIn(tester, auth, 'drv_B');
+    final prefs = await SharedPreferences.getInstance();
+    await tester.runAsync(prefs.reload);
+    expect(prefs.getString(_categories), isNull);
+    expect(prefs.getString(PrefsTripHistoryRepository.key), isNull);
+    expect(prefs.getString(RecentDestinations.key), isNull);
     expect(DriverCategoryChoice.off.value, isEmpty);
     expect(InMemoryWaybillRepository.instance.last, isNull);
     expect(DriverNotificationFeed.instance.items, isEmpty);

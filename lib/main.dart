@@ -622,7 +622,9 @@ class _MoveraAppState extends State<MoveraApp> {
     await PrefsActiveRideRepository.settle();
     await CompletionJournal.settle();
     await SettingsRepository.settle();
-    await clearLocalUserData();
+    // The owner key stays until the in-memory resets below are done too
+    // (post-merge 2026-11-15d S1).
+    await clearLocalUserData(keepOwner: true);
     // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
@@ -650,6 +652,9 @@ class _MoveraAppState extends State<MoveraApp> {
     // Last: the resets above can make the old Home, still mounted under
     // Profile, post notices (driver-r5-27).
     IslandMessages.clear();
+    // Only now: a clean-up that stopped above keeps the last driver
+    // recorded, so the next driver's sign-in runs it again.
+    await forgetLocalDataOwner();
   }
 
   // Round 4 (live): the hold is the server's account state; the demo

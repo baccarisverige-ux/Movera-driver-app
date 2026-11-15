@@ -148,6 +148,18 @@ Future<void> claimLocalData(
   await prefs.setString(localDataOwnerKey, driver);
 }
 
+/// The end of a clean-up run with `keepOwner`: everything of the last
+/// driver is gone, so nobody owns the local data any more.
+Future<void> forgetLocalDataOwner({
+  Future<SharedPreferences> Function()? load,
+}) async => _removeOwner(await (load ?? SharedPreferences.getInstance)());
+
+Future<void> _removeOwner(SharedPreferences prefs) async {
+  if (!await prefs.remove(localDataOwnerKey)) {
+    throw StateError('Could not clear local data: $localDataOwnerKey');
+  }
+}
+
 /// The driver's language choice: a device setting, kept across logout like
 /// the rider app's `movera_app_language` (the next driver on this phone most
 /// likely speaks it too).
@@ -159,8 +171,15 @@ const String languageSectionKey =
 /// Active-trip recovery still works until this runs. After it runs, terminal
 /// and active trips cannot resurrect from local storage. Keys outside the
 /// Movera inventory are left untouched.
+///
+/// The owner key ([localDataOwnerKey]) goes last, only after every other
+/// step succeeded (post-merge 2026-11-15d S1): a clean-up that stops
+/// part-way keeps the last driver recorded, so the next driver's sign-in
+/// runs it again. [keepOwner] leaves it for a caller with more to clear
+/// (the app's in-memory state), which then calls [forgetLocalDataOwner].
 Future<void> clearLocalUserData({
   Future<SharedPreferences> Function()? load,
+  bool keepOwner = false,
 }) async {
   LocalWriteSession.beginCleanup();
   try {
@@ -181,7 +200,6 @@ Future<void> clearLocalUserData({
       PrefsActiveRideRepository.terminalKey,
       DriverStartPosition.key,
       RecentDestinations.key,
-      localDataOwnerKey,
     ];
     DriverStartPosition.clearMemory();
     for (final key in exact) {
@@ -209,6 +227,7 @@ Future<void> clearLocalUserData({
     }
     // driver-u31: the Ride check audio files the cleared log pointed at.
     await deleteRideCheckRecordings();
+    if (!keepOwner) await _removeOwner(prefs);
   } catch (_) {
     LocalWriteSession.cancelCleanup();
     rethrow;
