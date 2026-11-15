@@ -13,6 +13,7 @@ import 'package:movera/presentation/driver/notifications/driver_notifications_sc
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/promotions/promotions_badge.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -163,43 +164,48 @@ class DriverSideMenu extends StatelessWidget {
                   ),
                   _groupGap(),
                   _sectionLabel(tr.work),
-                  _menuCard(
-                    children: [
-                      _MenuAction(
-                        asset: AppAssets.menuScheduledRide,
-                        highlight: true,
-                        title: tr.scheduledRides,
-                        subtitle: tr.reservationsAndAcceptedTrips,
-                        onTap: () => _open(
-                          context,
-                          ScheduledRidesScreen(
-                            dispatchRepository: dispatchRepository,
+                  _workMenu(
+                    context,
+                    session,
+                    (campaignsNew) => _menuCard(
+                      children: [
+                        _MenuAction(
+                          asset: AppAssets.menuScheduledRide,
+                          highlight: true,
+                          title: tr.scheduledRides,
+                          subtitle: tr.reservationsAndAcceptedTrips,
+                          onTap: () => _open(
+                            context,
+                            ScheduledRidesScreen(
+                              dispatchRepository: dispatchRepository,
+                            ),
                           ),
                         ),
-                      ),
-                      _MenuAction(
-                        asset: AppAssets.navMenuBranch,
-                        title: tr.ridePreferences,
-                        subtitle: tr.chooseCategoriesYouWantToReceive,
-                        onTap: () => _open(context, const Preferences()),
-                      ),
-                      _MenuAction(
-                        asset: AppAssets.menuTag,
-                        // G3-D6: "NEW" only for an unopened campaign.
-                        badge: session == null && PromotionsBadge.hasUnopened
-                            ? tr.orbNew
-                            : null,
-                        title: tr.promotions,
-                        subtitle: tr.bonusesAndCampaignOffers,
-                        onTap: () => _open(context, promotionsScreen()),
-                      ),
-                      _MenuAction(
-                        asset: AppAssets.menuTimer,
-                        title: tr.drivingLogs,
-                        subtitle: tr.hoursOnlineAndRestRules,
-                        onTap: () => _open(context, drivingLogsScreen()),
-                      ),
-                    ],
+                        _MenuAction(
+                          asset: AppAssets.navMenuBranch,
+                          title: tr.ridePreferences,
+                          subtitle: tr.chooseCategoriesYouWantToReceive,
+                          onTap: () => _open(context, const Preferences()),
+                        ),
+                        _MenuAction(
+                          asset: AppAssets.menuTag,
+                          // G3-D6: "NEW" only for an unopened campaign; on
+                          // live the server's isNew (BQ-V44).
+                          badge: campaignsNew ? tr.orbNew : null,
+                          title: LiveDriverServices.active
+                              ? tr.campaignsTitle
+                              : tr.promotions,
+                          subtitle: tr.bonusesAndCampaignOffers,
+                          onTap: () => _open(context, promotionsScreen()),
+                        ),
+                        _MenuAction(
+                          asset: AppAssets.menuTimer,
+                          title: tr.drivingLogs,
+                          subtitle: tr.hoursOnlineAndRestRules,
+                          onTap: () => _open(context, drivingLogsScreen()),
+                        ),
+                      ],
+                    ),
                   ),
                   _groupGap(),
                   _sectionLabel(tr.supportApp),
@@ -476,6 +482,23 @@ class DriverSideMenu extends StatelessWidget {
       height: 8,
       margin: const EdgeInsets.only(top: 8, bottom: 6),
       color: _gap,
+    );
+  }
+
+  /// The Work card; on live the Campaigns row's NEW follows the server
+  /// (BQ-V44 `GET /driver/bonuses` isNew), in the demo the screen's flag.
+  Widget _workMenu(
+    BuildContext context,
+    DriverAccountSession? session,
+    Widget Function(bool campaignsNew) card,
+  ) {
+    final live = LiveDriverServices.instance;
+    if (live == null) {
+      return card(session == null && PromotionsBadge.hasUnopened);
+    }
+    return CampaignsNewBadge(
+      bonuses: live.bonuses,
+      builder: (context, isNew) => card(isNew),
     );
   }
 

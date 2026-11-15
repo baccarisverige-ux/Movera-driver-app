@@ -1702,6 +1702,84 @@ abstract class AppLocalizations {
   /// **'Couldn\'t connect. Check your network or use chat.'**
   String get callConnectFailedHint;
 
+  /// BQ-V44 (contract v0.18.110 bonusCampaigns.texts.title): the side menu row and the Campaigns screen title on live.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaigns'**
+  String get campaignsTitle;
+
+  /// BQ-V44 texts.progressTrips: the server's progress.done and progress.target, plain numbers.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {target} trips'**
+  String campaignProgressTrips(String done, String target);
+
+  /// BQ-V44 texts.progressHours: done and target are the server's minutes, each written with campaignDuration, e.g. 4 h 20 min of 10 h online.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {target} online'**
+  String campaignProgressHours(String done, String target);
+
+  /// BQ-V44 texts.earned: the server says earned.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned – added to your next payout'**
+  String get campaignEarned;
+
+  /// BQ-V44 texts.startsOn: a scheduled campaign; date is the local start date, e.g. 1 Dec.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts {date}'**
+  String campaignStartsOn(String date);
+
+  /// BQ-V44 texts.endsOn: an active or paused campaign; date is the local end date, e.g. 30 Nov.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends {date}'**
+  String campaignEndsOn(String date);
+
+  /// BQ-V44 texts.paused: state chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get campaignPaused;
+
+  /// BQ-V44 texts.ended: state chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get campaignEnded;
+
+  /// BQ-V44 texts.empty: the server lists no campaign for his zones.
+  ///
+  /// In en, this message translates to:
+  /// **'No campaigns right now'**
+  String get campaignsEmpty;
+
+  /// BQ-V44 texts.duration: minutes from the server as hours and minutes, e.g. 4 h 20 min.
+  ///
+  /// In en, this message translates to:
+  /// **'{h} h {m} min'**
+  String campaignDuration(int h, int m);
+
+  /// BQ-V44 texts.durationWholeHours: whole hours (no minutes left), e.g. 10 h.
+  ///
+  /// In en, this message translates to:
+  /// **'{h} h'**
+  String campaignDurationWholeHours(int h);
+
+  /// BQ-V44: GET /driver/bonuses failed; a Retry button follows. Never shows the demo campaigns.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaigns could not be loaded.'**
+  String get campaignsCouldNotLoad;
+
+  /// BQ-V44 (contract EarningsPeriod.bonus): the trip bonuses and campaign bonuses of the period, already inside the total above (net); never added to it again.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonuses (included)'**
+  String get earningsBonusIncluded;
+
   /// No description provided for @cancelNextTripQuestion.
   ///
   /// In en, this message translates to:

@@ -757,6 +757,16 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
             const SizedBox(height: 10),
             _BreakdownRow(label: tr.tipsAndFees, value: tipsAndFees.formatted),
           ],
+          // BQ-V44: the server's bonus line, already inside the total above.
+          if (_live != null)
+            if (_serverTotals?.bonus case final bonus?
+                when bonus.minorUnits != 0) ...[
+              const SizedBox(height: 10),
+              _BreakdownRow(
+                label: tr.earningsBonusIncluded,
+                value: bonus.formatted,
+              ),
+            ],
         ],
       ),
     );
