@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_bonuses.dart';
+import 'package:movera/presentation/driver/promotions/campaign_area_map.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
 /// BQ-V44 (contract v0.18.103 `bonusCampaigns.apps.driver`): the
@@ -254,6 +255,15 @@ class _LiveCampaignsState extends State<LiveCampaigns> {
               ),
             ],
           ),
+          // Plan §8: the area on a small map; none when the server sent
+          // no usable outline.
+          if (bonus.area case final area?) ...[
+            const SizedBox(height: 10),
+            CampaignAreaMap(
+              key: ValueKey<String>('campaign-map-${bonus.bonusId}'),
+              area: area,
+            ),
+          ],
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(99),

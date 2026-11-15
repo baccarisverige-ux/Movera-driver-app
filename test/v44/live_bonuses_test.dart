@@ -68,6 +68,47 @@ void main() {
       );
     });
 
+    test('the area: 3 or more valid [lat, lng] points, else none', () {
+      Map<String, Object?> withPolygon(Object? polygon) =>
+          item()..['polygon'] = polygon;
+      final ok = DriverBonus.tryParse(
+        withPolygon([
+          [59.3, 18],
+          [59.4, 18.0],
+          [59.4, 18.1],
+        ]),
+      )!;
+      expect(ok.area, hasLength(3));
+      expect(ok.area!.first.longitude, 18.0);
+      expect(DriverBonus.tryParse(item())!.area, isNull);
+      for (final bad in <Object?>[
+        'x',
+        [
+          [59.3, 18.0],
+          [59.4, 18.0],
+        ],
+        [
+          [59.3, 18.0],
+          [59.4, 'e'],
+          [59.4, 18.1],
+        ],
+        [
+          [59.3, 18.0],
+          [95.0, 18.0],
+          [59.4, 18.1],
+        ],
+        [
+          [59.3],
+          [59.4, 18.0],
+          [59.4, 18.1],
+        ],
+      ]) {
+        final b = DriverBonus.tryParse(withPolygon(bad));
+        expect(b, isNotNull, reason: 'a bad area never hides the card');
+        expect(b!.area, isNull, reason: '$bad');
+      }
+    });
+
     test('the name in the app language, else English, else any', () {
       final b = DriverBonus.tryParse(
         item(names: {'sv': '', 'fr': 'Pointe', 'en': 'Rush'}),
