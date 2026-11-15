@@ -37,7 +37,9 @@ class RideCheckServices {
       _rules ?? RideCheckRules.fromAdmin(RideCheckAdminConfig.current);
   final RideCheckRecorder Function() createRecorder;
 
-  /// Opens the phone dialer with tel:112. The person calls; Movera never does.
+  /// Opens the phone dialer with the country's emergency number
+  /// (`EmergencyNumbers.main`, 112 until the server sends the list). The
+  /// person calls; Movera never does.
   final Future<bool> Function(Uri uri) launch;
 
   /// Possible-crash hook: a motion sensor adapter adds an event for each very
@@ -54,8 +56,6 @@ class RideCheckServices {
   /// True when [sos] really reaches movera-server: a live build, or a
   /// sender given here. The demo's SOS only reads as sent.
   bool get sosReachesMovera => _customSos || LiveDriverServices.active;
-
-  static final Uri emergencyNumber = Uri(scheme: 'tel', path: '112');
 
   static RideCheckServices? _fallback;
 
