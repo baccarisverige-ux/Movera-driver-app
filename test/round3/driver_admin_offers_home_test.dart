@@ -454,6 +454,66 @@ void main() {
     });
   });
 
+  group('BQ-V26 (base-jobs-2026-11-04.md:40 "Show it at once")', () {
+    RideOffer radarCard(String id, GeoPoint pickup) => RideOffer(
+      id: id,
+      tripId: 'trip-$id',
+      riderName: 'Astrid',
+      riderTrips: 38,
+      category: 'Comfort',
+      fare: const Money(minorUnits: 15240, currency: 'SEK'),
+      priority: true,
+      source: OfferSource.admin,
+      groupId: 'radar-g',
+      rating: '4.92',
+      pickupMinutes: 4,
+      pickupKm: 1.3,
+      tripMinutes: 16,
+      tripKm: 9.4,
+      pickup: 'Birger Jarlsgatan 12, Stockholm',
+      dropoff: 'Liljeholmstorget, Stockholm',
+      pickupPosition: pickup,
+      dropoffPosition: const GeoPoint(59.3103, 18.0231),
+      isNearby: true,
+      followsDestination: false,
+    );
+
+    testWidgets('two Radar cards on Home: the Exclusive offer is up within '
+        'one 300 ms step, on top (it takes the tap), the cards are off '
+        'screen; after it both cards come back', (tester) async {
+      final a = radarCard('v26-a', const GeoPoint(59.3362, 18.0735));
+      final b = radarCard('v26-b', const GeoPoint(59.3340, 18.0700));
+      final dispatch = await _online(tester, [a, b]);
+      const aKey = ValueKey<String>('radar-offer-category-v26-a');
+      const bKey = ValueKey<String>('radar-offer-category-v26-b');
+      await _until(tester, find.byKey(aKey));
+      final cardsBefore = [
+        aKey,
+        bKey,
+      ].where((k) => find.byKey(k).evaluate().isNotEmpty).toList();
+      expect(cardsBefore, isNotEmpty);
+
+      dispatch.publish([a, b, _first]);
+      await _frames(tester, const Duration(milliseconds: 300));
+      const exclusive = ValueKey<String>('exclusive-offer-card-same-1');
+      expect(find.byKey(exclusive), findsOneWidget, reason: 'at once');
+      // On top: nothing covers it, it takes the tap.
+      expect(find.byKey(exclusive).hitTestable(), findsOneWidget);
+      // The Radar cards stepped aside (kept, off screen).
+      for (final k in cardsBefore) {
+        expect(find.byKey(k).hitTestable(), findsNothing);
+      }
+
+      await dispatch.declineOffer('same-1');
+      await _frames(tester, const Duration(seconds: 3));
+      expect(find.byKey(exclusive), findsNothing);
+      for (final k in cardsBefore) {
+        await _until(tester, find.byKey(k));
+      }
+      await _leave(tester);
+    });
+  });
+
   group('Job 3 / L4 checker fixes', () {
     const card = RideOffer(
       id: 'auto-card',
