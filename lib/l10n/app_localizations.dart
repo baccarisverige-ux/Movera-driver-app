@@ -6412,17 +6412,17 @@ abstract class AppLocalizations {
   /// **'Search Country'**
   String get searchCountry;
 
-  /// No description provided for @moveWithin100MOfPickup.
+  /// BQ-V42: the Arrive hint; meters = the trip's terms.autoArriveMeters (contract v0.18.93, admin setting per zone), 100 when the server sends none.
   ///
   /// In en, this message translates to:
-  /// **'Move within 100 m of the pickup to arrive.'**
-  String get moveWithin100MOfPickup;
+  /// **'Move within {meters} m of the pickup to arrive.'**
+  String moveWithin100MOfPickup(int meters);
 
-  /// No description provided for @moveWithin100MOfStop.
+  /// BQ-V42: the Arrive hint at a middle stop; meters = the trip's terms.autoArriveMeters, 100 when the server sends none.
   ///
   /// In en, this message translates to:
-  /// **'Move within 100 m of the stop to arrive.'**
-  String get moveWithin100MOfStop;
+  /// **'Move within {meters} m of the stop to arrive.'**
+  String moveWithin100MOfStop(int meters);
 
   /// No description provided for @recordAudioStarting.
   ///

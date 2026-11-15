@@ -793,8 +793,12 @@ extension _AcceptRidePanel on _AcceptRideState {
               hint: near
                   ? null
                   : _stage == ActiveRideStage.onTrip
-                  ? tr.moveWithin100MOfStop
-                  : tr.moveWithin100MOfPickup,
+                  ? tr.moveWithin100MOfStop(
+                      _AcceptRidePickup(this)._arriveMeters,
+                    )
+                  : tr.moveWithin100MOfPickup(
+                      _AcceptRidePickup(this)._arriveMeters,
+                    ),
               // Contract v0.7.1 §3.8: at a middle stop the tap is the server's
               // arrived-at-stop, from which the stop wait is paid.
               child: Text(

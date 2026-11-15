@@ -3684,11 +3684,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchCountry => 'Search Country';
 
   @override
-  String get moveWithin100MOfPickup =>
-      'Move within 100 m of the pickup to arrive.';
+  String moveWithin100MOfPickup(int meters) {
+    return 'Move within $meters m of the pickup to arrive.';
+  }
 
   @override
-  String get moveWithin100MOfStop => 'Move within 100 m of the stop to arrive.';
+  String moveWithin100MOfStop(int meters) {
+    return 'Move within $meters m of the stop to arrive.';
+  }
 
   @override
   String get recordAudioStarting => 'starting…';

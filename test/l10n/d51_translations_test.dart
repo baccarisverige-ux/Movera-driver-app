@@ -322,7 +322,7 @@ void main() {
       await tester.ensureVisible(button);
       await tester.tap(button);
       await frames(tester, 6);
-      expect(find.text(tr.moveWithin100MOfPickup), findsOneWidget);
+      expect(find.text(tr.moveWithin100MOfPickup(100)), findsOneWidget);
       expect(words('(pickup)'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
     });

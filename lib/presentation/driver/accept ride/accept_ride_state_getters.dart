@@ -66,7 +66,7 @@ extension _AcceptRideStateGetters on _AcceptRideState {
     return GeoPointMaps.fromLatLng(
           _driverPosition,
         ).distanceMetersTo(GeoPointMaps.fromLatLng(target)) <=
-        100;
+        _AcceptRidePickup(this)._arriveMeters;
   }
 
   bool get _countingWait =>

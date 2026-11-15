@@ -143,7 +143,7 @@ void main() {
         find.byKey(const ValueKey('active-ride-panel-waitingForRider')),
         findsNothing,
       );
-      expect(find.textContaining(tr.moveWithin100MOfPickup), findsWidgets);
+      expect(find.textContaining(tr.moveWithin100MOfPickup(100)), findsWidgets);
       // A fresh fix far away: now it looks disabled.
       expect(_background(tester), const Color(0xFFEEEFF1));
       await tester.pumpWidget(const SizedBox.shrink());
