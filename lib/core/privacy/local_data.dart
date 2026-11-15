@@ -1,3 +1,4 @@
+import 'package:movera/core/destination/destination_search.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -106,7 +107,46 @@ const localDataInventory = <LocalDataRecord>[
         'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
     retention: 'Newest ${LocalQuarantine.maxEntries} entries, until logout.',
   ),
+  LocalDataRecord(
+    key: RecentDestinations.key,
+    dataClass: LocalDataClass.personal,
+    purpose:
+        'The last ${RecentDestinations.max} destinations of '
+        'destination mode (often a home address).',
+    retention: 'Until logout.',
+  ),
+  LocalDataRecord(
+    key: localDataOwnerKey,
+    dataClass: LocalDataClass.recovery,
+    purpose:
+        'The driver id the keys above belong to, so another driver who '
+        'signs in after a refused session never sees them.',
+    retention: 'Until logout.',
+  ),
 ];
+
+/// The driver id (the access token's `sub`) the local data belongs to.
+const localDataOwnerKey = 'movera_driver_local_owner';
+
+/// A session of [driver] on this phone. Local data left by another driver
+/// (a session the server refused runs no clean-up, so the same driver
+/// keeps everything when he signs in again) goes through [clear] first.
+/// Without [clear] (a session kept from an earlier start) the driver is
+/// only recorded when nobody is.
+Future<void> claimLocalData(
+  Object? driver, [
+  Future<void> Function()? clear,
+]) async {
+  if (driver is! String) return;
+  final prefs = await SharedPreferences.getInstance();
+  final last = prefs.getString(localDataOwnerKey);
+  if (last == driver) return;
+  if (last != null) {
+    if (clear == null) return;
+    await clear();
+  }
+  await prefs.setString(localDataOwnerKey, driver);
+}
 
 /// The driver's language choice: a device setting, kept across logout like
 /// the rider app's `movera_app_language` (the next driver on this phone most
@@ -140,6 +180,8 @@ Future<void> clearLocalUserData({
       SettingsRepository.key,
       PrefsActiveRideRepository.terminalKey,
       DriverStartPosition.key,
+      RecentDestinations.key,
+      localDataOwnerKey,
     ];
     DriverStartPosition.clearMemory();
     for (final key in exact) {

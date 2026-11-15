@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/provider_token_source.dart';
@@ -20,8 +22,9 @@ class AuthController {
   final ProviderTokenSource _providerTokens;
 
   /// Contract v0.18.2 `auth.beforeSignIn`: the calls that need a session
-  /// start here, right after a sign-in (the app root hands it in).
-  final void Function()? onSignedIn;
+  /// start here, right after a sign-in (the app root hands it in). Waited
+  /// for: another driver's local data is gone before the app opens.
+  final FutureOr<void> Function()? onSignedIn;
 
   /// And stop here, when the session ends on this device.
   final void Function()? onSignedOut;
@@ -64,7 +67,7 @@ class AuthController {
     lastChallenge = null;
     signInResult = result;
     signedInPhone = challenge.phone;
-    onSignedIn?.call();
+    await onSignedIn?.call();
     return result;
   }
 
@@ -85,7 +88,7 @@ class AuthController {
         providerLink = null;
         signInResult = result;
         signedInPhone = null;
-        onSignedIn?.call();
+        await onSignedIn?.call();
       case ProviderPhoneRequired(:final link):
         providerLink = link;
     }
