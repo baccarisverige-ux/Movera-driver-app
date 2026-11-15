@@ -1,16 +1,39 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/push/firebase_push_gateway.dart';
+import 'package:movera/core/push/native_push_platform.dart';
 import 'package:movera/core/push/push_config.dart';
 import 'package:movera/core/push/push_platform.dart';
 
-/// Android, iOS and tests: no push until a store build brings the Firebase
-/// app files (docs/push.md).
-PushPlatform createPlatformPush() => const UnsupportedPushPlatform();
+NativePushPlatform? _android;
+
+/// Android (BQ-V43): one [NativePushPlatform] for the whole app (the
+/// registrar starts it; the phone checks read its permission). It does
+/// nothing until the server gives the Android settings. iOS and other
+/// systems: no push until the APNs key exists (docs/push.md).
+PushPlatform createPlatformPush() {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    return _android ??= NativePushPlatform(FirebasePushGateway());
+  }
+  return const UnsupportedPushPlatform();
+}
 
 class UnsupportedPushPlatform implements PushPlatform {
   const UnsupportedPushPlatform();
 
   @override
   bool get supported => false;
+
+  @override
+  bool get ready => false;
+
+  @override
+  PushWebConfig? settingsFrom(PushConfig config) => null;
+
+  @override
+  Future<bool> prepare(PushWebConfig settings) async => false;
+
+  @override
+  void onTokenRefresh(void Function(String token) handler) {}
 
   @override
   String get platformName =>

@@ -70,11 +70,26 @@ class PushOpen {
 ///
 /// The web build (what is live) uses Firebase Cloud Messaging through
 /// `web/movera_push.js` and the service worker `web/firebase-messaging-sw.js`,
-/// both started from [PushConfig] at run time. Android and iOS have no push
-/// yet: they need the Firebase app files of a store build (see
-/// `docs/push.md`), so [supported] is false there and nothing is asked.
+/// both started from [PushConfig] at run time. Android (BQ-V43, contract
+/// v0.18.105) starts Firebase from the server's public Android settings
+/// (`native_push_platform.dart`). iOS has no push yet: it needs the APNs
+/// key (Apple Developer account), so [supported] is false there and
+/// nothing is asked.
 abstract class PushPlatform {
   bool get supported;
+
+  /// True once push can read the permission here (web: when supported;
+  /// Android: after [prepare] started Firebase).
+  bool get ready;
+
+  /// This platform's settings in the server's answer, or null (push off).
+  PushWebConfig? settingsFrom(PushConfig config);
+
+  /// Starts push with [settings]; false when it cannot (push stays off).
+  Future<bool> prepare(PushWebConfig settings);
+
+  /// Called when the push service gives this device a new token.
+  void onTokenRefresh(void Function(String token) handler);
 
   /// `granted`, `denied` or `default` (not asked yet).
   Future<String> permission();

@@ -181,12 +181,15 @@ class DevicePhoneChecks extends PhoneChecks {
     return const PhoneCheckResult.ok(kind);
   }
 
-  /// The push permission (web build); Android and iOS have no push yet
-  /// (docs/push.md), so they cannot tell.
+  /// The push permission (web build; Android once push has started from
+  /// the server's settings, BQ-V43); iOS has no push yet (docs/push.md),
+  /// so it cannot tell.
   Future<PhoneCheckResult> _notifications() async {
     const kind = PhoneCheckKind.notifications;
     final push = _pushPlatform;
-    if (!push.supported) return const PhoneCheckResult.unknown(kind);
+    if (!push.supported || !push.ready) {
+      return const PhoneCheckResult.unknown(kind);
+    }
     return switch (await push.permission()) {
       'granted' => const PhoneCheckResult.ok(kind),
       'denied' => const PhoneCheckResult(

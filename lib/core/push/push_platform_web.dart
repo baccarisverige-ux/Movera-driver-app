@@ -36,6 +36,20 @@ class WebPushPlatform implements PushPlatform {
   String get platformName => 'web';
 
   @override
+  bool get ready => supported;
+
+  @override
+  PushWebConfig? settingsFrom(PushConfig config) => config.webConfig;
+
+  /// `web/movera_push.js` starts Firebase itself in [token].
+  @override
+  Future<bool> prepare(PushWebConfig settings) async => true;
+
+  /// The web asks for the token again on every start (registrar).
+  @override
+  void onTokenRefresh(void Function(String token) handler) {}
+
+  @override
   Future<String> permission() async => _moveraPush?.permission() ?? 'denied';
 
   @override

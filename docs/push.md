@@ -9,14 +9,23 @@ No Firebase key is in this repository. The app reads the public Firebase web set
 `web/firebase-messaging-sw.js` shows the server's data messages (title and body already in the driver's language)
 and needs no settings at all.
 
-Android and iOS: push is off (`PushPlatform.supported` is false), so the native builds and CI need no Firebase files.
-For store builds, later:
+Android (BQ-V43, contract v0.18.105): `firebase_core` + `firebase_messaging` and `NativePushPlatform`
+(`lib/core/push/native_push_platform.dart`, Firebase behind the `NativePushGateway` seam). After sign-in the app reads
+`GET /push/config?app=driver&platform=android`; the server gives the Android Firebase app's public settings
+(`androidConfig`, read from the Firebase project by the package name `se.movera.driver`), and Firebase is started with
+them at run time. So there is **no `google-services.json`, no Google services Gradle plugin and no key** in this
+repository or in CI. Without `androidConfig` (server without Firebase, or no Android app in the project) push stays off,
+the log says `push off: the server has no android push settings`, and nothing is asked. Android 13+ asks for
+`POST_NOTIFICATIONS` after the explanation (already in the manifest). The token is registered with platform `android`
+and again when FCM changes it. `MainActivity.kt` makes the offer channels `movera_offers` (sound
+`res/raw/movera_offer.mp3`, vibration, high importance) and `movera_offers_quiet` (Radar: no sound, no vibration),
+named in sv / fr / en (`res/values*/strings.xml`). Gap: the in-app Vibrate setting cannot change a system notice; the
+channel decides (the driver can change it in Android settings).
 
-1. Add `firebase_core` and `firebase_messaging` and a native `PushPlatform` (lib/core/push/).
-2. Android: `google-services.json` for `se.movera.driver` (Firebase console › project movera-200b2), the Google
-   services Gradle plugin, and `POST_NOTIFICATIONS` (Android 13+). Keep the file out of git: write it from a CI secret.
-3. iOS: `GoogleService-Info.plist`, the Push Notifications and Background Modes (remote notifications) capabilities,
-   and an APNs auth key (.p8) uploaded to Firebase (Project settings › Cloud Messaging). Same secret handling.
+iOS: push is off (`UnsupportedPushPlatform`). It needs the Apple Developer account, an APNs auth key (.p8) uploaded to
+Firebase (Project settings › Cloud Messaging), the Push Notifications and Background Modes (remote notifications)
+capabilities, `movera_offer.caf`, and an iOS deployment target of at least 15 for the Firebase SDK (today 12.0). The
+server answers `platform=ios` with `enabled: false` until then.
 
 ## New-offer push (contract v0.18.6, driver group 4 decision 1 + E6)
 
@@ -34,7 +43,7 @@ For store builds, later:
   `node tool/verify_offer_push_sw.cjs` checks the worker (run by `test/g4/g4_offers_test.dart`).
 - In the open app, an Exclusive or hand-sent offer on Home plays the Movera offer sound (`assets/sounds/radar_offer.mp3`)
   until a tap, and vibrates once when the Vibrate setting is on; Radar offers are quiet.
-- Store builds, later: the Android channels `movera_offers` (sound `movera_offer`, vibration, high importance) and
-  `movera_offers_quiet`, the iOS sound `movera_offer.caf` (the server already names them), and a native answer on the
+- Store builds: the Android channels `movera_offers` and `movera_offers_quiet` are made (BQ-V43, above); later the
+  iOS sound `movera_offer.caf` (the server already names it), and a native answer on the
   `movera/phone_sound` channel (method `state` → `{silent, volume}`) for the "Sound is off" notice (decision 2). Until
   then a native build shows no such notice; the web build shows it while the browser still blocks sound (no tap yet).

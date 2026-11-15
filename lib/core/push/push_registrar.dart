@@ -41,7 +41,8 @@ class PrefsPushStore implements PushStore {
 
 /// The calls the registrar makes (contract §8 and v0.18.3 R7).
 abstract class PushApi {
-  Future<PushConfig> config();
+  /// [platform] `android` asks for the Android settings (v0.18.105).
+  Future<PushConfig> config({String platform = 'web'});
   Future<void> register(String token, String platform);
   Future<void> unregister(String token);
 }
@@ -60,9 +61,14 @@ class ApiPushApi implements PushApi {
   final String Function()? locale;
 
   @override
-  Future<PushConfig> config() async => PushConfig.fromJson(
-    await _api.get('$configPath?app=$app', authenticated: false),
-  );
+  Future<PushConfig> config({String platform = 'web'}) async =>
+      PushConfig.fromJson(
+        await _api.get(
+          '$configPath?app=$app'
+          '${platform == 'web' ? '' : '&platform=$platform'}',
+          authenticated: false,
+        ),
+      );
 
   @override
   Future<void> register(String token, String platform) async {
@@ -99,7 +105,9 @@ class PushRegistrar {
     required this.api,
     required this.store,
     required this.explain,
-  });
+  }) {
+    platform.onTokenRefresh(_tokenChanged);
+  }
 
   final PushPlatform platform;
   final PushApi api;
@@ -126,10 +134,24 @@ class PushRegistrar {
 
   Future<String?> _signedIn() async {
     try {
-      if (!platform.supported) return null;
-      final config = await api.config();
-      final web = config.webConfig;
-      if (!config.enabled || web == null) return null;
+      if (!platform.supported) {
+        DriverLog.info(
+          'push off on ${platform.platformName}: not supported here yet',
+          name: 'push',
+        );
+        return null;
+      }
+      final config = await api.config(platform: platform.platformName);
+      final web = platform.settingsFrom(config);
+      if (!config.enabled || web == null) {
+        DriverLog.info(
+          'push off: the server has no ${platform.platformName} '
+          'push settings',
+          name: 'push',
+        );
+        return null;
+      }
+      if (!await platform.prepare(web)) return null;
       final permission = await platform.permission();
       if (permission == 'denied') return null;
       if (permission != 'granted') {
@@ -154,6 +176,27 @@ class PushRegistrar {
     } catch (error) {
       DriverLog.warn('push not set up: ${error.runtimeType}', name: 'push');
       return null;
+    }
+  }
+
+  /// BQ-V43: FCM gave this phone a new token while signed in (a token is
+  /// saved): the old one goes, the new one is registered.
+  Future<void> _tokenChanged(String token) async {
+    try {
+      final old = await store.token();
+      if (old == null || old == token || token.isEmpty) return;
+      try {
+        await api.unregister(old);
+      } catch (_) {
+        // The server forgets a dead token on its own.
+      }
+      await api.register(token, platform.platformName);
+      await store.setToken(token);
+    } catch (error) {
+      DriverLog.warn(
+        'push token not updated: ${error.runtimeType}',
+        name: 'push',
+      );
     }
   }
 

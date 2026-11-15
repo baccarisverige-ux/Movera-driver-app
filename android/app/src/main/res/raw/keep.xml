@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The location plugin looks the status-bar icon up by name at run time,
-     so resource shrinking must keep it (D14-18). -->
+     so resource shrinking must keep it (D14-18). BQ-V43: the offer
+     channel's sound (contract driverOffers.push.native.soundFile). -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_stat_online" />
+    tools:keep="@drawable/ic_stat_online,@raw/movera_offer" />

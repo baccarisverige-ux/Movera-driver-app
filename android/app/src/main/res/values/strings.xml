@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BQ-V43: the names of the offer push channels in Android settings. -->
+<resources>
+    <string name="offer_channel">Trips for you</string>
+    <string name="offer_quiet_channel">Trips nearby (Radar, quiet)</string>
+</resources>

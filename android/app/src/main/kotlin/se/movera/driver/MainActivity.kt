@@ -1,14 +1,55 @@
 package se.movera.driver
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var pending: MethodChannel.Result? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        createOfferChannels()
+    }
+
+    // BQ-V43 (G4 decision 1 + E6, contract driverOffers.push.native): the
+    // server sends Exclusive and hand-sent offers on "movera_offers" (Movera
+    // offer sound, vibration, high importance) and Radar offers on
+    // "movera_offers_quiet" (no sound, no vibration). Android keeps a
+    // channel once made; making it again only renames it.
+    private fun createOfferChannels() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = getSystemService(NotificationManager::class.java) ?: return
+        val sound = Uri.parse("android.resource://" + packageName + "/" + R.raw.movera_offer)
+        val audio = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        val loud = NotificationChannel(
+            "movera_offers",
+            getString(R.string.offer_channel),
+            NotificationManager.IMPORTANCE_HIGH,
+        )
+        loud.setSound(sound, audio)
+        loud.enableVibration(true)
+        loud.vibrationPattern = longArrayOf(0, 300, 150, 300)
+        val quiet = NotificationChannel(
+            "movera_offers_quiet",
+            getString(R.string.offer_quiet_channel),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        )
+        quiet.setSound(null, null)
+        quiet.enableVibration(false)
+        manager.createNotificationChannels(listOf(loud, quiet))
+    }
 
     // D14-7: Android 13+ needs POST_NOTIFICATIONS for the "Movera is online"
     // notice; Go online asks once (lib/core/push/notification_permission.dart).

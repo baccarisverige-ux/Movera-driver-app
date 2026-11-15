@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BQ-V43: the names of the offer push channels in Android settings. -->
+<resources>
+    <string name="offer_channel">Courses pour vous</string>
+    <string name="offer_quiet_channel">Courses à proximité (Radar, silencieux)</string>
+</resources>
