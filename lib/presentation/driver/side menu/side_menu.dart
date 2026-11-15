@@ -76,6 +76,9 @@ class DriverSideMenu extends StatelessWidget {
   /// L-a Q1 (owner 2026-11-06): a live build shows the driver's own first
   /// and last name from `GET /driver/profile`, "—" until it is read; the
   /// demo keeps its brand stand-in.
+  /// The driver has a rating (the demo's sample always has one).
+  static bool get _rated => DriverPerformanceConfig.current.rating != null;
+
   static String _personName(DriverAccountSession? session) {
     if (session == null) return 'Movera Driver';
     final name = session.account?.fullName.trim() ?? '';
@@ -338,6 +341,8 @@ class DriverSideMenu extends StatelessWidget {
                           children: [
                             // The same rating as Home (UI-10): the demo's
                             // sample, a live driver's real one (G3-D2).
+                            // BQ-V15 (owner driver-g12.md:4): "New driver"
+                            // until the first rating.
                             Semantics(
                               label: DriverPerformanceConfig.current.isSample
                                   ? tr.sampleRating(
@@ -345,23 +350,33 @@ class DriverSideMenu extends StatelessWidget {
                                           .current
                                           .ratingLabel,
                                     )
-                                  : '${tr.rating} ${DriverPerformanceConfig.current.ratingLabel}',
+                                  : _rated
+                                  ? '${tr.rating} ${DriverPerformanceConfig.current.ratingLabel}'
+                                  : tr.menuNewDriver,
                               excludeSemantics: true,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    size: 16,
-                                    color: Color(0xFF111614),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    DriverPerformanceConfig.current.ratingLabel,
-                                    style: const TextStyle(
+                                  if (_rated) ...const [
+                                    Icon(
+                                      Icons.star_rounded,
+                                      size: 16,
                                       color: Color(0xFF111614),
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    SizedBox(width: 4),
+                                  ],
+                                  Flexible(
+                                    child: Text(
+                                      _rated
+                                          ? DriverPerformanceConfig
+                                                .current
+                                                .ratingLabel
+                                          : tr.menuNewDriver,
+                                      style: const TextStyle(
+                                        color: Color(0xFF111614),
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],

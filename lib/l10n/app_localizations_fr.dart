@@ -606,6 +606,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactEmailVerifiedDone => 'E-mail vérifié';
 
   @override
+  String get menuNewDriver => 'Nouveau chauffeur';
+
+  @override
   String get airportQueueTitle => 'File de l\'aéroport';
 
   @override
