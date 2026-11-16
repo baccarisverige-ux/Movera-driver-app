@@ -1,0 +1,15 @@
+{
+  "campaignsTitle": "Campagnes",
+  "campaignProgressTrips": "{done} sur {target} courses",
+  "campaignProgressHours": "{done} sur {target} en ligne",
+  "campaignEarned": "Gagnée – ajoutée au prochain versement",
+  "campaignStartsOn": "Commence le {date}",
+  "campaignEndsOn": "Se termine le {date}",
+  "campaignPaused": "En pause",
+  "campaignEnded": "Terminée",
+  "campaignsEmpty": "Aucune campagne pour le moment",
+  "campaignDuration": "{h} h {m} min",
+  "campaignDurationWholeHours": "{h} h",
+  "campaignsCouldNotLoad": "Impossible de charger les campagnes.",
+  "earningsBonusIncluded": "Bonus (inclus)"
+}
