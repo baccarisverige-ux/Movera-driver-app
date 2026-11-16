@@ -45,6 +45,10 @@ Future<void> _middle(WidgetTester tester) async {
       find
           .byKey(const ValueKey('active-ride-collect-cash'))
           .evaluate()
+          .isNotEmpty ||
+      find
+          .byKey(const ValueKey('active-ride-finish-trip'))
+          .evaluate()
           .isNotEmpty) {
     return;
   }
@@ -74,6 +78,9 @@ Future<String> _cashShown(WidgetTester tester, AcceptRide ride) async {
   await tester.drag(slide, const Offset(320, 0));
   await _settle(tester, 6);
   await _middle(tester);
+  // G18 (owner 2026-11-16): "Finish trip" first; tapped, it is "Collect cash".
+  await tester.tap(find.byKey(const ValueKey('active-ride-finish-trip')));
+  await _settle(tester, 2);
   final collect = find.byKey(
     const ValueKey<String>('active-ride-collect-cash'),
   );

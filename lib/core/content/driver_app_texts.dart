@@ -451,6 +451,13 @@ class DriverTexts {
     DriverTextArea.trip,
   );
 
+  /// G18 (owner 2026-11-16): a cash trip's button before "Collect cash".
+  static const tripFinishTrip = DriverTextKey(
+    'trip.finishTrip',
+    'Finish trip',
+    DriverTextArea.trip,
+  );
+
   static const tripFinishRide = DriverTextKey(
     'trip.finishRide',
     'Finish ride',
@@ -531,6 +538,7 @@ class DriverTexts {
     tripGoToStop,
     tripGoToDropoff,
     tripCollectCash,
+    tripFinishTrip,
     tripFinishRide,
   ];
 }

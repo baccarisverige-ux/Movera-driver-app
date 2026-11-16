@@ -272,6 +272,11 @@ void main() {
         .controller!
         .animatePanelToSnapPoint();
     await frames(tester, 16);
+    // G18 (owner 2026-11-16): "Finish trip" first; tapped, it is "Collect cash".
+    await tester.tap(
+      find.byKey(const ValueKey<String>('active-ride-finish-trip')),
+    );
+    await frames(tester, 2);
     final collect = find.byKey(
       const ValueKey<String>('active-ride-collect-cash'),
     );
