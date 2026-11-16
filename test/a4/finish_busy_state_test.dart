@@ -222,6 +222,11 @@ void main() {
     completeGate = Completer<void>();
     profileGate = Completer<void>();
     await open(tester, ActiveRideStage.onTrip);
+    // G18 (owner 2026-11-16): "Finish trip" first; tapped, it is "Collect cash".
+    await tester.tap(
+      find.byKey(const ValueKey<String>('active-ride-finish-trip')),
+    );
+    await frames(tester, 2);
     const key = 'active-ride-collect-cash';
     if (busy) expectBusy(tester, key, busy: false);
     await tester.ensureVisible(find.byKey(const ValueKey<String>(key)));

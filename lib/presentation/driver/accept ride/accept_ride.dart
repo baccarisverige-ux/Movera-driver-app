@@ -413,6 +413,8 @@ class _AcceptRideState extends State<AcceptRide>
   bool _sawOpenTrip = false; // G9 live: trip seen open here.
   final DriverRealtimeSequenceGate _realtimeGate = DriverRealtimeSequenceGate();
   static const Color _ink = Color(0xFF252E3A);
+  // G18 (owner 2026-11-16 "black not marron"): the cash trip button.
+  static const Color _black = Color(0xFF111614);
   static const Color _panel = Color(0xFFFFFFFF);
   static const Color _canvas = Color(0xFFF4F6F7);
   static const Color _muted = Color(0xFF7D898F);
@@ -605,6 +607,9 @@ class _AcceptRideState extends State<AcceptRide>
   int _waitAnchorSeconds = 0;
   int _stopCursor = 0;
   bool _paidStopWait = false;
+  // G18 (owner 2026-11-16): the stop count when "Finish trip" was tapped
+  // on a cash trip's last leg; then the button is "Collect cash".
+  int? _cashFinishTappedAt;
   DateTime? _onTripStartedAt;
   _OnTripRadarState _onTripRadarState = _OnTripRadarState.off;
   _NextTripRadarOffer? _nextTripRadarOffer;

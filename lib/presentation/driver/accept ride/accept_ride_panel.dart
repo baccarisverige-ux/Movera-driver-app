@@ -832,24 +832,33 @@ extension _AcceptRidePanel on _AcceptRideState {
       );
     }
 
-    // Q24: at the drop-off of a cash trip, collect the cash first; the
-    // amount shows, then "Complete ride".
-    if (_collectsCashNow) {
+    // Q24 / G18 (owner 2026-11-16): on a cash trip's last leg the button
+    // is "Finish trip" at any distance; tapped, it becomes "Collect cash",
+    // whose tap shows the server's price (an early end too), then
+    // "Finish ride" completes it. Black, not maroon.
+    if (_cashFinalLeg) {
+      final collect = _collectsCashNow;
       return SizedBox(
         width: double.infinity,
         height: 58,
         child: FilledButton(
-          key: const ValueKey<String>('active-ride-collect-cash'),
+          key: ValueKey<String>(
+            collect ? 'active-ride-collect-cash' : 'active-ride-finish-trip',
+          ),
           onPressed: _stepBusy
               ? null
               : () {
                   _setMapGesturesBlocked(false);
-                  unawaited(_AcceptRideTrip(this)._collectCash());
+                  if (collect) {
+                    unawaited(_AcceptRideTrip(this)._collectCash());
+                  } else {
+                    _rebuild(() => _cashFinishTappedAt = _stopAddresses.length);
+                  }
                 },
           style: tripStepStyle(
             FilledButton.styleFrom(
               elevation: 0,
-              backgroundColor: const Color(0xFF7A5200),
+              backgroundColor: _AcceptRideState._black,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -859,7 +868,11 @@ extension _AcceptRidePanel on _AcceptRideState {
           child: tripStepLabel(
             busy: _stepBusy,
             child: Text(
-              driverText(DriverTexts.tripCollectCash),
+              driverText(
+                collect
+                    ? DriverTexts.tripCollectCash
+                    : DriverTexts.tripFinishTrip,
+              ),
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
