@@ -266,7 +266,7 @@ void main() {
         count: 10,
       );
       await frames(tester, 3);
-      expect(text('You missed or declined 10 offers in a row'), findsOneWidget);
+      expect(text('You let 10 Exclusive offers run out in a row'), findsOneWidget);
       await leave(tester, null);
     });
 
@@ -865,7 +865,7 @@ void main() {
       );
       expect(
         reasonOf(DriverOfflineReason.missedOffers, count: 10),
-        'You missed or declined 10 offers in a row',
+        'You let 10 Exclusive offers run out in a row',
       );
       expect(
         reasonOf(DriverOfflineReason.appRestart),
@@ -878,7 +878,7 @@ void main() {
       );
       expect(
         reasonOf(DriverOfflineReason.missedOffers),
-        'You missed or declined 10 offers in a row',
+        'You let 10 Exclusive offers run out in a row',
       );
       expect(reasonOf(DriverOfflineReason.movera), 'Movera set you offline');
     });

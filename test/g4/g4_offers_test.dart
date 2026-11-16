@@ -1041,12 +1041,15 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
       }
       IslandMessages.posted.clear();
-      await tester.tap(
-        find.byKey(const ValueKey<String>('direct-offer-dismiss')),
-      );
+      // He lets it run out (15 s). Owner 2026-11-16: only an ignored offer
+      // is a miss (was: a tap on the down arrow).
+      for (var i = 0; i < 170 && card.evaluate().isNotEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
       for (var i = 0; i < 12; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
+      expect(card, findsNothing);
       expect(answers.missedInRow, 9);
       expect(
         IslandMessages.posted.map((m) => m.title),
