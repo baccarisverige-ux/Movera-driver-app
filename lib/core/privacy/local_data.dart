@@ -1,3 +1,4 @@
+import 'package:movera/core/destination/destination_search.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -106,7 +107,58 @@ const localDataInventory = <LocalDataRecord>[
         'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
     retention: 'Newest ${LocalQuarantine.maxEntries} entries, until logout.',
   ),
+  LocalDataRecord(
+    key: RecentDestinations.key,
+    dataClass: LocalDataClass.personal,
+    purpose:
+        'The last ${RecentDestinations.max} destinations of '
+        'destination mode (often a home address).',
+    retention: 'Until logout.',
+  ),
+  LocalDataRecord(
+    key: localDataOwnerKey,
+    dataClass: LocalDataClass.recovery,
+    purpose:
+        'The driver id the keys above belong to, so another driver who '
+        'signs in after a refused session never sees them.',
+    retention: 'Until logout.',
+  ),
 ];
+
+/// The driver id (the access token's `sub`) the local data belongs to.
+const localDataOwnerKey = 'movera_driver_local_owner';
+
+/// A session of [driver] on this phone. Local data left by another driver
+/// (a session the server refused runs no clean-up, so the same driver
+/// keeps everything when he signs in again) goes through [clear] first.
+/// Without [clear] (a session kept from an earlier start) the driver is
+/// only recorded when nobody is.
+Future<void> claimLocalData(
+  Object? driver, [
+  Future<void> Function()? clear,
+]) async {
+  if (driver is! String) return;
+  final prefs = await SharedPreferences.getInstance();
+  final last = prefs.getString(localDataOwnerKey);
+  if (last == driver) return;
+  if (last != null) {
+    if (clear == null) return;
+    await clear();
+  }
+  await prefs.setString(localDataOwnerKey, driver);
+}
+
+/// The end of a clean-up run with `keepOwner`: everything of the last
+/// driver is gone, so nobody owns the local data any more.
+Future<void> forgetLocalDataOwner({
+  Future<SharedPreferences> Function()? load,
+}) async => _removeOwner(await (load ?? SharedPreferences.getInstance)());
+
+Future<void> _removeOwner(SharedPreferences prefs) async {
+  if (!await prefs.remove(localDataOwnerKey)) {
+    throw StateError('Could not clear local data: $localDataOwnerKey');
+  }
+}
 
 /// The driver's language choice: a device setting, kept across logout like
 /// the rider app's `movera_app_language` (the next driver on this phone most
@@ -119,8 +171,15 @@ const String languageSectionKey =
 /// Active-trip recovery still works until this runs. After it runs, terminal
 /// and active trips cannot resurrect from local storage. Keys outside the
 /// Movera inventory are left untouched.
+///
+/// The owner key ([localDataOwnerKey]) goes last, only after every other
+/// step succeeded (post-merge 2026-11-15d S1): a clean-up that stops
+/// part-way keeps the last driver recorded, so the next driver's sign-in
+/// runs it again. [keepOwner] leaves it for a caller with more to clear
+/// (the app's in-memory state), which then calls [forgetLocalDataOwner].
 Future<void> clearLocalUserData({
   Future<SharedPreferences> Function()? load,
+  bool keepOwner = false,
 }) async {
   LocalWriteSession.beginCleanup();
   try {
@@ -140,6 +199,7 @@ Future<void> clearLocalUserData({
       SettingsRepository.key,
       PrefsActiveRideRepository.terminalKey,
       DriverStartPosition.key,
+      RecentDestinations.key,
     ];
     DriverStartPosition.clearMemory();
     for (final key in exact) {
@@ -167,6 +227,7 @@ Future<void> clearLocalUserData({
     }
     // driver-u31: the Ride check audio files the cleared log pointed at.
     await deleteRideCheckRecordings();
+    if (!keepOwner) await _removeOwner(prefs);
   } catch (_) {
     LocalWriteSession.cancelCleanup();
     rethrow;

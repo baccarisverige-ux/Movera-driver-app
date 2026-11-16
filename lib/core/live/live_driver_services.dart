@@ -21,6 +21,7 @@ import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_content.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
+import 'package:movera/core/live/live_bonuses.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
@@ -96,6 +97,7 @@ class LiveDriverServices {
     // becomes the current trip like an accepted offer.
     reservations = LiveReservations(api: api, onStarted: trips.observe);
     earnings = LiveEarnings(api: api);
+    bonuses = LiveBonuses(api: api);
     surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
@@ -216,6 +218,9 @@ class LiveDriverServices {
   /// Today's earnings from the server (audit R3).
   late final LiveEarnings earnings;
 
+  /// BQ-V44: the driver's bonus campaigns (Campaigns screen, NEW badge).
+  late final LiveBonuses bonuses;
+
   /// The coloured surge zones of Home's map (contract v0.7.2 §17).
   late final ApiSurgeMapSource surgeMap;
   late final ApiDispatchRepository dispatch;
@@ -315,6 +320,7 @@ class LiveDriverServices {
     _signedInStarted = false;
     config.stop();
     events.events.clear();
+    presence.signedOut();
     // Owner 2026-11-15: the next driver on this phone gets his own offer
     // feed, Cash rides switch and TODAY.
     dispatch.forget();
@@ -715,6 +721,22 @@ class LivePresence {
         return liveAvailabilityErrorMessage(error, online: false);
       }
     });
+  }
+
+  /// The session ended, also refused while online with no Go offline:
+  /// nothing stays online for the next driver (the last driver's feed
+  /// closes, Home shows offline, and the next Home sets the server offline
+  /// as after a restart). The server is not asked: there is no session. A
+  /// trip under way is left as it is.
+  void signedOut() {
+    if (onTrip) return;
+    _wantOnline = false;
+    serverOnline = false;
+    _settled = false;
+    _stopOnline();
+    if (_session?.status == DriverOnlineStatus.online) {
+      _session?.setOnline(false);
+    }
   }
 
   /// The feed is open (or reconnecting by itself) until [_stopOnline].

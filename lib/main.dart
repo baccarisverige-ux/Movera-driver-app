@@ -222,7 +222,7 @@ class _MoveraAppState extends State<MoveraApp> {
       repository: AuthRepository(api: _api, tokens: _tokens),
       // Contract v0.18.2 `auth.beforeSignIn`: the signed-in calls start
       // after the sign-in, not on the sign-in screen.
-      onSignedIn: () => _live?.signedIn(),
+      onSignedIn: _signedIn,
       onSignedOut: () => _live?.signedOut(),
     );
     _account = DriverAccountSession(repository: DriverAccountRepository(_api));
@@ -339,11 +339,24 @@ class _MoveraAppState extends State<MoveraApp> {
       alerts: _safetyAlerts,
       log: PrefsRideCheckLog(),
     );
-    unawaited(_session.restore());
-    // G4-E6: the driver's Vibrate setting for offers, from the first frame.
-    unawaited(OfferAlertSettings.restore());
-    // Offers follow the saved Ride-preferences choice from the first frame.
-    unawaited(DriverCategoryChoice.restore());
+    // A session kept from an earlier start: the local data must be his
+    // before anything reads it (the restores below, the gate's Home).
+    // The demo has no session and never touches the token store.
+    _startClaim = DriverRuntimeConfig.current.authRequired
+        ? _claimKeptSession()
+        : Future<void>.value();
+    unawaited(
+      _startClaim.then((_) {
+        if (!mounted) return;
+        unawaited(_session.restore());
+        // G4-E6: the driver's Vibrate setting for offers, from the first
+        // frame.
+        unawaited(OfferAlertSettings.restore());
+        // Offers follow the saved Ride-preferences choice from the first
+        // frame.
+        unawaited(DriverCategoryChoice.restore());
+      }),
+    );
     DriverLanguage.current.addListener(_languageChanged);
   }
 
@@ -500,6 +513,7 @@ class _MoveraAppState extends State<MoveraApp> {
   Widget _root() => DriverRuntimeConfig.current.authRequired
       ? DriverSessionGate(
           auth: _auth,
+          ready: _startClaim,
           homeBuilder: _home,
           signInBuilder: _signIn,
           account: _account,
@@ -569,6 +583,55 @@ class _MoveraAppState extends State<MoveraApp> {
     );
   }
 
+  /// Done when the local data belongs to the kept session's driver (or
+  /// there is no session); the restores and the gate wait for it.
+  late final Future<void> _startClaim;
+
+  /// Post-merge S1 round 2 (SF1): another driver's sign-in saves his
+  /// tokens before the last driver's data is cleared. An app killed in
+  /// that clean-up starts again with his session next to what is left,
+  /// the last driver still recorded. The clean-up is finished here, before
+  /// anything reads local data; one that cannot finish ends that session
+  /// (tokens first) and Sign in shows. The same driver, nobody recorded
+  /// or no session: nothing to do (the driver is recorded when nobody is).
+  Future<void> _claimKeptSession() async {
+    String? session;
+    try {
+      session = await _tokens.readAccess();
+      await claimLocalData(tokenDriver(session), () {
+        _account.clear();
+        return _clearLocal();
+      });
+    } catch (_) {
+      try {
+        await _auth.endSessionHereFirst(session: session);
+      } catch (_) {
+        // A token store that cannot be read or cleared: nothing more.
+      }
+      _live?.signedOut();
+    }
+  }
+
+  /// A sign-in. A refused session ([_sessionExpired]) keeps the local data
+  /// for the same driver; another driver's sign-in clears it first, and
+  /// without that there is no session.
+  Future<void> _signedIn() async {
+    String? session;
+    try {
+      session = await _tokens.readAccess();
+      await claimLocalData(tokenDriver(session), () {
+        _account.clear();
+        return _clearLocal();
+      });
+    } catch (_) {
+      // Round 2 (SF1): the phone's tokens FIRST, then the server ends the
+      // session it just opened.
+      await _auth.endSessionHereFirst(session: session);
+      rethrow;
+    }
+    _live?.signedIn();
+  }
+
   Future<void> _logout() async {
     // Round 4: the server's session first, while the token is still there;
     // the tokens go whatever it answers. The demo (no session required,
@@ -591,10 +654,17 @@ class _MoveraAppState extends State<MoveraApp> {
       await _push?.signingOut(server: false);
       _account.clear();
     }
+    await _clearLocal();
+  }
+
+  /// Everything one driver left on this phone, in storage and in memory.
+  Future<void> _clearLocal() async {
     await PrefsActiveRideRepository.settle();
     await CompletionJournal.settle();
     await SettingsRepository.settle();
-    await clearLocalUserData();
+    // The owner key stays until the in-memory resets below are done too
+    // (post-merge 2026-11-15d S1).
+    await clearLocalUserData(keepOwner: true);
     // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
@@ -622,6 +692,9 @@ class _MoveraAppState extends State<MoveraApp> {
     // Last: the resets above can make the old Home, still mounted under
     // Profile, post notices (driver-r5-27).
     IslandMessages.clear();
+    // Only now: a clean-up that stopped above keeps the last driver
+    // recorded, so the next driver's sign-in runs it again.
+    await forgetLocalDataOwner();
   }
 
   // Round 4 (live): the hold is the server's account state; the demo

@@ -943,6 +943,57 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t connect. Check your network or use chat.';
 
   @override
+  String get campaignsTitle => 'Campaigns';
+
+  @override
+  String campaignProgressTrips(String done, String target) {
+    return '$done of $target trips';
+  }
+
+  @override
+  String campaignProgressHours(String done, String target) {
+    return '$done of $target online';
+  }
+
+  @override
+  String get campaignEarned => 'Earned – added to your next payout';
+
+  @override
+  String campaignStartsOn(String date) {
+    return 'Starts $date';
+  }
+
+  @override
+  String campaignEndsOn(String date) {
+    return 'Ends $date';
+  }
+
+  @override
+  String get campaignPaused => 'Paused';
+
+  @override
+  String get campaignEnded => 'Ended';
+
+  @override
+  String get campaignsEmpty => 'No campaigns right now';
+
+  @override
+  String campaignDuration(int h, int m) {
+    return '$h h $m min';
+  }
+
+  @override
+  String campaignDurationWholeHours(int h) {
+    return '$h h';
+  }
+
+  @override
+  String get campaignsCouldNotLoad => 'Campaigns could not be loaded.';
+
+  @override
+  String get earningsBonusIncluded => 'Bonuses (included)';
+
+  @override
   String get cancelNextTripQuestion => 'Cancel the next trip?';
 
   @override

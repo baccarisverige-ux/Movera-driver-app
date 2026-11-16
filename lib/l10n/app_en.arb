@@ -652,6 +652,79 @@
   "@callConnectFailedHint": {
     "description": "v0.18.66 §87 (owner 2026-11-11 'Add hint'): under 'Call failed' when the call could not connect within the connect time limit (inAppCalls.texts.connectFailedHint)."
   },
+  "campaignsTitle": "Campaigns",
+  "@campaignsTitle": {
+    "description": "BQ-V44 (contract v0.18.110 bonusCampaigns.texts.title): the side menu row and the Campaigns screen title on live."
+  },
+  "campaignProgressTrips": "{done} of {target} trips",
+  "@campaignProgressTrips": {
+    "description": "BQ-V44 texts.progressTrips: the server's progress.done and progress.target, plain numbers.",
+    "placeholders": {
+      "done": {"type": "String"},
+      "target": {"type": "String"}
+    }
+  },
+  "campaignProgressHours": "{done} of {target} online",
+  "@campaignProgressHours": {
+    "description": "BQ-V44 texts.progressHours: done and target are the server's minutes, each written with campaignDuration, e.g. 4 h 20 min of 10 h online.",
+    "placeholders": {
+      "done": {"type": "String"},
+      "target": {"type": "String"}
+    }
+  },
+  "campaignEarned": "Earned – added to your next payout",
+  "@campaignEarned": {
+    "description": "BQ-V44 texts.earned: the server says earned."
+  },
+  "campaignStartsOn": "Starts {date}",
+  "@campaignStartsOn": {
+    "description": "BQ-V44 texts.startsOn: a scheduled campaign; date is the local start date, e.g. 1 Dec.",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "campaignEndsOn": "Ends {date}",
+  "@campaignEndsOn": {
+    "description": "BQ-V44 texts.endsOn: an active or paused campaign; date is the local end date, e.g. 30 Nov.",
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "campaignPaused": "Paused",
+  "@campaignPaused": {
+    "description": "BQ-V44 texts.paused: state chip."
+  },
+  "campaignEnded": "Ended",
+  "@campaignEnded": {
+    "description": "BQ-V44 texts.ended: state chip."
+  },
+  "campaignsEmpty": "No campaigns right now",
+  "@campaignsEmpty": {
+    "description": "BQ-V44 texts.empty: the server lists no campaign for his zones."
+  },
+  "campaignDuration": "{h} h {m} min",
+  "@campaignDuration": {
+    "description": "BQ-V44 texts.duration: minutes from the server as hours and minutes, e.g. 4 h 20 min.",
+    "placeholders": {
+      "h": {"type": "int"},
+      "m": {"type": "int"}
+    }
+  },
+  "campaignDurationWholeHours": "{h} h",
+  "@campaignDurationWholeHours": {
+    "description": "BQ-V44 texts.durationWholeHours: whole hours (no minutes left), e.g. 10 h.",
+    "placeholders": {
+      "h": {"type": "int"}
+    }
+  },
+  "campaignsCouldNotLoad": "Campaigns could not be loaded.",
+  "@campaignsCouldNotLoad": {
+    "description": "BQ-V44: GET /driver/bonuses failed; a Retry button follows. Never shows the demo campaigns."
+  },
+  "earningsBonusIncluded": "Bonuses (included)",
+  "@earningsBonusIncluded": {
+    "description": "BQ-V44 (contract EarningsPeriod.bonus): the trip bonuses and campaign bonuses of the period, already inside the total above (net); never added to it again."
+  },
   "cancelNextTripQuestion": "Cancel the next trip?",
   "cancelThisTripQuestion": "Cancel this trip?",
   "cancelNextTrip": "Cancel next trip",

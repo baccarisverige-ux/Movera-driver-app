@@ -1,0 +1,15 @@
+{
+  "campaignsTitle": "Kampanjer",
+  "campaignProgressTrips": "{done} av {target} resor",
+  "campaignProgressHours": "{done} av {target} online",
+  "campaignEarned": "Intjänad – läggs till nästa utbetalning",
+  "campaignStartsOn": "Börjar {date}",
+  "campaignEndsOn": "Slutar {date}",
+  "campaignPaused": "Pausad",
+  "campaignEnded": "Avslutad",
+  "campaignsEmpty": "Inga kampanjer just nu",
+  "campaignDuration": "{h} h {m} min",
+  "campaignDurationWholeHours": "{h} h",
+  "campaignsCouldNotLoad": "Kampanjerna kunde inte läsas in.",
+  "earningsBonusIncluded": "Bonusar (ingår)"
+}

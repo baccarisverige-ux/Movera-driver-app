@@ -248,6 +248,7 @@ class EarningsTotals {
     required this.tripCount,
     required this.cashCollected,
     this.tipsAndFees,
+    this.bonus,
     this.currencies = const [],
   });
 
@@ -269,10 +270,19 @@ class EarningsTotals {
     var net = Money(minorUnits: 0, currency: currency);
     var cash = Money(minorUnits: 0, currency: currency);
     Money? tipsAndFees = Money(minorUnits: 0, currency: currency);
+    Money? bonus;
     var trips = 0;
     for (final period in periods) {
       if (period is! Map) throw FormatException('period', period);
       net = sum(net, period['net']);
+      // v0.18.110 `EarningsPeriod.bonus` (optional): already inside `net`,
+      // summed for its own line only, never added to [net] again.
+      if (period['bonus'] != null) {
+        bonus = sum(
+          bonus ?? Money(minorUnits: 0, currency: currency),
+          period['bonus'],
+        );
+      }
       cash = sum(cash, period['cashCollected']);
       // `tips` is required by the contract, `fees` (v0.5.1) optional: a
       // period without `tips` → the sum is not known.
@@ -287,6 +297,7 @@ class EarningsTotals {
       tripCount: trips,
       cashCollected: cash,
       tipsAndFees: tipsAndFees,
+      bonus: bonus,
       currencies: [
         if (listed is List)
           for (final c in listed)
@@ -302,6 +313,11 @@ class EarningsTotals {
   /// The driver's tips and his shares of cancel / no-show fees over the
   /// range (both in [net]); null when the report does not give them.
   final Money? tipsAndFees;
+
+  /// BQ-V44 (contract v0.18.110 `EarningsPeriod.bonus`): the trip bonuses
+  /// and campaign bonuses over the range, a PART of [net] (the server
+  /// counts them in it); null from a server that does not send it.
+  final Money? bonus;
 
   /// Every currency earned in during the range.
   final List<String> currencies;
