@@ -9,9 +9,20 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/money/money.dart';
 
 String? _text(Object? value) =>
     value is String && value.isNotEmpty ? value : null;
+
+/// A contract `Money`, or null when it is missing or malformed.
+Money? _money(Object? value) {
+  if (value is! Map) return null;
+  try {
+    return Money.fromJson(Map<String, dynamic>.from(value));
+  } on FormatException {
+    return null;
+  }
+}
 
 enum ReminderLevel {
   /// Red: going online is refused until it is fixed.
@@ -129,11 +140,22 @@ class DriverReminder {
     this.renewalStatus,
     this.invitationId,
     this.fleetName,
+    this.owed,
+    this.limit,
   });
+
+  /// Contract v0.18.84 (`debtModel.driverOwes.homeLine`): he owes Movera
+  /// at or over his country's owes-limit, so he gets no cash trips.
+  static const owesMoveraKind = 'owes_movera_over_limit';
 
   factory DriverReminder.fromJson(Map<String, dynamic> json) => DriverReminder(
     kind: _text(json['kind']) ?? '',
-    level: ReminderLevel.of(json['level']),
+    // v0.18.84: the owes-limit line is an orange warning; it never keeps
+    // the driver offline (driverOwes.cashOffers "going online is never
+    // refused by it"), whatever level a server sends with it.
+    level: _text(json['kind']) == owesMoveraKind
+        ? ReminderLevel.dueSoon
+        : ReminderLevel.of(json['level']),
     scope: _text(json['scope']),
     documentType: _text(json['documentType']),
     documentId: _text(json['documentId']),
@@ -155,6 +177,8 @@ class DriverReminder {
     renewalStatus: _text(json['renewalStatus']),
     invitationId: _text(json['invitationId']),
     fleetName: _text(json['fleetName']),
+    owed: _money(json['owed']),
+    limit: _money(json['limit']),
   );
 
   /// `document_needed`, `document_expiring`, `fleet_no_approved_car`, …
@@ -187,6 +211,12 @@ class DriverReminder {
   /// and the fleet's name.
   final String? invitationId;
   final String? fleetName;
+
+  /// v0.18.84 `owes_movera_over_limit`: what he owes Movera now and his
+  /// country's owes-limit, both as the server sent them (never worked out
+  /// on the phone).
+  final Money? owed;
+  final Money? limit;
 
   bool get blocksOnline => level == ReminderLevel.blocksOnline;
 }
@@ -434,6 +464,14 @@ ReminderWords reminderWords(
           ? tr.remEmailNotVerifiedApproval
           : tr.remEmailNotVerified,
       action: reminder.fix == null ? null : tr.contactVerifyEmail,
+    ),
+    // Contract v0.18.84 (owner Q-S5-1 + 2026-11-13 14:54): orange, no fix
+    // target (he pays Movera outside the app); the server's amounts.
+    DriverReminder.owesMoveraKind => ReminderWords(
+      tr.remOwesMoveraOverLimit(
+        reminder.owed?.formatted ?? '',
+        reminder.limit?.formatted ?? '',
+      ),
     ),
     _ => ReminderWords(
       document,
