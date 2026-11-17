@@ -41,6 +41,7 @@ import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/reservations_refresh.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
+import 'package:movera/core/location/driver_start_warmup.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -84,6 +85,16 @@ Future<void> main() async {
   PreviewMode.readFromUrl();
   validateDriverComposition(production: driverProductionRequested);
   installGlobalErrorHooks();
+  // Owner REMINDERS 144/145: the position read starts with the intro (a
+  // signed-in driver whose location is already allowed; never a prompt).
+  // Home and the online sender reuse this one read.
+  unawaited(
+    DriverStartWarmup.start(
+      signedIn: _signedInAtStart,
+      allowedWithoutAsking: DriverStartWarmup.allowedNow,
+      read: const DriverLocationService().getCurrentPosition,
+    ),
+  );
   // Round 4: the zone's default language, then the driver's saved choice.
   // A slow or broken store never holds the first frame for long.
   DriverLanguage.applyZone(const DriverHomeAdminContentService().languages);
@@ -109,6 +120,14 @@ Future<void> main() async {
   // Owner 2026-11-03 (LT-2): index.html shows the Movera loading screen while
   // the app downloads; clear it once Flutter has painted its first frame.
   WidgetsBinding.instance.addPostFrameCallback((_) => dismissWebSplash());
+}
+
+/// A kept session (or the demo, which has none), outside an admin preview.
+Future<bool> _signedInAtStart() async {
+  if (PreviewMode.current.active) return false;
+  if (!DriverRuntimeConfig.current.authRequired) return true;
+  final access = await SecureTokenStore().readAccess();
+  return access != null && access.isNotEmpty;
 }
 
 /// App composition root.

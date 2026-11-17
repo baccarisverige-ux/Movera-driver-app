@@ -59,6 +59,7 @@ import 'package:movera/core/routing/route_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/location/driver_start_position.dart';
+import 'package:movera/core/location/driver_start_warmup.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
@@ -483,8 +484,7 @@ class _DriverHomeState extends State<DriverHome>
   late LatLng _driverPosition =
       LiveDriverServices.instance?.reporter.lastKnownPoint?.toLatLng() ??
       _fallbackDriverPosition;
-  bool _startPositionKnown = false, _startLocationFailed = false;
-  Timer? _startWait;
+  bool _startPositionKnown = false;
   // Opens on the area around the driver (~10 km across), nearly flat.
   CameraPosition get _initialPosition => CameraPosition(
     target: _driverPosition,
@@ -1332,7 +1332,6 @@ class _DriverHomeState extends State<DriverHome>
     _locationEpoch++;
     _reservationPopupTimer?.cancel();
     _offerRouteFrame.dispose();
-    _startWait?.cancel();
     _destinationLimitTimer?.cancel();
     _reservation.release?.cancel();
     _reservation.fade.cancel();
