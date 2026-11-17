@@ -380,6 +380,10 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   bool get oneStreamRefused => _oneStreamRefused;
   bool _oneStreamRefused = false;
 
+  /// MF-2: a 404 `zone_not_found` (stale zoneId) opens the two old streams
+  /// for the next try only; the one stream is asked again after that.
+  bool _oldStreamsOnce = false;
+
   /// Whether the feed now open (or being opened) is the one stream.
   bool get usesOneStream => _oneMode;
   bool _oneMode = false;
@@ -583,7 +587,10 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       // L20 stream: the one connection while the zone's switch is on and the
       // server has it; the settings then close their own stream.
       final link = oneStream;
-      final one = link != null && !_oneStreamRefused && link.wanted();
+      final skipOne = _oldStreamsOnce;
+      _oldStreamsOnce = false;
+      final one =
+          link != null && !_oneStreamRefused && !skipOne && link.wanted();
       _oneMode = one;
       link?.attached(one);
       if (generation != _generation) return;
@@ -616,27 +623,31 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     if (response.statusCode == 404 && _oneMode) {
       // L20 stream: an older server has no GET /driver/stream: the two
       // streams at once, and the one stream is not asked again. SF-1: a
-      // 404 `zone_not_found` (stale zoneId) is not an older server.
-      String? code;
+      // 404 `zone_not_found` (stale zoneId) is not an older server. MF-2:
+      // the server sends {code: not_found, reason: zone_not_found}; that
+      // try opens the two old streams (offers need no zone) without the
+      // mark, and the next reopen or zone change asks the one stream again.
+      String? reason;
       try {
         final body = await response.stream.bytesToString().timeout(
           requestTimeout,
         );
         final decoded = jsonDecode(body);
-        if (decoded is Map && decoded['code'] is String) {
-          code = decoded['code'] as String;
+        if (decoded is Map && decoded['reason'] is String) {
+          reason = decoded['reason'] as String;
         }
       } catch (_) {
         // No readable body: the route is missing.
       }
       if (generation != _generation) return;
-      if (code == 'zone_not_found') {
-        _feedLost();
+      _oneMode = false;
+      oneStream?.attached(false);
+      if (reason == 'zone_not_found') {
+        _oldStreamsOnce = true;
+        unawaited(connect());
         return;
       }
       _oneStreamRefused = true;
-      _oneMode = false;
-      oneStream?.attached(false);
       unawaited(connect());
       return;
     }

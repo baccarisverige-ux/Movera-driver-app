@@ -42,11 +42,11 @@ class _Server {
   _Server({
     required this.oneStream,
     this.oneStreamStatus = 200,
-    this.errorCode = 'not_found',
+    this.errorReason,
   });
   bool oneStream;
   int oneStreamStatus;
-  final String errorCode;
+  final String? errorReason;
   int version = 5;
   int configReads = 0;
   final asked = <http.BaseRequest>[];
@@ -68,7 +68,14 @@ class _Server {
         asked.add(request);
         if (stream == '/driver/stream' && oneStreamStatus != 200) {
           return http.StreamedResponse(
-            Stream.value(utf8.encode(jsonEncode({'code': errorCode}))),
+            Stream.value(
+              utf8.encode(
+                jsonEncode({
+                  'code': 'not_found',
+                  if (errorReason != null) 'reason': errorReason,
+                }),
+              ),
+            ),
             oneStreamStatus,
           );
         }
@@ -287,25 +294,31 @@ void main() {
     config.dispose();
   });
 
-  test('404 zone_not_found is not an older server (SF-1)', () async {
-    final server = _Server(
-      oneStream: true,
-      oneStreamStatus: 404,
-      errorCode: 'zone_not_found',
-    );
-    // A long retry: the stale-zone answer is retried later, not looped here.
-    final p = await phone(server, retry: const Duration(hours: 1));
-    final tries = server.asked
-        .where((r) => r.url.path.endsWith('/driver/stream'))
-        .length;
-    expect(tries, greaterThan(0));
-    expect(p.dispatch.oneStreamRefused, isFalse);
-    server.oneStreamStatus = 200;
-    await p.dispatch.disconnect();
-    await p.dispatch.connect();
-    await _settle();
-    expect(server.open['/driver/stream'], 1);
-    await p.dispatch.disconnect();
-    p.config.dispose();
-  });
+  test(
+    '404 zone_not_found opens the two old streams this time only (MF-2)',
+    () async {
+      // The real server's shape: code not_found, reason zone_not_found.
+      final server = _Server(
+        oneStream: true,
+        oneStreamStatus: 404,
+        errorReason: 'zone_not_found',
+      );
+      final p = await phone(server, retry: const Duration(hours: 1));
+      expect(
+        server.asked.where((r) => r.url.path.endsWith('/driver/stream')),
+        isNotEmpty,
+      );
+      // Offers keep flowing on the old stream; the one stream is not
+      // marked as missing.
+      expect(server.open['/driver/offers/stream'], 1);
+      expect(p.dispatch.oneStreamRefused, isFalse);
+      server.oneStreamStatus = 200;
+      await p.dispatch.disconnect();
+      await p.dispatch.connect();
+      await _settle();
+      expect(server.open['/driver/stream'], 1);
+      await p.dispatch.disconnect();
+      p.config.dispose();
+    },
+  );
 }
