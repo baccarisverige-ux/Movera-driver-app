@@ -218,9 +218,13 @@ class _ServerNextOffers {
       accepted.value++;
       return;
     }
-    ScaffoldMessenger.maybeOf(
-      s.context,
-    )?.showSnackBar(SnackBar(content: Text(tr.offerNoLongerAvailable)));
+    // J11 (v0.18.84): refused because he owes Movera over the limit: the
+    // Home line's words instead of "no longer available".
+    ScaffoldMessenger.maybeOf(s.context)?.showSnackBar(
+      SnackBar(
+        content: Text(result.owesMovera?.text ?? tr.offerNoLongerAvailable),
+      ),
+    );
     _changed();
   }
 

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/navigation/map_zoom_limit.dart';
 
 /// One point the camera must show, with how far its drawing reaches
 /// around it on screen (a pin with its time chip), in logical pixels.
@@ -71,7 +72,7 @@ RouteCameraFit? fitRouteCamera({
   required List<RouteFitPoint> points,
   required Rect free,
   required Offset targetAt,
-  double minZoom = 3,
+  double minZoom = kMapMinZoom,
   double maxZoom = 17,
 }) {
   if (points.isEmpty || free.width <= 0 || free.height <= 0) return null;

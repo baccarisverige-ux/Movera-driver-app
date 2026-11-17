@@ -5224,6 +5224,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Votre e-mail n’est pas vérifié. C’est nécessaire pour l’approbation. Appuyez pour le vérifier.';
 
   @override
+  String remOwesMoveraOverLimit(String owed, String limit) {
+    return 'Vous devez $owed à Movera (limite $limit). Vous ne recevez plus de courses payées à bord tant que vous n’avez pas payé Movera.';
+  }
+
+  @override
   String get safetyToolkit => 'Outils de sécurité';
 
   @override

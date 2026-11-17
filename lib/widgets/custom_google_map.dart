@@ -11,6 +11,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import '../core/l10n/driver_l10n.dart';
 import '../core/navigation/map_camera_report.dart';
 import '../core/navigation/map_double_tap_policy.dart';
+import '../core/navigation/map_zoom_limit.dart';
 import '../styles/movera_map_palette.dart';
 import '../styles/movera_map_style.dart';
 import 'movera_vehicle_marker.dart';
@@ -569,6 +570,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               // Owner (live test 2026-10-26, N5): no Google traffic layer
               // on any driver map; only the Movera map style draws the roads.
               trafficEnabled: false,
+              minMaxZoomPreference: kMapZoomPreference,
               buildingsEnabled: widget.buildingsEnabled,
               indoorViewEnabled: widget.indoorViewEnabled,
               scrollGesturesEnabled: widget.scrollGesturesEnabled,

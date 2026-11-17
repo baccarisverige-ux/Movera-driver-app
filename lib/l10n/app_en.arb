@@ -4118,6 +4118,11 @@
   "@remEmailNotVerifiedApproval": {
     "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12) S2: Home reminder email_not_verified, red (blocks_online) \"needed for approval\"; = contract reminders.texts.email_not_verified_approval."
   },
+  "remOwesMoveraOverLimit": "You owe Movera {owed} (limit {limit}). You get no cash trips until you pay Movera.",
+  "@remOwesMoveraOverLimit": {
+    "description": "J11 (contract v0.18.84 debtModel.driverOwes.homeLine, owner Q-S5-1 + 2026-11-13 14:54): Home reminder owes_movera_over_limit, orange (due_soon), never blocks going online; also the Accept refusal driver_owes_movera; = contract reminders.texts.owes_movera_over_limit (debtModel.texts.owesMoveraLine).",
+    "placeholders": {"owed": {"type": "String"}, "limit": {"type": "String"}}
+  },
   "safetyToolkit": "Safety toolkit",
   "safetyAlertKeptOnPhoneDemo": "Demo: alert kept on this phone only. No one at Movera was notified.",
   "safetyAlertNotSentLive": "Not sent: Movera cannot receive ride-check alerts yet. In danger, call 112.",
