@@ -413,6 +413,17 @@ class _RideRequestsState extends State<RideRequests> {
         _resolveMatchWon(trip);
       case ClaimOutcome.alreadyClaimed:
         _resolveMatchLost(trip, _RadarGone.lostOwnMatch);
+      // J11 (v0.18.84): a cash trip he may not take while he owes Movera
+      // over the limit: the banner says so, not "taken by another driver".
+      case ClaimOutcome.unavailable when result.owesMovera != null:
+        _resolveMatchLost(trip, _RadarGone.unavailable);
+        setState(
+          () => _matchNotice = _RadarMatchNotice(
+            type: _RadarMatchNoticeType.error,
+            title: tr.islandNoLongerAvailable,
+            message: result.owesMovera!.text,
+          ),
+        );
       case ClaimOutcome.expired:
       case ClaimOutcome.unavailable:
         _resolveMatchLost(trip, _RadarGone.unavailable);

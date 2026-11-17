@@ -19,6 +19,18 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     }
   }
 
+  /// J11 (contract v0.18.84 `debtModel.driverOwes`): the Accept of a
+  /// cash offer was refused because he owes Movera at or over the limit.
+  /// Going online is never touched; card trips still come.
+  void _showOwesMovera(String text) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        key: const ValueKey('home-owes-movera-refusal'),
+        content: Text(text),
+      ),
+    );
+  }
+
   _HomeRadarMatchState _homeRadarStateFor(String id) =>
       _homeRadarMatchStates[id] ?? _HomeRadarMatchState.available;
 
@@ -38,6 +50,15 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     switch (result.outcome) {
       case ClaimOutcome.success:
         _resolveHomeRadarMatchWon(offer);
+      // J11 (v0.18.84): he owes Movera over the limit; the line says so,
+      // not "Trip unavailable" nor "taken by another driver".
+      case ClaimOutcome.unavailable when result.owesMovera != null:
+        _resolveHomeRadarMatchLost(
+          offer,
+          _RadarOfferGone.unavailable,
+          notice: false,
+        );
+        _showOwesMovera(result.owesMovera!.text);
       case ClaimOutcome.alreadyClaimed:
         _resolveHomeRadarMatchLost(offer, _RadarOfferGone.lostOwnMatch);
       case ClaimOutcome.expired:
@@ -212,8 +233,9 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
 
   void _resolveHomeRadarMatchLost(
     _HomeDirectOffer offer,
-    _RadarOfferGone reason,
-  ) {
+    _RadarOfferGone reason, {
+    bool notice = true,
+  }) {
     final wasMatching = _homeRadarMatchingOfferId == offer.id;
     if (wasMatching) {
       _homeRadarNoticeTimer?.cancel();
@@ -229,7 +251,9 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
     // The island says why when this driver tapped Match, or when the
     // trip was the front card they were reading.
     final wasFront = offer.id == _radarExpandedOfferId;
-    if (reason == _RadarOfferGone.lostOwnMatch ||
+    if (!notice) {
+      // The caller says why itself.
+    } else if (reason == _RadarOfferGone.lostOwnMatch ||
         reason == _RadarOfferGone.takenElsewhere) {
       IslandMessages.show(HomeIslandNotices.takenByOther.forRide(offer.id));
     } else if (wasMatching || wasFront) {
@@ -348,6 +372,12 @@ extension _HomeOfferRadarClaims on _DriverHomeState {
               : WaybillRecord.assignedByMoveraSource,
         );
         return;
+      // J11 (v0.18.84): the cash offer is gone for him because he owes
+      // Movera over the limit: the Home line's words, never "taken by
+      // another driver".
+      case ClaimOutcome.unavailable when result.owesMovera != null:
+        _showOwesMovera(result.owesMovera!.text);
+        _dismissOutsideRadarOffer();
       case ClaimOutcome.alreadyClaimed ||
               ClaimOutcome.expired ||
               ClaimOutcome.unavailable
