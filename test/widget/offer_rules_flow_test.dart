@@ -478,6 +478,22 @@ void main() {
         ),
       );
       await startTrip(tester);
+      // G18 (owner 2026-11-16): "Finish trip" first, black; tapped, it is
+      // "Collect cash".
+      final finish = find.byKey(
+        const ValueKey<String>('active-ride-finish-trip'),
+      );
+      expect(
+        find.descendant(of: finish, matching: find.text('Finish trip')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('active-ride-collect-cash')),
+        findsNothing,
+      );
+      await tester.ensureVisible(finish);
+      await tester.tap(finish);
+      await tester.pump();
       final collect = find.byKey(
         const ValueKey<String>('active-ride-collect-cash'),
       );

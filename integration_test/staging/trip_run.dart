@@ -612,11 +612,13 @@ class TripRun extends StagingSession {
     );
     final collect = await pumpUntil(
       tester,
-      () => shows(byKey('active-ride-collect-cash')),
+      // G18 (owner 2026-11-16): "Finish trip" during the trip; tapped, it
+      // is "Collect cash".
+      () => shows(byKey('active-ride-finish-trip')),
       timeout: const Duration(seconds: 20),
     );
     final detail =
-        'moved=$drove server=$status collect button=$collect '
+        'moved=$drove server=$status finish button=$collect '
         'screen on top=${onTripTop()}';
     drove && onBoardStatuses.contains(status) && collect
         ? log.pass('DROPOFF', title, detail)

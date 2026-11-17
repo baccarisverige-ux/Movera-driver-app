@@ -164,7 +164,10 @@ extension _TripMoney on TripRun {
     const title = 'to collect / you get = server, trip completed';
     final opened = await watch.run('collect', () async {
       await rideCheckGate();
-      if (!await tapTripControl(tester, 'active-ride-collect-cash')) {
+      // G18 (owner 2026-11-16): "Finish trip" first; tapped, it is
+      // "Collect cash".
+      if (!await tapTripControl(tester, 'active-ride-finish-trip') ||
+          !await tapTripControl(tester, 'active-ride-collect-cash')) {
         return false;
       }
       return pumpUntil(

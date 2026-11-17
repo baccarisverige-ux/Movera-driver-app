@@ -274,17 +274,21 @@ void main() {
       ),
     );
     await frames(20);
-    final collect = find.byKey(
-      const ValueKey<String>('active-ride-collect-cash'),
+    final finish = find.byKey(
+      const ValueKey<String>('active-ride-finish-trip'),
     );
-    if (collect.evaluate().isEmpty) {
+    if (finish.evaluate().isEmpty) {
       tester
           .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
           .controller!
           .animatePanelToSnapPoint();
       await frames(10);
     }
-    expect(collect, findsOneWidget, reason: 'no "Collect cash" step');
+    expect(
+      finish,
+      findsOneWidget,
+      reason: 'no "Finish trip" step (G18; tapped it is "Collect cash")',
+    );
     // The trip card ("Current trip … kr", the sheet opened).
     tester
         .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
@@ -309,7 +313,13 @@ void main() {
         .controller!
         .animatePanelToSnapPoint();
     await frames(10);
-    await tester.ensureVisible(collect);
+    await tester.ensureVisible(finish);
+    await tester.tap(finish);
+    await frames(2);
+    final collect = find.byKey(
+      const ValueKey<String>('active-ride-collect-cash'),
+    );
+    expect(collect, findsOneWidget, reason: 'no "Collect cash" step');
     await tester.tap(collect);
     await frames(5);
     expect(

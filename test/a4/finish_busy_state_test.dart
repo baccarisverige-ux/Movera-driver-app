@@ -222,6 +222,11 @@ void main() {
     completeGate = Completer<void>();
     profileGate = Completer<void>();
     await open(tester, ActiveRideStage.onTrip);
+    // G18 (owner 2026-11-16): "Finish trip" first; tapped, it is "Collect cash".
+    await tester.tap(
+      find.byKey(const ValueKey<String>('active-ride-finish-trip')),
+    );
+    await frames(tester, 2);
     const key = 'active-ride-collect-cash';
     if (busy) expectBusy(tester, key, busy: false);
     await tester.ensureVisible(find.byKey(const ValueKey<String>(key)));
@@ -260,7 +265,16 @@ void main() {
       'look-up runs behind it', (tester) async {
     await finishCash(tester, busy: false);
     // The next-trip look-up (GET /driver/profile) has not answered yet.
-    expect(requests.last, 'GET /api/v1/driver/profile');
+    // v0.18.113 BQ-S13: the summary also reads the trip once for its
+    // callOpenUntil (Call rider window), so that read may come after it.
+    final afterComplete = requests.sublist(
+      requests.lastIndexOf('POST /api/v1/trips/live-trip/complete') + 1,
+    );
+    expect(afterComplete, contains('GET /api/v1/driver/profile'));
+    expect(
+      afterComplete.where((r) => r != 'GET /api/v1/trips/live-trip'),
+      everyElement('GET /api/v1/driver/profile'),
+    );
     expect(profileGate!.isCompleted, isFalse);
     expect(find.byType(DriverRideCompleted), findsOneWidget);
     profileGate!.complete();

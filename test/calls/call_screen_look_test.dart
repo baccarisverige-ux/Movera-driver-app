@@ -61,16 +61,31 @@ void main() {
       'failed" never covers Done', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 1000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    // v0.18.113 BQ-S13: the screen reads the trip once; the button shows
+    // only while callOpenUntil is ahead. The call itself is still refused.
     final client = MockClient(
-      (r) async => http.Response(
-        jsonEncode({
-          'code': 'invalid_transition',
-          'message': 'No.',
-          'reason': 'call_window_closed',
-        }),
-        409,
-        headers: {'content-type': 'application/json'},
-      ),
+      (r) async => r.method == 'GET'
+          ? http.Response(
+              jsonEncode({
+                'tripId': 'trp_1',
+                'status': 'completed',
+                'callOpenUntil': DateTime.now()
+                    .add(const Duration(minutes: 30))
+                    .toUtc()
+                    .toIso8601String(),
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            )
+          : http.Response(
+              jsonEncode({
+                'code': 'invalid_transition',
+                'message': 'No.',
+                'reason': 'call_window_closed',
+              }),
+              409,
+              headers: {'content-type': 'application/json'},
+            ),
     );
     final tokens = MemoryTokenStore()..save(access: 'a', refresh: 'r');
     final api = ApiClient(
@@ -108,6 +123,10 @@ void main() {
       ..completeCurrent();
     await tester.pumpWidget(_app(DriverRideCompleted(waybillRepository: repo)));
     await tester.pump(const Duration(seconds: 1));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pump();
     final call = find.byKey(const ValueKey<String>('ride-completed-call'));
     final style = tester.widget<OutlinedButton>(call).style!;
     expect(

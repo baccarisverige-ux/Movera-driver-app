@@ -281,12 +281,18 @@ extension _AcceptRideStateGetters on _AcceptRideState {
       _nextTripRadarOffer != null;
 
   /// Q24: the last leg of a cash trip, cash not collected yet: the main
-  /// button is "Collect cash" instead of the slide.
-  bool get _collectsCashNow =>
+  /// button is a cash step instead of the slide.
+  bool get _cashFinalLeg =>
       widget.paidByCash &&
       _stage == ActiveRideStage.onTrip &&
       !_paidStopWait &&
       _stopCursor >= _stopAddresses.length;
+
+  /// G18 (owner 2026-11-16 "Always finish trip then after clic it become
+  /// collect cash"): "Finish trip" at any distance; only once tapped on
+  /// this last leg is the button "Collect cash".
+  bool get _collectsCashNow =>
+      _cashFinalLeg && _cashFinishTappedAt == _stopAddresses.length;
 
   /// R8-4: the cash taken from the rider; the fare unless a promotion
   /// changed it. Live (price audit 2026-11-14 gap 11, contract v0.18.89
