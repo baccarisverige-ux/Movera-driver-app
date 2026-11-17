@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -95,6 +96,31 @@ void main() {
       expect(DriverStartWarmup.take(), isNull);
     },
   );
+
+  test('first start ever: no permission prompt during the intro', () async {
+    // Owner: "Allow location?" comes after the intro. The warm-up only
+    // checks; a read (which may ask) is never started without permission.
+    var asked = 0;
+    await DriverStartWarmup.start(
+      signedIn: () async => true,
+      allowedWithoutAsking: () async => false,
+      read: () async {
+        asked++;
+        return _fix;
+      },
+    );
+    expect(asked, 0);
+    expect(DriverStartWarmup.take(), isNull);
+  });
+
+  test('the warm-up permission check never asks', () {
+    // Source guard: allowedNow only checks (Permissions API on web).
+    final source = File(
+      'lib/core/location/driver_start_warmup.dart',
+    ).readAsStringSync();
+    expect(source.contains('requestPermission'), isFalse);
+    expect(source.contains('checkPermission'), isTrue);
+  });
 
   test('a failed warm read never throws at start', () async {
     await DriverStartWarmup.start(

@@ -32,6 +32,25 @@ class _WaitingGps implements DriverLocationRepository {
 
 const _stockholm = LatLng(59.3293, 18.0686);
 
+/// A driver who worked in a Paris zone before (a later start).
+final Map<String, Object> _parisZone = {
+  PrefsDriverZonesCache.key: jsonEncode({
+    'zones': [
+      {
+        'zoneId': 'paris',
+        'country': 'FR',
+        'polygon': [
+          [48.80, 2.20],
+          [48.80, 2.50],
+          [48.92, 2.50],
+          [48.92, 2.20],
+        ],
+      },
+    ],
+  }),
+  PrefsDriverConfigCache.key: jsonEncode({'zoneId': 'paris'}),
+};
+
 /// Records every camera command Home sends to the map.
 class _RecordingMaps extends HeadlessMapPlatform {
   final moves = <String>[];
@@ -104,12 +123,26 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('nothing known: the map shows at once (no hidden wait), no car', (
+  testWidgets(
+    'first start ever (nothing known): the locating screen, no made-up city',
+    (tester) async {
+      // Owner: the very first time, "Allow location?" comes after the
+      // intro and Home shows the locating screen until the position.
+      SharedPreferences.setMockInitialValues({});
+      await StartCountryHints.load();
+      await _pumpHome(tester);
+
+      expect(find.byKey(const ValueKey('home-map-locating')), findsWidgets);
+      expect(find.byType(GoogleMap), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('later start (zone known): the map shows at once, no car', (
     tester,
   ) async {
-    // Owner REMINDERS 145: never wait longer than the intro; open at the
-    // zone centre and move when the position arrives.
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues(_parisZone);
+    await StartCountryHints.load();
     await _pumpHome(tester);
 
     expect(find.byKey(const ValueKey('home-map-locating')), findsNothing);
@@ -132,23 +165,7 @@ void main() {
     (tester) async {
       // Rule: Sweden AND France (and Tunisia). Fallback order: saved
       // position, working zone centre, country centre, Stockholm last.
-      SharedPreferences.setMockInitialValues({
-        PrefsDriverZonesCache.key: jsonEncode({
-          'zones': [
-            {
-              'zoneId': 'paris',
-              'country': 'FR',
-              'polygon': [
-                [48.80, 2.20],
-                [48.80, 2.50],
-                [48.92, 2.50],
-                [48.92, 2.20],
-              ],
-            },
-          ],
-        }),
-        PrefsDriverConfigCache.key: jsonEncode({'zoneId': 'paris'}),
-      });
+      SharedPreferences.setMockInitialValues(_parisZone);
       await StartCountryHints.load();
       await _pumpHome(tester);
 
@@ -166,7 +183,8 @@ void main() {
   testWidgets('map shown first, GPS later: the camera moves to the driver', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues(_parisZone);
+    await StartCountryHints.load();
     final maps = GoogleMapsFlutterPlatform.instance;
     final recording = _RecordingMaps();
     GoogleMapsFlutterPlatform.instance = recording;
@@ -207,7 +225,8 @@ void main() {
   testWidgets(
     'map shown first, rough Wi-Fi fix later (laptop): the camera still moves',
     (tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues(_parisZone);
+      await StartCountryHints.load();
       final maps = GoogleMapsFlutterPlatform.instance;
       final recording = _RecordingMaps();
       GoogleMapsFlutterPlatform.instance = recording;
