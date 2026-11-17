@@ -18,6 +18,7 @@ import 'package:movera/core/history/today_earnings.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/live/live_driver_config.dart';
+import 'package:movera/core/live/one_stream.dart';
 import 'package:movera/core/live/live_driver_content.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
@@ -138,6 +139,9 @@ class LiveDriverServices {
       onZoneChanged: () => unawaited(content.refresh()),
       now: now,
     );
+    // L20 stream (contract v0.18.122): one live connection per driver phone
+    // while the zone's realtime.oneStream is on (one_stream.dart).
+    linkOneStream(dispatch: dispatch, config: config);
   }
 
   /// F2: the zone of the position, held before it is used.
