@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/auth/phone_country_default.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -30,6 +31,23 @@ class _WaitingGps implements DriverLocationRepository {
 }
 
 const _stockholm = LatLng(59.3293, 18.0686);
+
+/// Records every camera command Home sends to the map.
+class _RecordingMaps extends HeadlessMapPlatform {
+  final moves = <String>[];
+
+  @override
+  Future<void> animateCamera(
+    CameraUpdate cameraUpdate, {
+    required int mapId,
+  }) async => moves.add(jsonEncode(cameraUpdate.toJson()));
+
+  @override
+  Future<void> moveCamera(
+    CameraUpdate cameraUpdate, {
+    required int mapId,
+  }) async => moves.add(jsonEncode(cameraUpdate.toJson()));
+}
 
 Future<void> _pumpHome(WidgetTester tester) async {
   final maps = GoogleMapsFlutterPlatform.instance;
@@ -141,6 +159,90 @@ void main() {
         expect(target.latitude, closeTo(48.86, 0.001));
         expect(target.longitude, closeTo(2.35, 0.001));
       }
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('map shown first, GPS later: the camera moves to the driver', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final maps = GoogleMapsFlutterPlatform.instance;
+    final recording = _RecordingMaps();
+    GoogleMapsFlutterPlatform.instance = recording;
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final gps = _WaitingGps();
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: DriverHome(locationRepository: gps)),
+      ),
+    );
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.byType(GoogleMap), findsWidgets);
+    gps._fix.complete(
+      DriverLocation(
+        point: const GeoPoint(59.6519, 17.9186),
+        measuredAt: DateTime.now(),
+        accuracyMeters: 10,
+      ),
+    );
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(
+      recording.moves.any((m) => m.contains('59.65')),
+      isTrue,
+      reason: recording.moves.join('\n'),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+  testWidgets(
+    'map shown first, rough Wi-Fi fix later (laptop): the camera still moves',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final maps = GoogleMapsFlutterPlatform.instance;
+      final recording = _RecordingMaps();
+      GoogleMapsFlutterPlatform.instance = recording;
+      addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final gps = _WaitingGps();
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) =>
+              MaterialApp(home: DriverHome(locationRepository: gps)),
+        ),
+      );
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(GoogleMap), findsWidgets);
+      gps._fix.complete(
+        DriverLocation(
+          point: const GeoPoint(59.6519, 17.9186),
+          measuredAt: DateTime.now(),
+          accuracyMeters: 800,
+        ),
+      );
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(
+        recording.moves.any((m) => m.contains('59.65')),
+        isTrue,
+        reason: recording.moves.join('\n'),
+      );
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
