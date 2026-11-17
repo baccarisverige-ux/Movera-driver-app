@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:movera/core/auth/phone_country.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -47,6 +48,11 @@ String? deviceLanguage() {
 abstract final class StartCountryHints {
   static String? _fix;
   static String? _zone;
+  static GeoPoint? _zoneCentre;
+
+  /// The centre of the last zone the driver worked in (the last settings
+  /// document's zone), or null.
+  static GeoPoint? get zoneCentre => _zoneCentre;
 
   /// The country (ISO) of the zone around the last good fix, or null.
   static String? get fixCountry => _fix;
@@ -62,10 +68,13 @@ abstract final class StartCountryHints {
       final store = await (prefs ?? SharedPreferences.getInstance)();
       final zones = _zones(store.getString(PrefsDriverZonesCache.key));
       _fix = _fixCountry(store.getString(DriverStartPosition.key), zones);
-      _zone = _zoneCountry(store.getString(PrefsDriverConfigCache.key), zones);
+      final config = store.getString(PrefsDriverConfigCache.key);
+      _zone = _zoneCountry(config, zones);
+      _zoneCentre = _workZone(config, zones)?.centre;
     } catch (_) {
       _fix = null;
       _zone = null;
+      _zoneCentre = null;
     }
   }
 
@@ -74,6 +83,18 @@ abstract final class StartCountryHints {
   static void reset() {
     _fix = null;
     _zone = null;
+    _zoneCentre = null;
+  }
+
+  static DriverZone? _workZone(String? raw, List<DriverZone> zones) {
+    if (raw == null || raw.isEmpty) return null;
+    final document = jsonDecode(raw);
+    if (document is! Map) return null;
+    final zoneId = document['zoneId'];
+    for (final zone in zones) {
+      if (zone.id == zoneId) return zone;
+    }
+    return null;
   }
 
   static List<DriverZone> _zones(String? raw) {

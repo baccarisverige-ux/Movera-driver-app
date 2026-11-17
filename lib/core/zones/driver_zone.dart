@@ -1,3 +1,5 @@
+import 'package:movera/core/geo/geo_point.dart';
+
 /// A zone of `GET /driver/zones` (contract v0.11.0 §21): an OPEN zone with
 /// its outline and its names in the app languages.
 class DriverZone {
@@ -41,6 +43,12 @@ class DriverZone {
       if (p[1] > east) east = p[1];
     }
     return (south: south, west: west, north: north, east: east);
+  }
+
+  /// The middle of the zone's outline box.
+  GeoPoint get centre {
+    final b = bounds;
+    return GeoPoint((b.south + b.north) / 2, (b.west + b.east) / 2);
   }
 
   double get area {

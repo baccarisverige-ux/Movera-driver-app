@@ -58,6 +58,7 @@ import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/routing/route_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
+import 'package:movera/core/location/driver_start_centre.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/location/driver_start_warmup.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -476,14 +477,11 @@ class _DriverHomeState extends State<DriverHome>
       CoalescingMapRouteRefresh();
   final MovingRouteRefresh _destinationRouteRefetch = MovingRouteRefresh();
 
-  // Placeholder only: the map and car wait for a known position.
-  static const LatLng _fallbackDriverPosition = LatLng(59.3293, 18.0686);
-
   /// The last position the app sent the server, else the fallback, until
   /// this screen's own GPS read lands.
   late LatLng _driverPosition =
       LiveDriverServices.instance?.reporter.lastKnownPoint?.toLatLng() ??
-      _fallbackDriverPosition;
+      DriverStartCentre.fromHints().toLatLng();
   bool _startPositionKnown = false;
   // Opens on the area around the driver (~10 km across), nearly flat.
   CameraPosition get _initialPosition => CameraPosition(
