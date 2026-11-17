@@ -67,6 +67,7 @@ extension _HomeMapSheet on _DriverHomeState {
       }
       _rebuild(() {
         _hasLiveDriverLocation = false;
+        _startLocationFailed = true;
       });
       // driver-u24, driver-r5-51, decision 2: approximate only, not
       // allowed or location off. The reason card says so above the radar
@@ -106,6 +107,7 @@ extension _HomeMapSheet on _DriverHomeState {
             }
             _rebuild(() {
               _hasLiveDriverLocation = false;
+              _startLocationFailed = true;
             });
             _HomeOnlineGate(this)._locationFailed(error);
           },
@@ -780,56 +782,58 @@ extension _HomeMapSheet on _DriverHomeState {
 
   Widget _buildRadarMapBackdrop() {
     return SizedBox.expand(
-      child: CustomGoogleMap(
-        key: _homeMapKey,
-        initialPosition: _initialPosition,
-        markers: _markers,
-        myLocationEnabled: false,
-        myLocationButtonEnabled: false,
-        zoomControlsEnabled: false,
-        webCameraControlEnabled: false,
-        mapToolbarEnabled: false,
-        compassEnabled: false,
-        buildingsEnabled: true,
-        indoorViewEnabled: false,
-        scrollGesturesEnabled: true,
-        zoomGesturesEnabled: true,
-        rotateGesturesEnabled: true,
-        tiltGesturesEnabled: true,
-        onUserGesture: _camera.userGesture,
-        onTouching: (down) => _camera.touching = down,
-        onCameraIdle: () {
-          _cameraPort?.onIdle();
-          _camera.browseSettled();
-        },
-        onCameraMove: (position) => _cameraPort?.onMove(position),
-        mapType: MapType.normal,
-        onMapCreated: (GoogleMapController controller) {
-          _mapController = controller;
-          _cameraPort = GoogleDriverCameraPort(
-            controller,
-            onStatus: (status) {
-              if (status != null &&
-                  mounted &&
-                  ModalRoute.of(context)?.isCurrent == true) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(status),
-                    action: SnackBarAction(
-                      label: tr.retry,
-                      onPressed: _camera.recenter,
-                    ),
-                  ),
+      child: !_HomeStartPosition(this)._mapReady
+          ? _HomeStartPosition(this)._locating()
+          : CustomGoogleMap(
+              key: _homeMapKey,
+              initialPosition: _initialPosition,
+              markers: _markers,
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              webCameraControlEnabled: false,
+              mapToolbarEnabled: false,
+              compassEnabled: false,
+              buildingsEnabled: true,
+              indoorViewEnabled: false,
+              scrollGesturesEnabled: true,
+              zoomGesturesEnabled: true,
+              rotateGesturesEnabled: true,
+              tiltGesturesEnabled: true,
+              onUserGesture: _camera.userGesture,
+              onTouching: (down) => _camera.touching = down,
+              onCameraIdle: () {
+                _cameraPort?.onIdle();
+                _camera.browseSettled();
+              },
+              onCameraMove: (position) => _cameraPort?.onMove(position),
+              mapType: MapType.normal,
+              onMapCreated: (GoogleMapController controller) {
+                _mapController = controller;
+                _cameraPort = GoogleDriverCameraPort(
+                  controller,
+                  onStatus: (status) {
+                    if (status != null &&
+                        mounted &&
+                        ModalRoute.of(context)?.isCurrent == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(status),
+                          action: SnackBarAction(
+                            label: tr.retry,
+                            onPressed: _camera.recenter,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  initialPosition: _initialPosition,
+                  reducedMotion: MediaQuery.disableAnimationsOf(context),
                 );
-              }
-            },
-            initialPosition: _initialPosition,
-            reducedMotion: MediaQuery.disableAnimationsOf(context),
-          );
-          _camera.attach(_cameraPort!);
-        },
-        onTap: (LatLng position) {},
-      ),
+                _camera.attach(_cameraPort!);
+              },
+              onTap: (LatLng position) {},
+            ),
     );
   }
 
@@ -861,92 +865,99 @@ extension _HomeMapSheet on _DriverHomeState {
       width: viewportWidth,
       child: Stack(
         children: [
-          ListenableBuilder(
-            // G4-F6: the admin's events, and their icon once painted.
-            listenable: Listenable.merge([
-              _offerRouteFrame.flowLine,
-              DriverEvents.instance,
-              MoveraEventMarker.icon,
-            ]),
-            builder: (context, _) {
-              final layers = layersWith(_offerRouteFrame.flowLine.value);
-              unawaited(MoveraEventMarker.paintIcon());
-              return CustomGoogleMap(
-                key: _homeMapKey,
-                initialPosition: _initialPosition,
-                markers: withEventMarkers(
-                  _HomeExclusive(this)._exclusiveFadedPins(
-                    _HomeReservation(this)._fadedPins(layers.markers),
+          if (!_HomeStartPosition(this)._mapReady)
+            _HomeStartPosition(this)._locating()
+          else
+            ListenableBuilder(
+              // G4-F6: the admin's events, and their icon once painted.
+              listenable: Listenable.merge([
+                _offerRouteFrame.flowLine,
+                DriverEvents.instance,
+                MoveraEventMarker.icon,
+              ]),
+              builder: (context, _) {
+                final layers = layersWith(_offerRouteFrame.flowLine.value);
+                unawaited(MoveraEventMarker.paintIcon());
+                return CustomGoogleMap(
+                  key: _homeMapKey,
+                  initialPosition: _initialPosition,
+                  markers: withEventMarkers(
+                    _HomeExclusive(this)._exclusiveFadedPins(
+                      _HomeReservation(this)._fadedPins(layers.markers),
+                    ),
+                    DriverEvents.instance,
+                    onTap: (event) =>
+                        unawaited(showEventDetails(context, event)),
                   ),
-                  DriverEvents.instance,
-                  onTap: (event) => unawaited(showEventDetails(context, event)),
-                ),
-                polylines: _HomeExclusive(this)._exclusiveFadedLines(
-                  _HomeReservation(this)._fadedLines(
-                    OfferRouteLine.sized(
-                      DriverRouteStyle.sized(layers.polylines, _routeZoomStep),
-                      _routeZoomStep,
+                  polylines: _HomeExclusive(this)._exclusiveFadedLines(
+                    _HomeReservation(this)._fadedLines(
+                      OfferRouteLine.sized(
+                        DriverRouteStyle.sized(
+                          layers.polylines,
+                          _routeZoomStep,
+                        ),
+                        _routeZoomStep,
+                      ),
                     ),
                   ),
-                ),
-                // Contract v0.7.2 §17: surge zones as colour only.
-                polygons: _isOnline ? _surgePolygons : const {},
-                myLocationEnabled: false,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                webCameraControlEnabled: false,
-                mapToolbarEnabled: false,
-                compassEnabled: false,
-                onUserGesture: _camera.userGesture,
-                onTouching: (down) => _camera.touching = down,
-                onCameraIdle: () {
-                  _cameraPort?.onIdle();
-                  _camera.browseSettled();
-                },
-                onCameraMove: (position) {
-                  _cameraPort?.onMove(position);
-                  final step = DriverRouteStyle.stepZoom(position.zoom);
-                  if (step != _routeZoomStep) {
-                    _rebuild(() => _routeZoomStep = step);
-                  }
-                },
-                buildingsEnabled: true,
-                indoorViewEnabled: false,
-                mapType: MapType.normal,
-                padding: _HomeOfferRoute(
-                  this,
-                )._homeMapInsets(context).edgeInsets,
-                onMapCreated: (GoogleMapController controller) {
-                  _mapController = controller;
-                  _cameraPort = GoogleDriverCameraPort(
-                    controller,
-                    onStatus: (status) {
-                      if (status != null &&
-                          mounted &&
-                          ModalRoute.of(context)?.isCurrent == true) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(status),
-                            action: SnackBarAction(
-                              label: tr.retry,
-                              onPressed: _camera.recenter,
+                  // Contract v0.7.2 §17: surge zones as colour only.
+                  polygons: _isOnline ? _surgePolygons : const {},
+                  myLocationEnabled: false,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  webCameraControlEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
+                  onUserGesture: _camera.userGesture,
+                  onTouching: (down) => _camera.touching = down,
+                  onCameraIdle: () {
+                    _cameraPort?.onIdle();
+                    _camera.browseSettled();
+                  },
+                  onCameraMove: (position) {
+                    _cameraPort?.onMove(position);
+                    final step = DriverRouteStyle.stepZoom(position.zoom);
+                    if (step != _routeZoomStep) {
+                      _rebuild(() => _routeZoomStep = step);
+                    }
+                  },
+                  buildingsEnabled: true,
+                  indoorViewEnabled: false,
+                  mapType: MapType.normal,
+                  padding: _HomeOfferRoute(
+                    this,
+                  )._homeMapInsets(context).edgeInsets,
+                  onMapCreated: (GoogleMapController controller) {
+                    _mapController = controller;
+                    _cameraPort = GoogleDriverCameraPort(
+                      controller,
+                      onStatus: (status) {
+                        if (status != null &&
+                            mounted &&
+                            ModalRoute.of(context)?.isCurrent == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(status),
+                              action: SnackBarAction(
+                                label: tr.retry,
+                                onPressed: _camera.recenter,
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                    initialPosition: _initialPosition,
-                    reducedMotion: MediaQuery.disableAnimationsOf(context),
-                  );
-                  _camera.attach(_cameraPort!);
-                  if (_hasLiveDriverLocation) {
-                    unawaited(_animateToDriverLocation());
-                  }
-                },
-                onTap: (LatLng position) {},
-              );
-            },
-          ),
+                          );
+                        }
+                      },
+                      initialPosition: _initialPosition,
+                      reducedMotion: MediaQuery.disableAnimationsOf(context),
+                    );
+                    _camera.attach(_cameraPort!);
+                    if (_hasLiveDriverLocation) {
+                      unawaited(_animateToDriverLocation());
+                    }
+                  },
+                  onTap: (LatLng position) {},
+                );
+              },
+            ),
           isDestinationPanel
               ? Align(
                   alignment: Alignment.center,

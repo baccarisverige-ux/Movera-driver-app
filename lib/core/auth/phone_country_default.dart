@@ -54,6 +54,13 @@ abstract final class StartCountryHints {
   /// document's zone), or null.
   static GeoPoint? get zoneCentre => _zoneCentre;
 
+  static bool _knowsPlace = false;
+
+  /// True when an earlier start left a saved position or a working zone:
+  /// a later start, whose map opens at once (owner: the very first start
+  /// shows the locating screen, no made-up city).
+  static bool get knowsPlace => _knowsPlace;
+
   /// The country (ISO) of the zone around the last good fix, or null.
   static String? get fixCountry => _fix;
 
@@ -71,7 +78,11 @@ abstract final class StartCountryHints {
       final config = store.getString(PrefsDriverConfigCache.key);
       _zone = _zoneCountry(config, zones);
       _zoneCentre = _workZone(config, zones)?.centre;
+      _knowsPlace =
+          _zoneCentre != null ||
+          (store.getString(DriverStartPosition.key) ?? '').isNotEmpty;
     } catch (_) {
+      _knowsPlace = false;
       _fix = null;
       _zone = null;
       _zoneCentre = null;
@@ -84,6 +95,7 @@ abstract final class StartCountryHints {
     _fix = null;
     _zone = null;
     _zoneCentre = null;
+    _knowsPlace = false;
   }
 
   static DriverZone? _workZone(String? raw, List<DriverZone> zones) {

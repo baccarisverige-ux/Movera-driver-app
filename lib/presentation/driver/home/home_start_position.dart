@@ -5,12 +5,29 @@ part of 'home.dart';
 // now (this run, saved last position, platform last fix), else the zone
 // centre without a car, and moves when a position arrives.
 
+/// First start only: longest wait for a position before the map opens.
+const Duration _startWaitLimit = Duration(seconds: 8);
+
 extension _HomeStartPosition on _DriverHomeState {
+  /// Later starts: at once. The first start ever: once a position is
+  /// known or location failed (refused, off), then at the country centre.
+  bool get _mapReady =>
+      !_firstStart || _startPositionKnown || _startLocationFailed;
+
   void _restoreStartPosition() {
     final cached = DriverStartPosition.cached;
     if (cached != null) {
       _useStartPosition(cached);
       return;
+    }
+    // First start: GPS that never answers (no permission answer, no
+    // provider) must not keep the map hidden for good.
+    if (_firstStart) {
+      _startWait = Timer(_startWaitLimit, () {
+        if (mounted && !_mapReady) {
+          _rebuild(() => _startLocationFailed = true);
+        }
+      });
     }
     unawaited(
       DriverStartPosition.load().then((point) {
@@ -56,4 +73,44 @@ extension _HomeStartPosition on _DriverHomeState {
       zIndexInt: 12,
     ),
   };
+
+  /// Soft neutral surface while the first position is found.
+  Widget _locating() => ColoredBox(
+    key: ValueKey<String>('home-map-locating'),
+    color: Color(0xFFEEF0F2),
+    child: Align(
+      alignment: Alignment(0, -0.35),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Static on purpose: no endless animation on the map surface.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color(0x1F2B3036),
+              shape: BoxShape.circle,
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(7),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color(0xFF8A939B),
+                  shape: BoxShape.circle,
+                ),
+                child: SizedBox.square(dimension: 10),
+              ),
+            ),
+          ),
+          SizedBox(height: 12),
+          Text(
+            tr.findingYourLocation,
+            style: TextStyle(
+              color: Color(0xFF5F6B72),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
