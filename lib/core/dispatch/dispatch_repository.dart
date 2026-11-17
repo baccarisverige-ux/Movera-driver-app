@@ -1,5 +1,6 @@
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/dispatch/owes_movera_refusal.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -406,7 +407,8 @@ class OfferWithdrawal {
 }
 
 class ClaimResult {
-  const ClaimResult._(this.outcome, {this.offer, this.afterCheck = false});
+  const ClaimResult._(this.outcome, {this.offer, this.afterCheck = false})
+    : owesMovera = null;
 
   const ClaimResult.success(RideOffer offer, {bool afterCheck = false})
     : this._(ClaimOutcome.success, offer: offer, afterCheck: afterCheck);
@@ -417,10 +419,23 @@ class ClaimResult {
     : this._(ClaimOutcome.expired, afterCheck: afterCheck);
   const ClaimResult.unavailable({bool afterCheck = false})
     : this._(ClaimOutcome.unavailable, afterCheck: afterCheck);
+
+  /// J11 (v0.18.84): `409 driver_owes_movera`, a cash offer he may not
+  /// take while he owes Movera at or over the limit. Gone for him
+  /// ([ClaimOutcome.unavailable]), never "taken by another driver".
+  const ClaimResult.owesMovera(
+    OwesMoveraRefusal this.owesMovera, {
+    this.afterCheck = false,
+  }) : outcome = ClaimOutcome.unavailable,
+       offer = null;
   const ClaimResult.networkError() : this._(ClaimOutcome.networkError);
 
   final ClaimOutcome outcome;
   final RideOffer? offer;
+
+  /// Set when the server refused the Accept because he owes Movera; its
+  /// [OwesMoveraRefusal.text] is what the driver reads.
+  final OwesMoveraRefusal? owesMovera;
 
   /// G4 decision 4 (contract v0.18.6 `driverOffers.acceptCheck`): the
   /// Accept's own answer was lost and this result is what
