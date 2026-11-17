@@ -6,9 +6,9 @@
 // The contract has no driver trip list yet (BQ-V17 `GET /driver/trips`,
 // stage S8: contract C10 → server S21 → driver D18).
 //
-// This test pins TODAY's behaviour on main as the proof (Rule 36) that
-// the finding is still present. When D18 lands, flip it: the rides come
-// from the server list (failing test first).
+// This test pinned the behaviour on main as the proof (Rule 36) that the
+// finding was present. D18 (contract v0.18.124 C10, server S21) flipped
+// it: the rides now come from the server list GET /driver/trips.
 import 'dart:convert';
 import 'dart:io';
 
@@ -33,18 +33,15 @@ void main() {
     'currency': 'SEK',
   };
 
-  test('the driver contract copy has no driver trip list yet (BQ-V17)', () {
+  test('the driver contract copy has the driver trip list (BQ-V17, '
+      'v0.18.124)', () {
     final openapi = File('contracts/openapi.yaml').readAsStringSync();
     expect(openapi, contains('\n  /rider/trips:'), reason: 'riders have one');
-    expect(
-      openapi.contains('\n  /driver/trips:'),
-      isFalse,
-      reason: 'when this fails, the contract added the list: build D18',
-    );
+    expect(openapi, contains('\n  /driver/trips:'), reason: 'D18 reads it');
   });
 
-  testWidgets('empty history proof: after a reinstall the server counts 6 '
-      'rides but the list shows none', (tester) async {
+  testWidgets('fixed: after a reinstall the list shows the server\'s '
+      'rides, not an empty list', (tester) async {
     // Signed out and in again (or a new phone): the archive is empty.
     SharedPreferences.setMockInitialValues({});
     Money.zoneCurrency = 'SEK';
@@ -80,6 +77,28 @@ void main() {
           headers: {'content-type': 'application/json'},
         );
       }
+      if (request.url.path == '/api/v1/driver/trips') {
+        return http.Response(
+          jsonEncode({
+            'items': [
+              {
+                'tripId': 'trp_1',
+                'status': 'completed',
+                'categoryId': 'economy',
+                'pickup': {'lat': 59.33, 'lng': 18.06, 'address': 'Odenplan'},
+                'dropoff': {'lat': 59.32, 'lng': 18.07, 'address': 'Slussen'},
+                'paymentMethod': 'card',
+                'createdAt': DateTime.now().toUtc().toIso8601String(),
+                'endedAt': DateTime.now().toUtc().toIso8601String(),
+                'earned': money(600),
+              },
+            ],
+            'nextCursor': null,
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }
       return http.Response('{}', 404);
     });
     final origin = Uri.parse('https://api.test.movera.se');
@@ -99,12 +118,13 @@ void main() {
 
     // The server's totals are shown (G28 step 1) ...
     expect(find.text('6,00 kr'), findsWidgets);
-    // ... but the rides themselves are not: the list is the phone's.
-    expect(find.text('No completed rides in this period.'), findsOneWidget);
+    // ... and, since D18, the rides themselves from the server's list.
+    expect(find.text('No completed rides in this period.'), findsNothing);
+    expect(find.textContaining('Odenplan'), findsWidgets);
     expect(
       asked.where((p) => p.startsWith('/api/v1/driver/trips')),
-      isEmpty,
-      reason: 'no server trip list is read today',
+      isNotEmpty,
+      reason: 'the server trip list is read',
     );
     expect(tester.takeException(), isNull);
   });

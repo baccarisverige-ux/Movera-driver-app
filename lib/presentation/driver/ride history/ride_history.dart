@@ -13,6 +13,7 @@ import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/core/live/live_trip_history.dart';
 import 'package:movera/presentation/driver/ride%20history/cash_balance_sheet.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 
@@ -28,9 +29,14 @@ Widget _solarIcon(
 );
 
 class DriverRideHistory extends StatefulWidget {
-  const DriverRideHistory({super.key, this.loadHistory});
+  const DriverRideHistory({super.key, this.loadHistory, this.loadServerPage});
 
   final Future<List<TripHistoryRecord>> Function()? loadHistory;
+
+  /// D18: one page of the server's ride history (tests); a live build
+  /// reads `GET /driver/trips` without it.
+  final Future<DriverTripHistoryPage> Function({String? cursor})?
+  loadServerPage;
 
   @override
   State<DriverRideHistory> createState() => _DriverRideHistoryState();
@@ -140,7 +146,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       _loadFailed = false;
     });
     try {
-      final records = await _readHistory();
+      final phone = await _readHistory();
+      final records = await _withServerRows(phone);
       if (!mounted) {
         return;
       }
@@ -179,6 +186,45 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  /// D18 (contract v0.18.124 C10 `driverTripHistory`; owner G11 Q10
+  /// "Load from server (Recommended)"): on a live build the ride list is
+  /// the server's (`GET /driver/trips`), so a reinstall or a new phone
+  /// shows the same trips; the phone copy fills in only what the server
+  /// did not send, and is the whole list when the server cannot be
+  /// reached (offline). Pages are read until this month's start is
+  /// covered (the longest period shown), at most [maxServerPages].
+  static const maxServerPages = 10;
+
+  Future<List<TripHistoryRecord>> _withServerRows(
+    List<TripHistoryRecord> phone,
+  ) async {
+    final live = _live;
+    final read =
+        widget.loadServerPage ??
+        (live == null
+            ? null
+            : ({String? cursor}) => live.tripHistory.page(cursor: cursor));
+    if (read == null) return phone;
+    final server = <TripHistoryRecord>[];
+    final monthStart = startOf(_HistoryPeriod.month, DateTime.now());
+    try {
+      String? cursor;
+      for (var i = 0; i < maxServerPages; i++) {
+        final page = await read(cursor: cursor);
+        server.addAll(page.items);
+        cursor = page.nextCursor;
+        final oldest = page.items.isEmpty ? null : page.items.last.completedAt;
+        if (cursor == null || (oldest != null && oldest.isBefore(monthStart))) {
+          break;
+        }
+      }
+    } catch (_) {
+      // Offline or the server could not answer: the phone copy, plus any
+      // server page already read.
+    }
+    return LiveTripHistory.merge(server: server, phone: phone);
   }
 
   /// Retry: the phone's archive and, on a live build, the server's
