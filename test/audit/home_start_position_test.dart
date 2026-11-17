@@ -79,8 +79,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets(
-    'nothing known: the map shows at once (no hidden wait), no car', (
+  testWidgets('nothing known: the map shows at once (no hidden wait), no car', (
     tester,
   ) async {
     // Owner REMINDERS 145: never wait longer than the intro; open at the
@@ -94,9 +93,8 @@ void main() {
       tester
           .widgetList<GoogleMap>(find.byType(GoogleMap))
           .any(
-            (map) => map.markers.any(
-              (m) => m.markerId.value == 'driver_location',
-            ),
+            (map) =>
+                map.markers.any((m) => m.markerId.value == 'driver_location'),
           ),
       isFalse,
     );

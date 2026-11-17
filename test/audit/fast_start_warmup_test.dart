@@ -40,23 +40,26 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('signed in and allowed: one position read starts at app start', () async {
-    var reads = 0;
-    await DriverStartWarmup.start(
-      signedIn: () async => true,
-      allowedWithoutAsking: () async => true,
-      read: () async {
-        reads++;
-        return _fix;
-      },
-    );
-    expect(reads, 1);
-    final warm = DriverStartWarmup.take();
-    expect(warm, isNotNull);
-    expect((await warm!).point, _fix.point);
-    // Taken once: a later Home read asks the GPS itself.
-    expect(DriverStartWarmup.take(), isNull);
-  });
+  test(
+    'signed in and allowed: one position read starts at app start',
+    () async {
+      var reads = 0;
+      await DriverStartWarmup.start(
+        signedIn: () async => true,
+        allowedWithoutAsking: () async => true,
+        read: () async {
+          reads++;
+          return _fix;
+        },
+      );
+      expect(reads, 1);
+      final warm = DriverStartWarmup.take();
+      expect(warm, isNotNull);
+      expect((await warm!).point, _fix.point);
+      // Taken once: a later Home read asks the GPS itself.
+      expect(DriverStartWarmup.take(), isNull);
+    },
+  );
 
   test('not signed in: no permission check and no location read', () async {
     var checks = 0, reads = 0;
@@ -76,20 +79,22 @@ void main() {
     expect(DriverStartWarmup.take(), isNull);
   });
 
-  test('permission not given yet: nothing read, Home keeps the Allow flow',
-      () async {
-    var reads = 0;
-    await DriverStartWarmup.start(
-      signedIn: () async => true,
-      allowedWithoutAsking: () async => false,
-      read: () async {
-        reads++;
-        return _fix;
-      },
-    );
-    expect(reads, 0);
-    expect(DriverStartWarmup.take(), isNull);
-  });
+  test(
+    'permission not given yet: nothing read, Home keeps the Allow flow',
+    () async {
+      var reads = 0;
+      await DriverStartWarmup.start(
+        signedIn: () async => true,
+        allowedWithoutAsking: () async => false,
+        read: () async {
+          reads++;
+          return _fix;
+        },
+      );
+      expect(reads, 0);
+      expect(DriverStartWarmup.take(), isNull);
+    },
+  );
 
   test('a failed warm read never throws at start', () async {
     await DriverStartWarmup.start(
