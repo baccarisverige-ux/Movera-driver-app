@@ -6,6 +6,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/auth/phone_country_default.dart';
+import 'package:movera/core/live/live_driver_config.dart';
+import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -49,7 +52,11 @@ Future<void> _pumpHome(WidgetTester tester) async {
 }
 
 void main() {
-  setUp(DriverStartPosition.clearMemory);
+  setUp(() {
+    DriverStartPosition.clearMemory();
+    StartCountryHints.reset();
+  });
+  tearDown(StartCountryHints.reset);
 
   testWidgets('saved last position is the first camera target and car', (
     tester,
@@ -100,4 +107,41 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets(
+    'French driver, no saved position: opens at the FR zone centre, not '
+    'Stockholm',
+    (tester) async {
+      // Rule: Sweden AND France (and Tunisia). Fallback order: saved
+      // position, working zone centre, country centre, Stockholm last.
+      SharedPreferences.setMockInitialValues({
+        PrefsDriverZonesCache.key: jsonEncode({
+          'zones': [
+            {
+              'zoneId': 'paris',
+              'country': 'FR',
+              'polygon': [
+                [48.80, 2.20],
+                [48.80, 2.50],
+                [48.92, 2.50],
+                [48.92, 2.20],
+              ],
+            },
+          ],
+        }),
+        PrefsDriverConfigCache.key: jsonEncode({'zoneId': 'paris'}),
+      });
+      await StartCountryHints.load();
+      await _pumpHome(tester);
+
+      final maps = tester.widgetList<GoogleMap>(find.byType(GoogleMap));
+      expect(maps, isNotEmpty);
+      for (final map in maps) {
+        final target = map.initialCameraPosition.target;
+        expect(target.latitude, closeTo(48.86, 0.001));
+        expect(target.longitude, closeTo(2.35, 0.001));
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
