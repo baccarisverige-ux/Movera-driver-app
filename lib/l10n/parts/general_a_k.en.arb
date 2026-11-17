@@ -854,5 +854,7 @@
   "fixJob0DebtNote": "The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.",
   "@fixJob0DebtNote": {
     "description": "Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip."
-  }
+  },
+  "historyMonthBack": "Previous month",
+  "historyMonthNext": "Next month"
 }

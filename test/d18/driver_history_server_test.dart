@@ -144,16 +144,17 @@ void main() {
       MaterialApp(
         home: DriverRideHistory(
           loadHistory: () async => const <TripHistoryRecord>[],
-          loadServerPage: ({String? cursor}) async {
-            asked.add(cursor);
-            return DriverTripHistoryPage(
-              items: [
-                LiveTripHistory.recordOf(
-                  _item('t1', 'completed', now, earned: 21000),
-                ),
-              ],
-            );
-          },
+          loadServerPage:
+              ({String? cursor, DateTime? from, DateTime? to}) async {
+                asked.add(cursor);
+                return DriverTripHistoryPage(
+                  items: [
+                    LiveTripHistory.recordOf(
+                      _item('t1', 'completed', now, earned: 21000),
+                    ),
+                  ],
+                );
+              },
         ),
       ),
     );
@@ -184,8 +185,9 @@ void main() {
               completedAt: DateTime.now(),
             ),
           ],
-          loadServerPage: ({String? cursor}) async =>
-              throw Exception('offline'),
+          loadServerPage:
+              ({String? cursor, DateTime? from, DateTime? to}) async =>
+                  throw Exception('offline'),
         ),
       ),
     );

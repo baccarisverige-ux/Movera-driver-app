@@ -2724,6 +2724,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.';
 
   @override
+  String get historyMonthBack => 'Previous month';
+
+  @override
+  String get historyMonthNext => 'Next month';
+
+  @override
   String get n1Stop => '1 stop';
 
   @override

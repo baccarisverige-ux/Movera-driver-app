@@ -31,14 +31,22 @@ class LiveTripHistory {
   /// Contract default page size (limit 1-50).
   static const pageSize = 20;
 
-  /// One page, newest first. Throws when the server could not answer.
+  /// One page, newest first. [from] / [to] (instants, sent in UTC) bound
+  /// the trips' createdAt (D18b: any past month). Throws when the server
+  /// could not answer.
   Future<DriverTripHistoryPage> page({
     String? cursor,
     int limit = pageSize,
+    DateTime? from,
+    DateTime? to,
   }) async {
     final query = [
       'limit=$limit',
       if (cursor != null) 'cursor=${Uri.encodeQueryComponent(cursor)}',
+      if (from != null)
+        'from=${Uri.encodeQueryComponent(from.toUtc().toIso8601String())}',
+      if (to != null)
+        'to=${Uri.encodeQueryComponent(to.toUtc().toIso8601String())}',
     ].join('&');
     final body = await _api.get('$path?$query');
     final items = body['items'];

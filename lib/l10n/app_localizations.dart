@@ -4704,6 +4704,18 @@ abstract class AppLocalizations {
   /// **'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.'**
   String get fixJob0DebtNote;
 
+  /// No description provided for @historyMonthBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get historyMonthBack;
+
+  /// No description provided for @historyMonthNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get historyMonthNext;
+
   /// No description provided for @n1Stop.
   ///
   /// In en, this message translates to:
