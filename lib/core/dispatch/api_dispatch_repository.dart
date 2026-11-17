@@ -368,6 +368,10 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// False after [disconnect]: a lost feed is not opened again.
   bool _wanted = true;
 
+  /// MF-1: true only between [connect] and [disconnect] (the driver is
+  /// online); [reopen] does nothing while it is false.
+  bool _feedOpen = false;
+
   /// L20 stream: set by `linkOneStream`; null = always the old offer feed.
   OneStreamLink? oneStream;
 
@@ -383,7 +387,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// L20 stream: the switch or the zone changed; an online feed opens again
   /// in the right form (offers lose nothing: it resumes from its cursor).
   void reopen() {
-    if (_wanted && !_disposed) unawaited(connect());
+    if (_feedOpen && _wanted && !_disposed) unawaited(connect());
   }
 
   /// Bumped by every [connect] and [disconnect]: an older answer that
@@ -556,6 +560,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// retried with backoff from the last sequence; [feedLive] says when.
   Future<void> connect() async {
     _wanted = true;
+    _feedOpen = true;
     final generation = ++_generation;
     // A feed opened again (a resume) keeps the credit of its time up.
     _endUptime();
@@ -610,8 +615,25 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     }
     if (response.statusCode == 404 && _oneMode) {
       // L20 stream: an older server has no GET /driver/stream: the two
-      // streams at once, and the one stream is not asked again.
-      unawaited(response.stream.drain<void>().catchError((_) {}));
+      // streams at once, and the one stream is not asked again. SF-1: a
+      // 404 `zone_not_found` (stale zoneId) is not an older server.
+      String? code;
+      try {
+        final body = await response.stream.bytesToString().timeout(
+          requestTimeout,
+        );
+        final decoded = jsonDecode(body);
+        if (decoded is Map && decoded['code'] is String) {
+          code = decoded['code'] as String;
+        }
+      } catch (_) {
+        // No readable body: the route is missing.
+      }
+      if (generation != _generation) return;
+      if (code == 'zone_not_found') {
+        _feedLost();
+        return;
+      }
       _oneStreamRefused = true;
       _oneMode = false;
       oneStream?.attached(false);
@@ -758,6 +780,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// server withdraws them). [connect] opens it again from [lastSequence].
   Future<void> disconnect() async {
     _wanted = false;
+    _feedOpen = false;
     _generation++;
     _reconnect?.cancel();
     _reconnect = null;

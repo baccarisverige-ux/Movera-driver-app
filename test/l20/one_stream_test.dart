@@ -39,9 +39,14 @@ Map<String, dynamic> _offer(int sequence) => {
 };
 
 class _Server {
-  _Server({required this.oneStream, this.oneStreamStatus = 200});
+  _Server({
+    required this.oneStream,
+    this.oneStreamStatus = 200,
+    this.errorCode = 'not_found',
+  });
   bool oneStream;
-  final int oneStreamStatus;
+  int oneStreamStatus;
+  final String errorCode;
   int version = 5;
   int configReads = 0;
   final asked = <http.BaseRequest>[];
@@ -63,7 +68,7 @@ class _Server {
         asked.add(request);
         if (stream == '/driver/stream' && oneStreamStatus != 200) {
           return http.StreamedResponse(
-            Stream.value(utf8.encode('{"code":"not_found"}')),
+            Stream.value(utf8.encode(jsonEncode({'code': errorCode}))),
             oneStreamStatus,
           );
         }
@@ -101,14 +106,15 @@ void main() {
   final base = Uri.parse('https://api.test.movera.invalid/api/v1');
 
   Future<({ApiDispatchRepository dispatch, LiveDriverConfig config})> phone(
-    _Server server,
-  ) async {
+    _Server server, {
+    Duration retry = Duration.zero,
+  }) async {
     final client = server.client();
     final dispatch = ApiDispatchRepository(
       client: client,
       baseUri: base,
       accessToken: () async => 'token-1',
-      reconnectDelay: (_) => Duration.zero,
+      reconnectDelay: (_) => retry,
     );
     final config = LiveDriverConfig(
       client: client,
@@ -244,4 +250,62 @@ void main() {
       p.config.dispose();
     },
   );
+  test('switch on while offline opens no offer feed (MF-1)', () async {
+    final server = _Server(oneStream: false);
+    final client = server.client();
+    final dispatch = ApiDispatchRepository(
+      client: client,
+      baseUri: base,
+      accessToken: () async => 'token-1',
+      reconnectDelay: (_) => Duration.zero,
+    );
+    final config = LiveDriverConfig(
+      client: client,
+      apiBase: base,
+      accessToken: () async => 'token-1',
+      cache: MemoryDriverConfigCache(),
+      zoneId: () => 'Z001',
+    );
+    linkOneStream(dispatch: dispatch, config: config);
+    await config.start();
+    await config.watch();
+    await _settle();
+    server
+      ..oneStream = true
+      ..version = 8;
+    await config.refresh();
+    await _settle();
+    expect(
+      server.asked.where(
+        (r) =>
+            r.url.path.endsWith('/driver/stream') ||
+            r.url.path.endsWith('/driver/offers/stream'),
+      ),
+      isEmpty,
+    );
+    expect(server.open['/driver/config/stream'], 1);
+    config.dispose();
+  });
+
+  test('404 zone_not_found is not an older server (SF-1)', () async {
+    final server = _Server(
+      oneStream: true,
+      oneStreamStatus: 404,
+      errorCode: 'zone_not_found',
+    );
+    // A long retry: the stale-zone answer is retried later, not looped here.
+    final p = await phone(server, retry: const Duration(hours: 1));
+    final tries = server.asked
+        .where((r) => r.url.path.endsWith('/driver/stream'))
+        .length;
+    expect(tries, greaterThan(0));
+    expect(p.dispatch.oneStreamRefused, isFalse);
+    server.oneStreamStatus = 200;
+    await p.dispatch.disconnect();
+    await p.dispatch.connect();
+    await _settle();
+    expect(server.open['/driver/stream'], 1);
+    await p.dispatch.disconnect();
+    p.config.dispose();
+  });
 }
