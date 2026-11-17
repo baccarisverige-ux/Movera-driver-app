@@ -107,6 +107,29 @@ void main() {
     await expectLater(warm!, throwsA(isA<TimeoutException>()));
   });
 
+  test('signed in: the map starts loading at app start, even before '
+      'location is allowed', () async {
+    var warmed = 0;
+    await DriverStartWarmup.start(
+      signedIn: () async => true,
+      allowedWithoutAsking: () async => false,
+      read: () async => _fix,
+      warmMap: () => warmed++,
+    );
+    expect(warmed, 1);
+  });
+
+  test('not signed in: the map is not loaded (sign-in stays light)', () async {
+    var warmed = 0;
+    await DriverStartWarmup.start(
+      signedIn: () async => false,
+      allowedWithoutAsking: () async => true,
+      read: () async => _fix,
+      warmMap: () => warmed++,
+    );
+    expect(warmed, 0);
+  });
+
   testWidgets('Home reuses the warm read: the GPS is asked once in total', (
     tester,
   ) async {
