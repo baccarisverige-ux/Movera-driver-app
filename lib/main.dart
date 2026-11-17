@@ -42,6 +42,9 @@ import 'package:movera/core/live/reservations_refresh.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/location/driver_start_warmup.dart';
+import 'package:movera/widgets/driver_map_web_bridge_stub.dart'
+    if (dart.library.js_interop) 'package:movera/widgets/driver_map_web_bridge.dart'
+    as map_bridge;
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -93,6 +96,7 @@ Future<void> main() async {
       signedIn: _signedInAtStart,
       allowedWithoutAsking: DriverStartWarmup.allowedNow,
       read: const DriverLocationService().getCurrentPosition,
+      warmMap: map_bridge.requestMaps,
     ),
   );
   // Round 4: the zone's default language, then the driver's saved choice.

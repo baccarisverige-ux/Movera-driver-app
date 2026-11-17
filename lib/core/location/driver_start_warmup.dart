@@ -23,9 +23,18 @@ class DriverStartWarmup {
     required Future<bool> Function() signedIn,
     required Future<bool> Function() allowedWithoutAsking,
     required Future<DriverLocation> Function() read,
+    void Function()? warmMap,
   }) async {
     try {
       if (!await signedIn()) return;
+      // The map's script loads during the intro too (web: Maps JavaScript;
+      // the sign-in screen still never waits for it, owner LT-4). Home's
+      // one map uses it; no second map is made.
+      try {
+        warmMap?.call();
+      } catch (_) {
+        // The map asks again when it is on screen.
+      }
       if (!await allowedWithoutAsking()) return;
       final pending = read();
       _pending = pending;
