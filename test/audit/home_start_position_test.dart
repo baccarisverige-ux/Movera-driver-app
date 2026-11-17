@@ -79,18 +79,25 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('nothing known: no Stockholm map or car, a neutral placeholder', (
+  testWidgets(
+    'nothing known: the map shows at once (no hidden wait), no car', (
     tester,
   ) async {
+    // Owner REMINDERS 145: never wait longer than the intro; open at the
+    // zone centre and move when the position arrives.
     SharedPreferences.setMockInitialValues({});
     await _pumpHome(tester);
 
-    expect(find.byKey(const ValueKey('home-map-locating')), findsWidgets);
-    expect(find.byType(GoogleMap), findsNothing);
+    expect(find.byKey(const ValueKey('home-map-locating')), findsNothing);
+    expect(find.byType(GoogleMap), findsWidgets);
     expect(
       tester
           .widgetList<GoogleMap>(find.byType(GoogleMap))
-          .any((map) => map.markers.any((m) => m.position == _stockholm)),
+          .any(
+            (map) => map.markers.any(
+              (m) => m.markerId.value == 'driver_location',
+            ),
+          ),
       isFalse,
     );
     await tester.pumpWidget(const SizedBox.shrink());
