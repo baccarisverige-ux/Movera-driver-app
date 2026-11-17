@@ -266,7 +266,10 @@ void main() {
         count: 10,
       );
       await frames(tester, 3);
-      expect(text('You let 10 Exclusive offers run out in a row'), findsOneWidget);
+      expect(
+        text('You let 10 Exclusive offers run out in a row'),
+        findsOneWidget,
+      );
       await leave(tester, null);
     });
 
