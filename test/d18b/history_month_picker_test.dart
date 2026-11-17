@@ -4,6 +4,7 @@ import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_trip_history.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/presentation/driver/ride history/ride_history.dart';
 
 /// D18b (owner G11 Q10, Rules decisions/driver-g11.md: "any past month"):
@@ -105,4 +106,68 @@ void main() {
     expect(totals.last.from, thisMonth);
     expect(find.textContaining('Pickup new'), findsWidgets);
   });
+
+  // The month edge on the zone's clock, as the server's Earnings counts it
+  // (the driver's home zone time_zone, Rules decisions/driver-g11.md Q10):
+  // a 23:50 trip on the last day is in that month in BOTH the list and the
+  // total, and a 00:30 trip on the 1st is in the next month, whatever the
+  // phone's own time zone (UTC here).
+  for (final zone in [ZoneClock.stockholm, ZoneClock.paris, ZoneClock.tunis]) {
+    testWidgets('month edge in $zone: list and total use the zone month', (
+      tester,
+    ) async {
+      Money.zoneCurrency = 'SEK';
+      debugZoneTimeZone = zone;
+      addTearDown(() => debugZoneTimeZone = null);
+      tester.view.physicalSize = const Size(430, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final wallNow = ZoneClock.wallTime(zone, DateTime.now());
+      DateTime at(int monthDelta, int day, int h, int m) => ZoneClock.toUtc(
+        DateTime.utc(wallNow.year, wallNow.month + monthDelta, day, h, m),
+        zone,
+      );
+      final lastStart = at(-1, 1, 0, 0);
+      final thisStart = at(0, 1, 0, 0);
+      final lateLastDay = at(0, 0, 23, 50); // day 0 = last day of last month
+      final earlyFirst = at(0, 1, 0, 30);
+      final totals = <({DateTime from, DateTime? to})>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DriverRideHistory(
+            loadHistory: () async => const <TripHistoryRecord>[],
+            loadServerPage:
+                ({String? cursor, DateTime? from, DateTime? to}) async =>
+                    DriverTripHistoryPage(
+                      items: [
+                        _ride('first', earlyFirst, 500),
+                        _ride('late', lateLastDay, 4200),
+                      ],
+                    ),
+            loadTotals: ({required DateTime from, DateTime? to}) async {
+              totals.add((from: from, to: to));
+              return EarningsTotals(
+                net: const Money(minorUnits: 4200, currency: 'SEK'),
+                tripCount: 1,
+                cashCollected: const Money(minorUnits: 0, currency: 'SEK'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Month'));
+      await tester.pumpAndSettle();
+      expect(totals.last.from.toUtc(), thisStart);
+      await tester.tap(find.byKey(const ValueKey('history-month-back')));
+      await tester.pumpAndSettle();
+      expect(totals.last.from.toUtc(), lastStart);
+      expect(totals.last.to!.toUtc(), thisStart);
+      await tester.tap(find.text('Rides').first);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Pickup late'), findsWidgets);
+      expect(find.textContaining('Pickup first'), findsNothing);
+    });
+  }
 }

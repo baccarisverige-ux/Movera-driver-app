@@ -7,13 +7,16 @@ import 'package:movera/core/live/live_driver_services.dart';
 /// zone (`DriverAppConfig.timeZone`, set by Admin). Without a live config
 /// (demo, tests) the phone's own time is used, as before.
 DateTime zoneWallTime(DateTime instant) {
-  final zone =
-      debugZoneTimeZone ??
-      LiveDriverServices.instance?.config.current?.timeZone;
+  final zone = zoneTimeZone();
   return zone == null || zone.isEmpty
       ? instant.toLocal()
       : ZoneClock.wallTime(zone, instant);
 }
+
+/// The driver's zone time zone (config `timeZone`), null without a live
+/// config (demo, tests): the clock [zoneWallTime] reads.
+String? zoneTimeZone() =>
+    debugZoneTimeZone ?? LiveDriverServices.instance?.config.current?.timeZone;
 
 /// Tests only: the zone time zone, as a live config would give it.
 @visibleForTesting

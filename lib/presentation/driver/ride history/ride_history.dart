@@ -5,6 +5,7 @@ import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -150,9 +151,26 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     if (back > 0) _loadHistory();
   }
 
-  /// The shown month's first instant ([back] months before [now]'s).
-  static DateTime monthStart(DateTime now, int back) =>
-      DateTime(now.year, now.month - back);
+  /// The shown month's first instant ([back] months before [now]'s), on
+  /// the zone's clock: the server's Earnings counts the driver's home zone
+  /// month, so a 23:50 trip on the 30th is in that month in the list and
+  /// the total alike, whatever the phone's own time zone. Without a live
+  /// zone (demo, tests) the phone's clock, as [zoneWallTime].
+  static DateTime monthStart(DateTime now, int back) {
+    final zone = zoneTimeZone();
+    if (zone == null || zone.isEmpty) {
+      return DateTime(now.year, now.month - back);
+    }
+    final wall = ZoneClock.wallTime(zone, now);
+    return ZoneClock.toUtc(DateTime.utc(wall.year, wall.month - back), zone);
+  }
+
+  /// [at]'s month on the same clock as [monthStart].
+  static bool inMonth(DateTime at, DateTime now, int back) {
+    final shown = zoneWallTime(monthStart(now, back));
+    final wall = zoneWallTime(at);
+    return wall.year == shown.year && wall.month == shown.month;
+  }
 
   /// The selected period's start: today from the phone's midnight,
   /// "last 7 days" from now − 7 days, the month from its 1st. Every period
@@ -163,7 +181,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       switch (period) {
         _HistoryPeriod.today => DateTime(now.year, now.month, now.day),
         _HistoryPeriod.week => now.subtract(const Duration(days: 7)),
-        _HistoryPeriod.month => DateTime(now.year, now.month),
+        _HistoryPeriod.month => monthStart(now, 0),
       };
 
   Future<void> _readServerTotals() async {
@@ -317,10 +335,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           at.year == now.year && at.month == now.month && at.day == now.day,
         _HistoryPeriod.week =>
           now.difference(at).inDays < 7 && !at.isAfter(now),
-        _HistoryPeriod.month => () {
-          final shown = monthStart(now, _monthsBack);
-          return at.year == shown.year && at.month == shown.month;
-        }(),
+        _HistoryPeriod.month => inMonth(at, now, _monthsBack),
       };
     }).toList();
   }
@@ -332,7 +347,9 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       case _HistoryPeriod.week:
         return tr.last7Days;
       case _HistoryPeriod.month:
-        return DriverDates.monthYear(monthStart(DateTime.now(), _monthsBack));
+        return DriverDates.monthYear(
+          zoneWallTime(monthStart(DateTime.now(), _monthsBack)),
+        );
     }
   }
 
