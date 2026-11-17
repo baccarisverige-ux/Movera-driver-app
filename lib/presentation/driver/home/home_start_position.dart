@@ -21,12 +21,20 @@ extension _HomeStartPosition on _DriverHomeState {
         // The map is already up at the zone centre: glide to the position
         // unless live GPS placed it first.
         if (!_didCenterOnLiveLocation) {
-          _cameraLocation ??= DriverLocation(point: point);
+          _cameraLocation ??= _startTarget(point);
           unawaited(_HomeMapSheet(this)._animateToDriverLocation());
         }
       }),
     );
   }
+
+  /// A camera target for a start position (saved, or a rough first fix):
+  /// stamped now so the camera, which follows accurate fixes only, moves.
+  DriverLocation _startTarget(GeoPoint point) => DriverLocation(
+    point: point,
+    measuredAt: DateTime.now(),
+    accuracyMeters: 0,
+  );
 
   void _useStartPosition(GeoPoint point) {
     _driverPosition = point.toLatLng();

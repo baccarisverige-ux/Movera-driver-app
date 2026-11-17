@@ -123,7 +123,9 @@ extension _HomeMapSheet on _DriverHomeState {
       // position) still opens the map where the driver is.
       if (!_didCenterOnLiveLocation && location.isStartHintAt(DateTime.now())) {
         _didCenterOnLiveLocation = true;
-        _cameraLocation = location;
+        // The map is already up (REMINDERS 145): the camera takes the
+        // rough fix as a start target (it follows accurate fixes only).
+        _cameraLocation = _HomeStartPosition(this)._startTarget(location.point);
         _rebuild(() {
           _driverPosition = location.point.toLatLng();
           _hasLiveDriverLocation = false;
