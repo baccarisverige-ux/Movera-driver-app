@@ -92,7 +92,7 @@ class _Server {
       configReads++;
       return json({
         'version': version,
-        'zoneId': 'Z001',
+        'zoneId': request.url.queryParameters['zoneId'] ?? 'Z001',
         'currency': 'SEK',
         'timeZone': 'Europe/Stockholm',
         'realtime': {'oneStream': oneStream},
@@ -115,7 +115,9 @@ void main() {
   Future<({ApiDispatchRepository dispatch, LiveDriverConfig config})> phone(
     _Server server, {
     Duration retry = Duration.zero,
+    String? Function()? zoneOf,
   }) async {
+    String? zone() => zoneOf == null ? 'Z001' : zoneOf();
     final client = server.client();
     final dispatch = ApiDispatchRepository(
       client: client,
@@ -128,7 +130,7 @@ void main() {
       apiBase: base,
       accessToken: () async => 'token-1',
       cache: MemoryDriverConfigCache(),
-      zoneId: () => 'Z001',
+      zoneId: zone,
     );
     linkOneStream(dispatch: dispatch, config: config);
     await config.start();
@@ -321,4 +323,54 @@ void main() {
       p.config.dispose();
     },
   );
+
+  test('zone fallback (404 zone_not_found): the settings keep their own stream '
+      'and still take config_published (supervisor gap 1)', () async {
+    final server = _Server(
+      oneStream: true,
+      oneStreamStatus: 404,
+      errorReason: 'zone_not_found',
+    );
+    final p = await phone(server, retry: const Duration(hours: 1));
+    expect(server.open['/driver/config/stream'], 1, reason: '${server.open}');
+    expect(server.open['/driver/stream'] ?? 0, 0);
+    expect(p.config.onOneStream, isFalse);
+    server.version = 9;
+    final reads = server.configReads;
+    server.feeds['/driver/config/stream']!.last.add(
+      utf8.encode(
+        'data: ${jsonEncode({'eventId': 'c9', 'kind': 'config_published', 'doc': 'driver_app_config', 'zoneId': 'Z001', 'version': 9})}\n\n',
+      ),
+    );
+    await _settle();
+    expect(server.configReads, greaterThan(reads));
+    expect(p.config.current?.version, 9);
+    await p.dispatch.disconnect();
+    p.config.dispose();
+  });
+
+  test('zone change on the one stream: it opens again naming the new zone, '
+      'still one connection (supervisor gap 2)', () async {
+    final server = _Server(oneStream: true);
+    var zone = 'Z001';
+    final p = await phone(server, zoneOf: () => zone);
+    expect(server.open['/driver/stream'], 1);
+    final first = server.asked.lastWhere(
+      (r) => r.url.path.endsWith('/driver/stream'),
+    );
+    expect(first.url.queryParameters['zoneId'], 'Z001');
+    zone = 'Z002';
+    await p.config.zoneChanged();
+    await _settle();
+    final again = server.asked.lastWhere(
+      (r) => r.url.path.endsWith('/driver/stream'),
+    );
+    expect(again, isNot(same(first)));
+    expect(again.url.queryParameters['zoneId'], 'Z002');
+    expect(server.openStreams, 1, reason: '${server.open}');
+    expect(server.open['/driver/config/stream'] ?? 0, 0);
+    expect(p.config.onOneStream, isTrue);
+    await p.dispatch.disconnect();
+    p.config.dispose();
+  });
 }
