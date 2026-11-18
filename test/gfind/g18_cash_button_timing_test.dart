@@ -340,6 +340,17 @@ void main() {
     LiveDriverServices.instance = null;
     await open(tester, cash: true);
 
+    // A trip update can fold the sheet; the step buttons are in it.
+    Future<void> reveal(Finder target) async {
+      if (target.evaluate().isNotEmpty) return;
+      tester
+          .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
+          .last
+          .controller!
+          .animatePanelToSnapPoint();
+      await frames(tester, 16);
+    }
+
     await tester.ensureVisible(find.byKey(finishKey));
     await tester.tap(find.byKey(finishKey));
     await frames(tester, 6);
@@ -378,8 +389,12 @@ void main() {
     // A stop ahead: no cash step now, the stop comes first.
     expect(find.byKey(collectKey), findsNothing);
     expect(find.text('Collect cash'), findsNothing);
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
+    await reveal(arrive);
     expect(
-      find.byKey(const ValueKey<String>('active-ride-arrived-button')),
+      arrive,
       findsOneWidget,
     );
 
@@ -407,6 +422,7 @@ void main() {
     );
     await frames(tester, 10);
     final slide = find.byKey(const ValueKey('active-ride-primary-action'));
+    await reveal(slide);
     expect(slide, findsOneWidget);
     await tester.ensureVisible(slide);
     await tester.drag(slide, const Offset(320, 0));
@@ -414,6 +430,7 @@ void main() {
 
     // The new last leg: "Finish trip" again, not the old tap's
     // "Collect cash".
+    await reveal(find.byKey(finishKey));
     expect(find.byKey(finishKey), findsOneWidget);
     expect(
       find.descendant(
