@@ -5132,6 +5132,11 @@ class AppLocalizationsSv extends AppLocalizations {
       'Din e-post är inte verifierad. Det behövs för att bli godkänd. Tryck för att verifiera den.';
 
   @override
+  String remOwesMoveraOverLimit(String owed, String limit) {
+    return 'Du är skyldig Movera $owed (gräns $limit). Du får inga resor som betalas i bilen förrän du betalar Movera.';
+  }
+
+  @override
   String get safetyToolkit => 'Säkerhetsverktyg';
 
   @override
@@ -6974,7 +6979,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return 'Du missade eller nekade $count erbjudanden i rad';
+    return 'Du lät $count Exklusiva erbjudanden gå ut i rad';
   }
 
   @override

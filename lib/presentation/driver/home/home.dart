@@ -58,7 +58,10 @@ import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/routing/route_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
+import 'package:movera/core/auth/phone_country_default.dart';
+import 'package:movera/core/location/driver_start_centre.dart';
 import 'package:movera/core/location/driver_start_position.dart';
+import 'package:movera/core/location/driver_start_warmup.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
@@ -475,16 +478,21 @@ class _DriverHomeState extends State<DriverHome>
       CoalescingMapRouteRefresh();
   final MovingRouteRefresh _destinationRouteRefetch = MovingRouteRefresh();
 
-  // Placeholder only: the map and car wait for a known position.
-  static const LatLng _fallbackDriverPosition = LatLng(59.3293, 18.0686);
-
   /// The last position the app sent the server, else the fallback, until
   /// this screen's own GPS read lands.
   late LatLng _driverPosition =
       LiveDriverServices.instance?.reporter.lastKnownPoint?.toLatLng() ??
-      _fallbackDriverPosition;
+      DriverStartCentre.fromHints().toLatLng();
   bool _startPositionKnown = false, _startLocationFailed = false;
+
+  /// Owner: the very first start (nothing saved, no zone) shows the
+  /// locating screen until the position, no made-up city; later starts
+  /// open the map at once.
   Timer? _startWait;
+  late final bool _firstStart =
+      !StartCountryHints.knowsPlace &&
+      DriverStartPosition.cached == null &&
+      LiveDriverServices.instance?.reporter.lastKnownPoint == null;
   // Opens on the area around the driver (~10 km across), nearly flat.
   CameraPosition get _initialPosition => CameraPosition(
     target: _driverPosition,
@@ -1323,6 +1331,7 @@ class _DriverHomeState extends State<DriverHome>
 
   @override
   void dispose() {
+    _startWait?.cancel();
     _camera.dispose();
     final ownedRouting = _roadRouteService;
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) {
@@ -1332,7 +1341,6 @@ class _DriverHomeState extends State<DriverHome>
     _locationEpoch++;
     _reservationPopupTimer?.cancel();
     _offerRouteFrame.dispose();
-    _startWait?.cancel();
     _destinationLimitTimer?.cancel();
     _reservation.release?.cancel();
     _reservation.fade.cancel();

@@ -24,8 +24,8 @@ class DriverOfferRules {
   static DriverOfferRules current = const DriverOfferRules();
 
   /// Q46 (contract v0.5.6, owner decision 35: 10, was 3): Exclusive offers
-  /// missed or declined in a row before the driver
-  /// goes offline. The fallback: the zone's `DriverAppConfig` sets its own
+  /// the driver let run out in a row before he goes offline (contract
+  /// v0.18.120, owner 2026-11-16: a declined one never counts). The fallback: the zone's `DriverAppConfig` sets its own
   /// number (`offers.autoOffline.missedExclusive`) through
   /// [withAutoOffline] when it is applied.
   static const int defaultAutoOfflineAfter = 10;
@@ -280,8 +280,10 @@ class DriverOfferPreferences {
   }
 }
 
-/// Q16: Exclusive and other one-driver offers this driver did not accept,
-/// in a row. Radar trips never count, here or in the acceptance rate.
+/// Q16: Exclusive and other one-driver offers this driver let run out
+/// (ignored), in a row. Contract v0.18.120 (owner 2026-11-16 "It count
+/// when driver ignore", "only exclusive ... not radar"): a declined offer
+/// never counts and does not set the row back; Radar trips never count.
 class ExclusiveAnswers {
   ExclusiveAnswers._();
 
@@ -291,8 +293,8 @@ class ExclusiveAnswers {
 
   int get missedInRow => _missedInRow;
 
-  /// Contract §6.7 / `autoOffline.counts` (G4 decision 6, E3): the phone
-  /// counts a missed or declined offer only as the server does: an
+  /// Contract §6.7 / `autoOffline.counts` (G4 E3; v0.18.120): the phone
+  /// counts an offer that ran out only as the server does: an
   /// Exclusive or admin hand-sent (assigned) offer of a live trip; never a
   /// reservation or a scheduled ride Movera assigned. A [live] build
   /// counts nothing itself: the server counts, and its `driverOffline`
@@ -306,7 +308,7 @@ class ExclusiveAnswers {
   /// The driver accepted one: the row starts again.
   void accepted() => _missedInRow = 0;
 
-  /// One went by without Accept (ran out or ×). True when the row reaches
+  /// One ran out without an answer (never the driver's No). True when the row reaches
   /// the admin's limit: the driver goes offline.
   bool missed([DriverOfferRules? rules]) {
     final limit = rules ?? DriverOfferRules.current;

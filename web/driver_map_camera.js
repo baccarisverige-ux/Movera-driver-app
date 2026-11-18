@@ -748,6 +748,13 @@
       return context;
     };
   } catch (_) { /* best effort: the release then only drops the DOM */ }
+  // Owner 2026-11-17 ("When slide map must stop with the arctic and
+  // antarctic"): the view never pans past the world's top or bottom edge
+  // (85.05 N/S, Web Mercator), so no grey band shows above the Arctic or
+  // below the Antarctic. The full longitude range keeps east-west free.
+  // Phones do the same in Dart (MapPoleLimit).
+  const WORLD_RESTRICTION = {latLngBounds:
+    {north: 85.05112878, south: -85.05112878, west: -180, east: 180}};
   function installSdk() {
     sdk = globalThis.google.maps;
     const NativeMap = sdk.Map;
@@ -780,6 +787,7 @@
               maxZoom: Math.min(options.maxZoom ?? RASTER_MAX_ZOOM, RASTER_MAX_ZOOM)};
           }
         }
+        if (match) driverOptions = {...driverOptions, restriction: WORLD_RESTRICTION};
         const map = Reflect.construct(target, [div, driverOptions]);
         if (match) install(map, div, Number(match[1]), cloud);
         return map;

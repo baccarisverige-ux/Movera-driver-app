@@ -1,16 +1,18 @@
 part of 'home.dart';
 
-// Where Home's map opens. The map and car wait for the driver's real
-// position (saved last position, platform last fix, or first GPS fix)
-// instead of opening on the city fallback and jumping.
+// Where Home's map opens. Owner REMINDERS 144/145: the map is built at
+// once (never a hidden wait longer than the intro) at the position known
+// now (this run, saved last position, platform last fix), else the zone
+// centre without a car, and moves when a position arrives.
 
-/// Longest wait for a first position before the map opens anyway.
+/// First start only: longest wait for a position before the map opens.
 const Duration _startWaitLimit = Duration(seconds: 8);
 
 extension _HomeStartPosition on _DriverHomeState {
-  /// The map is built once the start position is known, or GPS failed
-  /// (then it opens without a car).
-  bool get _mapReady => _startPositionKnown || _startLocationFailed;
+  /// Later starts: at once. The first start ever: once a position is
+  /// known or location failed (refused, off), then at the country centre.
+  bool get _mapReady =>
+      !_firstStart || _startPositionKnown || _startLocationFailed;
 
   void _restoreStartPosition() {
     final cached = DriverStartPosition.cached;
@@ -18,22 +20,38 @@ extension _HomeStartPosition on _DriverHomeState {
       _useStartPosition(cached);
       return;
     }
-    // GPS that never answers (no permission answer, no provider) must not
-    // keep the map hidden for good: open it without a car.
-    _startWait = Timer(_startWaitLimit, () {
-      if (mounted && !_mapReady) {
-        _rebuild(() => _startLocationFailed = true);
-      }
-    });
+    // First start: GPS that never answers (no permission answer, no
+    // provider) must not keep the map hidden for good.
+    if (_firstStart) {
+      _startWait = Timer(_startWaitLimit, () {
+        if (mounted && !_mapReady) {
+          _rebuild(() => _startLocationFailed = true);
+        }
+      });
+    }
     unawaited(
       DriverStartPosition.load().then((point) {
         if (point == null || !mounted || _startPositionKnown) {
           return;
         }
         _rebuild(() => _useStartPosition(point));
+        // The map is already up at the zone centre: glide to the position
+        // unless live GPS placed it first.
+        if (!_didCenterOnLiveLocation) {
+          _cameraLocation ??= _startTarget(point);
+          unawaited(_HomeMapSheet(this)._animateToDriverLocation());
+        }
       }),
     );
   }
+
+  /// A camera target for a start position (saved, or a rough first fix):
+  /// stamped now so the camera, which follows accurate fixes only, moves.
+  DriverLocation _startTarget(GeoPoint point) => DriverLocation(
+    point: point,
+    measuredAt: DateTime.now(),
+    accuracyMeters: 0,
+  );
 
   void _useStartPosition(GeoPoint point) {
     _driverPosition = point.toLatLng();

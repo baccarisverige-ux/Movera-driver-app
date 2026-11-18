@@ -11,6 +11,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/owes_movera_refusal.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 
@@ -955,6 +956,12 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
             continue;
           }
           _withdraw(offerId, OfferGoneReason.fromWire(status), emit: true);
+          // J11 (v0.18.84): a cash offer he may not take while he owes
+          // Movera at or over the limit; gone for him, not taken by another
+          // driver (the 409's code is conflict too).
+          if (OwesMoveraRefusal.fromConflict(body) case final owes?) {
+            return ClaimResult.owesMovera(owes, afterCheck: afterCheck);
+          }
           return status == 'expired'
               ? ClaimResult.expired(afterCheck: afterCheck)
               : status == 'claimed_elsewhere' || body?['code'] == 'conflict'

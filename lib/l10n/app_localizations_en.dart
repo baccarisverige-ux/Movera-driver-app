@@ -5133,6 +5133,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your e-mail is not verified. It is needed for approval. Tap to verify it.';
 
   @override
+  String remOwesMoveraOverLimit(String owed, String limit) {
+    return 'You owe Movera $owed (limit $limit). You get no cash trips until you pay Movera.';
+  }
+
+  @override
   String get safetyToolkit => 'Safety toolkit';
 
   @override
@@ -6965,7 +6970,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return 'You missed or declined $count offers in a row';
+    return 'You let $count Exclusive offers run out in a row';
   }
 
   @override
