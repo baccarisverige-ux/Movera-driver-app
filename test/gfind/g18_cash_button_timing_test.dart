@@ -393,10 +393,7 @@ void main() {
     await reveal(arrive);
     expect(find.byKey(collectKey), findsNothing);
     expect(find.text('Collect cash'), findsNothing);
-    expect(
-      arrive,
-      findsOneWidget,
-    );
+    expect(arrive, findsOneWidget);
 
     // At the stop (the server's arrival), then leaving it.
     realtime.emit(
