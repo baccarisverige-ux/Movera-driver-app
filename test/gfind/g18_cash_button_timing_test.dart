@@ -387,12 +387,12 @@ void main() {
     );
     await frames(tester, 10);
     // A stop ahead: no cash step now, the stop comes first.
-    expect(find.byKey(collectKey), findsNothing);
-    expect(find.text('Collect cash'), findsNothing);
     final arrive = find.byKey(
       const ValueKey<String>('active-ride-arrived-button'),
     );
     await reveal(arrive);
+    expect(find.byKey(collectKey), findsNothing);
+    expect(find.text('Collect cash'), findsNothing);
     expect(
       arrive,
       findsOneWidget,
