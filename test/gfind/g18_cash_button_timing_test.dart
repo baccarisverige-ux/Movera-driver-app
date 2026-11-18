@@ -116,6 +116,28 @@ void main() {
           'earlyEnd': true,
         });
       }
+      if (request.method == 'POST' &&
+          path == '/api/v1/driver/trips/g18-trip/stops/0/leave') {
+        // SF-1: the stop added on the trip is left.
+        final now = DateTime.now().toUtc();
+        return json(200, {
+          'tripId': 'g18-trip',
+          'status': 'in_trip',
+          'version': 11,
+          'paymentMethod': 'cash',
+          'stops': [
+            {
+              'lat': 59.3326,
+              'lng': 18.0296,
+              'address': 'Fridhemsplan',
+              'arrivedAt': now
+                  .subtract(const Duration(seconds: 30))
+                  .toIso8601String(),
+              'leftAt': now.toIso8601String(),
+            },
+          ],
+        });
+      }
       if (request.method == 'GET' && path == '/api/v1/driver/profile') {
         return json(200, {
           'driverId': 'drv_1',
@@ -336,8 +358,6 @@ void main() {
       'added -> the button goes back to "Finish trip" on the new last '
       'leg', (tester) async {
     DriverAppTexts.language = 'en';
-    // The stop steps run on this phone (no server step to answer).
-    LiveDriverServices.instance = null;
     await open(tester, cash: true);
 
     // A trip update can fold the sheet; the step buttons are in it.
