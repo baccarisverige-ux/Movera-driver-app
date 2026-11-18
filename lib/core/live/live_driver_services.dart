@@ -24,6 +24,7 @@ import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_bonuses.dart';
 import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/core/live/live_trip_history.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
@@ -98,6 +99,8 @@ class LiveDriverServices {
     // becomes the current trip like an accepted offer.
     reservations = LiveReservations(api: api, onStarted: trips.observe);
     earnings = LiveEarnings(api: api);
+    // D18 (contract v0.18.124 C10): the ride history from the server.
+    tripHistory = LiveTripHistory(api: api);
     bonuses = LiveBonuses(api: api);
     surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
@@ -221,6 +224,10 @@ class LiveDriverServices {
 
   /// Today's earnings from the server (audit R3).
   late final LiveEarnings earnings;
+
+  /// D18: `GET /driver/trips`, the driver's ride history from the server
+  /// (the phone copy only for offline).
+  late final LiveTripHistory tripHistory;
 
   /// BQ-V44: the driver's bonus campaigns (Campaigns screen, NEW badge).
   late final LiveBonuses bonuses;

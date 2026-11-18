@@ -5,6 +5,7 @@ import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -13,6 +14,7 @@ import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/core/live/live_trip_history.dart';
 import 'package:movera/presentation/driver/ride%20history/cash_balance_sheet.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 
@@ -28,9 +30,29 @@ Widget _solarIcon(
 );
 
 class DriverRideHistory extends StatefulWidget {
-  const DriverRideHistory({super.key, this.loadHistory});
+  const DriverRideHistory({
+    super.key,
+    this.loadHistory,
+    this.loadServerPage,
+    this.loadTotals,
+  });
 
   final Future<List<TripHistoryRecord>> Function()? loadHistory;
+
+  /// D18: one page of the server's ride history (tests); a live build
+  /// reads `GET /driver/trips` without it.
+  /// D18b: [from] / [to] bound a past month's read.
+  final Future<DriverTripHistoryPage> Function({
+    String? cursor,
+    DateTime? from,
+    DateTime? to,
+  })?
+  loadServerPage;
+
+  /// D18b: the period totals as `GET /driver/earnings` counts them
+  /// (tests); a live build reads the server without it.
+  final Future<EarningsTotals> Function({required DateTime from, DateTime? to})?
+  loadTotals;
 
   @override
   State<DriverRideHistory> createState() => _DriverRideHistoryState();
@@ -50,6 +72,10 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   _HistoryView _view = _HistoryView.overview;
   _HistoryPeriod _period = _HistoryPeriod.week;
 
+  /// D18b (owner G11 Q10 "any past month"): how many months back the Month
+  /// period shows; 0 is the current month, never below (no future month).
+  int _monthsBack = 0;
+
   List<_HistoryRide> _rides = <_HistoryRide>[];
   late final _readHistory =
       widget.loadHistory ?? PrefsTripHistoryRepository().list;
@@ -68,14 +94,35 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   bool _serverFailed = false;
   int _serverRead = 0;
 
+  /// The server's totals reader: the test's, or the live build's.
+  late final Future<EarningsTotals> Function({
+    required DateTime from,
+    DateTime? to,
+  })?
+  _readTotals =
+      widget.loadTotals ??
+      (_live == null
+          ? null
+          : ({required DateTime from, DateTime? to}) => _live.earnings.range(
+              from: from,
+              to: to,
+              // The driver's zone currency, as the wallet opens on (owner
+              // 2026-11-10); the server's default until a zone is known.
+              // One currency is right: one account per country (owner),
+              // so no kr / € switch here (G28 review F2).
+              currency: Money.zoneKnown ? Money.zoneCurrency : null,
+            ));
+
+  bool get _serverCounts => _readTotals != null;
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
     if (_live != null) {
       Money.zoneCurrencyChanges.addListener(_readServerTotals);
-      _readServerTotals();
     }
+    _readServerTotals();
   }
 
   @override
@@ -87,8 +134,42 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   }
 
   void _selectPeriod(_HistoryPeriod period) {
-    setState(() => _period = period);
+    setState(() {
+      _period = period;
+      _monthsBack = 0;
+    });
     _readServerTotals();
+  }
+
+  /// D18b: one month back ([step] 1) or forward (-1), never past the
+  /// current month. A past month reads its own trips from the server.
+  void _stepMonth(int step) {
+    final back = _monthsBack + step;
+    if (back < 0) return;
+    setState(() => _monthsBack = back);
+    _readServerTotals();
+    if (back > 0) _loadHistory();
+  }
+
+  /// The shown month's first instant ([back] months before [now]'s), on
+  /// the zone's clock: the server's Earnings counts the driver's home zone
+  /// month, so a 23:50 trip on the 30th is in that month in the list and
+  /// the total alike, whatever the phone's own time zone. Without a live
+  /// zone (demo, tests) the phone's clock, as [zoneWallTime].
+  static DateTime monthStart(DateTime now, int back) {
+    final zone = zoneTimeZone();
+    if (zone == null || zone.isEmpty) {
+      return DateTime(now.year, now.month - back);
+    }
+    final wall = ZoneClock.wallTime(zone, now);
+    return ZoneClock.toUtc(DateTime.utc(wall.year, wall.month - back), zone);
+  }
+
+  /// [at]'s month on the same clock as [monthStart].
+  static bool inMonth(DateTime at, DateTime now, int back) {
+    final shown = zoneWallTime(monthStart(now, back));
+    final wall = zoneWallTime(at);
+    return wall.year == shown.year && wall.month == shown.month;
   }
 
   /// The selected period's start: today from the phone's midnight,
@@ -100,27 +181,27 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       switch (period) {
         _HistoryPeriod.today => DateTime(now.year, now.month, now.day),
         _HistoryPeriod.week => now.subtract(const Duration(days: 7)),
-        _HistoryPeriod.month => DateTime(now.year, now.month),
+        _HistoryPeriod.month => monthStart(now, 0),
       };
 
   Future<void> _readServerTotals() async {
-    final live = _live;
-    if (live == null || !mounted) return;
+    final readTotals = _readTotals;
+    if (readTotals == null || !mounted) return;
     final read = ++_serverRead;
     setState(() {
       _serverTotals = null;
       _serverFailed = false;
     });
-    final from = startOf(_period, DateTime.now());
+    final now = DateTime.now();
+    final past = _period == _HistoryPeriod.month && _monthsBack > 0;
+    // D18b: a past month is [its 1st, next month's 1st), the same bounds
+    // GET /driver/earnings counts, so the total is that month's earnings.
+    final from = past ? monthStart(now, _monthsBack) : startOf(_period, now);
     EarningsTotals? totals;
     try {
-      totals = await live.earnings.range(
+      totals = await readTotals(
         from: from,
-        // The driver's zone currency, as the wallet opens on (owner
-        // 2026-11-10); the server's default until a zone is known. One
-        // currency is right: one account per country (owner), so no
-        // kr / € switch here (G28 review F2).
-        currency: Money.zoneKnown ? Money.zoneCurrency : null,
+        to: past ? monthStart(now, _monthsBack - 1) : null,
       );
     } catch (_) {
       totals = null;
@@ -140,7 +221,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       _loadFailed = false;
     });
     try {
-      final records = await _readHistory();
+      final phone = await _readHistory();
+      final records = await _withServerRows(phone);
       if (!mounted) {
         return;
       }
@@ -181,6 +263,59 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     }
   }
 
+  /// D18 (contract v0.18.124 C10 `driverTripHistory`; owner G11 Q10
+  /// "Load from server (Recommended)"): on a live build the ride list is
+  /// the server's (`GET /driver/trips`), so a reinstall or a new phone
+  /// shows the same trips; the phone copy fills in only what the server
+  /// did not send, and is the whole list when the server cannot be
+  /// reached (offline). Pages are read until this month's start is
+  /// covered (the longest period shown), at most [maxServerPages].
+  static const maxServerPages = 10;
+
+  Future<List<TripHistoryRecord>> _withServerRows(
+    List<TripHistoryRecord> phone,
+  ) async {
+    final live = _live;
+    final read =
+        widget.loadServerPage ??
+        (live == null
+            ? null
+            : ({String? cursor, DateTime? from, DateTime? to}) =>
+                  live.tripHistory.page(cursor: cursor, from: from, to: to));
+    if (read == null) return phone;
+    final server = <TripHistoryRecord>[];
+    final now = DateTime.now();
+    final back = _period == _HistoryPeriod.month ? _monthsBack : 0;
+    final shownStart = monthStart(now, back);
+    // D18b: a past month is read with its own bounds. The server bounds
+    // createdAt and the list shows the end time, so one day before the 1st
+    // is read too (a trip started on the 31st and ended on the 1st).
+    final from = back > 0 ? shownStart.subtract(const Duration(days: 1)) : null;
+    final to = back > 0 ? monthStart(now, back - 1) : null;
+    try {
+      String? cursor;
+      for (var i = 0; i < maxServerPages; i++) {
+        final page = await read(cursor: cursor, from: from, to: to);
+        server.addAll(page.items);
+        cursor = page.nextCursor;
+        final oldest = page.items.isEmpty ? null : page.items.last.completedAt;
+        if (cursor == null || (oldest != null && oldest.isBefore(shownStart))) {
+          break;
+        }
+      }
+    } catch (_) {
+      // Offline or the server could not answer: the phone copy, plus any
+      // server page already read.
+    }
+    // Rows already read (other months) stay, so going back and forth
+    // does not lose them.
+    final kept = [for (final ride in _rides) ride.record];
+    return LiveTripHistory.merge(
+      server: server,
+      phone: LiveTripHistory.merge(server: phone, phone: kept),
+    );
+  }
+
   /// Retry: the phone's archive and, on a live build, the server's
   /// totals (G28 fix F4: the totals stayed "Unavailable").
   void _retry() {
@@ -200,7 +335,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           at.year == now.year && at.month == now.month && at.day == now.day,
         _HistoryPeriod.week =>
           now.difference(at).inDays < 7 && !at.isAfter(now),
-        _HistoryPeriod.month => at.year == now.year && at.month == now.month,
+        _HistoryPeriod.month => inMonth(at, now, _monthsBack),
       };
     }).toList();
   }
@@ -212,12 +347,14 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       case _HistoryPeriod.week:
         return tr.last7Days;
       case _HistoryPeriod.month:
-        return DriverDates.monthYear(DateTime.now());
+        return DriverDates.monthYear(
+          zoneWallTime(monthStart(DateTime.now(), _monthsBack)),
+        );
     }
   }
 
   String get _periodEarnings {
-    if (_live != null) {
+    if (_serverCounts) {
       // Never the phone's sum shown as the truth (audit R3).
       if (_serverFailed) return tr.unavailable;
       return _serverTotals?.net.formatted ?? _pending;
@@ -245,7 +382,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       CashBalance.totals(_periodCashTrips.map((trip) => trip.cashBalance!));
 
   String get _periodRides {
-    if (_live != null) {
+    if (_serverCounts) {
       if (_serverFailed) return _pending;
       return _serverTotals?.tripCount.toString() ?? _pending;
     }
@@ -261,7 +398,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
 
   /// The total's label: on a live build the server's earnings (owner
   /// 2026-11-12: "Earnings"); else the fares this phone recorded.
-  String get _totalLabel => _live != null ? tr.earnings : tr.recordedFares;
+  String get _totalLabel => _serverCounts ? tr.earnings : tr.recordedFares;
 
   String get _periodHours => '—';
 
@@ -621,6 +758,52 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   }
 
   Widget _buildPeriodSelector() {
+    if (_period != _HistoryPeriod.month) return _buildPeriodTabs();
+    return Column(
+      children: [
+        _buildPeriodTabs(),
+        const SizedBox(height: 6),
+        _buildMonthPicker(),
+      ],
+    );
+  }
+
+  /// D18b: "‹ oktober 2026 ›": back month by month, forward up to the
+  /// current month (never a future month).
+  Widget _buildMonthPicker() {
+    return Row(
+      children: [
+        IconButton(
+          key: const ValueKey('history-month-back'),
+          tooltip: tr.historyMonthBack,
+          icon: const Icon(Icons.chevron_left, color: _ink),
+          onPressed: () => _stepMonth(1),
+        ),
+        Expanded(
+          child: Text(
+            _periodLabel,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _ink,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        IconButton(
+          key: const ValueKey('history-month-next'),
+          tooltip: tr.historyMonthNext,
+          icon: Icon(
+            Icons.chevron_right,
+            color: _monthsBack == 0 ? _line : _ink,
+          ),
+          onPressed: _monthsBack == 0 ? null : () => _stepMonth(-1),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPeriodTabs() {
     return Container(
       height: 40,
       padding: const EdgeInsets.all(3),

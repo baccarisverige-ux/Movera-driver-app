@@ -2777,6 +2777,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera.';
 
   @override
+  String get historyMonthBack => 'Mois précédent';
+
+  @override
+  String get historyMonthNext => 'Mois suivant';
+
+  @override
   String get n1Stop => '1 arrêt';
 
   @override

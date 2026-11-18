@@ -766,6 +766,8 @@
   "accessibilitySavedOnPhone": "Ces préférences sont enregistrées sur ce téléphone.",
   "hearingComingSoon": "Informer les passagers de votre audition arrive bientôt.",
   "fixJob0DebtNote": "Le passager avait des frais impayés d’un trajet précédent. Ils sont inclus dans le prix et vont à Movera.",
+  "historyMonthBack": "Mois précédent",
+  "historyMonthNext": "Mois suivant",
   "n1Stop": "1 arrêt",
   "notNow": "Pas maintenant",
   "scheduled": "Programmées",

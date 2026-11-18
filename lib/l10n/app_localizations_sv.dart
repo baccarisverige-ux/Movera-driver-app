@@ -2720,6 +2720,12 @@ class AppLocalizationsSv extends AppLocalizations {
       'Resenären hade en obetald avgift från en tidigare resa. Den ingår i priset och går till Movera.';
 
   @override
+  String get historyMonthBack => 'Föregående månad';
+
+  @override
+  String get historyMonthNext => 'Nästa månad';
+
+  @override
   String get n1Stop => '1 stopp';
 
   @override
