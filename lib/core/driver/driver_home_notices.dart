@@ -66,7 +66,7 @@ enum DriverOfflineReason {
   noPosition,
 
   /// Contract `autoOffline`: `missedExclusive` Exclusive offers in a row
-  /// missed or declined (the app's own count, or the offer event's
+  /// the driver let run out (the app's own count, or the offer event's
   /// `driverOffline: true`).
   missedOffers,
 

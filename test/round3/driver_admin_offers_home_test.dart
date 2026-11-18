@@ -256,7 +256,10 @@ void main() {
       await _leave(tester);
     });
 
-    testWidgets('the down arrow declines it in dispatch and counts (Q46)', (
+    // Owner 2026-11-16 "It's not when driver decline ! It count when driver
+    // ignore" (contract v0.18.120 autoOffline.declined; was "declines it in
+    // dispatch and counts (Q46)").
+    testWidgets('the down arrow declines it in dispatch and never counts', (
       tester,
     ) async {
       final dispatch = await _online(tester, [DemoAdminOffers.directAssign]);
@@ -267,7 +270,39 @@ void main() {
       expect(dispatch.declines, ['admin-assign-1']);
       expect(dispatch.claims, isEmpty);
       expect(find.byKey(_assignCard), findsNothing);
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
+      await _leave(tester);
+    });
+
+    testWidgets('ignored, then declined: the count stays 1 (a decline neither '
+        'counts nor resets it)', (tester) async {
+      // One Exclusive offer already ran out in this online session.
+      expect(ExclusiveAnswers.instance.missed(), isFalse);
       expect(ExclusiveAnswers.instance.missedInRow, 1);
+      final dispatch = await _online(tester, [DemoAdminOffers.directAssign]);
+      await _until(tester, find.byKey(_assignCard));
+      await _frames(tester, const Duration(milliseconds: 1500));
+      await tester.tap(find.byKey(const ValueKey('direct-offer-dismiss')));
+      await _frames(tester, const Duration(milliseconds: 900));
+      expect(dispatch.declines, ['admin-assign-1']);
+      expect(ExclusiveAnswers.instance.missedInRow, 1);
+      await _leave(tester);
+    });
+
+    testWidgets('declining at the limit never sets the driver offline', (
+      tester,
+    ) async {
+      final before = DriverOfferRules.current;
+      DriverOfferRules.current = before.withAutoOffline(on: true, after: 1);
+      addTearDown(() => DriverOfferRules.current = before);
+      final dispatch = await _online(tester, [DemoAdminOffers.directAssign]);
+      await _until(tester, find.byKey(_assignCard));
+      await _frames(tester, const Duration(milliseconds: 1500));
+      await tester.tap(find.byKey(const ValueKey('direct-offer-dismiss')));
+      await _frames(tester, const Duration(milliseconds: 900));
+      expect(dispatch.declines, ['admin-assign-1']);
+      expect(_said.where((line) => line.startsWith('Offline')), isEmpty);
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _leave(tester);
     });
 

@@ -11,6 +11,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import '../core/l10n/driver_l10n.dart';
 import '../core/navigation/map_camera_report.dart';
 import '../core/navigation/map_double_tap_policy.dart';
+import '../core/navigation/map_pole_limit.dart';
 import '../core/navigation/map_zoom_limit.dart';
 import '../styles/movera_map_palette.dart';
 import '../styles/movera_map_style.dart';
@@ -181,7 +182,43 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
     _followCamera(position);
+    _lastCamera = position;
+    _keepInsideWorld(position);
     widget.onCameraMove?.call(position);
+  }
+
+  void _onCameraIdle() {
+    final camera = _lastCamera;
+    if (camera != null) _keepInsideWorld(camera);
+    widget.onCameraIdle?.call();
+  }
+
+  /// The camera as Maps last reported it.
+  CameraPosition? _lastCamera;
+
+  /// The pole stop last sent, so the echo of it is not sent again.
+  CameraPosition? _poleStopSent;
+
+  /// Owner 2026-11-17 ("When slide map must stop with the arctic and
+  /// antarctic"): the view never goes past the top or bottom of the world
+  /// (no grey band). Phones: when a pan or zoom-out takes the view's top
+  /// edge above 85.05° N (or its bottom below 85.05° S), the camera is put
+  /// back on the edge at once, so the map stops there under the finger.
+  /// Web: Maps JavaScript stops it itself (the world restriction set in
+  /// the web map camera script).
+  void _keepInsideWorld(CameraPosition camera) {
+    if (kIsWeb) return;
+    final controller = _mapController;
+    final size = context.size;
+    if (controller == null || size == null) return;
+    final stop = MapPoleLimit.clamp(camera, size, padding: widget.padding);
+    if (stop == null) {
+      _poleStopSent = null;
+      return;
+    }
+    if (stop == _poleStopSent) return;
+    _poleStopSent = stop;
+    unawaited(controller.moveCamera(CameraUpdate.newCameraPosition(stop)));
   }
 
   /// The camera the own position arrow was last drawn for (phones; web
@@ -614,7 +651,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               onTap: widget.onTap,
               onLongPress: widget.onLongPress,
               onCameraMove: _onCameraMove,
-              onCameraIdle: widget.onCameraIdle,
+              onCameraIdle: _onCameraIdle,
             ),
         ],
       ),

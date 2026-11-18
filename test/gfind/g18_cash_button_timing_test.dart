@@ -28,6 +28,7 @@ import 'package:http/testing.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -113,6 +114,28 @@ void main() {
           'cashDue': money(5400),
           'driverEarnings': money(3920),
           'earlyEnd': true,
+        });
+      }
+      if (request.method == 'POST' &&
+          path == '/api/v1/driver/trips/g18-trip/stops/0/leave') {
+        // SF-1: the stop added on the trip is left.
+        final now = DateTime.now().toUtc();
+        return json(200, {
+          'tripId': 'g18-trip',
+          'status': 'in_trip',
+          'version': 11,
+          'paymentMethod': 'cash',
+          'stops': [
+            {
+              'lat': 59.3326,
+              'lng': 18.0296,
+              'address': 'Fridhemsplan',
+              'arrivedAt': now
+                  .subtract(const Duration(seconds: 30))
+                  .toIso8601String(),
+              'leftAt': now.toIso8601String(),
+            },
+          ],
         });
       }
       if (request.method == 'GET' && path == '/api/v1/driver/profile') {
@@ -325,6 +348,125 @@ void main() {
       await close(tester);
     });
   }
+
+  // SF-1 (G18 post-merge review): "Collect cash" belongs to the last leg
+  // it was tapped on (`_cashFinishTappedAt == _stopAddresses.length`,
+  // accept_ride_state_getters.dart). A stop added after the tap takes the
+  // button away; once that stop is done, the new last leg starts again
+  // at "Finish trip".
+  testWidgets('G18 SF-1: Finish trip tapped -> Collect cash; a stop is '
+      'added -> the button goes back to "Finish trip" on the new last '
+      'leg', (tester) async {
+    DriverAppTexts.language = 'en';
+    await open(tester, cash: true);
+
+    // A trip update can fold the sheet; the step buttons are in it.
+    Future<void> reveal(Finder target) async {
+      if (target.evaluate().isNotEmpty) return;
+      tester
+          .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
+          .last
+          .controller!
+          .animatePanelToSnapPoint();
+      await frames(tester, 16);
+    }
+
+    await tester.ensureVisible(find.byKey(finishKey));
+    await tester.tap(find.byKey(finishKey));
+    await frames(tester, 6);
+    expect(find.byKey(collectKey), findsOneWidget);
+    expect(find.byKey(finishKey), findsNothing);
+
+    // The rider adds a stop; the change is accepted.
+    final stop = {'lat': 59.3326, 'lng': 18.0296, 'address': 'Fridhemsplan'};
+    final change = {
+      'changeId': 'rc_sf1',
+      'routeQuoteId': 'rq_sf1',
+      'status': 'accepted',
+      'answeredBy': 'driver',
+      'dropoff': {
+        'lat': _dropoff.latitude,
+        'lng': _dropoff.longitude,
+        'address': 'Odenplan',
+      },
+      'stops': [stop],
+      'total': money(25000),
+      'driverTotal': money(18000),
+    };
+    realtime.emit(
+      tripId: 'g18-trip',
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.inTrip,
+      projection: {
+        'tripId': 'g18-trip',
+        'version': 9,
+        'status': 'in_trip',
+        'paymentMethod': 'cash',
+        'routeChange': change,
+      },
+    );
+    await frames(tester, 10);
+    // A stop ahead: no cash step now, the stop comes first.
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
+    await reveal(arrive);
+    expect(find.byKey(collectKey), findsNothing);
+    expect(find.text('Collect cash'), findsNothing);
+    expect(arrive, findsOneWidget);
+
+    // At the stop (the server's arrival), then leaving it.
+    realtime.emit(
+      tripId: 'g18-trip',
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.inTrip,
+      projection: {
+        'tripId': 'g18-trip',
+        'version': 10,
+        'status': 'in_trip',
+        'paymentMethod': 'cash',
+        'routeChange': change,
+        'stops': [
+          {
+            ...stop,
+            'arrivedAt': DateTime.now()
+                .toUtc()
+                .subtract(const Duration(seconds: 30))
+                .toIso8601String(),
+          },
+        ],
+      },
+    );
+    await frames(tester, 10);
+    final slide = find.byKey(const ValueKey('active-ride-primary-action'));
+    await reveal(slide);
+    expect(slide, findsOneWidget);
+    await tester.ensureVisible(slide);
+    await tester.drag(slide, const Offset(320, 0));
+    await frames(tester, 10);
+
+    // The new last leg: "Finish trip" again, not the old tap's
+    // "Collect cash".
+    await reveal(find.byKey(finishKey));
+    expect(find.byKey(finishKey), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(finishKey),
+        matching: find.text('Finish trip'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(collectKey), findsNothing);
+    expectBlack(tester, finishKey);
+
+    // Tapped on this leg, it is "Collect cash" again.
+    await tester.ensureVisible(find.byKey(finishKey));
+    await tester.tap(find.byKey(finishKey));
+    await frames(tester, 6);
+    expect(find.byKey(collectKey), findsOneWidget);
+    expect(find.byKey(finishKey), findsNothing);
+    await close(tester);
+  });
 
   testWidgets('G18: a non-cash trip is unchanged (the slide, no cash '
       'button)', (tester) async {

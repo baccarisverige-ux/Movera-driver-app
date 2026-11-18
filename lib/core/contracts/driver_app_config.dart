@@ -95,8 +95,9 @@ class DriverAppConfig {
   /// after accept; the driver is notified (Q40).
   final int maxPickupMoveMeters;
 
-  /// `offers.autoOffline`: offline after this many missed or declined
-  /// Exclusive offers in a row (Q46).
+  /// `offers.autoOffline`: offline after this many Exclusive offers in a
+  /// row the driver let run out (Q46; contract v0.18.120: declines never
+  /// count).
   final bool autoOffline;
   final int missedExclusiveBeforeOffline;
 

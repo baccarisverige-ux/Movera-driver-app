@@ -7107,7 +7107,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return 'Vous avez manqué ou refusé $count offres d’affilée';
+    return 'Vous avez laissé expirer $count offres Exclusives d’affilée';
   }
 
   @override

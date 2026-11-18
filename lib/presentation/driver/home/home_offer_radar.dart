@@ -416,8 +416,9 @@ extension _HomeOfferRadar on _DriverHomeState {
     _clearRadarRouteIfNoCards();
   }
 
-  /// The Exclusive offer leaves. [missed]: it ran out or the driver
-  /// tapped ×; a row of those takes the driver offline (Q16). Its card
+  /// The Exclusive offer leaves. [missed]: it ran out without an answer
+  /// (ignored); a row of those takes the driver offline (Q16). The
+  /// driver's own No (× or the down arrow) is not a miss. Its card
   /// slides back into the sheet first; the offer clears once it is down.
   void _dismissOutsideRadarOffer({bool missed = false}) {
     _outsideOfferTimeoutTimer?.cancel();
@@ -464,7 +465,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
   }
 
-  /// See [ExclusiveAnswers.counts] (contract §6.7, G4 decision 6, E3).
+  /// See [ExclusiveAnswers.counts] (contract §6.7, G4 E3; v0.18.120: only
+  /// offers that ran out reach this, never a declined one).
   bool _countsTowardOffline(_HomeDirectOffer offer) => ExclusiveAnswers.counts(
     live: LiveDriverServices.active,
     reservation: offer.reservation,
@@ -908,14 +910,18 @@ extension _HomeOfferRadar on _DriverHomeState {
     );
   }
 
-  /// The down arrow, × or Back on the Exclusive offer: skipped like a
-  /// time out (Q16/Q46). An admin direct assign also tells dispatch No.
+  /// The down arrow, × or Back on the Exclusive offer: the driver's No.
+  /// Owner 2026-11-16 "It's not when driver decline ! It count when driver
+  /// ignore" (contract v0.18.120 `autoOffline.declined`; was: skipped like
+  /// a time out, Q16/Q46): a decline never counts toward going offline and
+  /// does not set the count back. An admin direct assign also tells
+  /// dispatch No.
   void _declineOutsideRadarOffer() {
     final offer = _outsideRadarOffer;
     if (offer != null && offer.viaDispatchAnswer && !_exclusive.leaving) {
       unawaited(_dispatch.declineOffer(offer.id));
     }
-    _dismissOutsideRadarOffer(missed: true);
+    _dismissOutsideRadarOffer();
   }
 
   /// Opens the trip for [offer], with its rider and stops, and clears
