@@ -325,7 +325,12 @@ class LiveDriverConfig extends ChangeNotifier {
       _lastLine = null;
     }
     await refresh();
-    if (_watching && _zone == zone && !_disposed) unawaited(_connect());
+    if (_watching && _zone == zone && !_disposed) {
+      // L20 stream: the one stream keeps the zone it opened with; it opens
+      // again for the new one.
+      if (_external) onStreamZoneChanged?.call();
+      unawaited(_connect());
+    }
   }
 
   /// True only when the zone list names the same country for both.
@@ -341,7 +346,71 @@ class LiveDriverConfig extends ChangeNotifier {
     EmergencyNumbers.accept(document['emergencyNumbers']);
     // v0.18.101 §92 (BQ-V34): whether SOS texts the emergency contacts.
     SosContactsSmsConfig.accept(document['sosContactsSms']);
-    return _use(DriverAppConfig.fromJson(document), zone: _zoneOf(document));
+    // v0.18.122 L20 stream (contract.json#driverOneStream): the zone's
+    // realtime.oneStream; missing (an older server) = off.
+    final realtime = document['realtime'];
+    final one = realtime is Map && realtime['oneStream'] == true;
+    return _use(
+      DriverAppConfig.fromJson(document),
+      zone: _zoneOf(document),
+      oneStream: one,
+    );
+  }
+
+  /// L20 stream: whether the zone's document in use says to open ONE live
+  /// connection (`GET /driver/stream`) instead of the offer feed + this
+  /// stream (`DriverAppConfig.realtime.oneStream`, default off).
+  bool get oneStream => _oneStream;
+  bool _oneStream = false;
+
+  /// L20 stream: while true the offer feed's one stream carries this
+  /// stream's events ([deliver]) and this class opens no stream of its own.
+  bool get onOneStream => _external;
+  bool _external = false;
+
+  /// L20 stream: the zone the one stream must name (null: the server picks).
+  String? get streamZone => _zone;
+
+  /// L20 stream: the config half of the one stream's id: the version in use
+  /// for [streamZone] (0 when none, so the server sends the newest).
+  int get streamVersion {
+    final zone = _zone;
+    return _current != null && zone != null && zone == _currentZone
+        ? _current!.version
+        : 0;
+  }
+
+  /// L20 stream: the zone changed while on the one stream; it opens again
+  /// for the new zone (set by `linkOneStream`).
+  void Function()? onStreamZoneChanged;
+
+  /// L20 stream: the offer feed took the settings events over (true) or
+  /// gave them back (false). Taking over closes this class's own stream;
+  /// giving back opens it again (when followed).
+  void useOneStream(bool on) {
+    if (on == _external) return;
+    _external = on;
+    if (on) {
+      _generation++;
+      _retry?.cancel();
+      _retry = null;
+      _endUptime();
+      unawaited(_stream?.cancel());
+      _stream = null;
+      _lastLine = null;
+    } else if (_watching && !_disposed) {
+      unawaited(_connect());
+    }
+  }
+
+  /// L20 stream: the one stream (re)opened: as on every (re)connect of the
+  /// settings stream, the booked rides are read again (§68).
+  void oneStreamOpened() => onReservationsChanged?.call();
+
+  /// L20 stream: one settings event from the one stream.
+  void deliver(Map<String, dynamic> event) {
+    if (_disposed) return;
+    _event(event);
   }
 
   /// Asks the server for the document; concurrent calls share one request.
@@ -396,13 +465,14 @@ class LiveDriverConfig extends ChangeNotifier {
 
   /// Puts [next] in use unless the app has the same or a newer version of
   /// the same zone (G17: another zone's document always replaces it).
-  bool _use(DriverAppConfig next, {String? zone}) {
+  bool _use(DriverAppConfig next, {String? zone, bool oneStream = false}) {
     final known = _current;
     final sameZone = known == null || zone == null || zone == _currentZone;
     if (known != null && sameZone && known.version >= next.version) {
       return false;
     }
     final moved = known != null && !sameZone;
+    _oneStream = oneStream;
     _current = next;
     _currentZone = zone ?? _currentZone;
     next.apply();
@@ -420,7 +490,8 @@ class LiveDriverConfig extends ChangeNotifier {
   }
 
   Future<void> _connect() async {
-    if (_disposed || !_watching) return;
+    // L20 stream: the offer feed's one stream carries the settings events.
+    if (_disposed || !_watching || _external) return;
     final generation = ++_generation;
     bool stale() => generation != _generation || _disposed || !_watching;
     try {
@@ -492,37 +563,7 @@ class LiveDriverConfig extends ChangeNotifier {
                 final event = jsonDecode(raw);
                 // A real event: the stream is connected (owner R3).
                 if (event is Map && !stale()) _failures = 0;
-                if (event is Map &&
-                    event['kind'] == 'driver_reservations_changed') {
-                  onReservationsChanged?.call();
-                  return;
-                }
-                if (event is! Map || event['kind'] != 'config_published') {
-                  return;
-                }
-                if (event['doc'] == 'content') {
-                  onContentPublished?.call();
-                  return;
-                }
-                if (event['doc'] == 'zones') {
-                  onZonesPublished?.call();
-                  return;
-                }
-                if (event['doc'] == 'events') {
-                  onEventsPublished?.call();
-                  return;
-                }
-                final version = event['version'];
-                // §89: "newer" only within the same zone.
-                final eventZone = event['zoneId'];
-                final otherZone =
-                    (eventZone is String && eventZone != _currentZone) ||
-                    (_zone != null && _zone != _currentZone);
-                if (version is! int ||
-                    otherZone ||
-                    version > (_current?.version ?? 0)) {
-                  unawaited(refresh());
-                }
+                if (event is Map) _event(event);
               } on FormatException {
                 // A broken event is skipped; the next one or a restart fixes it.
               }
@@ -538,6 +579,37 @@ class LiveDriverConfig extends ChangeNotifier {
     } catch (error) {
       DriverLog.warn('driver_config.stream_failed: $error');
       if (!stale()) _reconnect();
+    }
+  }
+
+  /// One settings event: from this class's own stream, or (L20 stream) from
+  /// the offer feed's one stream ([deliver]).
+  void _event(Map<dynamic, dynamic> event) {
+    if (event['kind'] == 'driver_reservations_changed') {
+      onReservationsChanged?.call();
+      return;
+    }
+    if (event['kind'] != 'config_published') return;
+    if (event['doc'] == 'content') {
+      onContentPublished?.call();
+      return;
+    }
+    if (event['doc'] == 'zones') {
+      onZonesPublished?.call();
+      return;
+    }
+    if (event['doc'] == 'events') {
+      onEventsPublished?.call();
+      return;
+    }
+    final version = event['version'];
+    // §89: "newer" only within the same zone.
+    final eventZone = event['zoneId'];
+    final otherZone =
+        (eventZone is String && eventZone != _currentZone) ||
+        (_zone != null && _zone != _currentZone);
+    if (version is! int || otherZone || version > (_current?.version ?? 0)) {
+      unawaited(refresh());
     }
   }
 

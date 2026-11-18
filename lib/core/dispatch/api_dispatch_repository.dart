@@ -171,6 +171,32 @@ class OfferFeedEvent {
 ///
 /// A live build (`MOVERA_AUTH_REQUIRED`) installs it through
 /// `LiveDriverServices`; the demo builds use the in-process demo dispatch.
+/// L20 stream (contract v0.18.122, contract.json#driverOneStream; owner
+/// 2026-11-17 "Yes, with switch (Rec.)"): how the offer feed shares ONE
+/// connection, `GET /driver/stream`, with the settings stream. Set by
+/// `linkOneStream` (live/one_stream.dart). [wanted] is the zone's
+/// `DriverAppConfig.realtime.oneStream`; [deliver] gets the settings events
+/// (`config_published`, `driver_reservations_changed`); [attached] tells the
+/// settings to close (true) or keep (false) their own stream; [opened]
+/// runs on every open of the one stream.
+class OneStreamLink {
+  const OneStreamLink({
+    required this.wanted,
+    required this.zoneId,
+    required this.configVersion,
+    required this.deliver,
+    required this.attached,
+    required this.opened,
+  });
+
+  final bool Function() wanted;
+  final String? Function() zoneId;
+  final int Function() configVersion;
+  final void Function(Map<String, dynamic> event) deliver;
+  final void Function(bool on) attached;
+  final void Function() opened;
+}
+
 class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   ApiDispatchRepository({
     required http.Client client,
@@ -343,6 +369,32 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// False after [disconnect]: a lost feed is not opened again.
   bool _wanted = true;
 
+  /// MF-1: true only between [connect] and [disconnect] (the driver is
+  /// online); [reopen] does nothing while it is false.
+  bool _feedOpen = false;
+
+  /// L20 stream: set by `linkOneStream`; null = always the old offer feed.
+  OneStreamLink? oneStream;
+
+  /// The server answered 404 to `GET /driver/stream` (an older server): the
+  /// two streams until the app restarts (contract.json#driverOneStream.driver).
+  bool get oneStreamRefused => _oneStreamRefused;
+  bool _oneStreamRefused = false;
+
+  /// MF-2: a 404 `zone_not_found` (stale zoneId) opens the two old streams
+  /// for the next try only; the one stream is asked again after that.
+  bool _oldStreamsOnce = false;
+
+  /// Whether the feed now open (or being opened) is the one stream.
+  bool get usesOneStream => _oneMode;
+  bool _oneMode = false;
+
+  /// L20 stream: the switch or the zone changed; an online feed opens again
+  /// in the right form (offers lose nothing: it resumes from its cursor).
+  void reopen() {
+    if (_feedOpen && _wanted && !_disposed) unawaited(connect());
+  }
+
   /// Bumped by every [connect] and [disconnect]: an older answer that
   /// arrives late is not the feed.
   int _generation = 0;
@@ -513,6 +565,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// retried with backoff from the last sequence; [feedLive] says when.
   Future<void> connect() async {
     _wanted = true;
+    _feedOpen = true;
     final generation = ++_generation;
     // A feed opened again (a resume) keeps the credit of its time up.
     _endUptime();
@@ -532,17 +585,32 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
         _driver = driver;
       }
       final headers = await _headers();
+      // L20 stream: the one connection while the zone's switch is on and the
+      // server has it; the settings then close their own stream.
+      final link = oneStream;
+      final skipOne = _oldStreamsOnce;
+      _oldStreamsOnce = false;
+      final one =
+          link != null && !_oneStreamRefused && !skipOne && link.wanted();
+      _oneMode = one;
+      link?.attached(one);
+      if (generation != _generation) return;
+      final zone = one ? link.zoneId() : null;
+      final cursor = one
+          ? '$_lastSequence.${link.configVersion()}'
+          : '$_lastSequence';
       final request =
           http.Request(
               'GET',
-              _uri('/driver/offers/stream', {
-                if (_hasCursor) 'after': '$_lastSequence',
+              _uri(one ? '/driver/stream' : '/driver/offers/stream', {
+                if (zone != null) 'zoneId': zone,
+                if (_hasCursor) 'after': cursor,
               }),
             )
             ..headers.addAll({
               ...headers,
               'Accept': 'text/event-stream',
-              if (_hasCursor) 'Last-Event-ID': '$_lastSequence',
+              if (_hasCursor) 'Last-Event-ID': cursor,
             });
       response = await _client.send(request).timeout(requestTimeout);
     } catch (_) {
@@ -551,6 +619,37 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     }
     if (generation != _generation) {
       unawaited(response.stream.drain<void>().catchError((_) {}));
+      return;
+    }
+    if (response.statusCode == 404 && _oneMode) {
+      // L20 stream: an older server has no GET /driver/stream: the two
+      // streams at once, and the one stream is not asked again. SF-1: a
+      // 404 `zone_not_found` (stale zoneId) is not an older server. MF-2:
+      // the server sends {code: not_found, reason: zone_not_found}; that
+      // try opens the two old streams (offers need no zone) without the
+      // mark, and the next reopen or zone change asks the one stream again.
+      String? reason;
+      try {
+        final body = await response.stream.bytesToString().timeout(
+          requestTimeout,
+        );
+        final decoded = jsonDecode(body);
+        if (decoded is Map && decoded['reason'] is String) {
+          reason = decoded['reason'] as String;
+        }
+      } catch (_) {
+        // No readable body: the route is missing.
+      }
+      if (generation != _generation) return;
+      _oneMode = false;
+      oneStream?.attached(false);
+      if (reason == 'zone_not_found') {
+        _oldStreamsOnce = true;
+        unawaited(connect());
+        return;
+      }
+      _oneStreamRefused = true;
+      unawaited(connect());
       return;
     }
     if (response.statusCode != 200) {
@@ -581,6 +680,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     // it opened is one more failed try.
     _openedAt = _now();
     _setLive(true);
+    final linked = _oneMode ? oneStream : null;
+    linked?.opened();
     if (_reloadOnOpen) {
       // Belt and braces after a lost feed: the open offers come again.
       _reloadOnOpen = false;
@@ -611,7 +712,9 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
             if (line.startsWith('data:')) {
               data.write(line.substring(5).trim());
             } else if (line.startsWith('id:')) {
-              blockId = int.tryParse(line.substring(3).trim());
+              // L20 stream: '<offer sequence>.<config version>'; the
+              // offer half is this feed's cursor.
+              blockId = int.tryParse(line.substring(3).trim().split('.').first);
             } else if (line.isEmpty && data.isEmpty) {
               // An `id:` with no data is the feed's cursor (SSE): a feed
               // opened without one says where it starts (`id: 0` when the
@@ -632,7 +735,17 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
                 if (event is Map) {
                   // A real event: the feed is connected (owner R3).
                   if (generation == _generation) _reconnects = 0;
-                  ingest(Map<String, dynamic>.from(event));
+                  final kind = event['kind'];
+                  if (linked != null &&
+                      (kind == 'config_published' ||
+                          kind == 'driver_reservations_changed')) {
+                    // L20 stream: a settings event, to the settings.
+                    if (generation == _generation) {
+                      linked.deliver(Map<String, dynamic>.from(event));
+                    }
+                  } else {
+                    ingest(Map<String, dynamic>.from(event));
+                  }
                 }
               } on FormatException {
                 // A broken event is skipped; the next resync fixes the list.
@@ -679,6 +792,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// server withdraws them). [connect] opens it again from [lastSequence].
   Future<void> disconnect() async {
     _wanted = false;
+    _feedOpen = false;
     _generation++;
     _reconnect?.cancel();
     _reconnect = null;
@@ -691,6 +805,11 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _feed = null;
     _setLive(false);
     _clear();
+    // L20 stream: offline, the settings keep their own single stream.
+    if (_oneMode) {
+      _oneMode = false;
+      oneStream?.attached(false);
+    }
     await feed?.cancel();
   }
 
