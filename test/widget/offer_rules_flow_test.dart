@@ -154,15 +154,39 @@ void main() {
       final session = await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(milliseconds: 2600));
       expect(find.byKey(_closeOffer), findsOneWidget);
-      // × is a "no", like letting it run out.
+      // He lets it run out (Dispatch's time to accept, 15 s). Owner
+      // 2026-11-16 "It count when driver ignore": only that counts (was:
+      // × is a "no", like letting it run out).
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 500),
+      );
+      expect(find.byKey(_closeOffer), findsNothing);
+      // G4 decision 7 (owner "No warning only when set offline").
+      expect(_said, isNot(contains('Next missed offer: offline')));
+      expect(_said.where((t) => t.contains('offline')), isEmpty);
+      expect(session.availableForOffers, isTrue);
+      expect(ExclusiveAnswers.instance.missedInRow, 1);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('× is a No, never a miss: at the limit minus one the driver '
+        'stays online and the count does not move (owner 2026-11-16)', (
+      tester,
+    ) async {
+      DriverOfferRules.current = const DriverOfferRules(autoOfflineAfter: 2);
+      ExclusiveAnswers.instance.missed();
+      final session = await _pumpHome(tester, _Dispatch());
+      await _frames(tester, const Duration(milliseconds: 2600));
+      expect(find.byKey(_closeOffer), findsOneWidget);
       await tester.tap(
         find.byKey(const ValueKey<String>('direct-offer-dismiss')),
       );
       // Its sheet goes down first.
       await _frames(tester, const Duration(milliseconds: 900));
-      // G4 decision 7 (owner "No warning only when set offline").
-      expect(_said, isNot(contains('Next missed offer: offline')));
-      expect(_said.where((t) => t.contains('offline')), isEmpty);
+      expect(find.byKey(_closeOffer), findsNothing);
+      expect(_said.where((t) => t.contains('ffline')), isEmpty);
       expect(session.availableForOffers, isTrue);
       expect(ExclusiveAnswers.instance.missedInRow, 1);
       await tester.pumpWidget(const SizedBox());

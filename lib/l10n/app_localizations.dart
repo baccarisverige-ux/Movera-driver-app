@@ -11953,10 +11953,10 @@ abstract class AppLocalizations {
   /// **'The app was restarted while you were online'**
   String get offlineReasonAppRestart;
 
-  /// Offline card reason: contract autoOffline (offers.autoOffline.missedExclusive, offer event driverOffline: true).
+  /// Offline card reason: contract autoOffline (offers.autoOffline.missedExclusive, offer event driverOffline: true). Contract v0.18.120 (owner 2026-11-16): only Exclusive offers the driver let run out count, a decline never does; was 'You missed or declined {count} offers in a row'.
   ///
   /// In en, this message translates to:
-  /// **'You missed or declined {count} offers in a row'**
+  /// **'You let {count} Exclusive offers run out in a row'**
   String offlineReasonMissedOffers(int count);
 
   /// Offline card reason when the server does not say why.

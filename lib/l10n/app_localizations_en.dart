@@ -6970,7 +6970,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return 'You missed or declined $count offers in a row';
+    return 'You let $count Exclusive offers run out in a row';
   }
 
   @override

@@ -5331,9 +5331,9 @@
   "@offlineReasonAppRestart": {
     "description": "Offline card reason: decision 3 (contract driverHome.setOffline reason app_restart)."
   },
-  "offlineReasonMissedOffers": "You missed or declined {count} offers in a row",
+  "offlineReasonMissedOffers": "You let {count} Exclusive offers run out in a row",
   "@offlineReasonMissedOffers": {
-    "description": "Offline card reason: contract autoOffline (offers.autoOffline.missedExclusive, offer event driverOffline: true).",
+    "description": "Offline card reason: contract autoOffline (offers.autoOffline.missedExclusive, offer event driverOffline: true). Contract v0.18.120 (owner 2026-11-16): only Exclusive offers the driver let run out count, a decline never does; was 'You missed or declined {count} offers in a row'.",
     "placeholders": {
       "count": {
         "type": "int"

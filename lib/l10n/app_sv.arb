@@ -1972,7 +1972,7 @@
   "offlineCardTitle": "Du är offline",
   "offlineReasonNoPosition": "Telefonen skickade ingen position på {minutes} min",
   "offlineReasonAppRestart": "Appen startades om medan du var online",
-  "offlineReasonMissedOffers": "Du missade eller nekade {count} erbjudanden i rad",
+  "offlineReasonMissedOffers": "Du lät {count} Exklusiva erbjudanden gå ut i rad",
   "offlineReasonMovera": "Movera satte dig offline",
   "offlineCheckPhone": "Kontrollera min telefon",
   "offlineChecking": "Kontrollerar…",

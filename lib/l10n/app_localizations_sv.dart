@@ -6979,7 +6979,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return 'Du missade eller nekade $count erbjudanden i rad';
+    return 'Du lät $count Exklusiva erbjudanden gå ut i rad';
   }
 
   @override
