@@ -189,6 +189,7 @@ class _TripIslandState extends State<TripIsland> {
                             color: color,
                             icon: icon,
                             pulse: true,
+                            textRoom: DigitalMessageFace.textRoomIn(width),
                           )
                         : _faceView(),
                   ),

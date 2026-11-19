@@ -35,7 +35,11 @@ extension _HomeMapIsland on _DriverHomeState {
     }
   }
 
-  Widget _islandMessageView(IslandMessage message, {bool hold = false}) {
+  Widget _islandMessageView(
+    IslandMessage message, {
+    bool hold = false,
+    double? textRoom,
+  }) {
     final (color, toneIcon) = DigitalIslandParts.toneLook(message.tone);
     return DigitalMessageFace(
       key: ValueKey<String>(
@@ -48,6 +52,7 @@ extension _HomeMapIsland on _DriverHomeState {
       icon: message.icon ?? toneIcon,
       pulse: message.live,
       tappable: hold,
+      textRoom: textRoom,
     );
   }
 
