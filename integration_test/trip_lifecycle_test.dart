@@ -88,7 +88,10 @@ void main() {
         outDir: tlEnv('MOVERA_TL_OUT'),
         shots: tlEnv('MOVERA_TL_SHOTS') != '0',
       );
-      final run = TripRun(tester, log, scheduled: scheduled,
+      final run = TripRun(
+        tester,
+        log,
+        scheduled: scheduled,
         frozen: frozen,
         oneStream: oneStream,
       );

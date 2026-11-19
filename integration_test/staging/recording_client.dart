@@ -140,7 +140,9 @@ class RecordingClient extends http.BaseClient {
   http.BaseRequest _lowered(http.BaseRequest request) {
     final url = request.url;
     final after = url.queryParameters['after'];
-    final parts = after == null ? null : RegExp(r'^(\d+)\.(\d+)$').firstMatch(after);
+    final parts = after == null
+        ? null
+        : RegExp(r'^(\d+)\.(\d+)$').firstMatch(after);
     final version = parts == null ? null : int.parse(parts.group(2)!);
     if (parts == null || version == null || version < 1) return request;
     lowerConfigCursorOnce = false;

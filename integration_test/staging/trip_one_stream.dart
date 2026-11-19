@@ -53,7 +53,9 @@ extension _TripOneStream on TripRun {
       final detail =
           'config oneStream=$switched; ${_streams()}; '
           '/driver/stream answers=$opens';
-      ok ? log.pass('L20-OPEN', title, detail) : log.fail('L20-OPEN', title, detail);
+      ok
+          ? log.pass('L20-OPEN', title, detail)
+          : log.fail('L20-OPEN', title, detail);
     });
 
     await step('L20-SETTINGS', 'settings event on the one stream', () async {
@@ -66,13 +68,14 @@ extension _TripOneStream on TripRun {
           .skip(before)
           .any((k) => k.$2 == 'config_published');
       await pumpUntil(tester, came, timeout: const Duration(seconds: 90));
-      final reopened = calls(_one, method: 'GET', from: mark)
-          .map((c) => c.status)
-          .toList();
+      final reopened = calls(
+        _one,
+        method: 'GET',
+        from: mark,
+      ).map((c) => c.status).toList();
       final lowered = rec.loweredCursor != null;
       rec.lowerConfigCursorOnce = false;
-      final ok =
-          came() && lowered && rec.openCount(_settings) == 0;
+      final ok = came() && lowered && rec.openCount(_settings) == 0;
       final detail =
           'reopened=$reopened cursor lowered=$lowered '
           'kinds=${rec.oneStreamKinds.skip(before).map((k) => k.$2).toList()}; '
@@ -80,8 +83,12 @@ extension _TripOneStream on TripRun {
       if (ok) {
         log.pass('L20-SETTINGS', title, detail);
       } else if (!lowered && reopened.isNotEmpty) {
-        log.skip('L20-SETTINGS', title, 'NOT CHECKED: config version 0 '
-            '(nothing lower to ask from); $detail');
+        log.skip(
+          'L20-SETTINGS',
+          title,
+          'NOT CHECKED: config version 0 '
+              '(nothing lower to ask from); $detail',
+        );
       } else {
         log.fail('L20-SETTINGS', title, detail);
       }
@@ -103,7 +110,9 @@ extension _TripOneStream on TripRun {
       final detail =
           'kinds on one stream=$kinds; offer-feed opens since book=$offerFeed; '
           '${_streams()}';
-      ok ? log.pass('L20-OFFER', title, detail) : log.fail('L20-OFFER', title, detail);
+      ok
+          ? log.pass('L20-OFFER', title, detail)
+          : log.fail('L20-OFFER', title, detail);
     });
   }
 }
