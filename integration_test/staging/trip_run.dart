@@ -27,6 +27,7 @@ part 'trip_extras.dart';
 part 'trip_cleanup.dart';
 part 'trip_money.dart';
 part 'trip_scheduled.dart';
+part 'trip_frozen.dart';
 
 /// Owner 2026-11-12 ("U can't make all trip lifecycle test on firebase?"):
 /// one full trip on a real Test Lab phone. The DRIVER is the real app on
@@ -37,7 +38,12 @@ part 'trip_scheduled.dart';
 /// and a clear FAIL detail, and the run always reaches the clean-up
 /// (open trip cancelled, driver offline).
 class TripRun extends StagingSession {
-  TripRun(super.tester, super.log, {this.scheduled = false}) {
+  TripRun(
+    super.tester,
+    super.log, {
+    this.scheduled = false,
+    this.frozen = false,
+  }) {
     rider = RiderApi(
       Uri(scheme: base.scheme, host: base.host, port: base.port),
     );
@@ -50,6 +56,17 @@ class TripRun extends StagingSession {
   /// The `trip-scheduled` scenario: a booked-for-later ride (and its
   /// cancel case) instead of a live one.
   final bool scheduled;
+
+  /// The `trip-frozen` scenario (T7, owner 2026-11-19 "You test with
+  /// Firebase"): the long-stop check with a frozen position, no network,
+  /// and a frozen position while moving ([_frozenScenario]).
+  final bool frozen;
+
+  /// More time for `trip-frozen` (three waits of 3-4 min): every stop below
+  /// moves by this much, Test Lab's --timeout is 30 min for it.
+  static const Duration frozenExtra = Duration(minutes: 7);
+
+  Duration get extra => frozen ? frozenExtra : Duration.zero;
 
   /// Trip ids this run booked (the clean-up closes every one), also those
   /// found after a lost `POST /trips` answer ([_findLostBooking]).
@@ -84,7 +101,7 @@ class TripRun extends StagingSession {
   final DateTime startedAt = DateTime.now();
 
   /// Optional checks are skipped past this point.
-  late final DateTime softDeadline = startedAt.add(softAfter);
+  late final DateTime softDeadline = startedAt.add(softAfter + extra);
 
   /// Every step stops here (supervisor 2026-11-12): no new step starts and
   /// the running one ends within seconds ([stepsHardStop]); CLEANUP and
@@ -97,7 +114,7 @@ class TripRun extends StagingSession {
   /// timeout 18 min ([testLimit]) -> Test Lab's --timeout 25 min
   /// (android-test-apk.yml `tl_timeout`, which also counts install and
   /// start, ~1 min).
-  late final DateTime hardDeadline = startedAt.add(hardAfter);
+  late final DateTime hardDeadline = startedAt.add(hardAfter + extra);
 
   static const Duration softAfter = Duration(minutes: 13);
   static const Duration hardAfter = Duration(minutes: 15);
@@ -214,7 +231,7 @@ class TripRun extends StagingSession {
   }) async {
     stepsHardStop = hardDeadline;
     final watchdog = Timer(
-      startedAt.add(watchAfter).difference(DateTime.now()),
+      startedAt.add(watchAfter + extra).difference(DateTime.now()),
       () => unawaited(_hung()),
     );
     log.step('sign in (server ${base.host})');
@@ -250,7 +267,9 @@ class TripRun extends StagingSession {
             : log.fail('RIDER-SIGN-IN', 'rider signs in over HTTP', error);
       });
       if (!rider.signedIn) return;
-      if (scheduled) {
+      if (frozen) {
+        await _frozenScenario();
+      } else if (scheduled) {
         await _scheduledScenario();
       } else {
         await step('BOOK', 'rider books a cash trip', () => _book('BOOK'));
@@ -271,7 +290,7 @@ class TripRun extends StagingSession {
       stepsHardStop = null;
       if (stopped) {
         CheckLog.say(
-          'STEP hard time limit (${TripRun.hardAfter.inMinutes} min) reached: '
+          'STEP hard time limit (${(TripRun.hardAfter + extra).inMinutes} min) reached: '
           'clean-up and offline now',
         );
       }
@@ -280,7 +299,7 @@ class TripRun extends StagingSession {
       // app's own Go offline (hold + confirm, up to ~90 s) only runs with
       // two minutes left, else the API sets the driver offline.
       final testEnd = startedAt
-          .add(TripRun.testLimit)
+          .add(TripRun.testLimit + extra)
           .subtract(const Duration(seconds: 20));
       var cleanupEnd = DateTime.now().add(TripRun.cleanupBudget);
       final latest = testEnd.subtract(const Duration(minutes: 1));

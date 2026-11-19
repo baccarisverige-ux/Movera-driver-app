@@ -34,8 +34,15 @@ void main() {
   final code = tlEnv('MOVERA_TL_CODE');
   final riderPhone = tlEnv('MOVERA_TL_RIDER_PHONE');
   final scheduled = tlEnv('MOVERA_TL_SCENARIO') == 'scheduled';
+  // T7 (owner 2026-11-19 "You test with Firebase"): testlab_test
+  // `trip-frozen`, MOVERA_TL_SCENARIO=frozen.
+  final frozen = tlEnv('MOVERA_TL_SCENARIO') == 'frozen';
   final live = DriverRuntimeConfig.current.authRequired;
-  final name = scheduled ? 'booked ride lifecycle' : 'trip lifecycle';
+  final name = frozen
+      ? 'frozen GPS long stop (T7)'
+      : scheduled
+      ? 'booked ride lifecycle'
+      : 'trip lifecycle';
 
   // Run 6 (2026-11-12): a test that times out (or hangs) is recorded
   // nowhere by the integration_test binding, so JUnit said "OK (0 tests)"
@@ -76,7 +83,7 @@ void main() {
         outDir: tlEnv('MOVERA_TL_OUT'),
         shots: tlEnv('MOVERA_TL_SHOTS') != '0',
       );
-      final run = TripRun(tester, log, scheduled: scheduled);
+      final run = TripRun(tester, log, scheduled: scheduled, frozen: frozen);
       try {
         await run.start();
         await run.all(phone: phone!, code: code!, riderPhone: riderPhone!);
@@ -100,6 +107,8 @@ void main() {
     // -> clean-up done by about 17 min 30 s (TripRun.cleanupBudget) -> this
     // test timeout 18 min (TripRun.testLimit) -> Test Lab --timeout 25 min
     // (install and start count too, ~1 min).
-    timeout: const Timeout(TripRun.testLimit),
+    timeout: Timeout(
+      TripRun.testLimit + (frozen ? TripRun.frozenExtra : Duration.zero),
+    ),
   );
 }

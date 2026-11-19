@@ -17,13 +17,14 @@ on:
         description: 'Firebase Test Lab: run a test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
         default: ''
       testlab_test:
-        description: 'Test Lab kind: robo (taps around, no sign-in); staging-checks (one test driver from the MOVERA_TEST_NUMBERS secret: online, G24, G17, G27, offline); trip-lifecycle (driver app on the phone + a test rider over HTTP: one whole live cash trip, chat, call, SOS, ride check, every screen change); trip-scheduled (the same with a booked-for-later ride and its cancel case)'
+        description: 'Test Lab kind: robo (taps around, no sign-in); staging-checks (one test driver from the MOVERA_TEST_NUMBERS secret: online, G24, G17, G27, offline); trip-lifecycle (driver app on the phone + a test rider over HTTP: one whole live cash trip, chat, call, SOS, ride check, every screen change); trip-scheduled (the same with a booked-for-later ride and its cancel case); trip-frozen (T7: long-stop ride check with Location off / no network, ~25 min)'
         type: choice
         options:
           - robo
           - staging-checks
           - trip-lifecycle
           - trip-scheduled
+          - trip-frozen
         default: robo
 
 permissions:
@@ -181,9 +182,9 @@ jobs:
     if: inputs.testlab_device != '' && inputs.testlab_test != 'robo'
     runs-on: ubuntu-24.04
     # Budget: lock <= 16 m + set-up and build ~15 m + wake <= 1.5 m +
-    # Test Lab 25 m (step cut at 30 m) + download / scrub / upload ~5 m
+    # Test Lab 25 m, trip-frozen 30 m (step cut at 35 m) + download / scrub / upload ~5 m
     # = ~68 m worst case, with margin (as the rider repo's job).
-    timeout-minutes: 80
+    timeout-minutes: 85
     concurrency:
       group: movera-device-checks-d38-r35
       cancel-in-progress: false
@@ -286,6 +287,9 @@ jobs:
             # ~17m30s -> test timeout 18m -> Test Lab 25m (install/start ~1m).
             trip-lifecycle) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=live ;;
             trip-scheduled) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=scheduled ;;
+            # T7 (owner 2026-11-19 "You test with Firebase"): every stop 7 min
+            # later (TripRun.frozenExtra): hard 22m -> test 25m -> Test Lab 30m.
+            trip-frozen) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=30m; scenario=frozen ;;
             *) echo "::error::unknown testlab_test"; exit 1 ;;
           esac
           python3 -I tool/testlab_summary.py "$mode" "$RUNNER_TEMP/tl"
@@ -348,7 +352,7 @@ jobs:
       - name: Device checks on a real phone (Firebase Test Lab)
         id: run
         if: steps.driver.outputs.ready == 'true'
-        timeout-minutes: 30
+        timeout-minutes: 35
         env:
           RESULTS_BUCKET: ${{ vars.TESTLAB_RESULTS_BUCKET }}
           TL_TIMEOUT: ${{ steps.driver.outputs.tl_timeout }}
