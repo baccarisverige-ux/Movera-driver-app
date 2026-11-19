@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -47,6 +49,34 @@ void main() {
     await tester.pump();
     expect(find.text('Driver home'), findsOneWidget);
     expect(find.text('Sign in'), findsNothing);
+  });
+
+  testWidgets('the root waits for the start claim (driver S1 SF4 a)', (
+    tester,
+  ) async {
+    // The start claim may clear another driver's kept session; the gate must
+    // not read the session (and open Home) before that claim has finished.
+    final tokens = MemoryTokenStore()..save(access: 'a', refresh: 'r');
+    final claim = Completer<void>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverSessionGate(
+          auth: controller(tokens),
+          ready: claim.future,
+          homeBuilder: () => const Scaffold(body: Text('Driver home')),
+          signInBuilder: () => const Scaffold(body: Text('Sign in')),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Driver home'), findsNothing);
+    // The claim drops the other driver's tokens, then finishes.
+    await tokens.clear();
+    claim.complete();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Driver home'), findsNothing);
   });
 
   test('the config defaults keep the demo on Home', () {

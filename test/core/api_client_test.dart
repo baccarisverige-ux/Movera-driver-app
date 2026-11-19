@@ -227,6 +227,34 @@ void main() {
       },
     );
 
+    test('a 401 on a call with its own bearer does not renew or end the '
+        'kept session (driver S1 SF4 b)', () async {
+      final tokens = MemoryTokenStore()..save(access: 'kept', refresh: 'r1');
+      final calls = <String>[];
+      var expired = 0;
+      final api = ApiClient(
+        client: MockClient((request) async {
+          calls.add(
+            '${request.method} ${request.url.path} '
+            '${request.headers['Authorization']}',
+          );
+          return json(401, {'code': 'unauthenticated', 'message': 'x'});
+        }),
+        baseUri: base,
+        tokens: tokens,
+        onSessionExpired: () async => expired++,
+      );
+      final error = await api
+          .post('/api/v1/auth/sign-out', bearer: 'refused')
+          .then<Object>((_) => 'no error', onError: (Object e) => e);
+      expect(error, isA<ApiError>());
+      expect((error as ApiError).statusCode, 401);
+      expect(calls, ['POST /api/v1/auth/sign-out Bearer refused']);
+      expect(expired, 0);
+      expect(await tokens.readAccess(), 'kept');
+      expect(await tokens.readRefresh(), 'r1');
+    });
+
     for (final status in [400, 401, 403]) {
       test('a $status from the refresh ends the session', () async {
         final tokens = MemoryTokenStore()..save(access: 'old', refresh: 'r1');
