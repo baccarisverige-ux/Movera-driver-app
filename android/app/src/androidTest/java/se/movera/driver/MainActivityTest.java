@@ -116,7 +116,109 @@ public class MainActivityTest {
       } catch (Exception e) {
         Log.w(TAG, "no mock target file: " + e.getClass().getSimpleName());
       }
+      // T7 (owner 2026-11-19 "You test with Firebase"): the Dart test turns
+      // the phone's Location or network off/on by writing one word into
+      // this file (location-off, location-on, net-off, net-on); the feeder
+      // runs it through the shell and writes what the phone then reports
+      // into the same name + ".ack". No values, only switch states.
+      File control = new File(app.getFilesDir(), "tl-control");
+      if (control.exists() && !control.delete()) {
+        Log.w(TAG, "old control file not removed");
+      }
+      controlFile = control;
+      try {
+        Os.setenv("MOVERA_TL_CONTROL_FILE", control.getAbsolutePath(), true);
+      } catch (Exception e) {
+        Log.w(TAG, "no control file: " + e.getClass().getSimpleName());
+      }
       startMockLocation(instrumentation, app);
+    }
+  }
+
+  private static File controlFile;
+
+  private static long controlStamp;
+
+  /** When the network was cut (0 = on): it is put back after [NET_OFF_MAX_MS] whatever the test does. */
+  private static long netOffSince;
+
+  private static final long NET_OFF_MAX_MS = 5 * 60 * 1000;
+
+  private static String shellOut(Instrumentation instrumentation, String command) {
+    ParcelFileDescriptor pfd = instrumentation.getUiAutomation().executeShellCommand(command);
+    StringBuilder text = new StringBuilder();
+    try (InputStream in = new FileInputStream(pfd.getFileDescriptor())) {
+      byte[] buffer = new byte[256];
+      int n;
+      while ((n = in.read(buffer)) != -1 && text.length() < 200) {
+        text.append(new String(buffer, 0, n, java.nio.charset.StandardCharsets.US_ASCII));
+      }
+    } catch (IOException e) {
+      return "?";
+    } finally {
+      try {
+        pfd.close();
+      } catch (IOException ignored) {
+        // Closed already.
+      }
+    }
+    return text.toString().trim().replace('\n', ' ');
+  }
+
+  private static void net(Instrumentation instrumentation, boolean on) {
+    shell(instrumentation, "cmd connectivity airplane-mode " + (on ? "disable" : "enable"));
+    shell(instrumentation, "svc wifi " + (on ? "enable" : "disable"));
+    shell(instrumentation, "svc data " + (on ? "enable" : "disable"));
+    netOffSince = on ? 0 : SystemClock.elapsedRealtime();
+  }
+
+  private static void location(Instrumentation instrumentation, boolean on) {
+    shell(instrumentation, "cmd location set-location-enabled " + on);
+    shell(instrumentation, "settings put secure location_mode " + (on ? "3" : "0"));
+  }
+
+  /** Runs a new word from [controlFile] (see prepare()); unknown words are ignored. */
+  private static void readControl(Instrumentation instrumentation) {
+    if (netOffSince != 0 && SystemClock.elapsedRealtime() - netOffSince > NET_OFF_MAX_MS) {
+      Log.w(TAG, "network off too long: put back on");
+      net(instrumentation, true);
+    }
+    File file = controlFile;
+    if (file == null || !file.exists()) return;
+    long stamp = file.lastModified() ^ file.length();
+    if (stamp == controlStamp) return;
+    controlStamp = stamp;
+    byte[] buffer = new byte[32];
+    int n;
+    try (InputStream in = new FileInputStream(file)) {
+      n = in.read(buffer);
+    } catch (IOException e) {
+      return;
+    }
+    if (n <= 0) return;
+    String word = new String(buffer, 0, n, java.nio.charset.StandardCharsets.US_ASCII).trim();
+    switch (word) {
+      case "location-off": location(instrumentation, false); break;
+      case "location-on": location(instrumentation, true); break;
+      case "net-off": net(instrumentation, false); break;
+      case "net-on": net(instrumentation, true); break;
+      default: return;
+    }
+    SystemClock.sleep(1500);
+    String state =
+        word
+            + " location_mode="
+            + shellOut(instrumentation, "settings get secure location_mode")
+            + " location="
+            + shellOut(instrumentation, "cmd location is-location-enabled")
+            + " airplane="
+            + shellOut(instrumentation, "settings get global airplane_mode_on");
+    Log.i(TAG, "control " + state);
+    File ack = new File(file.getAbsolutePath() + ".ack");
+    try (java.io.FileOutputStream outStream = new java.io.FileOutputStream(ack)) {
+      outStream.write(state.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+    } catch (IOException e) {
+      Log.w(TAG, "control ack: " + e.getClass().getSimpleName());
     }
   }
 
@@ -159,6 +261,9 @@ public class MainActivityTest {
 
   private static long targetStamp;
 
+  /** Speed of the mock fixes in m/s (third value in the target file, default 0 = standing). */
+  private static volatile float targetSpeed;
+
   /** Reads a new "lat,lng" from [targetFile] when it changed; bad text is ignored. */
   private static void readTarget() {
     File file = targetFile;
@@ -176,7 +281,13 @@ public class MainActivityTest {
     if (n <= 0) return;
     String[] parts = new String(buffer, 0, n, java.nio.charset.StandardCharsets.US_ASCII)
         .trim().split(",");
-    if (parts.length != 2) return;
+    if (parts.length != 2 && parts.length != 3) return;
+    float speed = 0f;
+    if (parts.length == 3) {
+      double parsed = parse(parts[2], Double.NaN);
+      if (Double.isNaN(parsed) || parsed < 0 || parsed > 60) return;
+      speed = (float) parsed;
+    }
     double lat = parse(parts[0], Double.NaN);
     double lng = parse(parts[1], Double.NaN);
     if (Double.isNaN(lat) || Double.isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
@@ -184,6 +295,7 @@ public class MainActivityTest {
     }
     targetLat = lat;
     targetLng = lng;
+    targetSpeed = speed;
     // Coordinates are not personal data; logged so a run shows the moves.
     Log.i(TAG, "mock target moved");
   }
@@ -214,6 +326,7 @@ public class MainActivityTest {
         new Thread(
             () -> {
               while (true) {
+                readControl(instrumentation);
                 readTarget();
                 final double lat = targetLat;
                 final double lng = targetLng;
@@ -281,8 +394,8 @@ public class MainActivityTest {
         lng + (JITTER.nextDouble() * 2 - 1) * JITTER_DEG / Math.cos(Math.toRadians(lat)));
     location.setAccuracy(5f);
     location.setAltitude(20);
-    location.setSpeed(0f);
-    location.setBearing(0f);
+    location.setSpeed(targetSpeed);
+    location.setBearing(targetSpeed > 0 ? 90f : 0f);
     location.setTime(System.currentTimeMillis());
     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
     if (Build.VERSION.SDK_INT >= 26) {
