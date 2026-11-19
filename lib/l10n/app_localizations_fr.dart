@@ -811,6 +811,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authErrSendCode => 'Impossible d’envoyer le code. Réessayez.';
 
   @override
+  String get authErrSmsNotSent =>
+      'Nous n’avons pas pu envoyer le SMS. Vérifiez le numéro et réessayez.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'Nous ne pouvons plus envoyer de codes par SMS pour le moment. Réessayez plus tard.';
+
+  @override
   String get authErrCheckCode => 'Impossible de vérifier le code. Réessayez.';
 
   @override

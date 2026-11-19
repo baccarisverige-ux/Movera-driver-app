@@ -794,6 +794,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrSendCode => 'Couldn\'t send the code. Try again.';
 
   @override
+  String get authErrSmsNotSent =>
+      'We could not send the SMS. Check the number and try again.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'We cannot send more SMS codes right now. Try again later.';
+
+  @override
   String get authErrCheckCode => 'Couldn\'t check the code. Try again.';
 
   @override

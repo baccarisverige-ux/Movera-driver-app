@@ -103,6 +103,10 @@
   "authErrWrongCode": "That code isn't right. Check it and try again.",
   "authCodeExpired": "This code has expired. Tap Resend code for a new one.",
   "authErrSendCode": "Couldn't send the code. Try again.",
+  "authErrSmsNotSent": "We could not send the SMS. Check the number and try again.",
+  "@authErrSmsNotSent": {"description": "Contract v0.18.135 smsSignIn.texts.smsNotSent (503 unavailable, reason sms_not_sent)."},
+  "authErrSmsDailyLimit": "We cannot send more SMS codes right now. Try again later.",
+  "@authErrSmsDailyLimit": {"description": "Contract v0.18.135 smsSignIn.texts.smsDailyLimit (503 unavailable, reason sms_daily_limit)."},
   "authErrCheckCode": "Couldn't check the code. Try again.",
   "authSignInRestricted": "This number isn’t open for sign-in yet. Join the waiting list and we’ll let you know.",
   "@authSignInRestricted": {
