@@ -1,6 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/auth_error_message.dart';
+import 'package:movera/core/auth/auth_repository.dart';
+import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 
 /// Contract v0.18.135 `smsSignIn.errors` (owner 2026-11-19 "Yes, build it
@@ -24,6 +31,41 @@ void main() {
   );
 
   tearDown(() => DriverAppTexts.language = 'en');
+
+  test(
+    'the code request carries the app language, so the SMS is written '
+    'in it (contract smsSignIn.language); another language sends none',
+    () async {
+      final bodies = <Map<String, dynamic>>[];
+      final api = ApiClient(
+        client: MockClient((request) async {
+          bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
+          return http.Response(
+            jsonEncode({
+              'sessionId': 'otp-1',
+              'expiresAt': '2030-01-01T10:00:00Z',
+              'retryAfterSeconds': 30,
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+        baseUri: Uri.parse('https://api.test.movera.se'),
+        tokens: MemoryTokenStore(),
+      );
+      final repo = AuthRepository(api: api, tokens: MemoryTokenStore());
+      for (final lang in const ['sv', 'fr', 'en', 'de']) {
+        DriverAppTexts.language = lang;
+        await repo.requestCode('+46 70 123 45 67');
+      }
+      expect(
+        [for (final body in bodies) body['locale']],
+        ['sv', 'fr', 'en', null],
+      );
+      expect(bodies.first['phone'], '+46701234567');
+      expect(bodies.first['app'], 'driver');
+    },
+  );
 
   test('sms_not_sent: the SMS could not be sent, in sv / fr / en '
       '(contract smsSignIn.texts.smsNotSent)', () {

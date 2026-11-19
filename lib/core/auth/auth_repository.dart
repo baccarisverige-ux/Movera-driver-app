@@ -2,6 +2,7 @@ import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/token_store.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 /// Phone sign-in over the contract's auth endpoints, saving the session
@@ -20,6 +21,9 @@ class AuthRepository {
   static const signOutPath = '/api/v1/auth/sign-out';
   static const waitlistPath = '/api/v1/auth/waitlist';
 
+  /// The languages the server writes the code SMS in (contract `languages`).
+  static const _smsLanguages = {'sv', 'fr', 'en'};
+
   /// A 4-digit code, as the server checks it.
   static bool isValidCode(String code) => RegExp(r'^\d{4}$').hasMatch(code);
 
@@ -36,6 +40,10 @@ class AuthRepository {
         'phone': normalized,
         'app': 'driver',
         if (link != null) 'linkToken': link.linkToken,
+        // Contract §8 OtpRequest.locale (v0.18.135 smsSignIn.language): the
+        // SMS with the code is written in the app's language.
+        if (_smsLanguages.contains(DriverAppTexts.language))
+          'locale': DriverAppTexts.language,
       },
       authenticated: false,
       timeout: ApiClient.signInTimeout,
