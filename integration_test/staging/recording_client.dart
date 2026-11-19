@@ -100,8 +100,148 @@ class RecordingClient extends http.BaseClient {
   /// Calls made since [mark] (an earlier [length]).
   List<RecordedCall> since(int mark) => calls.sublist(mark);
 
+  // ---- L20 one stream (test only; `trip-one-stream` scenario) ----------
+
+  static const String oneStreamPath = '/api/v1/driver/stream';
+
+  /// Test seam (no production switch): every `GET /driver/config` answer
+  /// the app reads says `realtime.oneStream: true`, as if an admin had
+  /// turned the zone's switch on. Staging is not changed; only this
+  /// phone's copy of the answer.
+  bool forceOneStream = false;
+
+  /// Arm once: the next `GET /driver/stream` that carries a cursor
+  /// `<offer seq>.<config version>` asks from config version - 1, so the
+  /// server sends the live settings (`config_published`) on the one stream.
+  bool lowerConfigCursorOnce = false;
+
+  /// The cursor the test lowered (offer half kept), null when not yet.
+  String? loweredCursor;
+
+  /// Event kinds that arrived on `GET /driver/stream` (in order), with the
+  /// time each came; never the event body.
+  final List<(DateTime, String)> oneStreamKinds = <(DateTime, String)>[];
+
+  /// Long-lived streams now open, by path (`.../stream`, `.../events`).
+  final Map<String, int> openStreams = <String, int>{};
+
+  final List<StreamController<List<int>>> _oneStreamPipes =
+      <StreamController<List<int>>>[];
+
+  int openCount(String path) => openStreams[path] ?? 0;
+
+  /// Ends the one stream as a network drop would (the app reconnects).
+  Future<void> cutOneStream() async {
+    for (final pipe in List.of(_oneStreamPipes)) {
+      await pipe.close();
+    }
+  }
+
+  http.BaseRequest _lowered(http.BaseRequest request) {
+    final url = request.url;
+    final after = url.queryParameters['after'];
+    final parts = after == null ? null : RegExp(r'^(\d+)\.(\d+)$').firstMatch(after);
+    final version = parts == null ? null : int.parse(parts.group(2)!);
+    if (parts == null || version == null || version < 1) return request;
+    lowerConfigCursorOnce = false;
+    final cursor = '${parts.group(1)}.${version - 1}';
+    loweredCursor = cursor;
+    final copy = http.Request(
+      request.method,
+      url.replace(queryParameters: {...url.queryParameters, 'after': cursor}),
+    )..headers.addAll(request.headers);
+    copy.headers.removeWhere((k, _) => k.toLowerCase() == 'last-event-id');
+    copy.headers['Last-Event-ID'] = cursor;
+    return copy;
+  }
+
+  http.StreamedResponse _watchStream(
+    String path,
+    http.StreamedResponse response,
+  ) {
+    openStreams[path] = openCount(path) + 1;
+    final one = path == oneStreamPath;
+    var closed = false;
+    void done() {
+      if (closed) return;
+      closed = true;
+      openStreams[path] = openCount(path) - 1;
+    }
+
+    late final StreamController<List<int>> pipe;
+    StreamSubscription<List<int>>? sub;
+    final lines = StringBuffer();
+    void read(List<int> chunk) {
+      if (!one) return;
+      lines.write(utf8.decode(chunk, allowMalformed: true));
+      final text = lines.toString();
+      final cut = text.lastIndexOf('\n');
+      if (cut < 0) return;
+      lines
+        ..clear()
+        ..write(text.substring(cut + 1));
+      for (final line in text.substring(0, cut).split('\n')) {
+        if (!line.startsWith('data:')) continue;
+        try {
+          final event = jsonDecode(line.substring(5).trim());
+          if (event is Map && event['kind'] is String) {
+            oneStreamKinds.add((DateTime.now(), event['kind'] as String));
+          }
+        } catch (_) {
+          // A data line split over lines: not counted.
+        }
+      }
+    }
+
+    pipe = StreamController<List<int>>(
+      onListen: () {
+        sub = response.stream.listen(
+          (chunk) {
+            read(chunk);
+            if (!pipe.isClosed) pipe.add(chunk);
+          },
+          onError: (Object e, StackTrace s) {
+            if (!pipe.isClosed) pipe.addError(e, s);
+          },
+          onDone: () {
+            if (!pipe.isClosed) unawaited(pipe.close());
+          },
+        );
+      },
+      onCancel: () async {
+        done();
+        _oneStreamPipes.remove(pipe);
+        await sub?.cancel();
+      },
+    );
+    unawaited(
+      pipe.done.whenComplete(() {
+        done();
+        _oneStreamPipes.remove(pipe);
+        unawaited(sub?.cancel());
+      }),
+    );
+    if (one) _oneStreamPipes.add(pipe);
+    return http.StreamedResponse(
+      pipe.stream,
+      response.statusCode,
+      contentLength: response.contentLength,
+      request: response.request,
+      headers: response.headers,
+      isRedirect: response.isRedirect,
+      persistentConnection: response.persistentConnection,
+      reasonPhrase: response.reasonPhrase,
+    );
+  }
+
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+  Future<http.StreamedResponse> send(http.BaseRequest original) async {
+    final request =
+        lowerConfigCursorOnce &&
+            original.url.path == oneStreamPath &&
+            original.url.host == apiHost
+        ? _lowered(original)
+        : original;
     final url = request.url;
     final call = RecordedCall(
       at: DateTime.now(),
@@ -129,6 +269,11 @@ class RecordingClient extends http.BaseClient {
       ..status = response.statusCode
       ..took = watch.elapsed;
     final type = response.headers['content-type'] ?? '';
+    if (url.host == apiHost &&
+        response.statusCode == 200 &&
+        type.contains('event-stream')) {
+      return _watchStream(url.path, response);
+    }
     final keep =
         url.host == apiHost &&
         keeps(url.path) &&
@@ -138,7 +283,35 @@ class RecordingClient extends http.BaseClient {
     // Read the (small) JSON answer once and hand the app the same bytes.
     final bytes = await response.stream.toBytes();
     try {
-      final decoded = jsonDecode(utf8.decode(bytes));
+      var decoded = jsonDecode(utf8.decode(bytes));
+      if (forceOneStream &&
+          url.path == '/api/v1/driver/config' &&
+          decoded is Map<String, dynamic> &&
+          response.statusCode == 200) {
+        final realtime = decoded['realtime'];
+        decoded = <String, dynamic>{
+          ...decoded,
+          'realtime': <String, dynamic>{
+            if (realtime is Map) ...Map<String, dynamic>.from(realtime),
+            'oneStream': true,
+          },
+        };
+        final patched = utf8.encode(jsonEncode(decoded));
+        call.answer = decoded;
+        lastAnswer[url.path] = decoded;
+        final headers = Map<String, String>.from(response.headers)
+          ..remove('content-length');
+        return http.StreamedResponse(
+          Stream<List<int>>.value(patched),
+          response.statusCode,
+          contentLength: patched.length,
+          request: response.request,
+          headers: headers,
+          isRedirect: response.isRedirect,
+          persistentConnection: response.persistentConnection,
+          reasonPhrase: response.reasonPhrase,
+        );
+      }
       call.answer = decoded;
       lastAnswer[url.path] = decoded;
     } catch (_) {

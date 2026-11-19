@@ -17,7 +17,7 @@ on:
         description: 'Firebase Test Lab: run a test of the newest APK on this real phone (empty = no Test Lab run). Example: model=oriole,version=33'
         default: ''
       testlab_test:
-        description: 'Test Lab kind: robo (taps around, no sign-in); staging-checks (one test driver from the MOVERA_TEST_NUMBERS secret: online, G24, G17, G27, offline); trip-lifecycle (driver app on the phone + a test rider over HTTP: one whole live cash trip, chat, call, SOS, ride check, every screen change); trip-scheduled (the same with a booked-for-later ride and its cancel case); trip-frozen (T7: long-stop ride check with Location off / no network, ~25 min)'
+        description: 'Test Lab kind: robo (taps around, no sign-in); staging-checks (one test driver from the MOVERA_TEST_NUMBERS secret: online, G24, G17, G27, offline); trip-lifecycle (driver app on the phone + a test rider over HTTP: one whole live cash trip, chat, call, SOS, ride check, every screen change); trip-scheduled (the same with a booked-for-later ride and its cancel case); trip-frozen (T7: long-stop ride check with Location off / no network, ~25 min); trip-one-stream (L20: the app on GET /driver/stream via a test-only config answer, settings event + offer on the one stream)'
         type: choice
         options:
           - robo
@@ -25,6 +25,7 @@ on:
           - trip-lifecycle
           - trip-scheduled
           - trip-frozen
+          - trip-one-stream
         default: robo
 
 permissions:
@@ -290,6 +291,8 @@ jobs:
             # T7 (owner 2026-11-19 "You test with Firebase"): every stop 7 min
             # later (TripRun.frozenExtra): hard 22m -> test 25m -> Test Lab 30m.
             trip-frozen) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=30m; scenario=frozen ;;
+            # L20 (contract v0.18.122): a short trip, same stops as trip-lifecycle.
+            trip-one-stream) mode=trip; target=integration_test/trip_lifecycle_test.dart; tl_timeout=25m; scenario=onestream ;;
             *) echo "::error::unknown testlab_test"; exit 1 ;;
           esac
           python3 -I tool/testlab_summary.py "$mode" "$RUNNER_TEMP/tl"
