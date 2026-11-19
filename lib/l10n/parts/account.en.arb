@@ -240,6 +240,27 @@
       }
     }
   },
+  "walletPayoutEarned": "Earned",
+  "@walletPayoutEarned": {
+    "description": "S5 J15 payout card line (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'driver payout 3 lines'): server amount, nothing worked out."
+  },
+  "walletPayoutOwedToMovera": "Owed to Movera",
+  "@walletPayoutOwedToMovera": {
+    "description": "S5 J15 payout card line (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'driver payout 3 lines'): server amount, nothing worked out."
+  },
+  "walletPayoutPaidOut": "Paid out",
+  "@walletPayoutPaidOut": {
+    "description": "S5 J15 payout card line (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'driver payout 3 lines'): server amount, nothing worked out."
+  },
+  "walletPayoutMovesNextWeek": "Moves to next week: {amount}",
+  "@walletPayoutMovesNextWeek": {
+    "description": "S5 J15 payout card 4th line, only when carriedOut > 0 (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'carry line only when needed'); amount = the server's carriedOut.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "contactChangePhone": "Change phone number",
   "@contactChangePhone": {
     "description": "Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange)."

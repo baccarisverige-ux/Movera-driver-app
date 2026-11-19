@@ -970,6 +970,30 @@ abstract class AppLocalizations {
   /// **'Next payout: {when}'**
   String walletNextPayout(String when);
 
+  /// S5 J15 payout card line (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'driver payout 3 lines'): server amount, nothing worked out.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned'**
+  String get walletPayoutEarned;
+
+  /// S5 J15 payout card line (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'driver payout 3 lines'): server amount, nothing worked out.
+  ///
+  /// In en, this message translates to:
+  /// **'Owed to Movera'**
+  String get walletPayoutOwedToMovera;
+
+  /// S5 J15 payout card line (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'driver payout 3 lines'): server amount, nothing worked out.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid out'**
+  String get walletPayoutPaidOut;
+
+  /// S5 J15 payout card 4th line, only when carriedOut > 0 (contract v0.18.133 payoutLines.driver; owner 2026-11-19 'carry line only when needed'); amount = the server's carriedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves to next week: {amount}'**
+  String walletPayoutMovesNextWeek(String amount);
+
   /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
   ///
   /// In en, this message translates to:
