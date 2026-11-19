@@ -563,6 +563,16 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// Opens `GET /driver/offers/stream` (SSE) from [lastSequence]. An
   /// error answer, a dropped connection or a feed the server ends is
   /// retried with backoff from the last sequence; [feedLive] says when.
+  /// Lets go of an answer that is not kept: a 200 (an open event stream)
+  /// is cancelled at once, an error body is read to its end.
+  static void _discard(http.StreamedResponse response) {
+    if (response.statusCode == 200) {
+      unawaited(response.stream.listen(null).cancel());
+    } else {
+      unawaited(response.stream.drain<void>().catchError((_) {}));
+    }
+  }
+
   Future<void> connect() async {
     _wanted = true;
     _feedOpen = true;
@@ -618,7 +628,9 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       return;
     }
     if (generation != _generation) {
-      unawaited(response.stream.drain<void>().catchError((_) {}));
+      // L20 fix: a stale answer is closed at once; draining a 200 event
+      // stream would keep that connection open for as long as it lives.
+      _discard(response);
       return;
     }
     if (response.statusCode == 404 && _oneMode) {
@@ -671,7 +683,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       return;
     }
     if (_disposed || !_wanted) {
-      unawaited(response.stream.drain<void>().catchError((_) {}));
+      _discard(response);
       return;
     }
     // D2 (fix plan 2026-11-13, owner R3): a 200 alone is not "connected".
