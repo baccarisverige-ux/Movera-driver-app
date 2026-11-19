@@ -144,6 +144,7 @@ class CheckLog {
   /// `<NAME>-JSON` line, so the summary has it even when no file is pulled.
   Future<void> write({
     required List<String> requestLog,
+    List<String> streamLog = const [],
     Map<String, List<Map<String, Object?>>> extra = const {},
   }) async {
     final passed = results.where((r) => r.outcome == CheckOutcome.pass);
@@ -174,6 +175,11 @@ class CheckLog {
       await File(
         '$dir/requests.txt',
       ).writeAsString('${requestLog.join('\n')}\n', flush: true);
+      if (streamLog.isNotEmpty) {
+        await File(
+          '$dir/streams.txt',
+        ).writeAsString('${streamLog.join('\n')}\n', flush: true);
+      }
     } catch (error) {
       step('summary file not written (${error.runtimeType})');
     }

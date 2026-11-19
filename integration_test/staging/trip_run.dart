@@ -370,6 +370,7 @@ class TripRun extends StagingSession {
     _written = true;
     await log.write(
       requestLog: [for (final c in rec.calls) '$c'],
+      streamLog: rec.streamLog,
       extra: {'transitions': watch.rows},
     );
     log.end();

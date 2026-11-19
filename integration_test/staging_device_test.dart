@@ -92,7 +92,10 @@ void main() {
       await run.start();
       await run.all(phone: phone!, code: code!);
     } finally {
-      await log.write(requestLog: [for (final c in run.rec.calls) '$c']);
+      await log.write(
+        requestLog: [for (final c in run.rec.calls) '$c'],
+        streamLog: run.rec.streamLog,
+      );
       log.end();
     }
     final failed = log.failures;

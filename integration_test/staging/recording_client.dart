@@ -37,6 +37,11 @@ class RecordedCall {
   /// for the checks; never printed).
   Object? answer;
 
+  /// L20 wire log only (`/driver/stream`, `/driver/config*`): the full
+  /// path + query (secret-looking values stripped) and the Last-Event-ID
+  /// header value. Never the Authorization header.
+  String? wire;
+
   bool get failed => error != null || (status != null && status! >= 400);
 
   /// Location sends and long-lived event streams are not "page reads".
@@ -45,8 +50,11 @@ class RecordedCall {
       path.endsWith('/events') ||
       path == '/api/v1/driver/location';
 
-  String get label =>
-      '$method $path${queryNames.isEmpty ? '' : '?${queryNames.join('&')}'}';
+  String get label {
+    if (wire != null) return '$method $wire';
+    final names = queryNames.isEmpty ? '' : '?${queryNames.join('&')}';
+    return '$method $path$names';
+  }
 
   @override
   String toString() =>
@@ -133,6 +141,35 @@ class RecordingClient extends http.BaseClient {
   final List<StreamController<List<int>>> _oneStreamPipes =
       <StreamController<List<int>>>[];
 
+  /// Raw SSE lines per stream response (first [streamLogLimit] bytes of
+  /// each), with a timestamp, for `streams.txt`. Data lines on these
+  /// streams carry offers/config, never a token.
+  final List<String> streamLog = <String>[];
+  static const int streamLogLimit = 2048;
+  int _streamSeq = 0;
+
+  static bool wired(String path) =>
+      path == oneStreamPath || path.startsWith('/api/v1/driver/config');
+
+  static final RegExp _secretName = RegExp(
+    r'token|auth|key|secret|code|password|sig',
+    caseSensitive: false,
+  );
+
+  static String wireOf(http.BaseRequest request) {
+    final url = request.url;
+    final query = <String, String>{
+      for (final e in url.queryParameters.entries)
+        e.key: _secretName.hasMatch(e.key) ? '[stripped]' : e.value,
+    };
+    String? lastId;
+    request.headers.forEach((k, v) {
+      if (k.toLowerCase() == 'last-event-id') lastId = v;
+    });
+    final q = query.isEmpty ? '' : '?${Uri(queryParameters: query).query}';
+    return '${url.path}$q [Last-Event-ID: ${lastId ?? '-'}]';
+  }
+
   int openCount(String path) => openStreams[path] ?? 0;
 
   /// Ends the one stream as a network drop would (the app reconnects).
@@ -175,6 +212,40 @@ class RecordingClient extends http.BaseClient {
       openStreams[path] = openCount(path) - 1;
     }
 
+    final wire = wired(path);
+    final id = ++_streamSeq;
+    var logged = 0;
+    final rawRest = StringBuffer();
+    if (wire) {
+      streamLog.add(
+        '${DateTime.now().toUtc().toIso8601String()} #$id OPEN $path '
+        'status=${response.statusCode}',
+      );
+    }
+    void raw(List<int> chunk) {
+      if (!wire || logged >= streamLogLimit) return;
+      final take = chunk.length > streamLogLimit - logged
+          ? chunk.sublist(0, streamLogLimit - logged)
+          : chunk;
+      logged += take.length;
+      rawRest.write(utf8.decode(take, allowMalformed: true));
+      final text = rawRest.toString();
+      final cut = text.lastIndexOf('\n');
+      final now = DateTime.now().toUtc().toIso8601String();
+      streamLog.add('$now #$id CHUNK ${chunk.length} bytes');
+      if (cut >= 0) {
+        rawRest
+          ..clear()
+          ..write(text.substring(cut + 1));
+        for (final line in text.substring(0, cut).split('\n')) {
+          streamLog.add('$now #$id | ${line.replaceAll('\r', '')}');
+        }
+      }
+      if (logged >= streamLogLimit) {
+        streamLog.add('$now #$id (2 KB log limit reached)');
+      }
+    }
+
     late final StreamController<List<int>> pipe;
     StreamSubscription<List<int>>? sub;
     final lines = StringBuffer();
@@ -204,6 +275,7 @@ class RecordingClient extends http.BaseClient {
       onListen: () {
         sub = response.stream.listen(
           (chunk) {
+            raw(chunk);
             read(chunk);
             if (!pipe.isClosed) pipe.add(chunk);
           },
@@ -211,11 +283,23 @@ class RecordingClient extends http.BaseClient {
             if (!pipe.isClosed) pipe.addError(e, s);
           },
           onDone: () {
+            if (wire) {
+              streamLog.add(
+                '${DateTime.now().toUtc().toIso8601String()} #$id DONE '
+                '(server ended)',
+              );
+            }
             if (!pipe.isClosed) unawaited(pipe.close());
           },
         );
       },
       onCancel: () async {
+        if (wire) {
+          streamLog.add(
+            '${DateTime.now().toUtc().toIso8601String()} #$id CANCEL '
+            '(app stopped listening)',
+          );
+        }
         done();
         _oneStreamPipes.remove(pipe);
         await sub?.cancel();
@@ -256,6 +340,16 @@ class RecordingClient extends http.BaseClient {
       path: url.path,
       queryNames: url.queryParameters.keys.toList()..sort(),
     )..zoneId = url.queryParameters['zoneId'];
+    if (url.host == apiHost && wired(url.path)) {
+      call.wire = wireOf(request);
+      final note = identical(request, original)
+          ? ''
+          : ' (lowered by test; app sent ${wireOf(original)})';
+      streamLog.add(
+        '${call.at.toUtc().toIso8601String()} REQUEST ${request.method} '
+        '${call.wire}$note',
+      );
+    }
     calls.add(call);
     if (url.host == apiHost) {
       final auth =
@@ -267,6 +361,12 @@ class RecordingClient extends http.BaseClient {
     try {
       response = await _inner.send(request);
     } catch (error) {
+      if (call.wire != null) {
+        streamLog.add(
+          '${DateTime.now().toUtc().toIso8601String()} ERROR ${call.wire} '
+          '${error.runtimeType}',
+        );
+      }
       call
         ..error = error.runtimeType.toString()
         ..took = watch.elapsed;
