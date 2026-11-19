@@ -122,6 +122,33 @@ jobs:
             printf '%s\n' '<!doctype html><meta http-equiv="refresh" content="0;url=/Movera-driver-app/live/"><link rel="canonical" href="/Movera-driver-app/live/"><script>location.replace("/Movera-driver-app/live/")</script>' > "$RUNNER_TEMP/site/$page"
           done
 
+      # Owner 2026-11-19 (Rules plan/NEW-SERVER-PLAN.md option a): the REAL driver app for the new real server, at
+      # /Movera-driver-app/app/, in the same Pages deploy. Built only when the repository variable
+      # MOVERA_PROD_API_URL is set; while it is not set this step is skipped and the site is exactly as before.
+      # It runs after "Assemble the site", so /live/ (the test app) is already copied and never changes here.
+      - name: Build and add the real driver web (new real server)
+        if: ${{ vars.MOVERA_PROD_API_URL != '' }}
+        env:
+          PROD_API: ${{ vars.MOVERA_PROD_API_URL }}
+          LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
+        run: |
+          case "$PROD_API" in https://*) ;; *) echo "::error::MOVERA_PROD_API_URL must start with https://"; exit 1 ;; esac
+          # Never a "real" app that talks to the test server.
+          if [ "${PROD_API%/}" = "${LIVE_API%/}" ]; then
+            echo "::error::MOVERA_PROD_API_URL is the test server (same as MOVERA_LIVE_API_URL)."
+            exit 1
+          fi
+          app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
+          # The same build as "Build live Drider web"; only the server address and the folder differ.
+          flutter build web --release --wasm --base-href "/Movera-driver-app/app/" \
+            --dart-define=MOVERA_AUTH_REQUIRED=true \
+            --dart-define=MOVERA_API_BASE_URL="$PROD_API" \
+            --dart-define=MOVERA_APP_VERSION="$app_version"
+          sed -i "s|  <!-- MOVERA_API_PRECONNECT -->|  <link rel=\"preconnect\" href=\"${PROD_API%/}\" crossorigin>|" build/web/index.html
+          cp -a build/web "$RUNNER_TEMP/site/app"
+          # A lost path under /app/ must reopen the REAL app, never the test app at /live/.
+          printf '%s\n' '<!doctype html><script>location.replace(location.pathname.indexOf("/Movera-driver-app/app/")===0?"/Movera-driver-app/app/":"/Movera-driver-app/live/")</script>' > "$RUNNER_TEMP/site/404.html"
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
