@@ -42,3 +42,48 @@ class StartCleanUp {
 class StartCleanUpAbandoned implements Exception {
   const StartCleanUpAbandoned();
 }
+
+/// The start clean-up of `main.dart` (`_claimKeptSession`), testable on its
+/// own. [claim] makes the local data the kept [readAccess] session's
+/// driver's: it runs the clear it is given when another driver is
+/// recorded and must call the guard right before it records the owner.
+/// [clear] gets the guard too and calls it before each destructive step,
+/// so a clean-up that resumes after a sign-in overtook it
+/// ([StartCleanUp.beforeSignIn]) stops before it deletes or records
+/// anything of the new driver. A clean-up that fails ends the session
+/// ([endSession], tokens first, then [signedOut]); an abandoned one never
+/// does: the new driver's tokens stay.
+Future<void> claimKeptSession({
+  required StartCleanUp Function() cleanUp,
+  required Future<String?> Function() readAccess,
+  required Future<void> Function(
+    String? session,
+    Future<void> Function() clear,
+    void Function() guard,
+  )
+  claim,
+  required Future<void> Function(void Function() guard) clear,
+  required Future<void> Function(String? session) endSession,
+  required void Function() signedOut,
+}) async {
+  String? session;
+  void guard() => cleanUp().check();
+  try {
+    session = await readAccess();
+    await claim(session, () async {
+      guard();
+      await clear(guard);
+      guard();
+    }, guard);
+  } on StartCleanUpAbandoned {
+    // The sign-in cleared everything itself; its tokens stay.
+  } catch (_) {
+    if (cleanUp().abandoned) return;
+    try {
+      await endSession(session);
+    } catch (_) {
+      // A token store that cannot be read or cleared: nothing more.
+    }
+    signedOut();
+  }
+}

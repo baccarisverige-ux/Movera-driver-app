@@ -622,29 +622,19 @@ class _MoveraAppState extends State<MoveraApp> {
   /// anything reads local data; one that cannot finish ends that session
   /// (tokens first) and Sign in shows. The same driver, nobody recorded
   /// or no session: nothing to do (the driver is recorded when nobody is).
-  Future<void> _claimKeptSession() async {
-    String? session;
-    try {
-      session = await _tokens.readAccess();
-      await claimLocalData(tokenDriver(session), () async {
-        // N1: a sign-in overtook this clean-up: hands off its data.
-        _startCleanUp.check();
-        _account.clear();
-        await _clearLocal();
-        _startCleanUp.check();
-      });
-    } on StartCleanUpAbandoned {
-      // The sign-in cleared everything itself; its tokens stay.
-    } catch (_) {
-      if (_startCleanUp.abandoned) return;
-      try {
-        await _auth.endSessionHereFirst(session: session);
-      } catch (_) {
-        // A token store that cannot be read or cleared: nothing more.
-      }
-      _live?.signedOut();
-    }
-  }
+  Future<void> _claimKeptSession() => claimKeptSession(
+    cleanUp: () => _startCleanUp,
+    readAccess: _tokens.readAccess,
+    claim: (session, clear, guard) =>
+        claimLocalData(tokenDriver(session), clear, guard),
+    // N1: a sign-in overtook this clean-up: hands off its data.
+    clear: (guard) async {
+      _account.clear();
+      await _clearLocal(guard: guard);
+    },
+    endSession: (session) => _auth.endSessionHereFirst(session: session),
+    signedOut: () => _live?.signedOut(),
+  );
 
   /// A sign-in. A refused session ([_sessionExpired]) keeps the local data
   /// for the same driver; another driver's sign-in clears it first, and
@@ -699,13 +689,17 @@ class _MoveraAppState extends State<MoveraApp> {
   }
 
   /// Everything one driver left on this phone, in storage and in memory.
-  Future<void> _clearLocal() async {
+  /// [guard] (the start clean-up's, N1) runs before each destructive step
+  /// and throws once a sign-in overtook it, so nothing of the new driver
+  /// is deleted or reset.
+  Future<void> _clearLocal({void Function()? guard}) async {
     await PrefsActiveRideRepository.settle();
     await CompletionJournal.settle();
     await SettingsRepository.settle();
     // The owner key stays until the in-memory resets below are done too
     // (post-merge 2026-11-15d S1).
-    await clearLocalUserData(keepOwner: true);
+    await clearLocalUserData(keepOwner: true, guard: guard);
+    guard?.call();
     // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
@@ -735,6 +729,7 @@ class _MoveraAppState extends State<MoveraApp> {
     IslandMessages.clear();
     // Only now: a clean-up that stopped above keeps the last driver
     // recorded, so the next driver's sign-in runs it again.
+    guard?.call();
     await forgetLocalDataOwner();
   }
 
