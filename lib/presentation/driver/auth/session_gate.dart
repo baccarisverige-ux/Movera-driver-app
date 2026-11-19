@@ -7,6 +7,7 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/privacy/start_clean_up.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 
@@ -83,7 +84,16 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
   Future<_Root> _decide() async {
     final bool signedIn;
     try {
-      await widget.ready;
+      final ready = widget.ready;
+      if (ready != null) {
+        // Owner 2026-11-19 (N1): a clean-up past the limit shows Sign in;
+        // the session is not read (the next sign-in clears first).
+        try {
+          await ready.timeout(StartCleanUp.limit);
+        } on TimeoutException {
+          return _Root.signIn;
+        }
+      }
       signedIn = await widget.auth.hasSession();
     } catch (_) {
       return _Root.signIn;

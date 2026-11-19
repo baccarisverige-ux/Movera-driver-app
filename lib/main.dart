@@ -50,6 +50,7 @@ import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/open_trip_screens.dart';
 import 'package:movera/core/privacy/local_data.dart';
+import 'package:movera/core/privacy/start_clean_up.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/settings/server_settings_sync.dart';
 import 'package:movera/core/routing/road_route_service.dart';
@@ -368,6 +369,7 @@ class _MoveraAppState extends State<MoveraApp> {
     _startClaim = DriverRuntimeConfig.current.authRequired
         ? _claimKeptSession()
         : Future<void>.value();
+    _startCleanUp = StartCleanUp(_startClaim);
     unawaited(
       _startClaim.then((_) {
         if (!mounted) return;
@@ -610,6 +612,9 @@ class _MoveraAppState extends State<MoveraApp> {
   /// there is no session); the restores and the gate wait for it.
   late final Future<void> _startClaim;
 
+  /// N1: the start clean-up's limit and its re-run at the next sign-in.
+  late final StartCleanUp _startCleanUp;
+
   /// Post-merge S1 round 2 (SF1): another driver's sign-in saves his
   /// tokens before the last driver's data is cleared. An app killed in
   /// that clean-up starts again with his session next to what is left,
@@ -621,11 +626,17 @@ class _MoveraAppState extends State<MoveraApp> {
     String? session;
     try {
       session = await _tokens.readAccess();
-      await claimLocalData(tokenDriver(session), () {
+      await claimLocalData(tokenDriver(session), () async {
+        // N1: a sign-in overtook this clean-up: hands off its data.
+        _startCleanUp.check();
         _account.clear();
-        return _clearLocal();
+        await _clearLocal();
+        _startCleanUp.check();
       });
+    } on StartCleanUpAbandoned {
+      // The sign-in cleared everything itself; its tokens stay.
     } catch (_) {
+      if (_startCleanUp.abandoned) return;
       try {
         await _auth.endSessionHereFirst(session: session);
       } catch (_) {
@@ -641,6 +652,13 @@ class _MoveraAppState extends State<MoveraApp> {
   Future<void> _signedIn() async {
     String? session;
     try {
+      // N1: a start clean-up still running (past the limit) is abandoned
+      // and everything is cleared first.
+      await _startCleanUp.beforeSignIn(() async {
+        _account.clear();
+        await _clearLocal();
+        await forgetLocalDataOwner();
+      });
       session = await _tokens.readAccess();
       await claimLocalData(tokenDriver(session), () {
         _account.clear();
