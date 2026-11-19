@@ -921,6 +921,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authCodeFieldLabel => 'Code à 4 chiffres reçu par SMS';
 
   @override
+  String get authCodeFieldLabelSix => 'Code à 6 chiffres reçu par SMS';
+
+  @override
   String get authSignedOutElsewhere => 'Connecté sur un autre téléphone';
 
   @override

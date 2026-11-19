@@ -596,6 +596,10 @@
   "@authCodeFieldLabel": {
     "description": "Owner G1-B6 screen-reader label."
   },
+  "authCodeFieldLabelSix": "6-digit code from the SMS",
+  "@authCodeFieldLabelSix": {
+    "description": "Screen-reader label of the code boxes when the code has 6 digits (a code sent by SMS, contract v0.18.135 smsSignIn.codeLength)."
+  },
   "authSignedOutElsewhere": "Signed in on another phone",
   "@authSignedOutElsewhere": {
     "description": "Contract v0.18.14 sign-in (authSignedOutElsewhere)."

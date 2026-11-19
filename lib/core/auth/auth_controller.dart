@@ -63,6 +63,7 @@ class AuthController {
       challenge.sessionId,
       code,
       link: challenge.link,
+      codeLength: challenge.codeLength,
     );
     lastChallenge = null;
     signInResult = result;

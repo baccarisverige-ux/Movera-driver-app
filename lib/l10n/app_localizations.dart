@@ -1624,6 +1624,12 @@ abstract class AppLocalizations {
   /// **'4-digit code from the SMS'**
   String get authCodeFieldLabel;
 
+  /// Screen-reader label of the code boxes when the code has 6 digits (a code sent by SMS, contract v0.18.135 smsSignIn.codeLength).
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code from the SMS'**
+  String get authCodeFieldLabelSix;
+
   /// Contract v0.18.14 sign-in (authSignedOutElsewhere).
   ///
   /// In en, this message translates to:

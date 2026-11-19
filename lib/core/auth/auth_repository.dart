@@ -24,10 +24,16 @@ class AuthRepository {
   /// The languages the server writes the code SMS in (contract `languages`).
   static const _smsLanguages = {'sv', 'fr', 'en'};
 
-  /// A 4-digit code, as the server checks it.
-  static bool isValidCode(String code) => RegExp(r'^\d{4}$').hasMatch(code);
+  /// A code of exactly [length] digits, as the server checks it: 4 (a test
+  /// number's code) or 6 (a code sent by SMS, contract v0.18.135
+  /// `smsSignIn.codeLength`). The length comes from the code request's
+  /// answer ([OtpChallenge.codeLength]).
+  static bool isValidCode(
+    String code, {
+    int length = OtpChallenge.defaultCodeLength,
+  }) => RegExp('^[0-9]{$length}\$').hasMatch(code);
 
-  /// Sends a 4-digit code to [phone] (E.164) for the driver app. With
+  /// Sends a code to [phone] (E.164) for the driver app. With
   /// [link] (round 4b) the phone confirms an Apple / Google identity.
   Future<OtpChallenge> requestCode(String phone, {ProviderLink? link}) async {
     final normalized = phone.replaceAll(' ', '').trim();
@@ -64,6 +70,9 @@ class AuthRepository {
       expiresAt: expiresAt.toUtc(),
       retryAfter: Duration(seconds: retryAfterSeconds),
       link: link,
+      // Contract v0.18.135 `smsSignIn.codeLengthNote`: the server says how
+      // many digits this code has; no field (an older server) = 4.
+      codeLength: OtpChallenge.codeLengthOf(response['codeLength']),
     );
   }
 
@@ -74,10 +83,15 @@ class AuthRepository {
     String sessionId,
     String code, {
     ProviderLink? link,
+    int codeLength = OtpChallenge.defaultCodeLength,
   }) async {
     final normalizedCode = code.trim();
-    if (!isValidCode(normalizedCode)) {
-      throw ArgumentError.value(code, 'code', 'A 4-digit code is required.');
+    if (!isValidCode(normalizedCode, length: codeLength)) {
+      throw ArgumentError.value(
+        code,
+        'code',
+        'A $codeLength-digit code is required.',
+      );
     }
     final response = await _api.post(
       verifyPath,

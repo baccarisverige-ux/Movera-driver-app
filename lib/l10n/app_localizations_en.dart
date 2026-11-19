@@ -904,6 +904,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCodeFieldLabel => '4-digit code from the SMS';
 
   @override
+  String get authCodeFieldLabelSix => '6-digit code from the SMS';
+
+  @override
   String get authSignedOutElsewhere => 'Signed in on another phone';
 
   @override

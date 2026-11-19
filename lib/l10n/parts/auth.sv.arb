@@ -76,6 +76,7 @@
   "authSignedOutDetailRevoked": "Movera avslutade din session.",
   "authPhoneFieldLabel": "Mobilnummer ({dial})",
   "authCodeFieldLabel": "Fyrsiffrig kod från sms:et",
+  "authCodeFieldLabelSix": "Sexsiffrig kod från sms:et",
   "authSignedOutElsewhere": "Inloggad på en annan telefon",
   "authErrLockedToday": "För många fel koder i dag. Försök igen senare."
 }

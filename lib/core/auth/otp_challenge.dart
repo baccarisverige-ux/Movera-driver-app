@@ -6,7 +6,22 @@ class OtpChallenge {
     required this.expiresAt,
     required this.retryAfter,
     this.link,
+    this.codeLength = defaultCodeLength,
   });
+
+  /// The fixed test code of a test number, and every code of a server
+  /// before contract v0.18.135 (contract `auth.otp.codeLength`).
+  static const defaultCodeLength = 4;
+
+  /// A code sent by SMS (contract v0.18.135 `smsSignIn.codeLength`, owner
+  /// 2026-11-19 "6 digits (Rec.)").
+  static const smsCodeLength = 6;
+
+  /// `OtpChallenge.codeLength` of the code request's answer: 4 or 6, as
+  /// the server says; missing (an older server) or anything else = 4. The
+  /// app never guesses the length from the phone number.
+  static int codeLengthOf(Object? raw) =>
+      raw == smsCodeLength && raw is int ? smsCodeLength : defaultCodeLength;
 
   /// E.164, as sent to the server.
   final String phone;
@@ -15,6 +30,15 @@ class OtpChallenge {
 
   /// How long before another code may be requested.
   final Duration retryAfter;
+
+  /// How many digits this code has, so how many boxes the code screen
+  /// shows: 4 (a test number's code) or 6 (a code sent by SMS).
+  final int codeLength;
+
+  /// Whether [code] has exactly this challenge's digits (the last digit
+  /// sends it; Verify unlocks).
+  bool isCompleteCode(String code) =>
+      RegExp('^[0-9]{$codeLength}\$').hasMatch(code);
 
   /// Round 4b: the Apple / Google identity this phone confirms, the first
   /// time (`linkToken` on the OTP calls). Null for a plain phone sign-in.

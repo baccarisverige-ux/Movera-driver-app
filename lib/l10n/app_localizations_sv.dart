@@ -905,6 +905,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authCodeFieldLabel => 'Fyrsiffrig kod från sms:et';
 
   @override
+  String get authCodeFieldLabelSix => 'Sexsiffrig kod från sms:et';
+
+  @override
   String get authSignedOutElsewhere => 'Inloggad på en annan telefon';
 
   @override
