@@ -318,6 +318,9 @@ class LiveDriverConfig extends ChangeNotifier {
       SosContactsSmsConfig.reset();
     }
     if (_watching) {
+      // L20 fix: a connect still waiting for its answer (the zone-less one
+      // opened at sign-in) is outdated too; its answer is closed on arrival.
+      _generation++;
       _retry?.cancel();
       _retry = null;
       unawaited(_stream?.cancel());
@@ -546,6 +549,8 @@ class LiveDriverConfig extends ChangeNotifier {
       onReservationsChanged?.call();
       // D12-5: only a received line shows the stream is alive.
       _lastLine = null;
+      // L20 fix: never two open: one kept before is closed first.
+      unawaited(_stream?.cancel());
       _stream = response.stream
           .transform(utf8.decoder)
           .transform(const LineSplitter())
