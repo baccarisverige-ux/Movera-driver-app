@@ -51,7 +51,8 @@ extension _TripOneStream on TripRun {
           rec.openCount(_offers) == 0 &&
           rec.openCount(_settings) == 0;
       final detail =
-          'config oneStream=$switched; ${_streams()}; '
+          'config oneStream=$switched (server said ${rec.serverOneStream}, '
+          'version ${rec.serverConfigVersion}); ${_streams()}; '
           '/driver/stream answers=$opens';
       ok
           ? log.pass('L20-OPEN', title, detail)
@@ -78,6 +79,8 @@ extension _TripOneStream on TripRun {
       final ok = came() && lowered && rec.openCount(_settings) == 0;
       final detail =
           'reopened=$reopened cursor lowered=$lowered '
+          '(${rec.loweredCursor}) server config version '
+          '${rec.serverConfigVersion} '
           'kinds=${rec.oneStreamKinds.skip(before).map((k) => k.$2).toList()}; '
           '${_streams()}';
       if (ok) {

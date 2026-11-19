@@ -110,6 +110,11 @@ class RecordingClient extends http.BaseClient {
   /// phone's copy of the answer.
   bool forceOneStream = false;
 
+  /// What the server itself last said (`realtime.oneStream`, `version`)
+  /// before any patch, for the report.
+  Object? serverOneStream;
+  Object? serverConfigVersion;
+
   /// Arm once: the next `GET /driver/stream` that carries a cursor
   /// `<offer seq>.<config version>` asks from config version - 1, so the
   /// server sends the live settings (`config_published`) on the one stream.
@@ -286,6 +291,11 @@ class RecordingClient extends http.BaseClient {
     final bytes = await response.stream.toBytes();
     try {
       var decoded = jsonDecode(utf8.decode(bytes));
+      if (url.path == '/api/v1/driver/config' && decoded is Map) {
+        final realtime = decoded['realtime'];
+        serverOneStream = realtime is Map ? realtime['oneStream'] : null;
+        serverConfigVersion = decoded['version'];
+      }
       if (forceOneStream &&
           url.path == '/api/v1/driver/config' &&
           decoded is Map<String, dynamic> &&
