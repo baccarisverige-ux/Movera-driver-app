@@ -132,10 +132,13 @@ const localDataOwnerKey = 'movera_driver_local_owner';
 /// (a session the server refused runs no clean-up, so the same driver
 /// keeps everything when he signs in again) goes through [clear] first.
 /// Without [clear] (a session kept from an earlier start) the driver is
-/// only recorded when nobody is.
+/// only recorded when nobody is. [guard] runs right before the owner is
+/// recorded and throws to stop it (N1: a start clean-up a sign-in
+/// overtook must never record the old driver).
 Future<void> claimLocalData(
   Object? driver, [
   Future<void> Function()? clear,
+  void Function()? guard,
 ]) async {
   if (driver is! String) return;
   final prefs = await SharedPreferences.getInstance();
@@ -145,6 +148,7 @@ Future<void> claimLocalData(
     if (clear == null) return;
     await clear();
   }
+  guard?.call();
   await prefs.setString(localDataOwnerKey, driver);
 }
 
@@ -177,9 +181,12 @@ const String languageSectionKey =
 /// part-way keeps the last driver recorded, so the next driver's sign-in
 /// runs it again. [keepOwner] leaves it for a caller with more to clear
 /// (the app's in-memory state), which then calls [forgetLocalDataOwner].
+/// [guard] runs before each removal and throws to stop the clean-up (N1:
+/// one a sign-in overtook must not delete what the new driver wrote).
 Future<void> clearLocalUserData({
   Future<SharedPreferences> Function()? load,
   bool keepOwner = false,
+  void Function()? guard,
 }) async {
   LocalWriteSession.beginCleanup();
   try {
@@ -201,8 +208,10 @@ Future<void> clearLocalUserData({
       DriverStartPosition.key,
       RecentDestinations.key,
     ];
+    guard?.call();
     DriverStartPosition.clearMemory();
     for (final key in exact) {
+      guard?.call();
       if (!await prefs.remove(key)) {
         throw StateError('Could not clear local data: $key');
       }
@@ -221,12 +230,15 @@ Future<void> clearLocalUserData({
         )
         .toList(growable: false);
     for (final key in sectionKeys) {
+      guard?.call();
       if (!await prefs.remove(key)) {
         throw StateError('Could not clear local data: $key');
       }
     }
     // driver-u31: the Ride check audio files the cleared log pointed at.
+    guard?.call();
     await deleteRideCheckRecordings();
+    guard?.call();
     if (!keepOwner) await _removeOwner(prefs);
   } catch (_) {
     LocalWriteSession.cancelCleanup();
