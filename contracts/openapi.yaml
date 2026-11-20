@@ -1,11 +1,11 @@
-# Movera API v0.18.124 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
+# Movera API v0.18.149 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
 openapi: 3.1.0
 info:
   title: Movera API
-  version: 0.18.124
+  version: 0.18.149
   description: '**Proposed contract — no backend exists yet.** One future backend serves the Rider (Flutter), Driver (Flutter)
     and Admin (React/TS) apps. Source of truth for names, enums, transitions, realtime and errors is `contract.json` + `CONTRACT.md`
-    v0.18.124 in this folder; this file must agree with them.
+    v0.18.149 in this folder; this file must agree with them.
 
 
     Wire rules: ids match `^[A-Za-z0-9_-]{1,64}$`; times are RFC 3339 UTC with `Z`; durations are integer seconds; money is
@@ -84,7 +84,7 @@ tags:
 - name: Admin · Finance
 x-contract:
   name: movera
-  version: 0.18.124
+  version: 0.18.149
   source: contract.json
 paths:
   /auth/otp/request:
@@ -101,11 +101,14 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
-        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
-        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
-        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
+        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
+        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
+        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
+        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
+        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
+        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
+        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -171,11 +174,14 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
-        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
-        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
-        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
+        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
+        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
+        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
+        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
+        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
+        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
+        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -297,36 +303,42 @@ paths:
         /admin/auth/refresh). Apps send one refresh at a time and retry a lost one at once; no app change is needed. v0.18.5
         (owner G1-D3 "Show a message (Recommended)"): when POST /auth/refresh answers 401 the app signs out and its sign-in
         screen shows why, in sv / fr / en. The 401 reason says which. Reasons: session_expired = expired, session_ended =
-        revoked, refresh_token_reused = revoked, refresh_token_unknown = revoked, signed_in_elsewhere = revoked. v0.18.14:
-        Codes stay 4 digits (owner). otp_locked_today per number + address; admin unlock; countryLimits (wrongCodesPerDay,
-        codesPerAddressPerHour, codesPerPhonePerHour, uploadsPerHour). One phone at a time for drivers: a new driver sign-in
-        ends his other sessions — their calls and POST /auth/refresh answer 401 reason signed_in_elsewhere (auth.signedOut.reasons);
-        the old phone is set offline (the driver goes online again from the new phone) and a notice kind signed_in_elsewhere
-        is sent. Riders keep several phones. v0.18.119 (S7 W2 Q118): otp_locked_today also per number over all addresses at
-        4 × wrongCodesPerDay wrong codes in 24 h (up to 24 h, admin unlock; auth.otp.note). POST /auth/refresh and /admin/auth/refresh
-        are write-limited per refresh session + address (contract.json#rateLimit.key). v0.18.49 §71 (owner Q6, Rules plan/finders-2026-11-07/D.md
-        D9 + D8): a refresh token already used, whose replacement was never used, sent again more than refreshRetryWindowSeconds
-        after its last use, is a lost answer (a dead zone, a tunnel, a lift), not theft: answered once with a fresh pair;
-        the never-used replacement is dropped. A second late use of the same old token ends the session (refresh_token_reused).
-        A replacement that WAS used means two holders of the session: the session ends at once, as before. Each old refresh
-        token is accepted at most once outside the 60 s window (the server keeps the time it accepted it: refresh_tokens.late_retry_at).
-        Inside the 60 s window after that answer, retries still work. v0.18.119 (contract.json#rateLimit.key): v0.18.119 (S7
-        W2 Q117 + Q118; owner 2026-11-15 "Yes, per user (Rec.)" and "Yes, phone + address (Rec.)", 2026-11-16 OQ-1 "Lock at
-        60 for 24 h (Rec.)" and OQ-2 "Keep fixed in server (Rec.)", Rules decisions/session-2026-11-06.md, audits/impact/s7-q117-q118.md):
-        a valid access token: its actor and user (sub), so many accounts behind one address never share a budget. An access
-        token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
-        ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
-        app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
-        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
-        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
-        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
-        before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
-        address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
-        a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
-        other call without a valid token: the client address (the address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code
-        locks are not this limit: auth.otp.note.'
+        revoked, refresh_token_reused = revoked, refresh_token_unknown = revoked, signed_in_elsewhere = revoked, signed_out_by_movera
+        = revoked. v0.18.14: Codes stay 4 digits (owner). otp_locked_today per number + address; admin unlock; countryLimits
+        (wrongCodesPerDay, codesPerAddressPerHour, codesPerPhonePerHour, uploadsPerHour). One phone at a time for drivers:
+        a new driver sign-in ends his other sessions — their calls and POST /auth/refresh answer 401 reason signed_in_elsewhere
+        (auth.signedOut.reasons); the old phone is set offline (the driver goes online again from the new phone) and a notice
+        kind signed_in_elsewhere is sent. Riders keep several phones. v0.18.119 (S7 W2 Q118): otp_locked_today also per number
+        over all addresses at 4 × wrongCodesPerDay wrong codes in 24 h (up to 24 h, admin unlock; auth.otp.note). POST /auth/refresh
+        and /admin/auth/refresh are write-limited per refresh session + address (contract.json#rateLimit.key). v0.18.49 §71
+        (owner Q6, Rules plan/finders-2026-11-07/D.md D9 + D8): a refresh token already used, whose replacement was never
+        used, sent again more than refreshRetryWindowSeconds after its last use, is a lost answer (a dead zone, a tunnel,
+        a lift), not theft: answered once with a fresh pair; the never-used replacement is dropped. A second late use of the
+        same old token ends the session (refresh_token_reused). A replacement that WAS used means two holders of the session:
+        the session ends at once, as before. Each old refresh token is accepted at most once outside the 60 s window (the
+        server keeps the time it accepted it: refresh_tokens.late_retry_at). Inside the 60 s window after that answer, retries
+        still work. v0.18.119 (contract.json#rateLimit.key): v0.18.119 (S7 W2 Q117 + Q118; owner 2026-11-15 "Yes, per user
+        (Rec.)" and "Yes, phone + address (Rec.)", 2026-11-16 OQ-1 "Lock at 60 for 24 h (Rec.)" and OQ-2 "Keep fixed in server
+        (Rec.)", Rules decisions/session-2026-11-06.md, audits/impact/s7-q117-q118.md): a valid access token: its actor and
+        user (sub), so many accounts behind one address never share a budget. An access token that ran out but carries the
+        server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays) ago: still its user, on a key of
+        its own apart from the live one, at the user budget; the answer is still 401 (the app refreshes), not 429 from a shared
+        address budget, and it gets no safety-write pass (safetyWrites needs a valid token). A forged token, a changed sub
+        or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules audits/impact/s7-q117-followup.md):
+        POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh:
+        the refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
+        the client address); each at the address budget, whether or not an access token is sent (a valid or expired token
+        is not read on these four calls). A call on these four whose body cannot be read (not valid JSON, too large, wrong
+        media type) counts against the client address at the address budget: over it, 429 rate_limited instead of the 400.
+        On these four calls the phone alone and the address alone are only ceilings of 10 × the address budget (a fixed server
+        factor, not an admin setting); the address ceiling is counted before the body is read, and a call refused on its phone
+        + address key adds nothing to the phone''s ceiling, so one address alone never fills a number''s ceiling. So one address
+        may cause up to 10 × the address budget refresh look-ups a minute (one indexed read each). The two code calls are
+        counted in production only (signInOutsideProduction). Every other call without a valid token: the client address (the
+        address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this limit: auth.otp.note. v0.18.149
+        (contract.json#adminSessions): reason signed_out_by_movera: an admin signed this phone out (Rider and driver apps:
+        on a 401 with this reason (a call, then the refresh) the app signs out and the sign-in screen shows auth.signedOut.texts.revoked
+        with byMoveraTexts as the detail line, once; no message after the person''s own Sign out.)'
       tags:
       - Auth
       x-actor:
@@ -1546,6 +1558,8 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+      description: 'v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one session on
+        a server copy are logged and counted, never refused in this version.'
   /rider/profile:
     get:
       operationId: getRiderProfile
@@ -1724,7 +1738,14 @@ paths:
         rider for places, the signed-in driver for preferences and contacts); another rider or driver never sees it and an
         id of someone else''s place is 404 place_not_found. Admins only read (never edit): emergency contacts through an OPEN
         safety case of that driver, saved places and ride preferences on the rider / driver profile page; every admin view
-        is written to the admin audit without the addresses, names or numbers. Logs never carry them.'
+        is written to the admin audit without the addresses, names or numbers. Logs never carry them. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
+        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
+        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
+        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
+        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
+        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
+        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
+        (step 6).'
   /rider/places/{placeId}:
     delete:
       operationId: deleteSavedPlace
@@ -1767,7 +1788,14 @@ paths:
       description: 'v0.18.26: only the rider''s own place (else 404 place_not_found). kind home and kind work: one each; saving
         a new home (or work) replaces the old one and keeps its placeId. kind other: as many as maxPlaces allows, each with
         its own placeId. type is the app''s finer word for an other place (gym, mall, school, airport, family, restaurant,
-        other); the app picks the icon and label from it.'
+        other); the app picks the icon and label from it. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
+        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
+        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
+        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
+        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
+        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
+        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
+        (step 6).'
       tags:
       - Rider · Account
       x-actor:
@@ -2805,6 +2833,8 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+      description: 'v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one session on
+        a server copy are logged and counted, never refused in this version.'
   /driver/offers/{offerId}:
     get:
       operationId: getDriverOffer
@@ -3512,7 +3542,8 @@ paths:
         stream to another zone, so the app reopens it (app rule above). ?zoneId= always wins (unchanged). A zone that does
         not exist is 404 zone_not_found (config and stream); on GET /driver/config a zone with nothing published (own or country
         standard) is 404 config_not_published and the app keeps its document. There is no rule limiting which zone a driver
-        may read (unchanged).'
+        may read (unchanged). v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one
+        session on a server copy are logged and counted, never refused in this version.'
   /driver/earnings:
     get:
       operationId: getDriverEarnings
@@ -7042,13 +7073,24 @@ paths:
         the country -> 403 zone_out_of_scope. v0.18.23: AlertBookState also carries alerts [LiveAlert] (serverDetection):
         the alerts the server found, open or solved by itself, of the admin''s zones in that country and the groups the admin
         may see (same filter as records). v0.18.117 (alertDesk.serverDetection.liveList): AlertBookState.alerts: Every open
-        alert of the admin''s zones and kind groups is sent: no limit, never cut. After the open ones, at most solvedCap (1000)
-        solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000 with the safety kinds first
-        and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups group safety: sos, car_lost,
-        ride_check, sos_slow), then level critical, important, info, then the newest since, then alertId. Solved: the safety
-        kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId. Not built yet: past solvedCap
-        the older solved alerts are left out and nothing in the answer says so (no ''more'' marker, no count). A marker and
-        a limit for open non-safety alerts are a later job (MF3).'
+        alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s zones and
+        kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000) are sent:
+        level critical, important, info, then the newest since, then alertId; the rest are left out. After the open ones,
+        at most solvedCap (1000) solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000
+        with the safety kinds first and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups
+        group safety: sos, car_lost, ride_check, sos_slow), then level critical, important, info, then the newest since, then
+        alertId. Solved: the safety kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId.
+        v0.18.131: AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true
+        when open non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left
+        out. Missing = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it
+        is there (alertDesk.serverDetection.liveList.adminLine); it never hides or cuts a safety alert. v0.18.131 (alertDesk.serverDetection.liveList):
+        Every open alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s
+        zones and kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000)
+        are sent: level critical, important, info, then the newest since, then alertId; the rest are left out. v0.18.131:
+        AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true when open
+        non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left out. Missing
+        = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
+        it never hides or cuts a safety alert.'
       tags:
       - Admin · Alerts
       x-actor:
@@ -8469,7 +8511,17 @@ paths:
       summary: Admin incident feed (opened, updated, escalated, closed)
       description: 'v0.7.0. Any signed-in admin may listen. Events of an incident go to admins with incidents.read whose zones
         cover its zone; once it is escalated (not taken in contract.json#safety.escalateAfterSeconds) to every signed-in admin.
-        Without Accept: text/event-stream: a JSON page of the same events (polling fallback).'
+        Without Accept: text/event-stream: a JSON page of the same events (polling fallback). v0.18.126 (contract.json#safety.feedStart):
+        v0.18.126 (S7 W2 Q126 = Q-B4; owner 2026-11-15 "Yes, open ones only (Rec.)", Rules decisions/session-2026-11-06.md;
+        Rule 33): GET /admin/incidents/stream with no cursor (no `after`, `after=0`, no Last-Event-ID) starts from the OPEN
+        incidents: first the newest event of each open or investigating incident (at or before the newest sequence when the
+        stream opened), oldest first, then live after that newest sequence. Closed incidents'' history is not replayed. The
+        open start is never cut by `limit`: every open case is an alarm. The JSON page (polling) without a cursor answers
+        the same open start, with `nextCursor` = the newest sequence when it is newer than the last item, else null. With
+        a cursor (`after` > 0 or Last-Event-ID) nothing changes: every event after it, in order. Zone rules unchanged (mayHear).
+        Rule 33: the start and the newest sequence are read from the one incident_events table; a Last-Event-ID from one server
+        copy is valid on every copy; no shared memory. Admin: no change needed (the panel already reads the open incident
+        list on load and keeps the highest sequence it saw); rider and driver apps: none (they do not use this stream).'
       tags:
       - Admin · Safety
       x-actor:
@@ -9361,7 +9413,13 @@ paths:
         unchanged (the draft is already whole). Rule for later: a field that no whole-document admin screen owns goes on this
         list in the same contract version that adds it. ConfigDraftUpdate.removeKeys (optional, array of dotted paths): each
         must be a kept key of that document, else 400 invalid_request, reason unknown_kept_key, details ["key:<path>"], nothing
-        saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep).'
+        saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep). v0.18.130 (configDocs.keptKeys;
+        driver_app_config: realtime.oneStream): v0.18.130 (SCS guard re-check follow-up, owner Q-SCS-1 "Keep values, save
+        rest (Rec.)"): the driver document keeps realtime.oneStream (driverOneStream, v0.18.122) when a save leaves out realtime,
+        so the one-live-connection switch never falls back to off by a save from another screen. offers.autoOffline is not
+        listed: every admin save of the driver document starts from the server document and writes offers whole from the Dispatch
+        page that owns it. Publish and Restore are unchanged (Restore names a removed kept key in removeKeys, as for the other
+        documents).'
       tags:
       - Admin · Config
       x-actor:
@@ -10090,16 +10148,18 @@ paths:
         that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays) ago:
         still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the app
         refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid token).
-        A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request and /auth/otp/verify:
-        the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session
-        + the client address (an unknown token, a body without a valid phone or a failed look-up: the client address); each
-        at the address budget. On these four calls the phone alone and the address alone are only ceilings of 10 × the address
-        budget (a fixed server factor, not an admin setting); the address ceiling is counted before the body is read, and
-        a call refused on its phone + address key adds nothing to the phone''s ceiling, so one address alone never fills a
-        number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups a minute (one indexed read
-        each). The two code calls are counted in production only (signInOutsideProduction). Every other call without a valid
-        token: the client address (the address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this
-        limit: auth.otp.note.'
+        A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules audits/impact/s7-q117-followup.md):
+        POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh:
+        the refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
+        the client address); each at the address budget, whether or not an access token is sent (a valid or expired token
+        is not read on these four calls). A call on these four whose body cannot be read (not valid JSON, too large, wrong
+        media type) counts against the client address at the address budget: over it, 429 rate_limited instead of the 400.
+        On these four calls the phone alone and the address alone are only ceilings of 10 × the address budget (a fixed server
+        factor, not an admin setting); the address ceiling is counted before the body is read, and a call refused on its phone
+        + address key adds nothing to the phone''s ceiling, so one address alone never fills a number''s ceiling. So one address
+        may cause up to 10 × the address budget refresh look-ups a minute (one indexed read each). The two code calls are
+        counted in production only (signInOutsideProduction). Every other call without a valid token: the client address (the
+        address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this limit: auth.otp.note.'
       tags:
       - Admin · Auth
       x-actor:
@@ -17349,7 +17409,14 @@ paths:
       description: 'v0.18.26: One-time upload of the places a phone kept before v0.18.26. Applied only the first time for
         this rider (the server remembers it); later calls change nothing and answer the server''s list. Items follow the POST
         rules (home / work replace, others added); items past maxPlaces are dropped. The app calls it once after sign-in,
-        then reads GET /rider/places and from then on the server''s list is the one shown.'
+        then reads GET /rider/places and from then on the server''s list is the one shown. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
+        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
+        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
+        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
+        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
+        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
+        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
+        (step 6).'
       tags:
       - Rider · Account
       x-actor:
@@ -19521,6 +19588,214 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /admin/riders/{riderId}/sessions:
+    get:
+      operationId: adminListRiderSessions
+      summary: A rider's signed-in sessions
+      description: 'v0.18.149 (contract.json#adminSessions): v0.18.149 (owner decisions/driver-g12.md Q6 "Real, riders + drivers
+        (Recommended)"): an admin sees the signed-in sessions (phones) of one rider or driver and signs one or all of them
+        out with a reason. The person''s next call and next POST /auth/refresh answer 401 unauthenticated, reason signed_out_by_movera;
+        the app signs out and its sign-in screen shows auth.signedOut.byMoveraTexts once. Riders and drivers, SE / FR / TN
+        alike. Zone-scoped like the other admin people routes: a driver outside every zone of the admin, or a rider who never
+        rode in the admin''s zones, is 403 forbidden, reason zone_out_of_scope (all-zones admins see everyone). Unknown person:
+        404 rider_not_found / driver_not_found. A short label from the sign-in''s user agent: iPhone, iPad, Android phone,
+        Web browser, or null when the app sent nothing useful. platform ios | android | web | unknown (the push registration''s
+        platform wins). appVersion from the push registration, else null. lastSeenAt = the last token refresh, else the sign-in.
+        Never the IP address, the raw user agent or any place: no city, country or position is kept per session, so none is
+        shown.'
+      tags:
+      - Admin · People
+      x-actor:
+      - admin
+      x-permission: riders.read
+      parameters:
+      - $ref: '#/components/parameters/RiderId'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /admin/riders/{riderId}/sessions/sign-out:
+    post:
+      operationId: adminSignOutRiderSessions
+      summary: Sign a rider out of one or all sessions (reason, audited)
+      description: 'v0.18.149 (contract.json#adminSessions): Zone-scoped like the other admin people routes: a driver outside
+        every zone of the admin, or a rider who never rode in the admin''s zones, is 403 forbidden, reason zone_out_of_scope
+        (all-zones admins see everyone). Unknown person: 404 rider_not_found / driver_not_found. The sessions end (auth_sessions.revoked_reason
+        signed_out_by_movera), their refresh tokens expire and their push devices are forgotten. Every server copy refuses
+        them at once (the revoke NOTIFY of the session check cache). A free online driver left with no session is set offline
+        and his offers are withdrawn. A driver with a current trip (auth.signOutOnTrip) is refused: 409 conflict, reason sign_out_on_trip;
+        nothing changes. He is signed out only after the trip ends (the admin tries again then). sessionId that is not an
+        active session of this person: 404 not_found, reason session_not_found. all: true with no active session: 200 { signedOut:
+        0 }. Idempotency-Key required; the same key replays the first answer and writes no second audit row. rider.sessions_sign_out
+        / driver.sessions_sign_out, target the person, detail { reason, all, sessionIds }.'
+      tags:
+      - Admin · People
+      x-actor:
+      - admin
+      x-permission: riders.block
+      parameters:
+      - $ref: '#/components/parameters/RiderId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSessionSignOutCommand'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionSignOutResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /admin/drivers/{driverId}/sessions:
+    get:
+      operationId: adminListDriverSessions
+      summary: A driver's signed-in sessions
+      description: 'v0.18.149 (contract.json#adminSessions): v0.18.149 (owner decisions/driver-g12.md Q6 "Real, riders + drivers
+        (Recommended)"): an admin sees the signed-in sessions (phones) of one rider or driver and signs one or all of them
+        out with a reason. The person''s next call and next POST /auth/refresh answer 401 unauthenticated, reason signed_out_by_movera;
+        the app signs out and its sign-in screen shows auth.signedOut.byMoveraTexts once. Riders and drivers, SE / FR / TN
+        alike. Zone-scoped like the other admin people routes: a driver outside every zone of the admin, or a rider who never
+        rode in the admin''s zones, is 403 forbidden, reason zone_out_of_scope (all-zones admins see everyone). Unknown person:
+        404 rider_not_found / driver_not_found. A short label from the sign-in''s user agent: iPhone, iPad, Android phone,
+        Web browser, or null when the app sent nothing useful. platform ios | android | web | unknown (the push registration''s
+        platform wins). appVersion from the push registration, else null. lastSeenAt = the last token refresh, else the sign-in.
+        Never the IP address, the raw user agent or any place: no city, country or position is kept per session, so none is
+        shown.'
+      tags:
+      - Admin · People
+      x-actor:
+      - admin
+      x-permission: drivers.read
+      parameters:
+      - $ref: '#/components/parameters/DriverId'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /admin/drivers/{driverId}/sessions/sign-out:
+    post:
+      operationId: adminSignOutDriverSessions
+      summary: Sign a driver out of one or all sessions (reason, audited)
+      description: 'v0.18.149 (contract.json#adminSessions): Zone-scoped like the other admin people routes: a driver outside
+        every zone of the admin, or a rider who never rode in the admin''s zones, is 403 forbidden, reason zone_out_of_scope
+        (all-zones admins see everyone). Unknown person: 404 rider_not_found / driver_not_found. The sessions end (auth_sessions.revoked_reason
+        signed_out_by_movera), their refresh tokens expire and their push devices are forgotten. Every server copy refuses
+        them at once (the revoke NOTIFY of the session check cache). A free online driver left with no session is set offline
+        and his offers are withdrawn. A driver with a current trip (auth.signOutOnTrip) is refused: 409 conflict, reason sign_out_on_trip;
+        nothing changes. He is signed out only after the trip ends (the admin tries again then). sessionId that is not an
+        active session of this person: 404 not_found, reason session_not_found. all: true with no active session: 200 { signedOut:
+        0 }. Idempotency-Key required; the same key replays the first answer and writes no second audit row. rider.sessions_sign_out
+        / driver.sessions_sign_out, target the person, detail { reason, all, sessionIds }.'
+      tags:
+      - Admin · People
+      x-actor:
+      - admin
+      x-permission: drivers.activate
+      parameters:
+      - $ref: '#/components/parameters/DriverId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminSessionSignOutCommand'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSessionSignOutResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -22894,6 +23169,17 @@ components:
           $ref: '#/components/schemas/Timestamp'
         updatedAt:
           $ref: '#/components/schemas/Timestamp'
+        preferredCategoryId:
+          description: 'v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory): SavedPlace.preferredCategoryId:
+            CategoryId | null, always sent by a v0.18.129 server (left optional in the schema so older answers still validate)
+            in reads (GET /rider/places, POST / PUT answers, POST /rider/places/import answer, GET /admin/riders/{riderId}/saved-places);
+            null = no fixed category (every place saved before v0.18.129). The id must be a category in the admin Pricing
+            catalog (contract.json#categories; the exact id, no alias); an unknown id is 400 invalid_request, reason unknown_category
+            (as driverPreferences.categoriesOff). A category deactivated or removed later is NOT cleared by the server: the
+            read still answers the id, and the rider app treats it as not available (step 6).'
+          oneOf:
+          - $ref: '#/components/schemas/CategoryId'
+          - type: 'null'
     SupportTicket:
       type: object
       required:
@@ -23358,13 +23644,24 @@ components:
         the country -> 403 zone_out_of_scope. v0.18.23: AlertBookState also carries alerts [LiveAlert] (serverDetection):
         the alerts the server found, open or solved by itself, of the admin''s zones in that country and the groups the admin
         may see (same filter as records). v0.18.117 (alertDesk.serverDetection.liveList): AlertBookState.alerts: Every open
-        alert of the admin''s zones and kind groups is sent: no limit, never cut. After the open ones, at most solvedCap (1000)
-        solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000 with the safety kinds first
-        and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups group safety: sos, car_lost,
-        ride_check, sos_slow), then level critical, important, info, then the newest since, then alertId. Solved: the safety
-        kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId. Not built yet: past solvedCap
-        the older solved alerts are left out and nothing in the answer says so (no ''more'' marker, no count). A marker and
-        a limit for open non-safety alerts are a later job (MF3).'
+        alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s zones and
+        kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000) are sent:
+        level critical, important, info, then the newest since, then alertId; the rest are left out. After the open ones,
+        at most solvedCap (1000) solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000
+        with the safety kinds first and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups
+        group safety: sos, car_lost, ride_check, sos_slow), then level critical, important, info, then the newest since, then
+        alertId. Solved: the safety kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId.
+        v0.18.131: AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true
+        when open non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left
+        out. Missing = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it
+        is there (alertDesk.serverDetection.liveList.adminLine); it never hides or cuts a safety alert. v0.18.131 (alertDesk.serverDetection.liveList):
+        Every open alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s
+        zones and kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000)
+        are sent: level critical, important, info, then the newest since, then alertId; the rest are left out. v0.18.131:
+        AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true when open
+        non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left out. Missing
+        = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
+        it never hides or cuts a safety alert.'
       required:
       - country
       - rev
@@ -23433,6 +23730,22 @@ components:
               name:
                 type: string
                 description: 'v0.18.16: the first name; absent until set.'
+        alertsMore:
+          type: object
+          description: 'v0.18.131 (alertDesk.serverDetection.liveList.more): v0.18.131: AlertBookState.alertsMore { open:
+            boolean, solved: boolean } is sent only when a part was cut: open true when open non-safety alerts past openOtherCap
+            were left out, solved true when solved alerts past solvedCap were left out. Missing = nothing was left out. No
+            count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
+            it never hides or cuts a safety alert.'
+          required:
+          - open
+          - solved
+          additionalProperties: false
+          properties:
+            open:
+              type: boolean
+            solved:
+              type: boolean
     AlertTakeCommand:
       type: object
       description: v0.18.15.
@@ -28207,32 +28520,49 @@ components:
             once, never 202 pending_approval.'
     AdminSession:
       type: object
-      description: 'v0.5.1 (CONTRACT.md §9), owner decisions 9 and 14 (2026-10-24): the admin panel signs in with e-mail and
-        password through the server; this replaces "outside this contract" in auth.note for the admin. No second factor in
-        v0.5.1.'
+      description: 'v0.18.149 (contract.json#adminSessions): one signed-in phone. Never the IP address, the raw user agent
+        or any place: no city, country or position is kept per session, so none is shown.'
       required:
-      - accessToken
-      - refreshToken
-      - expiresIn
-      - actor
-      - admin
+      - sessionId
+      - app
+      - device
+      - platform
+      - appVersion
+      - lastSeenAt
+      - createdAt
       properties:
-        accessToken:
+        sessionId:
+          $ref: '#/components/schemas/Id'
+        app:
           type: string
-          minLength: 1
-        refreshToken:
+          enum:
+          - rider
+          - driver
+        device:
+          oneOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+          description: 'A short label from the sign-in''s user agent: iPhone, iPad, Android phone, Web browser, or null when
+            the app sent nothing useful. platform ios | android | web | unknown (the push registration''s platform wins).
+            appVersion from the push registration, else null. lastSeenAt = the last token refresh, else the sign-in.'
+        platform:
           type: string
-          minLength: 1
-          description: Opaque, rotated on every refresh.
-        expiresIn:
-          type: integer
-          minimum: 1
-          default: 900
-        actor:
-          type: string
-          const: admin
-        admin:
-          $ref: '#/components/schemas/AdminMe'
+          enum:
+          - ios
+          - android
+          - web
+          - unknown
+        appVersion:
+          oneOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+        lastSeenAt:
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+      additionalProperties: false
     AdminSignInRequest:
       type: object
       required:
@@ -29303,7 +29633,9 @@ components:
     RiderTripEvent:
       type: object
       description: 'v0.18.32 (contract.json#bookedRideSeen.riderTripEvent, P21): a trip of this rider changed (made, accepted,
-        any status), also when made elsewhere. The rider app reads GET /rider/trips/active again.'
+        any status), also when made elsewhere. The rider app reads GET /rider/trips/active again. v0.18.127 (contract.json#bookedRideSeen.riderTripEvent):
+        not sent for a GPS update (trip event kind location: a position fix or an ETA tick); every other event of the rider''s
+        trips still sends it.'
       required:
       - eventId
       - kind
@@ -30434,6 +30766,17 @@ components:
           description: 'v0.18.26: the app''s word for an other place (gym, mall, ...).'
         place:
           $ref: '#/components/schemas/SavedPlaceAddress'
+        preferredCategoryId:
+          description: 'v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory): SavedPlaceRequest.preferredCategoryId
+            (optional, CategoryId | null): on POST a new place without it gets null; a POST that replaces home / work and
+            a PUT without the field keep the stored value (older apps never clear it by accident); null clears it; a category
+            id sets it. An item of POST /rider/places/import may carry it too, checked the same way. The id must be a category
+            in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown id is 400 invalid_request,
+            reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or removed later is NOT cleared
+            by the server: the read still answers the id, and the rider app treats it as not available (step 6).'
+          oneOf:
+          - $ref: '#/components/schemas/CategoryId'
+          - type: 'null'
     VehicleRequest:
       type: object
       required:
@@ -31256,7 +31599,8 @@ components:
             - payoutMode
             - payoutSchedule
             - radar.reaskAfterSeconds
-          maxItems: 8
+            - realtime.oneStream
+          maxItems: 9
           description: 'v0.18.123 (configDocs.keptKeys.removeKeys): ConfigDraftUpdate.removeKeys (optional, array of dotted
             paths): each must be a kept key of that document, else 400 invalid_request, reason unknown_kept_key, details ["key:<path>"],
             nothing saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep).'
@@ -38971,3 +39315,50 @@ components:
           - string
           - 'null'
           description: Opaque; null on the last page.
+    AdminSessionList:
+      type: object
+      description: 'v0.18.149 (contract.json#adminSessions): Active sessions only (not ended, not expired), newest sign-in
+        first, at most 50.'
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSession'
+          maxItems: 50
+    AdminSessionSignOutCommand:
+      type: object
+      description: 'v0.18.149 (contract.json#adminSessions): { sessionId, reason } signs out one session; { all: true, reason
+        } signs out every active session. Exactly one of sessionId / all, else 400 invalid_request reason session_or_all.
+        Required, 1-500 characters after trimming, else 400 invalid_request reason reason_required. Kept in the audit, never
+        shown to the person.'
+      required:
+      - reason
+      properties:
+        sessionId:
+          $ref: '#/components/schemas/Id'
+        all:
+          type: boolean
+          const: true
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+      additionalProperties: false
+    AdminSessionSignOutResult:
+      type: object
+      description: 'v0.18.149 (contract.json#adminSessions): 200 AdminSessionSignOutResult { signedOut, items } (items = the
+        sessions still active).'
+      required:
+      - signedOut
+      - items
+      properties:
+        signedOut:
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSession'
+          maxItems: 50

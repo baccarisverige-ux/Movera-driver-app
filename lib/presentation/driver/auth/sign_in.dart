@@ -521,6 +521,7 @@ class SignedOutLine extends StatelessWidget {
           SignedOutNotice.expired => tr.authSignedOutDetailExpired,
           SignedOutNotice.revoked => tr.authSignedOutDetailRevoked,
           SignedOutNotice.elsewhere => tr.authSignedOutElsewhere,
+          SignedOutNotice.byMovera => tr.authSignedOutByMovera,
           _ => null,
         };
         return Padding(
