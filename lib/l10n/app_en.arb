@@ -3694,6 +3694,151 @@
   "destSearchTryAgain": "Check your connection and try again.",
   "destSearchStart": "Search for an address",
   "destSearchStartBody": "Type a street, a place or a city. Your last 5 destinations show here.",
+  "mppTitle": "My profile",
+  "@mppTitle": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppIntro": "This is what riders see when they tap your card.",
+  "@mppIntro": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppLanguages": "Languages I speak",
+  "@mppLanguages": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppLanguagesHint": "Pick up to 6.",
+  "@mppLanguagesHint": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppShowCity": "Show my city",
+  "@mppShowCity": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppShowYears": "Show how long I have driven with Movera",
+  "@mppShowYears": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppCompliments": "What riders say",
+  "@mppCompliments": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppNoCompliments": "No compliments yet.",
+  "@mppNoCompliments": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppReviews": "Reviews",
+  "@mppReviews": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppNoReviews": "No reviews yet.",
+  "@mppNoReviews": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppReviewPending": "Waiting for approval",
+  "@mppReviewPending": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppReviewApproved": "Shown to riders",
+  "@mppReviewApproved": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppReviewHidden": "Hidden",
+  "@mppReviewHidden": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppAnonymous": "Anonymous",
+  "@mppAnonymous": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppViewAsRider": "View as rider",
+  "@mppViewAsRider": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppProfileOff": "The driver profile is off in your zone. Riders see only your name, car and rating.",
+  "@mppProfileOff": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppReviewsOff": "Written reviews are off in your zone.",
+  "@mppReviewsOff": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppLoadError": "Could not load your profile.",
+  "@mppLoadError": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppSaveError": "Could not save. Try again.",
+  "@mppSaveError": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppRetry": "Try again",
+  "@mppRetry": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppTrips": "Trips",
+  "@mppTrips": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppRating": "Rating",
+  "@mppRating": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppYears": "Years",
+  "@mppYears": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppLatestReview": "Latest review",
+  "@mppLatestReview": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppMilestones": "Milestones",
+  "@mppMilestones": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppMilestoneTrips1000": "1,000 trips",
+  "@mppMilestoneTrips1000": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppMilestoneTopRating": "Top rating",
+  "@mppMilestoneTopRating": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "complimentGreatService": "Excellent service",
+  "@complimentGreatService": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "complimentKnewTheWay": "Good route",
+  "@complimentKnewTheWay": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "complimentFriendly": "Nice conversation",
+  "@complimentFriendly": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "complimentCleanCar": "Clean car",
+  "@complimentCleanCar": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "complimentSafeDriving": "Safe driving",
+  "@complimentSafeDriving": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "complimentGoodMusic": "Good music",
+  "@complimentGoodMusic": {
+    "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppSince": "Movera driver since {month}",
+  "@mppSince": {
+    "description": "v0.18.147 View as rider: the since month (years 0 shows only this).",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "mppLanguagesMax": "You picked 6. Remove one to pick another.",
+  "@mppLanguagesMax": {
+    "description": "v0.18.147 Min profil: shown when 6 languages are picked."
+  },
   "reservation": "Reservation",
   "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
   "@leaveNowForPickupTimePickup": {

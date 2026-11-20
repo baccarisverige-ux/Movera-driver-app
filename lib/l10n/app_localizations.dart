@@ -8170,6 +8170,216 @@ abstract class AppLocalizations {
   /// **'Type a street, a place or a city. Your last 5 destinations show here.'**
   String get destSearchStartBody;
 
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get mppTitle;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'This is what riders see when they tap your card.'**
+  String get mppIntro;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Languages I speak'**
+  String get mppLanguages;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up to 6.'**
+  String get mppLanguagesHint;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show my city'**
+  String get mppShowCity;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show how long I have driven with Movera'**
+  String get mppShowYears;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'What riders say'**
+  String get mppCompliments;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'No compliments yet.'**
+  String get mppNoCompliments;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get mppReviews;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet.'**
+  String get mppNoReviews;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get mppReviewPending;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown to riders'**
+  String get mppReviewApproved;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get mppReviewHidden;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous'**
+  String get mppAnonymous;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'View as rider'**
+  String get mppViewAsRider;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'The driver profile is off in your zone. Riders see only your name, car and rating.'**
+  String get mppProfileOff;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Written reviews are off in your zone.'**
+  String get mppReviewsOff;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your profile.'**
+  String get mppLoadError;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get mppSaveError;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get mppRetry;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips'**
+  String get mppTrips;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get mppRating;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Years'**
+  String get mppYears;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest review'**
+  String get mppLatestReview;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestones'**
+  String get mppMilestones;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'1,000 trips'**
+  String get mppMilestoneTrips1000;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Top rating'**
+  String get mppMilestoneTopRating;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent service'**
+  String get complimentGreatService;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Good route'**
+  String get complimentKnewTheWay;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice conversation'**
+  String get complimentFriendly;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean car'**
+  String get complimentCleanCar;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe driving'**
+  String get complimentSafeDriving;
+
+  /// v0.18.147 driver profile (owner 2026-11-20 "Now build all"): Profile › My profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Good music'**
+  String get complimentGoodMusic;
+
+  /// v0.18.147 View as rider: the since month (years 0 shows only this).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera driver since {month}'**
+  String mppSince(String month);
+
+  /// v0.18.147 Min profil: shown when 6 languages are picked.
+  ///
+  /// In en, this message translates to:
+  /// **'You picked 6. Remove one to pick another.'**
+  String get mppLanguagesMax;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:
