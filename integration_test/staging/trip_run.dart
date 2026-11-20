@@ -29,6 +29,7 @@ part 'trip_money.dart';
 part 'trip_scheduled.dart';
 part 'trip_frozen.dart';
 part 'trip_device.dart';
+part 'trip_cancel.dart';
 
 /// Owner 2026-11-12 ("U can't make all trip lifecycle test on firebase?"):
 /// one full trip on a real Test Lab phone. The DRIVER is the real app on
@@ -284,6 +285,12 @@ class TripRun extends StagingSession {
         await step('OFFER', 'offer shows on the driver phone', _offerAndAccept);
         if (!accepted) return;
         await _tripSteps(extras: true);
+        // Sensitive buttons 2026-11-20: Cancel trip on a second ride.
+        await step(
+          'DRIVER-CANCEL',
+          'driver cancels an accepted ride in the app',
+          _driverCancel,
+        );
       }
     } catch (error, stack) {
       log.fail('RUN', 'checks ran to the end', 'stopped by $error');
