@@ -76,6 +76,13 @@ class DriverSos {
   /// another driver, sign-out) without reaching Movera; the driver is told.
   static void Function()? onExpired;
 
+  /// Bumped by [signedOut]: what began before is never saved or posted.
+  static int _generation = 0;
+
+  /// The SOS whose POST is on its way, and whether sign-out dropped it.
+  static String? _inFlightKey;
+  static bool _inFlightDropped = false;
+
   /// One background retry loop per app run.
   static Future<void>? _retrying;
 
@@ -95,6 +102,8 @@ class DriverSos {
     await _writes;
     await _retrying?.catchError((Object _) {});
     _retrying = null;
+    _inFlightKey = null;
+    _inFlightDropped = false;
   }
 
   final Future<void> Function(Duration) _sleep;
@@ -149,8 +158,12 @@ class DriverSos {
     // signed in at press time (read in the queued write, so the POST
     // never waits for it).
     String? driver;
+    final generation = _generation;
     Future<void> keep(String? trip) async {
+      // Signed out since the press: never saved again.
+      if (generation != _generation) return;
       driver ??= await _pending.owner();
+      if (generation != _generation) return;
       await _pending.save(
         PendingSos(key: key, tripId: trip, body: body, driverId: driver),
       );
@@ -160,7 +173,23 @@ class DriverSos {
     for (var attempt = 0; ; attempt++) {
       try {
         if (id == null) {
-          id = await _activeTripId();
+          try {
+            id = await _activeTripId();
+          } on ApiError catch (error) {
+            // Only a 404 means no trip; any other profile trouble (403,
+            // 401, 5xx, network) keeps the SOS and tries again.
+            if (error.statusCode == 404) {
+              _store(() => _pending.clear(key));
+              return noTrip;
+            }
+            if (attempt >= retryDelays.length || !_retryable(error)) {
+              DriverLog.warn('sos trip unknown: ${error.code}', name: 'safety');
+              _retryLater();
+              return failed;
+            }
+            await _sleep(retryDelays[attempt]);
+            continue;
+          }
           if (id == null) {
             _store(() => _pending.clear(key));
             return noTrip;
@@ -169,11 +198,20 @@ class DriverSos {
           final trip = id;
           _store(() => keep(trip));
         }
-        final receipt = await _api.post(
-          '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
-          body: body,
-          idempotencyKey: key,
-        );
+        // Signed out since the press: an SOS of before is never posted.
+        if (generation != _generation) return failed;
+        _inFlightKey = key;
+        final Map<String, dynamic> receipt;
+        try {
+          receipt = await _api.post(
+            '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
+            body: body,
+            idempotencyKey: key,
+          );
+        } finally {
+          if (_inFlightKey == key) _inFlightKey = null;
+          _inFlightDropped = false;
+        }
         _store(() => _pending.clear(key));
         return DriverSosResult(
           DriverSosOutcome.sent,
@@ -230,8 +268,11 @@ class DriverSos {
       _retrying ??= _retryLoop().whenComplete(() => _retrying = null);
 
   Future<void> _retryLoop() async {
+    final generation = _generation;
     for (var attempt = 0; ; attempt++) {
       await _writes;
+      // Signed out meanwhile: the SOS of before is gone, the loop stops.
+      if (generation != _generation) return;
       final sos = await _pending.read();
       if (sos == null) return;
       final at = DateTime.tryParse('${sos.body['at']}');
@@ -266,12 +307,25 @@ class DriverSos {
           continue;
         }
       }
+      if (generation != _generation) return;
       try {
-        await _api.post(
-          '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
-          body: sos.body,
-          idempotencyKey: sos.key,
-        );
+        _inFlightKey = sos.key;
+        try {
+          await _api.post(
+            '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
+            body: sos.body,
+            idempotencyKey: sos.key,
+          );
+        } catch (_) {
+          // Dropped by a sign-out while it was on its way, and it did not
+          // get through: now the driver is told.
+          if (_inFlightDropped) onExpired?.call();
+          if (generation != _generation) return;
+          rethrow;
+        } finally {
+          _inFlightKey = null;
+          _inFlightDropped = false;
+        }
         await _pending.clear(sos.key);
         DriverLog.info('pending sos sent', name: 'safety');
         return;
@@ -304,6 +358,7 @@ class DriverSos {
   /// Sign-out (and before another driver signs in): a kept SOS is told to
   /// the driver as not sent and dropped from this phone.
   static Future<void> signedOut({PendingSosStore? store}) {
+    _generation++;
     final pending = store ?? const PendingSosStore();
     // In the write queue: a save of a press still running lands first and
     // is then dropped too; nothing saves it again after.
@@ -314,7 +369,13 @@ class DriverSos {
         if (sos == null) return;
         DriverLog.warn('kept sos dropped at sign-out', name: 'safety');
         await pending.clear(sos.key);
-        onExpired?.call();
+        // On its way now: told only if it then fails (a success is not
+        // "not sent").
+        if (sos.key == _inFlightKey) {
+          _inFlightDropped = true;
+        } else {
+          onExpired?.call();
+        }
       } finally {
         done.complete();
       }

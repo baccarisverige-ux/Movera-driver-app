@@ -23,11 +23,14 @@ void main() {
   late int told;
   late int profileStatus;
   late List<String> gets;
+  Completer<void>? holdGet;
+  Completer<int>? holdPost;
 
   ApiClient api() => ApiClient(
     client: MockClient((request) async {
       if (request.method == 'GET') {
         gets.add(request.url.path);
+        await holdGet?.future;
         return http.Response(
           jsonEncode(
             profileStatus == 200
@@ -38,6 +41,8 @@ void main() {
         );
       }
       posts.add(request);
+      final held = holdPost;
+      if (held != null) status = await held.future;
       return http.Response(
         jsonEncode(
           status == 200
@@ -59,6 +64,8 @@ void main() {
     });
     profileStatus = 200;
     gets = [];
+    holdGet = null;
+    holdPost = null;
     posts = [];
     status = 200;
     me = 'drv_A';
@@ -180,6 +187,62 @@ void main() {
     await DriverSos.signedOut();
     expect(told, 1, reason: 'nothing kept: nothing to tell');
   });
+
+  test('a trip-less press whose profile read is 403 keeps the SOS', () async {
+    profileStatus = 403;
+    var n = 0;
+    final outcome = await DriverSos(
+      api: api(),
+      now: () => t0,
+      sleep: (_) async {
+        if (++n > DriverSos.retryDelays.length) throw StateError('stop');
+      },
+    ).send();
+    expect(outcome, DriverSosOutcome.failed);
+    await DriverSos.writesDone;
+    expect((await const PendingSosStore().read())?.driverId, 'drv_A');
+    expect(told, 0);
+  });
+
+  test('a press from before sign-out is never saved again or posted', () async {
+    holdGet = Completer<void>();
+    final press = DriverSos(api: api(), now: () => t0).send();
+    await Future<void>.delayed(Duration.zero);
+    await DriverSos.signedOut();
+    holdGet!.complete();
+    expect(await press, DriverSosOutcome.failed);
+    await DriverSos.writesDone;
+    expect(posts, isEmpty);
+    expect(await const PendingSosStore().read(), isNull);
+  });
+
+  for (final ok in [true, false]) {
+    test(
+      'a retry on its way at sign-out: told only if it fails ($ok)',
+      () async {
+        await const PendingSosStore().save(
+          PendingSos(
+            key: 'k8',
+            tripId: 'trp_1',
+            driverId: 'drv_A',
+            body: {'at': at},
+          ),
+        );
+        holdPost = Completer<int>();
+        final retry = sos().retryPending();
+        while (posts.isEmpty) {
+          await Future<void>.delayed(const Duration(milliseconds: 1));
+        }
+        await DriverSos.signedOut();
+        expect(told, 0);
+        holdPost!.complete(ok ? 200 : 503);
+        await retry;
+        expect(told, ok ? 0 : 1);
+        expect(posts, hasLength(1));
+        expect(await const PendingSosStore().read(), isNull);
+      },
+    );
+  }
 
   testWidgets('the notice stays until OK and comes back after a restart', (
     tester,

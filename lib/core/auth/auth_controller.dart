@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:movera/core/auth/auth_repository.dart';
-import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/provider_token_source.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/legal/driver_legal.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 
 /// The sign-in flow's state between its three steps, over [AuthRepository].
 ///
