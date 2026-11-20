@@ -197,4 +197,12 @@ void main() {
       );
     },
   );
+  test('owner 2026-11-20: Stripe replaces the SumUp link: on with no link still pays by card; the link is never shown', () {
+    final view = PayMovera.of(
+      {...answer(), 'payLink': null}..remove('payLink'),
+    );
+    expect(view.canPayByCard, isTrue);
+    expect(view.payLink, isNull);
+    expect(view.canPay, isFalse);
+  });
 }
