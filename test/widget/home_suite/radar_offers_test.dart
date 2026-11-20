@@ -442,4 +442,39 @@ void main() {
     expect(find.byType(AcceptRide), findsOneWidget);
     expectNoException(tester);
   });
+
+  testWidgets('Admin Radar limits: 1 card, list off (offers.radarApp)', (
+    WidgetTester tester,
+  ) async {
+    DriverOfferRules.current = const DriverOfferRules(
+      radarApp: RadarAppLimits(fullOn: false, popup: 1),
+    );
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    RadarOfferSound.debugPlayer = FakeRadarSound();
+    addTearDown(() => RadarOfferSound.debugPlayer = null);
+    OfferVibration.debugVibrate = (_) {};
+    addTearDown(() => OfferVibration.debugVibrate = null);
+    await pumpHome(tester, const Size(375, 812));
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 3850));
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 900));
+    }
+    final cards = find.byWidgetPredicate(
+      (w) =>
+          w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('radar-offer-card-'),
+    );
+    // One card over the map; the others are held, not lost.
+    expect(cards, findsOneWidget);
+    final island = find.byKey(const ValueKey<String>('island-radar-offers'));
+    if (island.evaluate().isNotEmpty) {
+      await tester.tap(island, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 160));
+    }
+    // The full-screen list is off in admin: it never opens.
+    expect(find.byType(RideRequests), findsNothing);
+    expectNoException(tester);
+  });
 }

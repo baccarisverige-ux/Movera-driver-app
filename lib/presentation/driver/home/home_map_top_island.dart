@@ -261,7 +261,9 @@ extension _HomeMapTopIsland on _DriverHomeState {
                                   feedDown != null
                             ? null
                             : radar
-                            ? _openRideOffers
+                            ? (_HomeOfferRadar(this)._radarListAllowed
+                                  ? _openRideOffers
+                                  : null)
                             : destination
                             ? _openDestinationDetails
                             : _onIslandEarningsTap,

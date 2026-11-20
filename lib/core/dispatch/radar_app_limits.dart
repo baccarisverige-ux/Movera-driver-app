@@ -23,7 +23,9 @@ class RadarAppLimits {
         json[key] is bool ? json[key] as bool : keep;
     int count(String key, int max, int keep) {
       final raw = json[key];
-      return raw is int && raw >= 1 && raw <= max ? raw : keep;
+      return raw is num && raw == raw.roundToDouble() && raw >= 1 && raw <= max
+          ? raw.toInt()
+          : keep;
     }
 
     return RadarAppLimits(
@@ -81,6 +83,12 @@ class DriverMotion {
   DateTime? _otherSince;
 
   bool get moving => _moving;
+
+  /// Offline: back to stopped, no half-judged change kept.
+  void reset() {
+    _moving = false;
+    _otherSince = null;
+  }
 
   /// Feeds one fix; returns true when the state changed.
   bool update({required double? speedMps, required DateTime at}) {

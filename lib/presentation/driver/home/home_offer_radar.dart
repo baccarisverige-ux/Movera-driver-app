@@ -223,6 +223,20 @@ extension _HomeOfferRadar on _DriverHomeState {
   int get _maxHomeRadarOffers =>
       DriverOfferRules.current.radarApp.cardLimit(moving: _motion.moving);
 
+  /// Whether the full-screen Radar list may open now (off, or locked while
+  /// driving, in Dispatch › Modes).
+  bool get _radarListAllowed =>
+      DriverOfferRules.current.radarApp.listOpen(moving: _motion.moving);
+
+  /// Stopped ↔ driving changed the limits: close a locked list and move
+  /// cards over the new limit back to held (or held ones onto the deck).
+  void _onMotionChanged() {
+    if (showRideRequests && !_radarListAllowed) {
+      _rebuild(() => showRideRequests = false);
+    }
+    _refreshRadarHomeOffers();
+  }
+
   void _maybeShowSoonReservation() {
     if (!_soonReservationReady ||
         !mounted ||
@@ -544,7 +558,8 @@ extension _HomeOfferRadar on _DriverHomeState {
         RideCheckGate.open ||
         _outsideRadarOffer != null ||
         _HomeReservation(this)._reservationUp ||
-        _pendingRadarHomeOffers.isEmpty) {
+        (_pendingRadarHomeOffers.isEmpty &&
+            _radarHomeOffers.length <= _maxHomeRadarOffers)) {
       return;
     }
 
@@ -555,14 +570,13 @@ extension _HomeOfferRadar on _DriverHomeState {
 
     final seen = <String>{};
     final next = <_HomeDirectOffer>[];
+    final held = <_HomeDirectOffer>[];
     for (final offer in refreshed) {
-      if (seen.add(offer.id)) {
-        next.add(offer);
-      }
-      if (next.length >= _maxHomeRadarOffers) {
-        break;
-      }
+      if (!seen.add(offer.id)) continue;
+      // Over the card limit (§3.3): held until a slot frees, never lost.
+      (next.length < _maxHomeRadarOffers ? next : held).add(offer);
     }
+    held.removeWhere((offer) => _radarOfferExpired.contains(offer.id));
 
     // Trips whose pick window ran out leave on refresh.
     next.removeWhere((offer) => _radarOfferExpired.contains(offer.id));
@@ -578,8 +592,11 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarHomeOffers
         ..clear()
         ..addAll(next);
-      _pendingRadarHomeOffers.clear();
-      _hasRideOffers = _radarHomeOffers.isNotEmpty;
+      _pendingRadarHomeOffers
+        ..clear()
+        ..addAll(held);
+      _hasRideOffers =
+          _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
     });
 
     _dispatch.refreshOffers();

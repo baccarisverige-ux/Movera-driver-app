@@ -1165,6 +1165,7 @@ class _DriverHomeState extends State<DriverHome>
     _radarOfferTwoTimer?.cancel();
     _radarOfferThreeTimer?.cancel();
     _offlineHeld = false;
+    _motion.reset();
 
     setState(() {
       _driverSession.setOnline(false);
@@ -1191,9 +1192,7 @@ class _DriverHomeState extends State<DriverHome>
 
   void _openRideOffers() {
     // Dispatch › Modes: the full-screen list is off, or locked while driving.
-    if (!DriverOfferRules.current.radarApp.listOpen(moving: _motion.moving)) {
-      return;
-    }
+    if (!_HomeOfferRadar(this)._radarListAllowed) return;
     if (_mainPanelPosition > 0.04 || isPanelOpen) {
       return;
     }
@@ -1299,7 +1298,9 @@ class _DriverHomeState extends State<DriverHome>
           sweep: _radarSweepController.value,
           wedge: _radarWedge(found: hasRadarOffer),
           statusPulse: hasRadarOffer ? _matchPulse : 0,
-          onTap: hasRadarOffer ? _openRideOffers : null,
+          onTap: hasRadarOffer && _HomeOfferRadar(this)._radarListAllowed
+              ? _openRideOffers
+              : null,
         );
       },
     );

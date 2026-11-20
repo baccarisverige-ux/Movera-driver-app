@@ -115,17 +115,15 @@ extension _HomeMapSheet on _DriverHomeState {
   }
 
   void _applyDriverLocation(DriverLocation location) {
-    if (!mounted || !_liveVisible) {
-      return;
-    }
-    if (_motion.update(
+    if (mounted &&
+        _motion.update(
           speedMps: location.speedMetersPerSecond,
           at: location.measuredAt ?? DateTime.now(),
-        ) &&
-        showRideRequests &&
-        !DriverOfferRules.current.radarApp.listOpen(moving: _motion.moving)) {
-      // Dispatch › Modes: the full-screen list locks once the car drives.
-      _rebuild(() => showRideRequests = false);
+        )) {
+      _HomeOfferRadar(this)._onMotionChanged(); // §3.3 limits
+    }
+    if (!mounted || !_liveVisible) {
+      return;
     }
     _HomeOnlineGate(this)._locationWorks();
     if (!location.isDisplayableAt(DateTime.now())) {

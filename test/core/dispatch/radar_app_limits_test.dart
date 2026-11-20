@@ -32,6 +32,11 @@ void main() {
       expect(limits.cardLimit(moving: true), 1);
     });
 
+    test('a whole number sent as 3.0 counts', () {
+      expect(RadarAppLimits.fromJson({'popup': 3.0}).popup, 3);
+      expect(RadarAppLimits.fromJson({'popup': 2.5}).popup, 2);
+    });
+
     test('switched off: no list, no cards', () {
       final limits = RadarAppLimits.fromJson({
         'fullOn': false,
@@ -83,6 +88,14 @@ void main() {
       motion.update(speedMps: 0, at: t0.add(const Duration(seconds: 20)));
       expect(motion.moving, isTrue);
       motion.update(speedMps: 0, at: t0.add(const Duration(seconds: 22)));
+      expect(motion.moving, isFalse);
+    });
+
+    test('offline resets to stopped', () {
+      final motion = DriverMotion();
+      motion.update(speedMps: 5, at: t0);
+      motion.update(speedMps: 5, at: t0.add(const Duration(seconds: 10)));
+      motion.reset();
       expect(motion.moving, isFalse);
     });
 
