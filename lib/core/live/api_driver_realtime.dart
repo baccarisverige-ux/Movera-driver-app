@@ -331,6 +331,10 @@ class ApiDriverRealtime implements DriverRealtime {
         kind == 'trip_projection' &&
         status != null &&
         !_isTerminal(status) &&
+        // Back in the queue (searching/requested) there is no ride to
+        // check: a check on that echo is not a question to the driver.
+        status != 'searching' &&
+        status != 'requested' &&
         !_rideChecksPassed.contains(check.checkId) &&
         check.openForDriver(_now().toUtc());
     if (!asks &&

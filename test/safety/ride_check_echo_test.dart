@@ -331,4 +331,42 @@ void main() {
     );
     expect(withCheck('srv_a'), hasLength(1));
   });
+
+  test('a driver_cancelled event that carries an open check is never a '
+      'question: the echo of this phone\'s own cancel stays '
+      'suppressed', () async {
+    await ownStart();
+    answers.add(
+      (_) => json(200, {
+        'tripId': 't1',
+        'status': 'driver_cancelled',
+        'version': 10,
+      }),
+    );
+    expect((await trips.cancel('t1', reasonCode: 'other')).ok, isTrue);
+    await listen();
+    await send(
+      31,
+      status: 'driver_cancelled',
+      version: 10,
+      kind: 'driver_cancelled',
+      rideCheck: check('srv_a'),
+    );
+    expect(events, isEmpty);
+  });
+
+  for (final status in ['searching', 'requested']) {
+    test('the echo of this phone\'s own cancel that put the trip back in '
+        'the queue ($status) stays suppressed, also when it carries an '
+        'open check', () async {
+      await ownStart();
+      answers.add(
+        (_) => json(200, {'tripId': 't1', 'status': status, 'version': 10}),
+      );
+      expect((await trips.cancel('t1', reasonCode: 'other')).ok, isTrue);
+      await listen();
+      await send(31, status: status, version: 10, rideCheck: check('srv_q'));
+      expect(events, isEmpty);
+    });
+  }
 }
