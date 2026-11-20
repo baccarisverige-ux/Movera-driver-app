@@ -168,10 +168,14 @@ void main() {
     'the server amount differs from the one shown: no sheet, a notice, the screen reloads',
     (tester) async {
       var sheets = 0;
+      var loads = 0;
       await tester.pumpWidget(
         MaterialApp(
           home: PayMoveraScreen(
-            load: () async => PayMovera.of(answer()),
+            load: () async {
+              loads++;
+              return PayMovera.of(answer());
+            },
             startCard: () async => StripeDriverPayment.of({
               'amount': money(3000),
               'clientSecret': 's',
@@ -191,6 +195,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
       }
       expect(sheets, 0);
+      expect(loads, 2); // the screen read the server again
       expect(
         find.text('The amount changed. Check it and try again.'),
         findsOneWidget,
