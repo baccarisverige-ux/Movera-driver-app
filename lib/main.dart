@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:movera/presentation/common/chat/call_screen.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 
@@ -275,6 +276,9 @@ class _MoveraAppState extends State<MoveraApp> {
         location: _location,
       );
       LiveDriverServices.instance = live;
+      // Audit 2026-11-20 item 1: an SOS not confirmed before the app
+      // stopped is sent again now.
+      unawaited(DriverSos(api: live.api).retryPending());
       // v0.18.38 §62 (fix job 8, owner G15 "Both rider and driver"): the
       // rider's in-app call rings here: the call screen with Answer /
       // Decline opens over whatever screen is up.
