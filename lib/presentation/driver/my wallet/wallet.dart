@@ -613,7 +613,10 @@ class _WalletCashBalance extends StatelessWidget {
               )
             else
               ?owes,
-            if (balance != null) ...[
+            // Only when something is owed either way ("Settled" needs no
+            // "settled in your next payout").
+            if (balance != null &&
+                (balance.driverOwes || balance.moveraOwes)) ...[
               const SizedBox(height: 8),
               Text(
                 tr.settledInYourNextPayout2,

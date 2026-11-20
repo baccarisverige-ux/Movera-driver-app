@@ -62,6 +62,14 @@ void main() {
         'tel:+46700000000',
         'https://',
         'https://pay.sumup.com/a b',
+        // Review should-fix 1: the address he reads is where it goes.
+        'https://sumup.com@evil.example/x',
+        'https://user:pw@pay.sumup.com/x',
+        'HTTPS://pay.sumup.com/x',
+        'https://pay.sumup.com/\u0000x',
+        'https://pay.sumup.com/\u200bx',
+        'https://pay.sumup.com/\u202ex',
+        ' https://pay.sumup.com/x',
         '',
         42,
         'https://pay.sumup.com/${'x' * 500}',
@@ -76,6 +84,11 @@ void main() {
       final off = PayMovera.of({...answer(enabled: false), 'payLink': link});
       expect(off.payLink, isNull);
       expect(PayMovera.of(answer(owed: 0)).canPay, isFalse);
+    });
+
+    test('an amount below 0 is a broken answer: an error (review should-fix '
+        '2)', () {
+      expect(() => PayMovera.of(answer(owed: -500)), throwsFormatException);
     });
 
     test('no amount or no reference: an error, never a made-up screen', () {

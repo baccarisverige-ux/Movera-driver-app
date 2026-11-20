@@ -295,7 +295,12 @@ class EarningsWeek {
     return EarningsWeek(
       net: LiveEarnings.todayOf(report, now),
       cashCollected: _cashOf(report, now, currency),
-      moveraBalance: MoveraBalance.tryParse(report['moveraBalance']),
+      // Only a balance in the report's own currency is shown next to it
+      // (never "kr" under the € tab).
+      moveraBalance: MoveraBalance.tryParse(
+        report['moveraBalance'],
+        currency: currency,
+      ),
       currency: currency,
       currencies: [
         if (listed is List)
@@ -361,17 +366,26 @@ class MoveraBalance {
   bool get driverOwes => owedToMovera.minorUnits > 0;
   bool get moveraOwes => !driverOwes && moveraOwesYou.minorUnits > 0;
 
-  /// Null when absent or not two valid amounts (never half a balance).
-  static MoveraBalance? tryParse(Object? json) {
+  /// Null when absent or not what the contract promises: two valid amounts
+  /// of one currency ([currency] when given: the report's), both 0 or
+  /// above and at least one of them 0. A broken answer shows no line at
+  /// all, never half a balance or a number that contradicts itself.
+  static MoveraBalance? tryParse(Object? json, {String? currency}) {
     if (json is! Map) return null;
     final owed = json['owedToMovera'];
     final owes = json['moveraOwesYou'];
     if (owed is! Map || owes is! Map) return null;
     try {
-      return MoveraBalance(
+      final balance = MoveraBalance(
         owedToMovera: Money.fromJson(Map<String, dynamic>.from(owed)),
         moveraOwesYou: Money.fromJson(Map<String, dynamic>.from(owes)),
       );
+      final a = balance.owedToMovera, b = balance.moveraOwesYou;
+      if (a.minorUnits < 0 || b.minorUnits < 0) return null;
+      if (a.minorUnits > 0 && b.minorUnits > 0) return null;
+      if (a.currency != b.currency) return null;
+      if (currency != null && a.currency != currency) return null;
+      return balance;
     } on FormatException {
       return null;
     }
@@ -396,9 +410,15 @@ class PayMovera {
     if (owed is! Map || reference is! String || reference.isEmpty) {
       throw FormatException('pay-movera answer', json);
     }
+    final amount = Money.fromJson(Map<String, dynamic>.from(owed));
+    // The contract promises 0 or above: a negative amount is a broken
+    // answer (the error screen, never "Settled" over a minus number).
+    if (amount.minorUnits < 0) {
+      throw FormatException('pay-movera amount below 0', json);
+    }
     return PayMovera(
       enabled: json['enabled'] == true,
-      owedToMovera: Money.fromJson(Map<String, dynamic>.from(owed)),
+      owedToMovera: amount,
       reference: reference,
       payLink: json['enabled'] == true ? linkOf(json['payLink']) : null,
     );
@@ -420,14 +440,30 @@ class PayMovera {
   /// The Pay button shows only with a link and something to pay.
   bool get canPay => payLink != null && owedToMovera.minorUnits > 0;
 
+  /// A plain https link, as the server's own rule (movera-server
+  /// src/drivers/payRequestSetting.ts): it starts with "https://", has a
+  /// host, no "user:password@" part (so the address he reads is where it
+  /// goes), and no white space, control or invisible character.
   static Uri? linkOf(Object? value) {
     if (value is! String || value.length > 500) return null;
-    if (value.contains(RegExp(r'\s'))) return null;
+    if (!value.startsWith('https://')) return null;
+    if (value.runes.any(_badLinkChar)) return null;
     final uri = Uri.tryParse(value);
-    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty
+    return uri != null &&
+            uri.scheme == 'https' &&
+            uri.host.isNotEmpty &&
+            uri.userInfo.isEmpty
         ? uri
         : null;
   }
+
+  static bool _badLinkChar(int c) =>
+      c <= 0x20 ||
+      (c >= 0x7f && c <= 0xa0) ||
+      (c >= 0x200b && c <= 0x200f) ||
+      (c >= 0x2028 && c <= 0x202e) ||
+      (c >= 0x2060 && c <= 0x2069) ||
+      c == 0xfeff;
 }
 
 /// G28 step 1: an `EarningsReport` summed over all its periods: `net`,
