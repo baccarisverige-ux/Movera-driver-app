@@ -132,6 +132,23 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Audit N5: "View all N rides" uses the same count as "Rides"',
+    (tester) async {
+      await open(
+        tester,
+        (_) async => http.Response(
+          jsonEncode(threeDays),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      );
+      expect(metric(tester, 'Rides'), '6');
+      expect(find.text('View all 6 rides'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('G28: each period asks the server for its own range', (
     tester,
   ) async {

@@ -381,12 +381,17 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   List<Money> get _periodCashBalance =>
       CashBalance.totals(_periodCashTrips.map((trip) => trip.cashBalance!));
 
-  String get _periodRides {
+  String get _periodRides => _periodRideCount?.toString() ?? _pending;
+
+  /// Audit 2026-11-20 N5: ONE count for "Rides" and "View all N rides"
+  /// (was "Rides 6" next to "View all 7 rides"): the server's completed
+  /// trips on a live build, else this phone's completed trips.
+  int? get _periodRideCount {
     if (_serverCounts) {
-      if (_serverFailed) return _pending;
-      return _serverTotals?.tripCount.toString() ?? _pending;
+      if (_serverFailed) return null;
+      return _serverTotals?.tripCount;
     }
-    return _localCompletedRides.toString();
+    return _localCompletedRides;
   }
 
   /// The completed trips of the list below (this phone's archive).
@@ -567,7 +572,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   }
 
   Widget _buildOverview() {
-    final visibleRideCount = _periodRidesList.length;
+    final visibleRideCount = _periodRideCount ?? _localCompletedRides;
 
     return ListView(
       key: const ValueKey<String>('history-overview'),
