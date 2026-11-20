@@ -100,7 +100,7 @@ String authErrorMessage(Object error, AuthAction action) {
         return tr.authInvalidMobileNumber;
       case 'sign_in_restricted':
         return tr.authSignInRestricted;
-      // v0.18.140 (contract.json#accountDeletion.closeAtOnce).
+      // v0.18.134 (contract.json#accountDeletion.closeAtOnce).
       case 'account_closed':
         return tr.acctClosedSignIn;
     }

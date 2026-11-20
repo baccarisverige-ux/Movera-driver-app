@@ -13,7 +13,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/profile/delete_account.dart';
 
-/// Contract v0.18.140 (`contract.json#accountDeletion.driver`; owner button
+/// Contract v0.18.134 (`contract.json#accountDeletion.driver`; owner button
 /// 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. A
 /// confirm step, then `POST /driver/account/deletion`; 202 = closed (signed
 /// out, phone wiped); 409 `deletion_open_trip` = "finish or cancel first".

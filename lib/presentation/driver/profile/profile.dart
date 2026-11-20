@@ -323,7 +323,7 @@ class _DriverProfileState extends State<DriverProfile> {
                 LegalDocumentScreen.terms,
               ),
               _item(Icons.help_outline_rounded, tr.helpCenter, supportScreen()),
-              // v0.18.140 (contract.json#accountDeletion.driver): a confirm
+              // v0.18.134 (contract.json#accountDeletion.driver): a confirm
               // step, then the request; 202 signs out and wipes the phone.
               if (_liveSession != null)
                 _item(

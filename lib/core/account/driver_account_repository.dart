@@ -43,7 +43,7 @@ class DriverAccountRepository {
 
   static const accountDeletionPath = '/api/v1/driver/account/deletion';
 
-  /// Contract v0.18.140 (`contract.json#accountDeletion.driver`): Profile >
+  /// Contract v0.18.134 (`contract.json#accountDeletion.driver`): Profile >
   /// Delete my account. 202 = the account is closed now (sessions ended,
   /// offline) and erased 30 days later; a debt never blocks it. 409
   /// `deletion_open_trip` is thrown as [ApiError] (finish or cancel first).
@@ -363,8 +363,8 @@ class DriverAccountRepository {
   );
 }
 
-/// `AccountDeletion` (contract v0.18.140): `status` (`requested`) and, from
-/// a v0.18.140 server, when it was asked and when the erase may run.
+/// `AccountDeletion` (contract v0.18.134): `status` (`requested`) and, from
+/// a v0.18.134 server, when it was asked and when the erase may run.
 class AccountDeletionAnswer {
   const AccountDeletionAnswer({
     required this.status,

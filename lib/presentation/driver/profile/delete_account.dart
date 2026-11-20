@@ -3,7 +3,7 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 
-/// Contract v0.18.140 (`contract.json#accountDeletion.driver`; owner button
+/// Contract v0.18.134 (`contract.json#accountDeletion.driver`; owner button
 /// 2026-11-20 "Accept, keep debt (Rec.)", Rules
 /// decisions/session-2026-11-06.md): Profile > Delete my account. What
 /// closes at once and what is kept, then a confirm step, then
