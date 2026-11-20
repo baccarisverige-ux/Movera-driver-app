@@ -26,10 +26,16 @@ class ContactChangeScreen extends StatefulWidget {
     required this.account,
     required this.kind,
     this.verifyCurrent,
+    this.startCountry = defaultPhoneCountry,
   });
 
   final DriverAccountSession account;
   final ContactKind kind;
+
+  /// Contract v0.18.138: how a typed number without "+" is read — the SAME
+  /// start country as the sign-in field (last fix, last zone, then the
+  /// device region; lib/presentation/driver/auth/sign_in.dart).
+  final PhoneCountry Function() startCountry;
 
   /// G30 `emailVerified.verifyCurrent`: the driver's current, Not verified
   /// e-mail. The field is filled with it and read-only; "Change e-mail"
@@ -113,7 +119,7 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
   /// invalid_phone). An e-mail is only trimmed.
   String get _entered {
     if (!_phone) return _value.text.trim();
-    return phoneNumberFromField(_value.text, defaultPhoneCountry()) ??
+    return phoneNumberFromField(_value.text, widget.startCountry()) ??
         _value.text.replaceAll(RegExp(r'[\s\-(). ]'), '');
   }
 
