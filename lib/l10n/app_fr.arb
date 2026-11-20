@@ -1510,6 +1510,7 @@
   "waitingPausedAtStop": "Attente en pause : vous êtes à plus de {leave} m de l’arrêt. Revenez à moins de {arrive} m pour continuer.",
   "waitingBackAtStop": "Je suis de retour à l’arrêt",
   "liveTripNotAtStop": "Vous n’êtes pas encore à l’arrêt.",
+  "meterChangeToAppPrice": "Réglez le taximètre sur {amount}",
   "call112": "Appeler le 112",
   "call112OnYourPhone": "Appelez le 112 depuis votre téléphone",
   "call112IfYouNeedHelp": "\nAppelez le 112 si vous avez besoin d’aide maintenant.",

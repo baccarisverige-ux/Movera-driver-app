@@ -5451,6 +5451,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get liveTripNotAtStop => 'Vous n’êtes pas encore à l’arrêt.';
 
   @override
+  String meterChangeToAppPrice(String amount) {
+    return 'Réglez le taximètre sur $amount';
+  }
+
+  @override
   String get call112 => 'Appeler le 112';
 
   @override

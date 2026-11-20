@@ -481,7 +481,16 @@ extension _AcceptRideTrip on _AcceptRideState {
     _AcceptRidePickup(this)._followServerWaitClock();
     // G7 (contract v0.18.9): the server's ride check and route change.
     _AcceptRideRouteChange(this)._onTripExtras(next, initial: initial);
+    // Owner 2026-11-20 "Change meter to app (Rec.)": the server's new
+    // price after the start, shown until OK.
+    final meter = _meterWatch.observe(
+      next.fare,
+      started: _stage == ActiveRideStage.onTrip,
+    );
     if (initial) return;
+    if (meter != null && mounted && !_rideLifecycle.terminal) {
+      _meterNotice.show(context, meter.formatted);
+    }
     if (mounted && (rebuild || pickupChanged || alert != null)) {
       _rebuild(() {
         if (pickupChanged) {

@@ -33,6 +33,7 @@ class TripLiveDetails {
     this.rideCheck,
     this.routeChange,
     this.stopVisits,
+    this.fare,
   });
 
   /// Reads the fields it knows; anything missing or broken is simply
@@ -61,6 +62,7 @@ class TripLiveDetails {
         json['stops'],
         visits: json['stopVisits'],
       ),
+      fare: _fareOf(json['fare']),
     );
   }
 
@@ -83,6 +85,19 @@ class TripLiveDetails {
   /// server's record of each middle stop (G7 live fix: an arrival sent from
   /// another device or the API is picked up). Null when not carried.
   final List<TripStopVisit>? stopVisits;
+
+  /// Owner 2026-11-20 "Change meter to app (Rec.)": the rider's price as
+  /// the server has it now (`TripProjection.fare`); null when absent.
+  final Money? fare;
+
+  static Money? _fareOf(Object? value) {
+    if (value is! Map) return null;
+    try {
+      return Money.fromJson(Map<String, dynamic>.from(value));
+    } on FormatException {
+      return null;
+    }
+  }
 
   /// The server's arrival at middle stop [index] while the driver has not
   /// left it yet; null otherwise.
@@ -123,6 +138,7 @@ class TripLiveDetails {
           rideCheck: rideCheck ?? older.rideCheck,
           routeChange: routeChange ?? older.routeChange,
           stopVisits: stopVisits ?? older.stopVisits,
+          fare: fare ?? older.fare,
         );
 
   TripLiveDetails withEta(TripEta? eta) => TripLiveDetails(
@@ -137,6 +153,7 @@ class TripLiveDetails {
     rideCheck: rideCheck,
     routeChange: routeChange,
     stopVisits: stopVisits,
+    fare: fare,
   );
 }
 

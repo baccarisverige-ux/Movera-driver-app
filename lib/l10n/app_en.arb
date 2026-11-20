@@ -4240,6 +4240,8 @@
   "@waitingBackAtStop": {"description": "Contract v0.18.108 (contract.json#autoArrive.stops.texts.driverStopBack, job C9b): button under the paused note at a middle stop (stops[i].away); the server counts the tap only within terms.leaveMeters."},
   "liveTripNotAtStop": "You are not at the stop yet.",
   "@liveTripNotAtStop": {"description": "Contract v0.18.108 (contract.json#autoArrive.stops.texts.notAtStop, job C9b): the server refused the stop tap or the back tap with 409 not_at_stop."},
+  "meterChangeToAppPrice": "Change the taximeter to {amount}",
+  "@meterChangeToAppPrice": {"description": "Owner button 2026-11-20 \"Change meter to app (Rec.)\": notice that stays until OK when the server's trip price (TripProjection.fare) changed after the start; amount = the server's new fare, formatted.", "placeholders": {"amount": {"type": "String"}}},
   "call112": "Call 112",
   "call112OnYourPhone": "Call 112 on your phone",
   "call112IfYouNeedHelp": "\nCall 112 if you need help now.",

@@ -5359,6 +5359,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String get liveTripNotAtStop => 'Du är inte vid stoppet än.';
 
   @override
+  String meterChangeToAppPrice(String amount) {
+    return 'Ändra taxametern till $amount';
+  }
+
+  @override
   String get call112 => 'Ring 112';
 
   @override
