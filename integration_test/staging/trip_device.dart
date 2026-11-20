@@ -29,13 +29,24 @@ extension _TripDevice on TripRun {
       RegExp('$name=(\\S+)').firstMatch(ack ?? '')?[1] ?? '?';
 
   /// Brings the app back and pumps only once Android says it is resumed.
+  /// Pumps only once the phone's top screen is this app again (up to 3
+  /// tries); otherwise nothing is pumped and the step fails on `back`.
   Future<String?> _toFront(PhoneSwitches phone) async {
-    final ack = await phone.send(tester, 'front', pump: false);
-    await Future<void>.delayed(const Duration(seconds: 2));
-    await tester.pump(const Duration(milliseconds: 300));
-    await wait(tester, const Duration(seconds: 2));
+    String? ack;
+    for (var i = 0; i < 3; i++) {
+      ack = await phone.send(tester, 'front', pump: false);
+      if (_field(ack, 'top').startsWith(_pkg)) {
+        await Future<void>.delayed(const Duration(seconds: 1));
+        await tester.pump(const Duration(milliseconds: 300));
+        await wait(tester, const Duration(seconds: 2));
+        return ack;
+      }
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
     return ack;
   }
+
+  bool _inFront(String? ack) => _field(ack, 'top').startsWith(_pkg);
 
   Future<void> _bookInBackground() async {
     const id = 'OFFER-PUSH';
@@ -45,29 +56,38 @@ extension _TripDevice on TripRun {
       log.skip(id, title, 'not run: no phone control file (not Test Lab)');
       return _book('BOOK');
     }
-    final before = _offers(await phone.send(tester, 'notif'));
+    final first = await phone.send(tester, 'notif');
+    final before = _offers(first);
+    final keysBefore = _field(first, 'keys').split(',').toSet();
     final home = await phone.send(tester, 'home', pump: false);
     final away = !_field(home, 'top').startsWith(_pkg);
     await _book('BOOK');
     var now = before;
+    var fresh = false;
     final sent = DateTime.now();
     if (tripId != null) {
       final end = sent.add(const Duration(seconds: 45));
       while (DateTime.now().isBefore(end)) {
-        now = _offers(await phone.send(tester, 'notif', pump: false));
-        if (now > before && before >= 0) break;
+        final ack = await phone.send(tester, 'notif', pump: false);
+        now = _offers(ack);
+        // A notice id:time not there before booking (a replaced notice
+        // gets a new post time).
+        fresh = _field(ack, 'keys')
+            .split(',')
+            .any((k) => k != '-' && k != '?' && !keysBefore.contains(k));
+        if (now >= 1 && fresh) break;
         await Future<void>.delayed(const Duration(seconds: 2));
       }
     }
     final seconds = DateTime.now().difference(sent).inSeconds;
     final front = await _toFront(phone);
-    final back = _field(front, 'top').startsWith(_pkg);
+    final back = _inFront(front);
     final detail =
-        'app in background=$away offer notices before=$before after=$now '
+        'app in background=$away offer notices before=$before after=$now new=$fresh '
         'in ${seconds}s; trip=${tripId ?? 'none'}; back in front=$back';
     if (tripId == null) {
       log.skip(id, title, 'not run: booking failed; $detail');
-    } else if (away && before >= 0 && now > before && back) {
+    } else if (away && now >= 1 && fresh && back) {
       log.pass(id, title, detail);
     } else {
       log.fail(id, title, detail);
@@ -102,9 +122,17 @@ extension _TripDevice on TripRun {
     final top = await phone.send(tester, 'top', pump: false);
     final topActivity = _field(top, 'top');
     final dialAct = _field(top, 'telact');
-    final dialerOnTop = !topActivity.startsWith(_pkg) && topActivity != '?';
+    final dialer = _field(top, 'dialer');
+    final dialerOnTop = dialer != 'none' && topActivity.startsWith('$dialer/');
     final dialIntent = dialAct.endsWith('.DIAL') || dialAct.endsWith('.VIEW');
     final front = await _toFront(phone);
+    if (!_inFront(front)) {
+      return log.fail(
+        id,
+        title,
+        'app not back in front: ${_field(front, 'top')}',
+      );
+    }
     await pumpUntil(
       tester,
       () => shows(find.textContaining(tr.safetySosSent)),
@@ -118,9 +146,12 @@ extension _TripDevice on TripRun {
     await log.screenshot(tester, 'trip-sos-sent');
     await backToTrip(tester);
     final detail =
-        'top after SOS=$topActivity tel intent=$dialAct '
+        'top after SOS=$topActivity dialer=$dialer tel intent=$dialAct '
         'back=${_field(front, 'top')}; "SOS sent" shown=$sentShown; '
         'server incident=$incident; trip screen on top=${onTripTop()}';
+    if (dialer == 'none') {
+      return log.skip(id, title, 'not run: this phone has no dialer; $detail');
+    }
     dialerOnTop && dialIntent && sentShown && incident && onTripTop()
         ? log.pass(id, title, detail)
         : log.fail(id, title, detail);

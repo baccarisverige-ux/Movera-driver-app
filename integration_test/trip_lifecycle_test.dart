@@ -13,10 +13,10 @@ import 'staging/trip_run.dart';
 /// big-test rider (se.r35, fallback se.r36) handed over at run time.
 ///
 /// Live scenario (testlab_test `trip-lifecycle`): SIGN-IN, ONLINE,
-/// RIDER-SIGN-IN, OFFER-PUSH (booked with the app in the background: the
-/// offer notice shows, M1), BOOK, OFFER, ACCEPT, SWITCH-1, WAYBILL-DURING, ARRIVE,
-/// START, CHAT, CALL, SWITCH-2, SOS, SOS-PRESS (SOS sent: the
-/// 112 dial screen opens and the server's incident exists, M4), RIDE-CHECK, DROPOFF, PAY, RATE,
+/// RIDER-SIGN-IN, OFFER-PUSH (booked with the app in the background, M1),
+/// BOOK, OFFER, ACCEPT, SWITCH-1, WAYBILL-DURING, ARRIVE, START, CHAT,
+/// CALL, SWITCH-2, SOS, SOS-PRESS (dial screen + server incident, M4),
+/// RIDE-CHECK, DROPOFF, PAY, RATE,
 /// WAYBILL-AFTER, RIDER, HISTORY, CLEANUP, OFFLINE, and for every screen
 /// change `TRANSITION:<name>:SMOOTH` / RELOAD / ERRORS.
 ///
@@ -98,8 +98,9 @@ void main() {
       expect(
         failed,
         isEmpty,
-        reason: [for (final f in failed) '${f.id} (${f.title}): ${f.detail}']
-            .join('\n'),
+        reason: [
+          for (final f in failed) '${f.id} (${f.title}): ${f.detail}',
+        ].join('\n'),
       );
       bodyDone = true;
     },

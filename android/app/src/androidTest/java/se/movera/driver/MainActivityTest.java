@@ -133,6 +133,10 @@ public class MainActivityTest {
       }
       startMockLocation(instrumentation, app);
     }
+    // Device proof M1: offer notices may show (granted once, before the app starts).
+    if (Build.VERSION.SDK_INT >= 33) {
+      shell(instrumentation, "pm grant se.movera.driver android.permission.POST_NOTIFICATIONS");
+    }
   }
 
   private static File controlFile;
@@ -207,7 +211,6 @@ public class MainActivityTest {
       // Device proof 2026-11-20 (M1, M4): the app really to the background
       // and back, the offer notices in the phone's list, the top screen.
       case "home":
-        shell(instrumentation, "pm grant se.movera.driver android.permission.POST_NOTIFICATIONS");
         shell(instrumentation, "input keyevent KEYCODE_HOME");
         break;
       case "front":
@@ -220,11 +223,12 @@ public class MainActivityTest {
     }
     String state;
     if (word.equals("notif")) {
-      state = word + " offers=" + offerNotices(instrumentation);
+      state = word + " " + offerNotices(instrumentation);
     } else if (word.equals("home") || word.equals("front") || word.equals("top")) {
       SystemClock.sleep(1500);
       String[] top = topAndTel(instrumentation);
       state = word + " top=" + top[0] + " telact=" + top[1];
+      if (word.equals("top")) state += " dialer=" + dialHandler(instrumentation);
     } else {
       SystemClock.sleep(1500);
       state = locationState(instrumentation, word);
@@ -260,18 +264,46 @@ public class MainActivityTest {
     return new String(text.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
   }
 
-  /** Posted notices of this app on the offer channels (movera_offers*); a count only. */
-  private static int offerNotices(Instrumentation instrumentation) {
-    String dump = shellAll(instrumentation, "dumpsys notification", 4 << 20);
+  /**
+   * Posted notices of this app on the offer channels (movera_offers*):
+   * "offers=N keys=id:when,..." (notification ids and post times only).
+   */
+  private static String offerNotices(Instrumentation instrumentation) {
+    String dump = shellAll(instrumentation, "dumpsys notification --noredact", 4 << 20);
+    java.util.regex.Pattern idP = java.util.regex.Pattern.compile(" id=(-?\\d+)");
+    java.util.regex.Pattern whenP = java.util.regex.Pattern.compile("when=(\\d+)");
     int count = 0;
+    StringBuilder keys = new StringBuilder();
     for (String line : dump.split("\n")) {
       if (line.contains("NotificationRecord(")
           && line.contains("pkg=se.movera.driver")
           && line.contains("channel=movera_offers")) {
         count++;
+        java.util.regex.Matcher id = idP.matcher(line);
+        java.util.regex.Matcher when = whenP.matcher(line);
+        if (keys.length() > 0) keys.append(',');
+        keys.append(id.find() ? id.group(1) : "?")
+            .append(':')
+            .append(when.find() ? when.group(1) : "?");
       }
     }
-    return count;
+    return "offers=" + count + " keys=" + (keys.length() == 0 ? "-" : keys.toString());
+  }
+
+  /** The package that handles ACTION_DIAL tel: on this phone ("none": no dialer). */
+  private static String dialHandler(Instrumentation instrumentation) {
+    String out =
+        shellAll(
+            instrumentation,
+            "cmd package resolve-activity --brief -a android.intent.action.DIAL -d tel:112",
+            4096);
+    java.util.regex.Pattern comp = java.util.regex.Pattern.compile("^([A-Za-z0-9_.]+)/");
+    String pkg = "none";
+    for (String line : out.split("\n")) {
+      java.util.regex.Matcher m = comp.matcher(line.trim());
+      if (m.find()) pkg = m.group(1);
+    }
+    return pkg;
   }
 
   /**
