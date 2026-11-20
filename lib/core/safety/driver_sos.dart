@@ -72,8 +72,8 @@ class DriverSos {
   /// logged and dropped.
   static const maxAge = Duration(minutes: 30);
 
-  /// Set by the app root: a kept SOS passed [maxAge] without reaching
-  /// Movera; the driver is told so.
+  /// Set by the app root: a kept SOS was given up on (too old, refused,
+  /// another driver, sign-out) without reaching Movera; the driver is told.
   static void Function()? onExpired;
 
   /// One background retry loop per app run.
@@ -227,15 +227,22 @@ class DriverSos {
       if (sos == null) return;
       final at = DateTime.tryParse('${sos.body['at']}');
       if (at == null || _now().difference(at) > maxAge) {
-        DriverLog.warn('kept sos too old, dropped', name: 'safety');
-        await _pending.clear(sos.key);
-        // Owner 2026-11-20 "Show 'SOS not sent'": the driver is told it
-        // never reached Movera (existing text safetySosNotSent).
-        onExpired?.call();
+        await _giveUp(sos, 'kept sos too old, dropped');
         return;
       }
       try {
-        final id = sos.tripId ?? await _activeTripId();
+        // Whose phone it is now: an SOS of another driver (a sign-out and
+        // a new sign-in) is never sent, also not to his trip.
+        final profile = await _api.get(profilePath);
+        final me = _idOf(profile['driverId']);
+        if (me != null && sos.driverId != null && sos.driverId != me) {
+          await _giveUp(sos, 'kept sos of another driver, dropped');
+          return;
+        }
+        if (me != null && sos.driverId == null) {
+          await _pending.save(sos.withDriver(me));
+        }
+        final id = sos.tripId ?? _idOf(profile['activeTripId']);
         if (id == null) {
           // No trip known to send it to: kept, asked again later.
           await _sleep(refusedDelay);
@@ -251,12 +258,12 @@ class DriverSos {
         return;
       } on ApiError catch (error) {
         if (error.statusCode == 409) {
-          // Trip not live: kept (never dropped), tried again slowly.
+          // Trip not live: kept, tried again slowly until [maxAge].
           await _sleep(refusedDelay);
           continue;
         }
         if (error.statusCode == 404 || !_keepTrying(error)) {
-          await _pending.clear(sos.key);
+          await _giveUp(sos, 'kept sos refused: ${error.code}');
           return;
         }
       } catch (_) {
@@ -266,6 +273,28 @@ class DriverSos {
       await _sleep(backgroundDelays[attempt < last ? attempt : last]);
     }
   }
+
+  /// Owner 2026-11-20 "Show 'SOS not sent'": every kept SOS given up on
+  /// is told to the driver (existing text safetySosNotSent).
+  Future<void> _giveUp(PendingSos sos, String why) async {
+    DriverLog.warn(why, name: 'safety');
+    await _pending.clear(sos.key);
+    onExpired?.call();
+  }
+
+  /// Sign-out (and before another driver signs in): a kept SOS is told to
+  /// the driver as not sent and dropped from this phone.
+  static Future<void> signedOut({PendingSosStore? store}) async {
+    final pending = store ?? const PendingSosStore();
+    final sos = await pending.read();
+    if (sos == null) return;
+    DriverLog.warn('kept sos dropped at sign-out', name: 'safety');
+    await pending.clear(sos.key);
+    onExpired?.call();
+  }
+
+  static String? _idOf(Object? id) =>
+      id is String && id.trim().isNotEmpty ? id : null;
 
   /// Not given up on: a network or server trouble, or a sign-in to renew.
   static bool _keepTrying(ApiError error) =>

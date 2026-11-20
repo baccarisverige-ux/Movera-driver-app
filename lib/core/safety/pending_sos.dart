@@ -6,15 +6,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// yet, kept on the phone so it is sent again after a network loss or an
 /// app restart. Its Idempotency-Key stays the same, so Movera gets one SOS.
 class PendingSos {
-  const PendingSos({required this.key, required this.body, this.tripId});
+  const PendingSos({
+    required this.key,
+    required this.body,
+    this.tripId,
+    this.driverId,
+  });
 
   final String key;
   final String? tripId;
+
+  /// The driver who pressed it (from the profile once known): another
+  /// driver signed in on this phone never sends it.
+  final String? driverId;
+
+  PendingSos withDriver(String id) =>
+      PendingSos(key: key, body: body, tripId: tripId, driverId: id);
   final Map<String, Object?> body;
 
   Map<String, Object?> toJson() => {
     'key': key,
     if (tripId != null) 'tripId': tripId,
+    if (driverId != null) 'driverId': driverId,
     'body': body,
   };
 
@@ -23,10 +36,12 @@ class PendingSos {
     final key = json['key'];
     final body = json['body'];
     final trip = json['tripId'];
+    final driver = json['driverId'];
     if (key is! String || key.isEmpty || body is! Map) return null;
     return PendingSos(
       key: key,
       tripId: trip is String && trip.isNotEmpty ? trip : null,
+      driverId: driver is String && driver.isNotEmpty ? driver : null,
       body: Map<String, Object?>.from(body),
     );
   }

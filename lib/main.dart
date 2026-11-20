@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:movera/presentation/common/chat/call_screen.dart';
 import 'package:movera/core/safety/driver_sos.dart';
+import 'package:movera/core/safety/sos_not_sent_notice.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 
@@ -279,13 +280,10 @@ class _MoveraAppState extends State<MoveraApp> {
       // Audit 2026-11-20 item 1: an SOS not confirmed before the app
       // stopped is sent again now.
       unawaited(DriverSos(api: live.api).retryPending());
-      DriverSos.onExpired = () {
-        final context = _navigatorKey.currentContext;
-        if (context == null || !context.mounted) return;
-        ScaffoldMessenger.maybeOf(
-          context,
-        )?.showSnackBar(SnackBar(content: Text(tr.safetySosNotSent)));
-      };
+      // Owner 2026-11-20 "Show 'SOS not sent'": a dialog until OK, also
+      // after a lock, the background or a restart.
+      SosNotSentNotice.instance.attach(() => _navigatorKey.currentContext);
+      DriverSos.onExpired = () => unawaited(SosNotSentNotice.instance.raise());
       // v0.18.38 §62 (fix job 8, owner G15 "Both rider and driver"): the
       // rider's in-app call rings here: the call screen with Answer /
       // Decline opens over whatever screen is up.
