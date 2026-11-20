@@ -4170,7 +4170,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get liveDriverPrivacyNote =>
-      'Votre position est envoyée uniquement à votre passager pendant cette course et n\'est pas enregistrée.';
+      'Votre position est envoyée uniquement à votre passager jusqu\'à la prise en charge et n\'est pas enregistrée.';
 
   @override
   String liveRiderSharing(String rider, String meters) {

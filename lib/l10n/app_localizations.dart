@@ -7165,7 +7165,7 @@ abstract class AppLocalizations {
   /// Consent / privacy line under the switch (v0.18.144, owner + legal OK pending).
   ///
   /// In en, this message translates to:
-  /// **'Your live location is sent only to your rider during this ride and is not saved.'**
+  /// **'Your live location is sent only to your rider until pickup and is not saved.'**
   String get liveDriverPrivacyNote;
 
   /// The rider shares; metres from the pickup (v0.18.144).

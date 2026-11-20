@@ -4091,7 +4091,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get liveDriverPrivacyNote =>
-      'Din plats skickas bara till din kund under den här resan och sparas inte.';
+      'Din plats skickas bara till din kund fram till upphämtningen och sparas inte.';
 
   @override
   String liveRiderSharing(String rider, String meters) {

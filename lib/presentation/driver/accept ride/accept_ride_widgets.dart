@@ -61,6 +61,10 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     super.initState();
     // v0.18.144: the rider's live dot (when the rider shares) redraws the pins.
     LiveLocationHub.riderDot.addListener(_riderDotChanged);
+    // A rider dot older than staleAfter leaves the map even with no new frame.
+    _riderDotExpiry = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (LiveLocationHub.riderDot.value != null) _riderDotChanged();
+    });
     _pose = widget.vehicle.current;
     _car = ValueNotifier<Marker?>(_carMarker);
     if (!DriverRuntimeConfig.current.liveMapTicker) {
@@ -97,6 +101,7 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
   @override
   void dispose() {
     LiveLocationHub.riderDot.removeListener(_riderDotChanged);
+    _riderDotExpiry?.cancel();
     _ticker?.cancel();
     _car.dispose();
     super.dispose();
@@ -116,6 +121,8 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     consumeTapEvents: true,
     infoWindow: InfoWindow(title: MoveraVehicleMarker.ownTitle),
   );
+
+  Timer? _riderDotExpiry;
 
   void _riderDotChanged() {
     if (mounted) setState(() {});

@@ -3095,7 +3095,7 @@
       }
     }
   },
-  "liveDriverPrivacyNote": "Your live location is sent only to your rider during this ride and is not saved.",
+  "liveDriverPrivacyNote": "Your live location is sent only to your rider until pickup and is not saved.",
   "@liveDriverPrivacyNote": {
     "description": "Consent / privacy line under the switch (v0.18.144, owner + legal OK pending)."
   },

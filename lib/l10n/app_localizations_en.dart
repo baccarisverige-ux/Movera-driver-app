@@ -4091,7 +4091,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveDriverPrivacyNote =>
-      'Your live location is sent only to your rider during this ride and is not saved.';
+      'Your live location is sent only to your rider until pickup and is not saved.';
 
   @override
   String liveRiderSharing(String rider, String meters) {

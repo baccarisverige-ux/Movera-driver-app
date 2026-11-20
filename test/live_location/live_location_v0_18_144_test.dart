@@ -142,14 +142,57 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('a 503 probe does not hide the card: it asks again in 30 s', (
+    tester,
+  ) async {
+    var calls = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DriverLiveLocationCard(
+            api: api((_) async {
+              calls++;
+              return calls == 1
+                  ? http.Response(
+                      '{"code":"unavailable","message":"busy"}',
+                      503,
+                      headers: {'content-type': 'application/json'},
+                    )
+                  : ok();
+            }),
+            tripId: 't1',
+            riderName: 'Sara Berg',
+            pickup: pickup,
+            position: () => pickup,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    final key = find.byKey(
+      const ValueKey<String>('driver-share-location-switch'),
+    );
+    expect(key, findsNothing);
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pump();
+    expect(calls, 2);
+    expect(key, findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
-    'zone on: the switch is on, and a sharing rider shows "Sara is sharing … m from pickup"',
+    'zone on: the switch starts OFF (the driver opts in); a sharing rider shows "Sara is sharing … m from pickup"',
     (tester) async {
+      final puts = <Object?>[];
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: DriverLiveLocationCard(
-              api: api((_) async => ok()),
+              api: api((request) async {
+                puts.add(jsonDecode(request.body));
+                return ok();
+              }),
               tripId: 't1',
               riderName: 'Sara Berg',
               pickup: pickup,
@@ -160,11 +203,33 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
-      final sw = tester.widget<Switch>(
-        find.byKey(const ValueKey<String>('driver-share-location-switch')),
+      final key = find.byKey(
+        const ValueKey<String>('driver-share-location-switch'),
       );
-      expect(sw.value, isTrue);
+      expect(
+        tester.widget<Switch>(key).value,
+        isFalse,
+        reason: 'no auto-share',
+      );
+      expect(puts, [
+        {'sharing': false},
+      ], reason: 'only the probe, no point');
+      await tester.tap(key);
+      await tester.pump();
+      await tester.pump();
+      expect(tester.widget<Switch>(key).value, isTrue);
+      expect(puts.last, {
+        'sharing': true,
+        'lat': pickup.latitude,
+        'lng': pickup.longitude,
+      });
       expect(find.text('Sara sees you on the map.'), findsOneWidget);
+      expect(
+        find.text(
+          'Your live location is sent only to your rider until pickup and is not saved.',
+        ),
+        findsOneWidget,
+      );
       LiveLocationHub.offer({
         'tripId': 't1',
         'side': 'rider',

@@ -20,7 +20,6 @@ class DriverLiveLocationCard extends StatefulWidget {
     required this.riderName,
     required this.pickup,
     required this.position,
-    this.every = const Duration(seconds: 8),
   });
 
   final ApiClient api;
@@ -28,7 +27,6 @@ class DriverLiveLocationCard extends StatefulWidget {
   final String riderName;
   final GeoPoint pickup;
   final GeoPoint? Function() position;
-  final Duration every;
 
   @override
   State<DriverLiveLocationCard> createState() => _DriverLiveLocationCardState();
@@ -40,6 +38,10 @@ class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
   bool _sharing = false;
   LiveLocationSender? _sender;
   Timer? _fresh;
+  Timer? _again;
+
+  /// The zone's `liveLocation.sendEverySeconds` from the probe's answer.
+  Duration _every = const Duration(seconds: 8);
 
   @override
   void initState() {
@@ -53,21 +55,38 @@ class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
   }
 
   /// One `sharing: false` tells whether the zone's switch is on (200) or
-  /// off (409 live_location_off), without sending a point.
+  /// off (409), without sending a point. The switch then starts OFF: the
+  /// driver opts in himself (decision: "opt-in by each person"). A 429,
+  /// 5xx or no answer asks again in 30 s; only a 409 hides the card.
   Future<void> _probe() async {
     try {
-      await widget.api.put(
+      final answer = await widget.api.put(
         '/api/v1/trips/${Uri.encodeComponent(widget.tripId)}/live-location',
         body: {'sharing': false},
       );
       if (!mounted) return;
-      setState(() => _allowed = true);
-      _set(true);
-    } on ApiError catch (_) {
-      if (mounted) setState(() => _allowed = false);
+      final every = answer['sendEverySeconds'];
+      setState(() {
+        _allowed = true;
+        if (every is int && every >= 5 && every <= 10) {
+          _every = Duration(seconds: every);
+        }
+      });
+    } on ApiError catch (error) {
+      if (!mounted) return;
+      if (error.statusCode == 409) {
+        setState(() => _allowed = false);
+      } else {
+        _retryProbe();
+      }
     } catch (_) {
-      // No answer: the card stays hidden on this screen.
+      if (mounted) _retryProbe();
     }
+  }
+
+  void _retryProbe() {
+    _again?.cancel();
+    _again = Timer(const Duration(seconds: 30), () => unawaited(_probe()));
   }
 
   void _set(bool on) {
@@ -75,7 +94,7 @@ class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
       _sender = LiveLocationSender(
         api: widget.api,
         tripId: widget.tripId,
-        every: widget.every,
+        every: _every,
         position: widget.position,
         onStopped: (why) {
           if (!mounted) return;
@@ -96,6 +115,7 @@ class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
   @override
   void dispose() {
     _fresh?.cancel();
+    _again?.cancel();
     unawaited(_sender?.stop());
     LiveLocationHub.clear();
     super.dispose();

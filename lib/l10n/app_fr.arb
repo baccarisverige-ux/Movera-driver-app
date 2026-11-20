@@ -1175,7 +1175,7 @@
   "nextTripsSwitchFailed": "Impossible de modifier les courses suivantes. Réessayez.",
   "liveShareSwitch": "Partager ma position",
   "liveDriverShareBody": "{rider} vous voit sur la carte.",
-  "liveDriverPrivacyNote": "Votre position est envoyée uniquement à votre passager pendant cette course et n'est pas enregistrée.",
+  "liveDriverPrivacyNote": "Votre position est envoyée uniquement à votre passager jusqu'à la prise en charge et n'est pas enregistrée.",
   "liveRiderSharing": "{rider} partage sa position (à {meters} m de la prise en charge)",
   "liveRiderLive": "{rider} · en direct",
   "islandRadarOffers": "{count, plural, =1{1 offre · radar} other{{count} offres · radar}}",
