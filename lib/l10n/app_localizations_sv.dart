@@ -4725,6 +4725,37 @@ class AppLocalizationsSv extends AppLocalizations {
       'Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här.';
 
   @override
+  String get payMoveraTitle => 'Betala Movera';
+
+  @override
+  String get payMoveraReference => 'Referens';
+
+  @override
+  String get payMoveraHowTo =>
+      'Betalningssidan öppnas i din webbläsare. Ange beloppet och referensen där.';
+
+  @override
+  String get payMoveraConfirmNote =>
+      'Beloppet minskar när Movera har bekräftat din betalning.';
+
+  @override
+  String get payMoveraCopy => 'Kopiera';
+
+  @override
+  String get payMoveraCopied => 'Kopierat';
+
+  @override
+  String get payMoveraAmountToPay => 'Belopp att betala';
+
+  @override
+  String get payMoveraLinkFailed =>
+      'Det gick inte att öppna betalningssidan. Försök igen.';
+
+  @override
+  String get payMoveraUnavailable =>
+      'Det gick inte att läsa in vad du är skyldig Movera. Försök igen senare.';
+
+  @override
   String get reservation => 'Bokning';
 
   @override
