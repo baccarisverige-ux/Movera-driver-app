@@ -93,41 +93,64 @@ void main() {
     expect(await const PendingSosStore().read(), isNull);
   });
 
-  test('a trip that ended first never drops the kept SOS', () async {
-    // Ali presses SOS offline; the trip ends before the network is back.
+  test(
+    'a trip that ended first: the server takes the kept SOS by its press time',
+    () async {
+      // Contract v0.18.148 (sosPressTime): Ali presses SOS offline; the trip
+      // ends before the network is back; the same key and body (with the
+      // press time) go out and Movera takes it.
+      await const PendingSosStore().save(
+        PendingSos(key: 'sos-k2', tripId: 'trp_9', body: {'at': at}),
+      );
+      networkUp = true;
+      await DriverSos(
+        api: api(),
+        now: () => t0.add(const Duration(minutes: 10)),
+        sleep: (_) async {},
+      ).retryPending();
+      expect(posts.single.headers['Idempotency-Key'], 'sos-k2');
+      expect(jsonDecode(posts.single.body), {'at': at});
+      expect(await const PendingSosStore().read(), isNull);
+    },
+  );
+
+  test('a refusal (409) of the kept SOS is final: dropped and told', () async {
+    var told = 0;
+    DriverSos.onExpired = () => told++;
+    addTearDown(() => DriverSos.onExpired = null);
     await const PendingSosStore().save(
       PendingSos(key: 'sos-k2', tripId: 'trp_9', body: {'at': at}),
     );
     networkUp = true;
     status = 409;
-    final waits = <Duration>[];
-    await expectLater(
-      DriverSos(
-        api: api(),
-        now: () => t0.add(const Duration(minutes: 10)),
-        sleep: (d) async {
-          waits.add(d);
-          if (waits.length == 3) throw StateError('stop the test loop');
-        },
-      ).retryPending(),
-      throwsStateError,
-    );
-    expect(posts, hasLength(3));
-    expect(waits, everyElement(DriverSos.refusedDelay));
-    expect((await const PendingSosStore().read())?.key, 'sos-k2');
+    await DriverSos(
+      api: api(),
+      now: () => t0.add(const Duration(minutes: 10)),
+      sleep: (_) async => throw StateError('no retry after a refusal'),
+    ).retryPending();
+    expect(posts, hasLength(1));
+    expect(told, 1);
+    expect(await const PendingSosStore().read(), isNull);
   });
 
-  test('a press refused as not live is kept and reads not sent', () async {
-    networkUp = true;
-    status = 409;
-    final outcome = await DriverSos(
-      api: api(),
-      sleep: (_) async => throw StateError('stop'),
-    ).send(tripId: 'trp_1');
-    expect(outcome, DriverSosOutcome.failed);
-    await DriverSos.writesDone;
-    expect((await const PendingSosStore().read())?.tripId, 'trp_1');
-  });
+  test(
+    'a press refused (409) is not kept, reads not sent and is told',
+    () async {
+      var told = 0;
+      DriverSos.onExpired = () => told++;
+      addTearDown(() => DriverSos.onExpired = null);
+      networkUp = true;
+      status = 409;
+      final outcome = await DriverSos(
+        api: api(),
+        sleep: (_) async => throw StateError('no retry after a refusal'),
+      ).send(tripId: 'trp_1');
+      expect(outcome, DriverSosOutcome.failed);
+      await DriverSos.writesDone;
+      expect(await const PendingSosStore().read(), isNull);
+      expect(told, 1);
+    },
+  );
 
   test('older than 30 min: dropped, never sent to a later trip', () async {
     await const PendingSosStore().save(
