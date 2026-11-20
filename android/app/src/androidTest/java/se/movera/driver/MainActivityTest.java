@@ -197,6 +197,8 @@ public class MainActivityTest {
     }
     if (n <= 0) return;
     String word = new String(buffer, 0, n, java.nio.charset.StandardCharsets.US_ASCII).trim();
+    int hash = word.indexOf('#');
+    if (hash >= 0) word = word.substring(0, hash);
     switch (word) {
       case "location-off": location(instrumentation, false); break;
       case "location-on": location(instrumentation, true); break;

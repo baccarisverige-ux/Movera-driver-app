@@ -21,6 +21,8 @@ class MockPosition {
   double lng;
   final String? _path;
 
+  static int _sent = 0;
+
   /// False when the run has no mock feeder (movera_tl_mock_location=0 or
   /// an older MainActivityTest): the position cannot be moved.
   bool get movable => _path != null;
@@ -123,7 +125,8 @@ class PhoneSwitches {
     final ack = File('$path.ack');
     if (ack.existsSync()) ack.deleteSync();
     final tmp = File('$path.tmp');
-    tmp.writeAsStringSync(word, flush: true);
+    // A unique suffix: a repeated word still changes the file's stamp.
+    tmp.writeAsStringSync('$word#${_sent++}', flush: true);
     tmp.renameSync(path);
     final end = DateTime.now().add(const Duration(seconds: 15));
     while (DateTime.now().isBefore(end)) {

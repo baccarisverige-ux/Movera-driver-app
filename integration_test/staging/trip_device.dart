@@ -97,7 +97,7 @@ extension _TripDevice on TripRun {
     );
     // The tap hands off to the dialer: from here the app may be paused.
     await tester.tap(find.byKey(const ValueKey('safety-sos-send')));
-    await tester.pump(const Duration(milliseconds: 100));
+    // No pump: the dialer may already cover the app (frames off).
     await Future<void>.delayed(const Duration(seconds: 3));
     final top = await phone.send(tester, 'top', pump: false);
     final topActivity = _field(top, 'top');
