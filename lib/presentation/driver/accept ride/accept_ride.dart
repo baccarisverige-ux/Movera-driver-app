@@ -1,3 +1,4 @@
+import 'package:movera/core/device/screen_awake.dart';
 import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
@@ -542,6 +543,11 @@ class _AcceptRideState extends State<AcceptRide>
   );
   ActiveRideStage get _stage => _rideLifecycle.stage;
 
+  /// Heading to pickup, at pickup or in trip: every stage until the trip
+  /// ends (completed, cancelled or handed back).
+  void _syncScreenAwake() =>
+      ScreenAwake.instance.hold(this, keep: !_rideLifecycle.terminal);
+
   /// Finder A4: the step button is disabled with a spinner while [request]
   /// runs.
   Future<T> _whileStepBusy<T>(Future<T> Function() request) async {
@@ -756,6 +762,9 @@ class _AcceptRideState extends State<AcceptRide>
     _AcceptRideTrip(this)._setUpTripCamera();
     _rideLifecycle.addListener(_AcceptRideTrip(this)._onPersistenceChanged);
     _rideLifecycle.addListener(_syncNavigationStageListener);
+    // Audit 2026-11-20 item 2: the screen stays on while the trip is live.
+    _rideLifecycle.addListener(_syncScreenAwake);
+    _syncScreenAwake();
     _syncNavigationStageListener();
     _rideLifecycle.addListener(_syncLateEtaListener);
     _AcceptRideTrip(this)._restoreQueuedNextFromSnapshot();
@@ -886,6 +895,8 @@ class _AcceptRideState extends State<AcceptRide>
 
   @override
   void dispose() {
+    _rideLifecycle.removeListener(_syncScreenAwake);
+    ScreenAwake.instance.release(this);
     OpenTripScreens.remove(widget.tripId, _bringToFront);
     _chatAlerts?.dispose();
     driverRouteObserver.unsubscribe(this);
