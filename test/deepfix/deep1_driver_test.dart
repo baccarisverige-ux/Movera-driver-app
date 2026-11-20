@@ -353,6 +353,19 @@ void main() {
       expect(jsonDecode(sent.single.body), {'phone': '+46701740633'});
     });
 
+    testWidgets('v0.18.138: a national number with a trunk 0 and any '
+        'separators goes out in E.164, as sign-in reads it', (tester) async {
+      final sent = await run(tester, ContactKind.phone, '(070) 174-06.33', (r) {
+        return {
+          'sessionId': 'ses_1',
+          'requestId': 'req_1',
+          'expiresAt': '2026-11-02T12:05:00Z',
+          'retryAfterSeconds': 30,
+        };
+      });
+      expect(jsonDecode(sent.single.body), {'phone': '+46701740633'});
+    });
+
     testWidgets('a number already used says so', (tester) async {
       await run(
         tester,
