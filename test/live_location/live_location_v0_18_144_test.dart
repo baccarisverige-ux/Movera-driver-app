@@ -252,4 +252,89 @@ void main() {
       );
     },
   );
+
+  test('position: only a real fix at most 30 s old; none = nothing', () {
+    final now = DateTime.utc(2026, 11, 20, 10);
+    expect(freshDriverPoint(null, now: now), isNull);
+    expect(
+      freshDriverPoint({
+        'lat': 59.3,
+        'lng': 18.0,
+        'measuredAt': now
+            .subtract(const Duration(seconds: 45))
+            .toIso8601String(),
+      }, now: now),
+      isNull,
+    );
+    expect(
+      freshDriverPoint({
+        'lat': 59.3,
+        'lng': 18.0,
+        'measuredAt': now
+            .subtract(const Duration(seconds: 5))
+            .toIso8601String(),
+      }, now: now)?.latitude,
+      59.3,
+    );
+  });
+
+  test('sender with no fix sends nothing', () async {
+    var puts = 0;
+    final sender = LiveLocationSender(
+      api: api((_) async {
+        puts++;
+        return ok();
+      }),
+      tripId: 't1',
+      position: () => null,
+      every: const Duration(hours: 1),
+    );
+    sender.start();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(puts, 0);
+    await sender.stop(tellServer: false);
+  });
+
+  testWidgets(
+    'app paused: sharing stops and the switch shows off until tapped',
+    (tester) async {
+      final puts = <Object?>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DriverLiveLocationCard(
+              api: api((r) async {
+                puts.add(jsonDecode(r.body));
+                return ok();
+              }),
+              tripId: 't1',
+              riderName: 'Sara',
+              pickup: pickup,
+              position: () => pickup,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      final key = find.byKey(
+        const ValueKey<String>('driver-share-location-switch'),
+      );
+      await tester.tap(key);
+      await tester.pump();
+      expect(tester.widget<Switch>(key).value, isTrue);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(tester.widget<Switch>(key).value, isFalse);
+      expect(puts.last, {'sharing': false});
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(
+        tester.widget<Switch>(key).value,
+        isFalse,
+        reason: 'resumes only on a tap',
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

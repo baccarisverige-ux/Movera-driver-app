@@ -8,8 +8,8 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_location_share.dart';
 
 /// Contract v0.18.144 (owner 2026-11-20; approved mockup screen 8): on the
-/// way to the pickup the driver's "Share my location" switch (default on
-/// once the zone allows it) and "Sara is sharing her location (12 m from
+/// way to the pickup the driver's opt-in "Share my location" switch (starts
+/// off; the driver taps it) and "Sara is sharing her location (12 m from
 /// pickup)" while the rider shares. Lives only while the trip screen shows
 /// it; sharing stops with it.
 class DriverLiveLocationCard extends StatefulWidget {
@@ -32,7 +32,8 @@ class DriverLiveLocationCard extends StatefulWidget {
   State<DriverLiveLocationCard> createState() => _DriverLiveLocationCardState();
 }
 
-class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
+class _DriverLiveLocationCardState extends State<DriverLiveLocationCard>
+    with WidgetsBindingObserver {
   /// null until the server said whether the zone allows sharing.
   bool? _allowed;
   bool _sharing = false;
@@ -46,6 +47,7 @@ class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     LiveLocationHub.riderLabel = widget.riderName.split(' ').first;
     unawaited(_probe());
     // Re-draw so a point that went stale disappears.
@@ -112,12 +114,26 @@ class _DriverLiveLocationCardState extends State<DriverLiveLocationCard> {
     setState(() => _sharing = on);
   }
 
+  /// Hidden, paused or closed: sharing stops and the switch shows off; it
+  /// comes back only when the driver taps it again.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final away =
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached;
+    if (away && (_sharing || _sender != null)) _set(false);
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fresh?.cancel();
     _again?.cancel();
     unawaited(_sender?.stop());
-    LiveLocationHub.clear();
+    if (LiveLocationHub.riderDot.value?.tripId == widget.tripId) {
+      LiveLocationHub.clear();
+    }
     super.dispose();
   }
 

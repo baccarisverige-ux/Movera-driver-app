@@ -14,8 +14,10 @@ extension _AcceptRideLiveLocation on _AcceptRideState {
       tripId: widget.tripId,
       riderName: _riderName,
       pickup: GeoPoint(_pickupPosition.latitude, _pickupPosition.longitude),
+      // Only a real, recent GPS fix the phone sent (never the screen's
+      // start point, which may be the pickup itself).
       position: () =>
-          GeoPoint(_driverPosition.latitude, _driverPosition.longitude),
+          freshDriverPoint(LiveDriverServices.instance?.reporter.lastFix),
     );
   }
 }

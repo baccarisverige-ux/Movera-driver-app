@@ -78,6 +78,22 @@ abstract final class LiveLocationHub {
 
 enum LiveShareStop { zoneOff, rideOver }
 
+/// The phone's last sent GPS fix (`GeoFix` map) as a point, only when it is
+/// at most [maxAge] old; else null (then nothing is sent).
+GeoPoint? freshDriverPoint(
+  Map<String, Object?>? fix, {
+  DateTime? now,
+  Duration maxAge = const Duration(seconds: 30),
+}) {
+  final lat = fix?['lat'];
+  final lng = fix?['lng'];
+  final at = DateTime.tryParse('${fix?['measuredAt']}');
+  if (lat is! num || lng is! num || at == null) return null;
+  if ((now ?? DateTime.now()).difference(at) > maxAge) return null;
+  final point = GeoPoint(lat.toDouble(), lng.toDouble());
+  return point.isValid ? point : null;
+}
+
 /// The driver's "Share my location" switch: `PUT /trips/{tripId}/
 /// live-location` every [every] (5–10 s) only while the trip screen is open.
 class LiveLocationSender {
