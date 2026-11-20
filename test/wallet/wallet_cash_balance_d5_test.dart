@@ -102,6 +102,55 @@ void main() {
       expect(week.moveraBalance!.owedToMovera.formatted, '50,00 kr');
     });
 
+    test('not what the contract promises → no balance: a negative amount, '
+        'both sides above 0, two currencies, another currency than the '
+        'report (review should-fix 2 + 3)', () {
+      Map<String, dynamic> withBalance(Map<String, dynamic> balance) =>
+          report('SEK')..['moveraBalance'] = balance;
+      for (final bad in [
+        {'owedToMovera': money(-500, 'SEK'), 'moveraOwesYou': money(0, 'SEK')},
+        {'owedToMovera': money(0, 'SEK'), 'moveraOwesYou': money(-1, 'SEK')},
+        {'owedToMovera': money(5, 'SEK'), 'moveraOwesYou': money(7, 'SEK')},
+        {'owedToMovera': money(5, 'SEK'), 'moveraOwesYou': money(0, 'EUR')},
+        {'owedToMovera': money(5, 'EUR'), 'moveraOwesYou': money(0, 'EUR')},
+      ]) {
+        expect(
+          EarningsWeek.of(withBalance(bad), DateTime.now()).moveraBalance,
+          isNull,
+          reason: '$bad',
+        );
+      }
+    });
+
+    test('no period holds now → the newest period, as the week total does; '
+        'cash is 0 only when the report has no period at all (review '
+        'should-fix 5)', () {
+      Map<String, dynamic> period(String start, String end, int cash) => {
+        'periodStart': start,
+        'periodEnd': end,
+        'tripCount': 1,
+        'gross': money(1, 'SEK'),
+        'commission': money(0, 'SEK'),
+        'tips': money(0, 'SEK'),
+        'adjustments': money(0, 'SEK'),
+        'cashCollected': money(cash, 'SEK'),
+        'net': money(cash * 2, 'SEK'),
+      };
+      final old = report('SEK', period: false)
+        ..['periods'] = [
+          period('2026-01-05T00:00:00Z', '2026-01-12T00:00:00Z', 111),
+          period('2026-01-12T00:00:00Z', '2026-01-19T00:00:00Z', 222),
+        ];
+      final week = EarningsWeek.of(old, DateTime.utc(2026, 6, 1));
+      expect(week.cashCollected!.minorUnits, 222);
+      expect(week.net!.minorUnits, 444);
+      // A period that cannot be read is not "no entry": no made-up 0.
+      final odd = report('SEK', period: false)..['periods'] = ['x'];
+      expect(EarningsWeek.of(odd, DateTime.now()).cashCollected, isNull);
+      final none = report('SEK', period: false)..['periods'] = 'x';
+      expect(EarningsWeek.of(none, DateTime.now()).cashCollected, isNull);
+    });
+
     test('a period without cashCollected (optional field): no cash line', () {
       final week = EarningsWeek.of(report('SEK', cash: null), DateTime.now());
       expect(week.cashCollected, isNull);
@@ -236,6 +285,8 @@ void main() {
       await open(tester);
       expect(textOf(tester, 'wallet-movera-balance'), 'Settled');
       expect(key('wallet-pay-movera'), findsNothing);
+      // "Settled" needs no "Settled in your next payout." under it.
+      expect(key('wallet-balance-settles'), findsNothing);
     });
 
     testWidgets('an older server: the cash line only, no owed line and no '
@@ -248,6 +299,37 @@ void main() {
       );
       expect(key('wallet-movera-balance'), findsNothing);
       expect(key('wallet-balance-settles'), findsNothing);
+      expect(find.textContaining('23,84'), findsNothing);
+    });
+
+    testWidgets('a broken balance (below 0) or one in another currency than '
+        'the tab: no owed line, the cash line stays', (tester) async {
+      serve(
+        (_) => report('SEK')
+          ..['moveraBalance'] = {
+            'owedToMovera': money(-500, 'SEK'),
+            'moveraOwesYou': money(0, 'SEK'),
+          },
+      );
+      await open(tester);
+      expect(key('wallet-cash-collected'), findsOneWidget);
+      expect(key('wallet-movera-balance'), findsNothing);
+      expect(key('wallet-balance-settles'), findsNothing);
+      expect(find.textContaining('5,00'), findsNothing);
+    });
+
+    testWidgets('€ tab: a kr balance is never shown under it', (tester) async {
+      serve(
+        (_) => report('EUR')
+          ..['moveraBalance'] = {
+            'owedToMovera': money(2384, 'SEK'),
+            'moveraOwesYou': money(0, 'SEK'),
+          },
+      );
+      Money.zoneCurrency = 'EUR';
+      await open(tester);
+      expect(textOf(tester, 'wallet-cash-collected'), contains('349,00 €'));
+      expect(key('wallet-movera-balance'), findsNothing);
       expect(find.textContaining('23,84'), findsNothing);
     });
 
