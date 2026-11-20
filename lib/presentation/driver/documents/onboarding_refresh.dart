@@ -90,8 +90,12 @@ Future<void> _readHomeBadges(
 }) async {
   if (!homeBadgesMissing) {
     try {
-      final badges = await session.repository.homeBadges();
-      session.replace(badges.profile);
+      // The profile read shares the session's one-at-a-time guard; an older
+      // answer never overwrites a newer account.
+      final badges = await session.readProfileWith(
+        session.repository.homeBadges,
+        (b) => b.profile,
+      );
       session.unreadNotifications.value = badges.unread.length;
       afterProfile?.call();
       await _quiet(

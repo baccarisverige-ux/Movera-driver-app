@@ -189,4 +189,30 @@ void main() {
       '/api/v1/driver/home-badges',
     );
   });
+
+  test('an older badges answer never overwrites a newer account, and a '
+      'profile read already out is waited for (one at a time)', () async {
+    final session = sessionWith(
+      (path) => path == '/api/v1/driver/profile'
+          ? jsonResponse(200, {...profileJson(), 'version': 7})
+          : jsonResponse(200, {
+              'profile': {...profileJson(), 'version': 5, 'firstName': 'Old'},
+              'notifications': {'items': <Object>[], 'nextCursor': null},
+              'reminders': {'items': <Object>[], 'blocksOnline': 0},
+              'onboardingSettings': null,
+            }),
+    );
+    final first = session.refresh();
+    final badges = refreshHomeBadges(session);
+    await Future.wait([first, badges]);
+    expect(sent, ['/api/v1/driver/profile', '/api/v1/driver/home-badges']);
+    expect(session.account?.version, 7);
+    expect(session.account?.firstName, 'Eva');
+    // A refresh while the badges read is out shares it (no second request).
+    sent.clear();
+    final again = refreshHomeBadges(session);
+    await session.refresh();
+    await again;
+    expect(sent, ['/api/v1/driver/home-badges']);
+  });
 }

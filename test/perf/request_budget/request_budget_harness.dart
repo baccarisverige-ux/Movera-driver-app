@@ -196,6 +196,7 @@ StateMeasure measure(
   void Function(LiveDriverServices live, List<void Function()> stops)? extra,
 }) {
   late StateMeasure result;
+  homeBadgesMissing = false;
   fakeAsync((async) {
     final client = CountingClient(
       refuseStream: switch (state) {

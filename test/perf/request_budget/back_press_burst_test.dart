@@ -38,6 +38,7 @@ void main() {
   final previousClock = badgesClock;
   var now = DateTime.utc(2026, 11, 12, 9);
   setUp(() {
+    homeBadgesMissing = false;
     SharedPreferences.setMockInitialValues({});
     IslandMessages.reset();
     ScheduledRideStore.reset();
@@ -237,7 +238,8 @@ void main() {
     );
     expect(sent['GET /api/v1/trips/srv-trip-9'], 1, reason: '$sent');
     expect(sent[badges], 1, reason: '$sent');
-    expect(sent[profile], 1, reason: '$sent');
+    // v0.18.145: the trip's profile read shares the badges read in flight.
+    expect(sent[profile], isNull, reason: '$sent');
     expect(sent[unread], isNull, reason: '$sent');
     expect(sent[reminders], isNull, reason: '$sent');
     expect(sent[settings], isNull, reason: '$sent');
@@ -266,7 +268,8 @@ void main() {
     tester.state<NavigatorState>(find.byType(Navigator)).pop();
     await frames(tester);
     expect(
-      home.sent.skip(again).where((k) => k == unread),
+      // v0.18.145: the bell comes in the badges read (or its own read).
+      home.sent.skip(again).where((k) => k == unread || k == badges),
       hasLength(1),
       reason: '${home.sent.skip(again)}',
     );
