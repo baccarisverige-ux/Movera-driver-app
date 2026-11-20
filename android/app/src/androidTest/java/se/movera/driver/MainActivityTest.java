@@ -92,6 +92,7 @@ public class MainActivityTest {
     Log.i(TAG, "run-time values handed to the test: " + handed);
 
     Context app = instrumentation.getTargetContext();
+    appContext = app;
     File out = app.getExternalFilesDir("tl");
     if (out != null) {
       try {
@@ -217,13 +218,17 @@ public class MainActivityTest {
         shell(instrumentation, "am start -n se.movera.driver/.MainActivity");
         break;
       case "notif":
+      case "clear-offers":
       case "top":
         break;
       default: return;
     }
     String state;
     if (word.equals("notif")) {
-      state = word + " " + offerNotices(instrumentation);
+      state = word + " " + offerNotices(false);
+    } else if (word.equals("clear-offers")) {
+      offerNotices(true);
+      state = word + " " + offerNotices(false);
     } else if (word.equals("home") || word.equals("front") || word.equals("top")) {
       SystemClock.sleep(1500);
       String[] top = topAndTel(instrumentation);
@@ -264,28 +269,33 @@ public class MainActivityTest {
     return new String(text.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
   }
 
+  /** The app's context (the test runs in the app's process), for its notices. */
+  private static Context appContext;
+
   /**
-   * Posted notices of this app on the offer channels (movera_offers*):
-   * "offers=N keys=id:when,..." (notification ids and post times only).
+   * Active notices of this app on the offer channels (movera_offers*):
+   * "offers=N keys=key@postTime,..." (StatusBarNotification keys, which
+   * carry id and tag, and post times only). [clear]: they are cancelled.
    */
-  private static String offerNotices(Instrumentation instrumentation) {
-    String dump = shellAll(instrumentation, "dumpsys notification --noredact", 4 << 20);
-    java.util.regex.Pattern idP = java.util.regex.Pattern.compile(" id=(-?\\d+)");
-    java.util.regex.Pattern whenP = java.util.regex.Pattern.compile("when=(\\d+)");
+  private static String offerNotices(boolean clear) {
+    Context app = appContext;
+    if (app == null || Build.VERSION.SDK_INT < 26) return "offers=-1 keys=-";
+    android.app.NotificationManager manager =
+        app.getSystemService(android.app.NotificationManager.class);
+    if (manager == null) return "offers=-1 keys=-";
     int count = 0;
     StringBuilder keys = new StringBuilder();
-    for (String line : dump.split("\n")) {
-      if (line.contains("NotificationRecord(")
-          && line.contains("pkg=se.movera.driver")
-          && line.contains("channel=movera_offers")) {
-        count++;
-        java.util.regex.Matcher id = idP.matcher(line);
-        java.util.regex.Matcher when = whenP.matcher(line);
-        if (keys.length() > 0) keys.append(',');
-        keys.append(id.find() ? id.group(1) : "?")
-            .append(':')
-            .append(when.find() ? when.group(1) : "?");
+    for (android.service.notification.StatusBarNotification sbn :
+        manager.getActiveNotifications()) {
+      String channel = sbn.getNotification().getChannelId();
+      if (channel == null || !channel.startsWith("movera_offers")) continue;
+      if (clear) {
+        manager.cancel(sbn.getTag(), sbn.getId());
+        continue;
       }
+      count++;
+      if (keys.length() > 0) keys.append(',');
+      keys.append(sbn.getKey().replace(' ', '_')).append('@').append(sbn.getPostTime());
     }
     return "offers=" + count + " keys=" + (keys.length() == 0 ? "-" : keys.toString());
   }

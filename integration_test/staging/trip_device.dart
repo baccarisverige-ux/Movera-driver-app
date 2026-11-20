@@ -56,7 +56,8 @@ extension _TripDevice on TripRun {
       log.skip(id, title, 'not run: no phone control file (not Test Lab)');
       return _book('BOOK');
     }
-    final first = await phone.send(tester, 'notif');
+    // Old offer notices are cleared first, so any notice now is new.
+    final first = await phone.send(tester, 'clear-offers');
     final before = _offers(first);
     final keysBefore = _field(first, 'keys').split(',').toSet();
     final home = await phone.send(tester, 'home', pump: false);
