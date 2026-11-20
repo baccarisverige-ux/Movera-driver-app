@@ -11,13 +11,22 @@ void main() {
       'Stockholm',
     );
     expect(RadarOfferView.area('Solna Centrum, Solna, Sweden'), 'Solna');
-    expect(RadarOfferView.area('12 Rue de Rivoli, 75004 Paris, France'), 'Paris');
-    expect(RadarOfferView.area('Av. Habib Bourguiba, Tunis 1000, Tunisie'), 'Tunis');
+    expect(
+      RadarOfferView.area('12 Rue de Rivoli, 75004 Paris, France'),
+      'Paris',
+    );
+    expect(
+      RadarOfferView.area('Av. Habib Bourguiba, Tunis 1000, Tunisie'),
+      'Tunis',
+    );
   });
 
   test('area keeps the old answers', () {
     expect(RadarOfferView.area('Hantverkargatan 4, Stockholm'), 'Stockholm');
-    expect(RadarOfferView.area('Klockarvägen 37, Geneta, Södertälje'), 'Södertälje');
+    expect(
+      RadarOfferView.area('Klockarvägen 37, Geneta, Södertälje'),
+      'Södertälje',
+    );
     expect(RadarOfferView.area('Stockholm'), 'Stockholm');
     expect(RadarOfferView.area('Sverige'), 'Sverige');
   });

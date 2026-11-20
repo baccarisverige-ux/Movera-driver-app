@@ -134,9 +134,17 @@ class RadarOfferView {
 
   /// Movera's countries as Google and OpenStreetMap name them (sv, en, fr, ar).
   static const Set<String> _countryNames = {
-    'sverige', 'sweden', 'suède', 'schweden',
-    'france', 'frankrike', 'frankreich',
-    'tunisie', 'tunisia', 'tunisien', 'تونس',
+    'sverige',
+    'sweden',
+    'suède',
+    'schweden',
+    'france',
+    'frankrike',
+    'frankreich',
+    'tunisie',
+    'tunisia',
+    'tunisien',
+    'تونس',
   };
 
   /// "Hantverkargatan 4, Stockholm" → "Hantverkargatan 4".
