@@ -324,6 +324,60 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('M3 (v0.18.140): the sheet shows the server\'s ride and earlier '
+      'fee rows; a 409 fresh preview brings its own rows', (tester) async {
+    preview = () => json(200, {
+      'previewId': 'cpv_first',
+      'tripId': 'live-trip',
+      'total': money(25000),
+      'cashDue': money(25000),
+      'cashDueRide': money(21500),
+      'cashDueOutstandingFee': money(3500),
+      'driverEarnings': money(3920),
+      'earlyEnd': false,
+      'fareLines': const [],
+    });
+    completeAnswers.add(
+      () => json(409, {
+        'code': 'conflict',
+        'message': 'The price changed.',
+        'requestId': 'r',
+        'retryable': false,
+        'reason': 'price_changed',
+        'preview': {
+          'previewId': 'cpv_fresh',
+          'tripId': 'live-trip',
+          'total': money(25500),
+          'cashDue': money(25500),
+          'cashDueRide': money(22000),
+          'cashDueOutstandingFee': money(3500),
+          'driverEarnings': money(4300),
+          'earlyEnd': false,
+          'fareLines': const [],
+        },
+      }),
+    );
+    Finder row(String key, String text) => find.descendant(
+      of: find.byKey(ValueKey<String>(key)),
+      matching: find.text(text),
+    );
+    final sent = await openCashSheet(tester);
+    expect(row('cash-collect-ride', '215,00 kr'), findsOneWidget);
+    expect(row('cash-collect-earlier-fee', '35,00 kr'), findsOneWidget);
+    await finish(tester);
+    expect(row('cash-collect-ride', '220,00 kr'), findsOneWidget);
+    expect(row('cash-collect-earlier-fee', '35,00 kr'), findsOneWidget);
+    await finish(tester);
+    final bodies = [
+      for (final r in sent.where((r) => r.url.path.endsWith('/complete')))
+        jsonDecode(r.body) as Map,
+    ];
+    // The cash sent is still cashDue, never the rows.
+    expect(bodies[0]['cashCollected'], money(25000));
+    expect(bodies[1]['cashCollected'], money(25500));
+    await close(tester);
+  });
+
   testWidgets('checker: an older server without the preview (404) keeps the '
       'old finish, so the cash trip is not stuck', (tester) async {
     preview = () =>

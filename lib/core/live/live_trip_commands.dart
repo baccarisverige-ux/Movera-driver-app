@@ -120,14 +120,14 @@ class CompletePreview {
   /// fix or from an older server.
   final int? distanceToDropoffMeters;
 
-  /// v0.18.58 §80: the meters for "You are {m} m from the destination",
-  /// only when the server says the trip ends early.
   /// v0.18.140 M3 (owner 2026-11-19): the server's split of [cashDue]
   /// when it holds the rider's earlier unpaid fee: the ride, and the fee
   /// owed to Movera. Both null with no fee or from an older server.
   final Money? cashDueRide;
   final Money? cashDueOutstandingFee;
 
+  /// v0.18.58 §80: the meters for "You are {m} m from the destination",
+  /// only when the server says the trip ends early.
   int? get farFromDropoffMeters => earlyEnd ? distanceToDropoffMeters : null;
 
   /// The driver's money for the sheet: [driverTotal], else the older
