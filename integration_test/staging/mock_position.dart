@@ -21,8 +21,6 @@ class MockPosition {
   double lng;
   final String? _path;
 
-  static int _sent = 0;
-
   /// False when the run has no mock feeder (movera_tl_mock_location=0 or
   /// an older MainActivityTest): the position cannot be moved.
   bool get movable => _path != null;
@@ -106,6 +104,8 @@ class PhoneSwitches {
   PhoneSwitches() : _path = Platform.environment['MOVERA_TL_CONTROL_FILE'];
 
   final String? _path;
+
+  static int _sent = 0;
 
   bool get usable => _path != null;
 
