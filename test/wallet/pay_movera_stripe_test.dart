@@ -127,4 +127,41 @@ void main() {
     expect(key('pay-movera-button'), findsOneWidget);
     expect(key('pay-movera-card-button'), findsNothing);
   });
+  testWidgets(
+    'review MUST 1+2: paid on the sheet, reload fails: "checking"; the button stays off while owed has not dropped',
+    (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PayMoveraScreen(
+            load: () async {
+              calls++;
+              if (calls == 2) throw StateError('offline');
+              return PayMovera.of(answer());
+            },
+            startCard: () async => StripeDriverPayment.of({
+              'amount': money(2384),
+              'clientSecret': 'pi_1_secret',
+              'publishableKey': 'pk_test_x',
+            }),
+            presentCard: (_) async => true,
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.tap(key('pay-movera-card-button'));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      expect(
+        find.text('Payment received. We are checking it.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('The payment did not go through. Try again.'),
+        findsNothing,
+      );
+    },
+  );
 }
