@@ -96,6 +96,9 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
           return tr.contactReauthRequired;
         case 'change_too_many':
           return tr.contactChangeTooMany;
+        // Contract v0.18.138 deviceCheck.phoneChange: no SMS was sent.
+        case 'device_check_failed':
+          return tr.authErrDeviceCheckFailed;
       }
     }
     return accountErrorMessage(error, fallback: tr.contactChangeFailed);

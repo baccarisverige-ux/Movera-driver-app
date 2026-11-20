@@ -354,6 +354,9 @@ void main() {
     for (final (status, reason, text) in [
       (403, 'reauth_required', () => tr.contactReauthRequired),
       (429, 'change_too_many', () => tr.contactChangeTooMany),
+      // v0.18.138 deviceCheck.phoneChange: a phone change that fails the
+      // real-phone check says so, not the generic message.
+      (403, 'device_check_failed', () => tr.authErrDeviceCheckFailed),
     ]) {
       testWidgets('$status $reason has its own message', (tester) async {
         await run(
