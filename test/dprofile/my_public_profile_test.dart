@@ -122,4 +122,65 @@ void main() {
       expect(find.textContaining('Svenska · العربية'), findsOneWidget);
     },
   );
+
+  // Review round 1 (NO-GO e4d78ed8): View as rider shows the milestones and
+  // the since month, no "0 Years" tile; at 6 languages the other chips are off.
+  testWidgets('preview: milestones, since month, years 0 hidden', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: DriverProfilePreviewSheet(
+            preview: PublicProfilePreview(
+              firstName: 'Ali',
+              sinceMonth: '2026-03',
+              years: 0,
+              tripCount: 1000,
+              milestones: ['trips_1000', 'top_rating'],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Movera driver since 3/2026'), findsOneWidget);
+    expect(find.text('Years'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('mpp-milestone-trips_1000')),
+      findsOneWidget,
+    );
+    expect(find.text('Top rating'), findsOneWidget);
+  });
+
+  testWidgets('six languages: the chips not picked are off', (tester) async {
+    final six = ['sv', 'en', 'ar', 'fr', 'fi', 'es'];
+    final s = _start();
+    final api = _Fake(
+      OwnPublicProfile(
+        languages: six,
+        showCity: true,
+        showYears: true,
+        profileOn: true,
+        reviewsOn: true,
+        preview: s.preview,
+        compliments: s.compliments,
+        reviews: s.reviews,
+      ),
+    );
+    await tester.pumpWidget(MaterialApp(home: MyPublicProfileScreen(api: api)));
+    await tester.pumpAndSettle();
+    final de = tester.widget<FilterChip>(
+      find.byKey(const ValueKey('mpp-lang-de')),
+    );
+    expect(de.onSelected, isNull);
+    final sv = tester.widget<FilterChip>(
+      find.byKey(const ValueKey('mpp-lang-sv')),
+    );
+    expect(sv.onSelected, isNotNull);
+    expect(
+      find.text('You picked 6. Remove one to pick another.'),
+      findsOneWidget,
+    );
+  });
 }

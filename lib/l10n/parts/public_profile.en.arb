@@ -130,5 +130,18 @@
   "complimentGoodMusic": "Good music",
   "@complimentGoodMusic": {
     "description": "v0.18.147 driver profile (owner 2026-11-20 \"Now build all\"): Profile › My profile."
+  },
+  "mppSince": "Movera driver since {month}",
+  "@mppSince": {
+    "description": "v0.18.147 View as rider: the since month (years 0 shows only this).",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "mppLanguagesMax": "You picked 6. Remove one to pick another.",
+  "@mppLanguagesMax": {
+    "description": "v0.18.147 Min profil: shown when 6 languages are picked."
   }
 }

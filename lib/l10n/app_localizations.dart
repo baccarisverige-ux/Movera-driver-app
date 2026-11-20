@@ -8368,6 +8368,18 @@ abstract class AppLocalizations {
   /// **'Good music'**
   String get complimentGoodMusic;
 
+  /// v0.18.147 View as rider: the since month (years 0 shows only this).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera driver since {month}'**
+  String mppSince(String month);
+
+  /// v0.18.147 Min profil: shown when 6 languages are picked.
+  ///
+  /// In en, this message translates to:
+  /// **'You picked 6. Remove one to pick another.'**
+  String get mppLanguagesMax;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

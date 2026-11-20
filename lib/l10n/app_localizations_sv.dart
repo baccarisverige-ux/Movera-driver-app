@@ -4812,6 +4812,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get complimentGoodMusic => 'Bra musik';
 
   @override
+  String mppSince(String month) {
+    return 'Movera-förare sedan $month';
+  }
+
+  @override
+  String get mppLanguagesMax =>
+      'Du har valt 6. Ta bort ett för att välja ett annat.';
+
+  @override
   String get reservation => 'Bokning';
 
   @override

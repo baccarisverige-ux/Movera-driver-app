@@ -32,6 +32,17 @@ String complimentLabel(String code) => switch (code) {
   _ => code,
 };
 
+/// "2026-11" → "november 2026" in the driver's language.
+String profileMonthText(String month) {
+  final parts = month.split('-');
+  if (parts.length != 2) return month;
+  final at = DateTime(
+    int.tryParse(parts[0]) ?? 2000,
+    int.tryParse(parts[1]) ?? 1,
+  );
+  return DriverDates.monthYear(at);
+}
+
 class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
   OwnPublicProfile? _profile;
   Object? _error;
@@ -127,7 +138,9 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
                 const SizedBox(height: 16),
                 _section(
                   tr.mppLanguages,
-                  subtitle: tr.mppLanguagesHint,
+                  subtitle: p.languages.length >= maxProfileLanguages
+                      ? tr.mppLanguagesMax
+                      : tr.mppLanguagesHint,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -137,7 +150,11 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
                           key: ValueKey('mpp-lang-${e.key}'),
                           label: Text(e.value),
                           selected: p.languages.contains(e.key),
-                          onSelected: _saving
+                          // At 6, the chips not picked are off.
+                          onSelected:
+                              _saving ||
+                                  (!p.languages.contains(e.key) &&
+                                      p.languages.length >= maxProfileLanguages)
                               ? null
                               : (_) => _toggleLanguage(e.key),
                           selectedColor: const Color(0xFFE6F0FF),
@@ -431,6 +448,14 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                         ),
                     ],
                   ),
+                  if (p.sinceMonth != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        tr.mppSince(profileMonthText(p.sinceMonth!)),
+                        style: const TextStyle(fontSize: 13, color: _muted),
+                      ),
+                    ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 6,
@@ -454,7 +479,8 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                               : '${p.rating!.toStringAsFixed(1)} ★',
                           tr.mppRating,
                         ),
-                        if (p.years != null) _kpi('${p.years}', tr.mppYears),
+                        // Contract: years 0 shows only the since month.
+                        if ((p.years ?? 0) > 0) _kpi('${p.years}', tr.mppYears),
                       ],
                     ),
                   ),
@@ -470,6 +496,31 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                     const SizedBox(height: 8),
                     ComplimentGrid(compliments: p.compliments),
                   ],
+                  if (p.milestones.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      tr.mppMilestones,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    for (final m in p.milestones)
+                      ListTile(
+                        key: ValueKey('mpp-milestone-$m'),
+                        dense: true,
+                        leading: Text(
+                          m == 'trips_1000' ? '\u{1F3C6}' : '\u{1F31F}',
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                        title: Text(
+                          m == 'trips_1000'
+                              ? tr.mppMilestoneTrips1000
+                              : tr.mppMilestoneTopRating,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                  ],
                   if (p.latestReview != null) ...[
                     const SizedBox(height: 16),
                     Text(
@@ -482,7 +533,7 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        '“${p.latestReview!.text}”\n${p.latestReview!.name ?? tr.mppAnonymous} · ${p.latestReview!.month}',
+                        '“${p.latestReview!.text}”\n${p.latestReview!.name ?? tr.mppAnonymous} · ${profileMonthText(p.latestReview!.month)}',
                         textAlign: TextAlign.center,
                       ),
                     ),

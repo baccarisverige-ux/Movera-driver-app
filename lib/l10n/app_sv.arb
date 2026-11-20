@@ -1376,6 +1376,8 @@
   "complimentCleanCar": "Ren bil",
   "complimentSafeDriving": "Säker körning",
   "complimentGoodMusic": "Bra musik",
+  "mppSince": "Movera-förare sedan {month}",
+  "mppLanguagesMax": "Du har valt 6. Ta bort ett för att välja ett annat.",
   "reservation": "Bokning",
   "leaveNowForPickupTimePickup": "Åk nu till upphämtningen {pickupTime}",
   "reservationTime": "Bokning · {time}",

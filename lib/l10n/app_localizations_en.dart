@@ -4807,6 +4807,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get complimentGoodMusic => 'Good music';
 
   @override
+  String mppSince(String month) {
+    return 'Movera driver since $month';
+  }
+
+  @override
+  String get mppLanguagesMax => 'You picked 6. Remove one to pick another.';
+
+  @override
   String get reservation => 'Reservation';
 
   @override

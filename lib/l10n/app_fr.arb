@@ -1376,6 +1376,8 @@
   "complimentCleanCar": "Voiture propre",
   "complimentSafeDriving": "Conduite sûre",
   "complimentGoodMusic": "Bonne musique",
+  "mppSince": "Chauffeur Movera depuis {month}",
+  "mppLanguagesMax": "Vous en avez choisi 6. Retirez-en une pour en choisir une autre.",
   "reservation": "Réservation",
   "leaveNowForPickupTimePickup": "Partez maintenant pour votre course prévue à {pickupTime}",
   "reservationTime": "Réservation · {time}",
