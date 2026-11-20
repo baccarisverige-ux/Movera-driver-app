@@ -113,11 +113,31 @@ class RadarOfferView {
       payment.trim().toLowerCase() == cashPayment.toLowerCase();
 
   /// "Hantverkargatan 4, Stockholm" → "Stockholm".
+  /// "Klarabergsgatan 16, 111 21 Stockholm, Sverige" → "Stockholm": a
+  /// trailing country and the postcode are not the area.
   static String area(String address) {
-    final parts = address.split(',');
-    final last = parts.last.trim();
-    return last.isEmpty ? address.trim() : last;
+    final parts = address
+        .split(',')
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.length > 1 && _countryNames.contains(parts.last.toLowerCase())) {
+      parts.removeLast();
+    }
+    if (parts.isEmpty) return address.trim();
+    final town = parts.last
+        .replaceAll(RegExp(r'^\d[\d ]*\s+'), '')
+        .replaceAll(RegExp(r'\s+\d[\d ]*$'), '')
+        .trim();
+    return town.isEmpty ? parts.last : town;
   }
+
+  /// Movera's countries as Google and OpenStreetMap name them (sv, en, fr, ar).
+  static const Set<String> _countryNames = {
+    'sverige', 'sweden', 'suède', 'schweden',
+    'france', 'frankrike', 'frankreich',
+    'tunisie', 'tunisia', 'tunisien', 'تونس',
+  };
 
   /// "Hantverkargatan 4, Stockholm" → "Hantverkargatan 4".
   static String street(String address) {
