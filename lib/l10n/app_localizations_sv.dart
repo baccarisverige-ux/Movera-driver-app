@@ -4082,6 +4082,28 @@ class AppLocalizationsSv extends AppLocalizations {
       'Nästa resor kunde inte ändras. Försök igen.';
 
   @override
+  String get liveShareSwitch => 'Dela min plats';
+
+  @override
+  String liveDriverShareBody(String rider) {
+    return '$rider ser dig på kartan.';
+  }
+
+  @override
+  String get liveDriverPrivacyNote =>
+      'Din plats skickas bara till din kund fram till upphämtningen och sparas inte.';
+
+  @override
+  String liveRiderSharing(String rider, String meters) {
+    return '$rider delar sin plats ($meters m från upphämtningen)';
+  }
+
+  @override
+  String liveRiderLive(String rider) {
+    return '$rider · live';
+  }
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

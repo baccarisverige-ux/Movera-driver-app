@@ -4161,6 +4161,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de modifier les courses suivantes. Réessayez.';
 
   @override
+  String get liveShareSwitch => 'Partager ma position';
+
+  @override
+  String liveDriverShareBody(String rider) {
+    return '$rider vous voit sur la carte.';
+  }
+
+  @override
+  String get liveDriverPrivacyNote =>
+      'Votre position est envoyée uniquement à votre passager jusqu\'à la prise en charge et n\'est pas enregistrée.';
+
+  @override
+  String liveRiderSharing(String rider, String meters) {
+    return '$rider partage sa position (à $meters m de la prise en charge)';
+  }
+
+  @override
+  String liveRiderLive(String rider) {
+    return '$rider · en direct';
+  }
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
