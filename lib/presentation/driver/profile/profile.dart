@@ -22,6 +22,8 @@ import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
 import 'package:movera/presentation/driver/profile/app_version_line.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
+import 'package:movera/presentation/driver/profile/my_public_profile.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/presentation/driver/vehicles/vehicles.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -300,6 +302,14 @@ class _DriverProfileState extends State<DriverProfile> {
                   tr.myFleet,
                   MyFleetScreen(account: _liveSession!),
                   badge: _liveAccount?.pendingFleetInvitations ?? 0,
+                ),
+              // v0.18.147 (contract.json#driverProfile.apps.driver): what
+              // riders see when they tap the driver card.
+              if (LiveDriverServices.instance case final live?)
+                _item(
+                  Icons.person_pin_outlined,
+                  tr.mppTitle,
+                  MyPublicProfileScreen(api: live.publicProfile),
                 ),
               _item(Icons.insights_outlined, tr.analytics, const Analytics()),
               _item(Icons.account_balance_outlined, tr.myBank, const MyBank()),
