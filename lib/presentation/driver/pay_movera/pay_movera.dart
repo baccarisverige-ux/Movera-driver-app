@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/core/payments/stripe_sheet.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,13 +20,25 @@ import 'package:url_launcher/url_launcher.dart';
 /// screen shows the amount and the reference to enter there; the payment is
 /// confirmed by Movera by hand, so nothing changes here until then.
 class PayMoveraScreen extends StatefulWidget {
-  const PayMoveraScreen({super.key, this.load, this.openLink});
+  const PayMoveraScreen({
+    super.key,
+    this.load,
+    this.openLink,
+    this.startCard,
+    this.presentCard,
+  });
 
   /// Reads the screen's numbers; default: the live server.
   final Future<PayMovera> Function()? load;
 
   /// Opens the payment link in the browser; default: url_launcher.
   final Future<bool> Function(Uri link)? openLink;
+
+  /// DRAFT (driverPayRequest.stripe): POST /driver/pay-movera/pay; default: the live server.
+  final Future<StripeDriverPayment> Function()? startCard;
+
+  /// Shows the Stripe PaymentSheet; default: flutter_stripe. true = paid on the phone.
+  final Future<bool> Function(StripeDriverPayment intent)? presentCard;
 
   @override
   State<PayMoveraScreen> createState() => _PayMoveraScreenState();
@@ -56,6 +69,50 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(tr.payMoveraCopied)));
+  }
+
+  bool _busy = false;
+
+  void _say(String key, String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(key: ValueKey<String>(key), content: Text(text)));
+  }
+
+  /// DRAFT (owner 2026-11-20 "Stripe ... (2) the DRIVER paying his monthly
+  /// invoice"): the server's PaymentIntent, the Stripe sheet, then the
+  /// screen reads the server again: paid only when the server's owed drops.
+  Future<void> _payByCard() async {
+    setState(() => _busy = true);
+    try {
+      final live = LiveDriverServices.instance;
+      final intent =
+          await (widget.startCard ??
+              () => live!.earnings.startStripePayment())();
+      final paid =
+          await (widget.presentCard ??
+              (i) => presentStripeSheet(
+                clientSecret: i.clientSecret,
+                publishableKey: i.publishableKey,
+              ))(intent);
+      if (!paid) return;
+      final next = _load();
+      setState(() {
+        _view = next;
+      });
+      final view = await next;
+      _say(
+        'pay-movera-card-outcome',
+        view.owedToMovera.minorUnits < intent.amount.minorUnits
+            ? tr.payMoveraCardPaid
+            : tr.payMoveraCardChecking,
+      );
+    } catch (_) {
+      _say('pay-movera-card-outcome', tr.payMoveraCardFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _pay(Uri link) async {
@@ -134,7 +191,8 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
 
   Widget _body(PayMovera view) {
     final owes = view.owedToMovera.minorUnits > 0;
-    final link = view.canPay ? view.payLink : null;
+    final card = view.canPayByCard;
+    final link = !card && view.canPay ? view.payLink : null;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 30),
       child: Column(
@@ -176,7 +234,7 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
                     ),
                   ),
                 ),
-                if (owes && link == null) ...[
+                if (owes && link == null && !card) ...[
                   const SizedBox(height: 8),
                   Text(
                     tr.settledInYourNextPayout2,
@@ -200,6 +258,28 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
             ),
             const SizedBox(height: 8),
             _copyRow('reference', tr.payMoveraReference, view.reference),
+          ],
+          if (card) ...[
+            const SizedBox(height: 18),
+            FilledButton(
+              key: const ValueKey<String>('pay-movera-card-button'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _ink,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              onPressed: _busy ? null : _payByCard,
+              child: Text(
+                tr.payMoveraPayByCard(view.owedToMovera.formatted),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
           ],
           if (link != null) ...[
             const SizedBox(height: 18),

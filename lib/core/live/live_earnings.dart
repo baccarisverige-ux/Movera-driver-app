@@ -85,6 +85,13 @@ class LiveEarnings {
   Future<PayMovera> payMovera() async =>
       PayMovera.of(await _api.get('/api/v1/driver/pay-movera'));
 
+  /// DRAFT (contract driverPayRequest.stripe): a Stripe PaymentIntent for
+  /// what he owes now; the app sends no amount (the server's only).
+  Future<StripeDriverPayment> startStripePayment() async =>
+      StripeDriverPayment.of(
+        await _api.post('/api/v1/driver/pay-movera/pay', body: const {}),
+      );
+
   /// The period holding [now] (else the newest one) of an `EarningsReport`;
   /// null when there is none.
   static Map? periodOf(Map<String, dynamic> report, DateTime now) {
@@ -347,6 +354,7 @@ class PayMovera {
     required this.owedToMovera,
     required this.reference,
     this.payLink,
+    this.stripe = false,
   });
 
   /// Throws [FormatException] when the amount or the reference is missing
@@ -368,6 +376,7 @@ class PayMovera {
       owedToMovera: amount,
       reference: reference,
       payLink: json['enabled'] == true ? linkOf(json['payLink']) : null,
+      stripe: json['enabled'] == true && json['stripe'] == true,
     );
   }
 
@@ -383,6 +392,13 @@ class PayMovera {
   /// The admin's payment link, opened as it is; null while off or when it
   /// is not a plain https link (nothing else is ever opened).
   final Uri? payLink;
+
+  /// DRAFT (driverPayRequest.stripe): the Pay button pays by Stripe (card,
+  /// Apple Pay) instead of opening the link.
+  final bool stripe;
+
+  /// The Stripe Pay button shows only when the server says so and he owes.
+  bool get canPayByCard => stripe && owedToMovera.minorUnits > 0;
 
   /// The Pay button shows only with a link and something to pay.
   bool get canPay => payLink != null && owedToMovera.minorUnits > 0;
@@ -490,4 +506,36 @@ class EarningsTotals {
 
   /// Every currency earned in during the range.
   final List<String> currencies;
+}
+
+/// DRAFT (contract driverPayRequest.stripe, `StripeDriverPayment`): the
+/// PaymentIntent the server made for what he owes now. Test keys only.
+class StripeDriverPayment {
+  const StripeDriverPayment({
+    required this.amount,
+    required this.clientSecret,
+    required this.publishableKey,
+  });
+
+  factory StripeDriverPayment.of(Map<String, dynamic> json) {
+    final amount = json['amount'];
+    final secret = json['clientSecret'];
+    final key = json['publishableKey'];
+    if (amount is! Map ||
+        secret is! String ||
+        secret.isEmpty ||
+        key is! String ||
+        !key.startsWith('pk_test_')) {
+      throw FormatException('pay-movera/pay answer', json);
+    }
+    return StripeDriverPayment(
+      amount: Money.fromJson(Map<String, dynamic>.from(amount)),
+      clientSecret: secret,
+      publishableKey: key,
+    );
+  }
+
+  final Money amount;
+  final String clientSecret;
+  final String publishableKey;
 }
