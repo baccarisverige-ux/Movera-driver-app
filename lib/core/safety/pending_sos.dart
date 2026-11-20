@@ -1,20 +1,32 @@
 import 'dart:convert';
 
+import 'package:movera/core/privacy/local_data.dart' show localDataOwnerKey;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// App-lifecycle audit 2026-11-20 item 1: an SOS Movera has not confirmed
 /// yet, kept on the phone so it is sent again after a network loss or an
 /// app restart. Its Idempotency-Key stays the same, so Movera gets one SOS.
 class PendingSos {
-  const PendingSos({required this.key, required this.body, this.tripId});
+  const PendingSos({
+    required this.key,
+    required this.body,
+    this.tripId,
+    this.driverId,
+  });
 
   final String key;
   final String? tripId;
+
+  /// The driver who pressed it (this phone's signed-in driver at press
+  /// time): another driver signed in later never sends it. Never filled
+  /// in later.
+  final String? driverId;
   final Map<String, Object?> body;
 
   Map<String, Object?> toJson() => {
     'key': key,
     if (tripId != null) 'tripId': tripId,
+    if (driverId != null) 'driverId': driverId,
     'body': body,
   };
 
@@ -23,10 +35,12 @@ class PendingSos {
     final key = json['key'];
     final body = json['body'];
     final trip = json['tripId'];
+    final driver = json['driverId'];
     if (key is! String || key.isEmpty || body is! Map) return null;
     return PendingSos(
       key: key,
       tripId: trip is String && trip.isNotEmpty ? trip : null,
+      driverId: driver is String && driver.isNotEmpty ? driver : null,
       body: Map<String, Object?>.from(body),
     );
   }
@@ -39,6 +53,18 @@ class PendingSosStore {
   const PendingSosStore();
 
   static const prefKey = 'pending_sos_v1';
+
+  /// The driver signed in on this phone now (the local data owner,
+  /// `local_data.dart`); null when none.
+  Future<String?> owner() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = prefs.getString(localDataOwnerKey);
+      return id == null || id.isEmpty ? null : id;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<PendingSos?> read() async {
     try {

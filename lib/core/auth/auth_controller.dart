@@ -5,6 +5,7 @@ import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/provider_token_source.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/legal/driver_legal.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 
 /// The sign-in flow's state between its three steps, over [AuthRepository].
 ///
@@ -118,6 +119,10 @@ class AuthController {
     // v0.18.49 §71 (owner Q8): the server first; a refusal (a current trip,
     // [SignOutOnTrip]) changes nothing on this phone.
     await _auth.signOut();
+    // Owner 2026-11-20: a kept SOS never goes with the next driver; this
+    // driver is told it was not sent.
+    // Not awaited: sign-out never waits for the phone storage.
+    unawaited(DriverSos.signedOut().catchError((Object _) {}));
     // Contract v0.18.5 `auth.signedOut.ownSignOut`: no message after the
     // driver's own Sign out.
     SignedOutNotice.clear();

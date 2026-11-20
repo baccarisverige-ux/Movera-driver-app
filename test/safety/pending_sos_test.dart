@@ -143,6 +143,21 @@ void main() {
     expect(await const PendingSosStore().read(), isNull);
   });
 
+  test('past the max age the driver is told it was not sent', () async {
+    var told = 0;
+    DriverSos.onExpired = () => told++;
+    addTearDown(() => DriverSos.onExpired = null);
+    await const PendingSosStore().save(
+      const PendingSos(key: 'sos-k4', body: {'at': '2026-11-20T12:00:00Z'}),
+    );
+    await DriverSos(
+      api: api(),
+      now: () => t0.add(const Duration(minutes: 31)),
+      sleep: (_) async {},
+    ).retryPending();
+    expect(told, 1);
+  });
+
   test('the SOS POST never waits for the phone storage', () async {
     networkUp = true;
     final stuck = _StuckStore();
