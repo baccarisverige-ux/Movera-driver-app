@@ -11,5 +11,6 @@
   "payMoveraPayByCard": "Payer {amount} par carte",
   "payMoveraCardPaid": "Payé. Merci.",
   "payMoveraCardChecking": "Paiement reçu. Nous le vérifions.",
-  "payMoveraCardFailed": "Le paiement n'a pas abouti. Réessayez."
+  "payMoveraCardFailed": "Le paiement n'a pas abouti. Réessayez.",
+  "payMoveraAmountChanged": "Le montant a changé. Vérifiez-le et réessayez."
 }

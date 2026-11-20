@@ -4878,6 +4878,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get payMoveraCardFailed => 'Le paiement n\'a pas abouti. Réessayez.';
 
   @override
+  String get payMoveraAmountChanged =>
+      'Le montant a changé. Vérifiez-le et réessayez.';
+
+  @override
   String get reservation => 'Réservation';
 
   @override

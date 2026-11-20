@@ -164,4 +164,37 @@ void main() {
       );
     },
   );
+  testWidgets(
+    'the server amount differs from the one shown: no sheet, a notice, the screen reloads',
+    (tester) async {
+      var sheets = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PayMoveraScreen(
+            load: () async => PayMovera.of(answer()),
+            startCard: () async => StripeDriverPayment.of({
+              'amount': money(3000),
+              'clientSecret': 's',
+              'publishableKey': 'pk_test_x',
+            }),
+            presentCard: (_) async {
+              sheets++;
+              return true;
+            },
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.tap(key('pay-movera-card-button'));
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      expect(sheets, 0);
+      expect(
+        find.text('The amount changed. Check it and try again.'),
+        findsOneWidget,
+      );
+    },
+  );
 }

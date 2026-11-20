@@ -4796,6 +4796,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The payment did not go through. Try again.';
 
   @override
+  String get payMoveraAmountChanged =>
+      'The amount changed. Check it and try again.';
+
+  @override
   String get reservation => 'Reservation';
 
   @override

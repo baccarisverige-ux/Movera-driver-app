@@ -103,6 +103,7 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
         setState(() {
           _view = _load();
         });
+        _say('pay-movera-card-outcome', tr.payMoveraAmountChanged);
         return;
       }
       sheetPaid =
