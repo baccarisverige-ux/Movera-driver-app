@@ -4707,6 +4707,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Type a street, a place or a city. Your last 5 destinations show here.';
 
   @override
+  String get islandRadarListDriving => 'Radar list locked while driving';
+
+  @override
+  String get islandRadarListOff => 'Radar list is off';
+
+  @override
   String get reservation => 'Reservation';
 
   @override

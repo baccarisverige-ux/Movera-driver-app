@@ -105,4 +105,47 @@ void main() {
       expect(motion.moving, isFalse);
     });
   });
+
+  group('splitRadarDeck (Home deck refresh, §3.3)', () {
+    String id(String s) => s;
+    test('refresh keeps the overflow trips as held', () {
+      final r = splitRadarDeck(['a', 'b', 'c', 'd'], limit: 2, id: id);
+      expect(r.shown, ['a', 'b']);
+      expect(r.held, ['c', 'd']);
+    });
+    test('driving lowers the limit: cards move back to held, then return', () {
+      final driving = splitRadarDeck(['a', 'b', 'c'], limit: 1, id: id);
+      expect(driving.shown, ['a']);
+      expect(driving.held, ['b', 'c']);
+      final stopped = splitRadarDeck(
+        [...driving.shown, ...driving.held],
+        limit: 3,
+        id: id,
+      );
+      expect(stopped.shown, ['a', 'b', 'c']);
+      expect(stopped.held, isEmpty);
+    });
+    test('duplicates count once; run-out held trips leave', () {
+      final r = splitRadarDeck(
+        ['a', 'a', 'b', 'c'],
+        limit: 1,
+        id: id,
+        gone: (s) => s == 'c',
+      );
+      expect(r.shown, ['a']);
+      expect(r.held, ['b']);
+    });
+    test('the list locks once driving and closes on the change', () {
+      const limits = RadarAppLimits();
+      final motion = DriverMotion();
+      final t0 = DateTime.utc(2026, 11, 20);
+      motion.update(speedMps: 8, at: t0);
+      final changed = motion.update(
+        speedMps: 8,
+        at: t0.add(const Duration(seconds: 10)),
+      );
+      expect(changed, isTrue);
+      expect(limits.listOpen(moving: motion.moving), isFalse);
+    });
+  });
 }

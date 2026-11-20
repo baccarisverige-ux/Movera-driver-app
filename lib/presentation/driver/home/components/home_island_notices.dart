@@ -24,6 +24,14 @@ class HomeIslandNotices {
     group: 'online',
   );
 
+  /// §3.3: the full-screen Radar list cannot open now.
+  static IslandMessage radarListClosed({required bool driving}) =>
+      IslandMessage(
+        title: driving ? tr.islandRadarListDriving : tr.islandRadarListOff,
+        priority: IslandPriority.low,
+        group: 'radarList',
+      );
+
   static IslandMessage get riderCancelled => IslandMessage(
     title: driverText(DriverTexts.islandRiderCancelled),
     tone: IslandTone.alert,

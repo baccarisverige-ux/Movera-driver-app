@@ -228,6 +228,13 @@ extension _HomeOfferRadar on _DriverHomeState {
   bool get _radarListAllowed =>
       DriverOfferRules.current.radarApp.listOpen(moving: _motion.moving);
 
+  /// Tapped while the list cannot open: say why on the island.
+  void _radarListRefused() => IslandMessages.show(
+    HomeIslandNotices.radarListClosed(
+      driving: DriverOfferRules.current.radarApp.fullOn,
+    ),
+  );
+
   /// Stopped ↔ driving changed the limits: close a locked list and move
   /// cards over the new limit back to held (or held ones onto the deck).
   void _onMotionChanged() {
@@ -568,15 +575,13 @@ extension _HomeOfferRadar on _DriverHomeState {
       ..._pendingRadarHomeOffers,
     ];
 
-    final seen = <String>{};
-    final next = <_HomeDirectOffer>[];
-    final held = <_HomeDirectOffer>[];
-    for (final offer in refreshed) {
-      if (!seen.add(offer.id)) continue;
-      // Over the card limit (§3.3): held until a slot frees, never lost.
-      (next.length < _maxHomeRadarOffers ? next : held).add(offer);
-    }
-    held.removeWhere((offer) => _radarOfferExpired.contains(offer.id));
+    // Over the card limit (§3.3): held until a slot frees, never lost.
+    final (shown: next, held: held) = splitRadarDeck(
+      refreshed,
+      limit: _maxHomeRadarOffers,
+      id: (offer) => offer.id,
+      gone: (offer) => _radarOfferExpired.contains(offer.id),
+    );
 
     // Trips whose pick window ran out leave on refresh.
     next.removeWhere((offer) => _radarOfferExpired.contains(offer.id));

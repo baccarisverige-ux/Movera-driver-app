@@ -168,5 +168,7 @@
   "destSearchUnavailable": "La recherche d’adresse n’est pas disponible",
   "destSearchTryAgain": "Vérifiez votre connexion et réessayez.",
   "destSearchStart": "Recherchez une adresse",
-  "destSearchStartBody": "Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici."
+  "destSearchStartBody": "Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici.",
+  "islandRadarListDriving": "Liste radar bloquée en roulant",
+  "islandRadarListOff": "Liste radar désactivée"
 }

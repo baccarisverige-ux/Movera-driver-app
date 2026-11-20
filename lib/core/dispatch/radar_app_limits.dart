@@ -67,6 +67,26 @@ class RadarAppLimits {
   }
 }
 
+/// Splits the Home Radar deck at [limit] (§3.3): the first [limit] distinct
+/// trips show as cards, the rest are held (never lost) until a slot frees;
+/// trips that [gone] says ran out leave the held ones. A smaller limit
+/// moves cards back to held; a larger one promotes held trips.
+({List<T> shown, List<T> held}) splitRadarDeck<T>(
+  Iterable<T> deck, {
+  required int limit,
+  required String Function(T) id,
+  bool Function(T)? gone,
+}) {
+  final seen = <String>{};
+  final shown = <T>[], held = <T>[];
+  for (final item in deck) {
+    if (!seen.add(id(item))) continue;
+    (shown.length < limit ? shown : held).add(item);
+  }
+  if (gone != null) held.removeWhere(gone);
+  return (shown: shown, held: held);
+}
+
 /// Stopped or driving, judged on the phone (`contract.json#driverMotion`):
 /// moving once the speed stays at least [movingSpeedMps] for [hysteresis],
 /// stopped once it stays below for as long, so a red light does not flicker.

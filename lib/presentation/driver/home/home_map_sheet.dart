@@ -115,7 +115,9 @@ extension _HomeMapSheet on _DriverHomeState {
   }
 
   void _applyDriverLocation(DriverLocation location) {
+    if (!_isOnline) _motion.reset(); // every offline path
     if (mounted &&
+        _isOnline &&
         _motion.update(
           speedMps: location.speedMetersPerSecond,
           at: location.measuredAt ?? DateTime.now(),

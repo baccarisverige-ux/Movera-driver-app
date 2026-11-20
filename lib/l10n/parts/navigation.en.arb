@@ -610,5 +610,13 @@
   "destSearchUnavailable": "Address search is not available",
   "destSearchTryAgain": "Check your connection and try again.",
   "destSearchStart": "Search for an address",
-  "destSearchStartBody": "Type a street, a place or a city. Your last 5 destinations show here."
+  "destSearchStartBody": "Type a street, a place or a city. Your last 5 destinations show here.",
+  "islandRadarListDriving": "Radar list locked while driving",
+  "@islandRadarListDriving": {
+    "description": "Island notice: the full-screen Radar list is locked while the car drives (Dispatch › Modes, offers.radarApp.fullLockWhileDriving)."
+  },
+  "islandRadarListOff": "Radar list is off",
+  "@islandRadarListOff": {
+    "description": "Island notice: admin switched the full-screen Radar list off (offers.radarApp.fullOn)."
+  }
 }
