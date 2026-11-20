@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/auth_error_message.dart';
@@ -210,6 +211,38 @@ void main() {
         text,
         (contract['deviceCheck'] as Map)['texts']['deviceCheckFailed']['en'],
       );
+    },
+  );
+
+  test(
+    'a phone change carries installId and deviceCheck too (deviceCheck.phoneChange)',
+    () async {
+      Map<String, dynamic>? body;
+      final api = ApiClient(
+        client: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, dynamic>;
+          return http.Response(
+            jsonEncode({'sessionId': 'otp-2'}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+        baseUri: Uri.parse('https://api.test.movera.se'),
+        tokens: MemoryTokenStore(),
+      );
+      final repo = DriverAccountRepository(
+        api,
+        device: DeviceIdentity(platform: TargetPlatform.android, isWeb: false),
+      );
+      expect(await repo.changePhone('+46701234568'), 'otp-2');
+      expect(body!['installId'], isA<String>());
+      expect(body!['deviceCheck'], {
+        'platform': 'android',
+        'token': 'play-token',
+      });
+      expect(calls.single.arguments, {
+        'nonce': expectedNonce('+46701234568', body!['installId'] as String),
+      });
     },
   );
 }

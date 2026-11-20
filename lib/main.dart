@@ -182,6 +182,9 @@ class _MoveraAppState extends State<MoveraApp> {
   late final TokenStore _tokens;
   late final http.Client _http;
   late final ApiClient _api;
+
+  /// Contract v0.18.138 (`deviceCheck`): one install id + check for sign-in and phone change.
+  final DeviceIdentity _device = DeviceIdentity();
   late final AuthController _auth;
   late final DriverAccountSession _account;
 
@@ -246,17 +249,15 @@ class _MoveraAppState extends State<MoveraApp> {
       );
     }
     _auth = AuthController(
-      repository: AuthRepository(
-        api: _api,
-        tokens: _tokens,
-        device: DeviceIdentity(),
-      ),
+      repository: AuthRepository(api: _api, tokens: _tokens, device: _device),
       // Contract v0.18.2 `auth.beforeSignIn`: the signed-in calls start
       // after the sign-in, not on the sign-in screen.
       onSignedIn: _signedIn,
       onSignedOut: () => _live?.signedOut(),
     );
-    _account = DriverAccountSession(repository: DriverAccountRepository(_api));
+    _account = DriverAccountSession(
+      repository: DriverAccountRepository(_api, device: _device),
+    );
     // G9 live 2026-11-02: a language pick is saved to the account (live).
     DriverLanguage.saveToAccount = DriverRuntimeConfig.current.authRequired
         ? _account.saveLanguage

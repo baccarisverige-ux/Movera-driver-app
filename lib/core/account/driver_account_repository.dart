@@ -6,6 +6,7 @@ import 'package:movera/core/live/next_trips_switch.dart';
 import 'package:movera/core/live/offline_after_trips.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/auth/device_identity.dart';
 import 'package:movera/core/onboarding/document_upload.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
@@ -13,9 +14,14 @@ import 'package:movera/core/onboarding/onboarding_settings.dart';
 /// The driver's account over the contract's v0.5.3 §14 endpoints: profile
 /// and details, fleet, cars and documents.
 class DriverAccountRepository {
-  DriverAccountRepository(this._api);
+  DriverAccountRepository(this._api, {DeviceIdentity? device})
+    : _device = device;
 
   final ApiClient _api;
+
+  /// Contract v0.18.138 `deviceCheck.phoneChange`: a phone change sends a
+  /// real SMS too, so it carries the install id and the real-phone check.
+  final DeviceIdentity? _device;
 
   static const profilePath = '/api/v1/driver/profile';
   static const onboardingPath = '/api/v1/driver/onboarding';
@@ -45,9 +51,10 @@ class DriverAccountRepository {
   /// phone at a time"): the new number gets a code; `409 phone_taken`.
   /// Returns the code session's id.
   Future<String> changePhone(String phone) async {
+    final device = await _device?.requestFields('driver', phone);
     final answer = await _api.post(
       '/api/v1/account/phone/change',
-      body: {'phone': phone},
+      body: {'phone': phone, ...?device},
     );
     return '${answer['sessionId']}';
   }
