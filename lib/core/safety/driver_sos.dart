@@ -145,8 +145,18 @@ class DriverSos {
     };
     var id = tripId;
     // Kept before the first try: an app killed or a network lost now
-    // still sends it later (audit 2026-11-20 item 1).
-    _store(() => _pending.save(PendingSos(key: key, tripId: id, body: body)));
+    // still sends it later (audit 2026-11-20 item 1). Tied to the driver
+    // signed in at press time (read in the queued write, so the POST
+    // never waits for it).
+    String? driver;
+    Future<void> keep(String? trip) async {
+      driver ??= await _pending.owner();
+      await _pending.save(
+        PendingSos(key: key, tripId: trip, body: body, driverId: driver),
+      );
+    }
+
+    _store(() => keep(id));
     for (var attempt = 0; ; attempt++) {
       try {
         if (id == null) {
@@ -156,9 +166,8 @@ class DriverSos {
             return noTrip;
           }
           // The trip it is for, kept: a later retry still finds it.
-          _store(
-            () => _pending.save(PendingSos(key: key, tripId: id, body: body)),
-          );
+          final trip = id;
+          _store(() => keep(trip));
         }
         final receipt = await _api.post(
           '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
@@ -230,24 +239,34 @@ class DriverSos {
         await _giveUp(sos, 'kept sos too old, dropped');
         return;
       }
-      try {
-        // Whose phone it is now: an SOS of another driver (a sign-out and
-        // a new sign-in) is never sent, also not to his trip.
-        final profile = await _api.get(profilePath);
-        final me = _idOf(profile['driverId']);
-        if (me != null && sos.driverId != null && sos.driverId != me) {
-          await _giveUp(sos, 'kept sos of another driver, dropped');
-          return;
-        }
-        if (me != null && sos.driverId == null) {
-          await _pending.save(sos.withDriver(me));
-        }
-        final id = sos.tripId ?? _idOf(profile['activeTripId']);
-        if (id == null) {
-          // No trip known to send it to: kept, asked again later.
+      // Whose phone it is now: an SOS of another driver (a sign-out and a
+      // new sign-in) is never sent, also not to his trip.
+      final me = await _pending.owner();
+      if (sos.driverId != null && me != null && sos.driverId != me) {
+        await _giveUp(sos, 'kept sos of another driver, dropped');
+        return;
+      }
+      var id = sos.tripId;
+      if (id == null) {
+        // Only the driver who pressed it may look up his own trip; an SOS
+        // of unknown driver waits for its age instead.
+        if (sos.driverId == null || me != sos.driverId) {
           await _sleep(refusedDelay);
           continue;
         }
+        try {
+          id = _idOf((await _api.get(profilePath))['activeTripId']);
+        } catch (_) {
+          // A profile read that fails (network, 401, 403, 5xx) never drops
+          // the SOS: tried again after the wait.
+          id = null;
+        }
+        if (id == null) {
+          await _sleep(refusedDelay);
+          continue;
+        }
+      }
+      try {
         await _api.post(
           '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
           body: sos.body,
@@ -284,13 +303,23 @@ class DriverSos {
 
   /// Sign-out (and before another driver signs in): a kept SOS is told to
   /// the driver as not sent and dropped from this phone.
-  static Future<void> signedOut({PendingSosStore? store}) async {
+  static Future<void> signedOut({PendingSosStore? store}) {
     final pending = store ?? const PendingSosStore();
-    final sos = await pending.read();
-    if (sos == null) return;
-    DriverLog.warn('kept sos dropped at sign-out', name: 'safety');
-    await pending.clear(sos.key);
-    onExpired?.call();
+    // In the write queue: a save of a press still running lands first and
+    // is then dropped too; nothing saves it again after.
+    final done = Completer<void>();
+    _store(() async {
+      try {
+        final sos = await pending.read();
+        if (sos == null) return;
+        DriverLog.warn('kept sos dropped at sign-out', name: 'safety');
+        await pending.clear(sos.key);
+        onExpired?.call();
+      } finally {
+        done.complete();
+      }
+    });
+    return done.future;
   }
 
   static String? _idOf(Object? id) =>

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:movera/core/privacy/local_data.dart' show localDataOwnerKey;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// App-lifecycle audit 2026-11-20 item 1: an SOS Movera has not confirmed
@@ -16,12 +17,10 @@ class PendingSos {
   final String key;
   final String? tripId;
 
-  /// The driver who pressed it (from the profile once known): another
-  /// driver signed in on this phone never sends it.
+  /// The driver who pressed it (this phone's signed-in driver at press
+  /// time): another driver signed in later never sends it. Never filled
+  /// in later.
   final String? driverId;
-
-  PendingSos withDriver(String id) =>
-      PendingSos(key: key, body: body, tripId: tripId, driverId: id);
   final Map<String, Object?> body;
 
   Map<String, Object?> toJson() => {
@@ -54,6 +53,18 @@ class PendingSosStore {
   const PendingSosStore();
 
   static const prefKey = 'pending_sos_v1';
+
+  /// The driver signed in on this phone now (the local data owner,
+  /// `local_data.dart`); null when none.
+  Future<String?> owner() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = prefs.getString(localDataOwnerKey);
+      return id == null || id.isEmpty ? null : id;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<PendingSos?> read() async {
     try {

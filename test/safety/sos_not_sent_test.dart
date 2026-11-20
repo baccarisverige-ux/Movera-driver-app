@@ -1,6 +1,7 @@
 // Owner 2026-11-20 "Show 'SOS not sent' (Rec.)" + supervisor findings:
 // every kept SOS given up on tells the driver in a dialog that stays until
 // OK (and comes back after a restart); another driver never sends it.
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -20,13 +21,20 @@ void main() {
   late int status;
   late String me;
   late int told;
+  late int profileStatus;
+  late List<String> gets;
 
   ApiClient api() => ApiClient(
     client: MockClient((request) async {
       if (request.method == 'GET') {
+        gets.add(request.url.path);
         return http.Response(
-          jsonEncode({'driverId': me, 'activeTripId': 'trp_2'}),
-          200,
+          jsonEncode(
+            profileStatus == 200
+                ? {'driverId': me, 'activeTripId': 'trp_2'}
+                : {'code': 'forbidden', 'message': 'x', 'requestId': 'r'},
+          ),
+          profileStatus,
         );
       }
       posts.add(request);
@@ -46,7 +54,11 @@ void main() {
   DriverSos sos() => DriverSos(api: api(), now: () => t0, sleep: (_) async {});
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'movera_driver_local_owner': 'drv_A',
+    });
+    profileStatus = 200;
+    gets = [];
     posts = [];
     status = 200;
     me = 'drv_A';
@@ -72,30 +84,92 @@ void main() {
     await const PendingSosStore().save(
       PendingSos(key: 'k2', driverId: 'drv_A', body: {'at': at}),
     );
-    me = 'drv_B';
+    SharedPreferences.setMockInitialValues({
+      'movera_driver_local_owner': 'drv_B',
+      'pending_sos_v1': jsonEncode(
+        PendingSos(key: 'k2', driverId: 'drv_A', body: {'at': at}).toJson(),
+      ),
+    });
     await sos().retryPending();
     expect(posts, isEmpty);
     expect(told, 1);
     expect(await const PendingSosStore().read(), isNull);
   });
 
-  test('the first profile read records whose SOS it is', () async {
-    await const PendingSosStore().save(
-      PendingSos(key: 'k3', tripId: 'trp_1', body: {'at': at}),
-    );
+  test('the press keeps the driver signed in at press time', () async {
     status = 503;
     var n = 0;
-    await expectLater(
-      DriverSos(
-        api: api(),
-        now: () => t0,
-        sleep: (_) async {
-          if (++n == 1) throw StateError('stop');
-        },
-      ).retryPending(),
-      throwsStateError,
-    );
+    final outcome = await DriverSos(
+      api: api(),
+      now: () => t0,
+      sleep: (_) async {
+        if (++n > DriverSos.retryDelays.length) throw StateError('stop');
+      },
+    ).send(tripId: 'trp_1');
+    expect(outcome, DriverSosOutcome.failed);
+    await DriverSos.writesDone;
     expect((await const PendingSosStore().read())?.driverId, 'drv_A');
+  });
+
+  test(
+    'an SOS of unknown driver is never tagged or sent to a trip later',
+    () async {
+      await const PendingSosStore().save(
+        PendingSos(key: 'k5', body: {'at': at}),
+      );
+      var n = 0;
+      await expectLater(
+        DriverSos(
+          api: api(),
+          now: () => t0,
+          sleep: (_) async {
+            if (++n == 2) throw StateError('stop');
+          },
+        ).retryPending(),
+        throwsStateError,
+      );
+      expect(posts, isEmpty);
+      expect(gets, isEmpty);
+      final kept = await const PendingSosStore().read();
+      expect(kept?.driverId, isNull);
+    },
+  );
+
+  for (final code in [403, 401, 503]) {
+    test('a profile read answered $code keeps the SOS', () async {
+      await const PendingSosStore().save(
+        PendingSos(key: 'k6', driverId: 'drv_A', body: {'at': at}),
+      );
+      profileStatus = code;
+      var n = 0;
+      await expectLater(
+        DriverSos(
+          api: api(),
+          now: () => t0,
+          sleep: (_) async {
+            if (++n == 2) throw StateError('stop');
+          },
+        ).retryPending(),
+        throwsStateError,
+      );
+      expect(told, 0);
+      expect((await const PendingSosStore().read())?.key, 'k6');
+    });
+  }
+
+  test('after sign-out the retry never saves it again', () async {
+    await const PendingSosStore().save(
+      PendingSos(
+        key: 'k7',
+        tripId: 'trp_1',
+        driverId: 'drv_A',
+        body: {'at': at},
+      ),
+    );
+    await DriverSos.signedOut();
+    await sos().retryPending();
+    expect(posts, isEmpty);
+    expect(await const PendingSosStore().read(), isNull);
   });
 
   test('sign-out drops a kept SOS and tells the driver', () async {
@@ -135,5 +209,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(dialog, findsNothing);
     expect(await tester.runAsync(notice.pending), isFalse);
+  });
+
+  testWidgets('a notice raised while one is up is shown again after OK; '
+      'two shows never stack', (tester) async {
+    final key = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(navigatorKey: key, home: const SizedBox()),
+    );
+    final notice = SosNotSentNotice.instance;
+    addTearDown(notice.resetForTesting);
+    notice.context = () => key.currentContext;
+    unawaited(notice.raise());
+    unawaited(notice.showIfPending(force: true));
+    await tester.pumpAndSettle();
+    final dialog = find.byKey(const ValueKey('sos-not-sent-notice'));
+    expect(dialog, findsOneWidget);
+    unawaited(notice.raise());
+    await tester.pumpAndSettle();
+    expect(dialog, findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(dialog, findsOneWidget, reason: 'the second one');
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(dialog, findsNothing);
   });
 }

@@ -37,8 +37,12 @@ class SosNotSentNotice with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) unawaited(showIfPending());
   }
 
+  /// Raised while a dialog was up: shown again once it is closed.
+  bool _raisedWhileOpen = false;
+
   /// An SOS was given up on: kept, then shown.
   Future<void> raise() async {
+    if (_open) _raisedWhileOpen = true;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(prefKey, true);
@@ -56,39 +60,53 @@ class SosNotSentNotice with WidgetsBindingObserver {
   }
 
   Future<void> showIfPending({bool force = false}) async {
+    // Set before any wait: two calls never stack two dialogs.
     if (_open) return;
-    if (!force && !await pending()) return;
-    final where = context?.call();
-    if (where == null || !where.mounted) return;
     _open = true;
+    var again = false;
     try {
-      await showDialog<void>(
-        context: where,
-        barrierDismissible: false,
-        builder: (dialog) => AlertDialog(
-          key: const ValueKey('sos-not-sent-notice'),
-          content: Text(tr.safetySosNotSent),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(dialog).pop(),
-              child: Text(tr.ok),
-            ),
-          ],
-        ),
-      );
-      // Dismissed with OK: not shown again.
+      if (!force && !await pending()) return;
+      final where = context?.call();
+      if (where == null || !where.mounted) return;
+      _raisedWhileOpen = false;
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove(prefKey);
-      } catch (_) {}
+        await showDialog<void>(
+          context: where,
+          barrierDismissible: false,
+          builder: (dialog) => AlertDialog(
+            key: const ValueKey('sos-not-sent-notice'),
+            content: Text(tr.safetySosNotSent),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(dialog).pop(),
+                child: Text(tr.ok),
+              ),
+            ],
+          ),
+        );
+      } catch (_) {
+        // Not shown (no navigator now): kept for the next resume.
+        return;
+      }
+      // Dismissed with OK: not shown again, unless a new one came meanwhile.
+      again = _raisedWhileOpen;
+      _raisedWhileOpen = false;
+      if (!again) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove(prefKey);
+        } catch (_) {}
+      }
     } finally {
       _open = false;
     }
+    if (again) await showIfPending(force: true);
   }
 
   @visibleForTesting
   void resetForTesting() {
     _open = false;
+    _raisedWhileOpen = false;
     context = null;
   }
 }

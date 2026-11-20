@@ -445,6 +445,9 @@ class _MoveraAppState extends State<MoveraApp> {
   Future<void> _sessionExpired() async {
     if (!DriverRuntimeConfig.current.authRequired) return;
     _live?.signedOut();
+    // A refused session (401): a kept SOS is told as not sent and dropped,
+    // so it never goes with whoever signs in next.
+    unawaited(DriverSos.signedOut());
     // Checker blocker 1 / HIGH 2: no terms screen over Sign in.
     unawaited(DriverLegal.instance.signedOut());
     final navigator = _navigatorKey.currentState;
