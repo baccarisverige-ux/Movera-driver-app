@@ -83,33 +83,53 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
   /// DRAFT (owner 2026-11-20 "Stripe ... (2) the DRIVER paying his monthly
   /// invoice"): the server's PaymentIntent, the Stripe sheet, then the
   /// screen reads the server again: paid only when the server's owed drops.
-  Future<void> _payByCard() async {
+  /// After a sheet said paid: the owed amount it paid, until the server's
+  /// owed drops below it (webhook lag). The button stays off meanwhile.
+  int? _awaitingBelow;
+
+  Future<void> _payByCard(PayMovera shown) async {
+    if (_busy) return;
     setState(() => _busy = true);
+    var sheetPaid = false;
     try {
       final live = LiveDriverServices.instance;
       final intent =
           await (widget.startCard ??
               () => live!.earnings.startStripePayment())();
-      final paid =
+      // Review SHOULD 4: the sheet only for the amount the screen shows; a
+      // changed owed reloads the screen instead.
+      if (intent.amount.minorUnits != shown.owedToMovera.minorUnits ||
+          intent.amount.currency != shown.owedToMovera.currency) {
+        setState(() {
+          _view = _load();
+        });
+        return;
+      }
+      sheetPaid =
           await (widget.presentCard ??
               (i) => presentStripeSheet(
                 clientSecret: i.clientSecret,
                 publishableKey: i.publishableKey,
               ))(intent);
-      if (!paid) return;
+      if (!sheetPaid) return;
+      _awaitingBelow = intent.amount.minorUnits;
       final next = _load();
       setState(() {
         _view = next;
       });
       final view = await next;
+      final done = view.owedToMovera.minorUnits < intent.amount.minorUnits;
+      if (done) _awaitingBelow = null;
       _say(
         'pay-movera-card-outcome',
-        view.owedToMovera.minorUnits < intent.amount.minorUnits
-            ? tr.payMoveraCardPaid
-            : tr.payMoveraCardChecking,
+        done ? tr.payMoveraCardPaid : tr.payMoveraCardChecking,
       );
     } catch (_) {
-      _say('pay-movera-card-outcome', tr.payMoveraCardFailed);
+      // Review MUST 1: the sheet said paid but the reload failed: checking.
+      _say(
+        'pay-movera-card-outcome',
+        sheetPaid ? tr.payMoveraCardChecking : tr.payMoveraCardFailed,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -271,7 +291,14 @@ class _PayMoveraScreenState extends State<PayMoveraScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onPressed: _busy ? null : _payByCard,
+              // Review MUST 2: off while paying and until the server's owed
+              // drops below what the sheet paid.
+              onPressed:
+                  _busy ||
+                      (_awaitingBelow != null &&
+                          view.owedToMovera.minorUnits >= _awaitingBelow!)
+                  ? null
+                  : () => _payByCard(view),
               child: Text(
                 tr.payMoveraPayByCard(view.owedToMovera.formatted),
                 style: const TextStyle(
