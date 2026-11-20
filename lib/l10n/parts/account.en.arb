@@ -371,5 +371,37 @@
   "menuNewDriver": "New driver",
   "@menuNewDriver": {
     "description": "BQ-V15 (owner driver-g12.md:4): side menu header instead of the rating until the driver's first rating."
+  },
+  "acctDeleteTitle": "Delete my account",
+  "@acctDeleteTitle": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. row and screen title."
+  },
+  "acctDeleteBody": "Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.",
+  "@acctDeleteBody": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. what happens."
+  },
+  "acctDeleteKept": "Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.",
+  "@acctDeleteKept": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. what is kept."
+  },
+  "acctDeleteConfirmQ": "Delete your account?",
+  "@acctDeleteConfirmQ": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. confirm dialog title."
+  },
+  "acctDeleteConfirmBody": "This cannot be undone. Your account closes now.",
+  "@acctDeleteConfirmBody": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. confirm dialog text."
+  },
+  "acctDeleteConfirm": "Delete account",
+  "@acctDeleteConfirm": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. confirm button."
+  },
+  "acctDeleteOpenTrip": "Finish or cancel your ride first, then delete your account.",
+  "@acctDeleteOpenTrip": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. 409 deletion_open_trip."
+  },
+  "acctDeleteFailed": "Could not delete the account. Try again.",
+  "@acctDeleteFailed": {
+    "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. other error."
   }
 }

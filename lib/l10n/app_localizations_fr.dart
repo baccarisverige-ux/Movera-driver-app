@@ -609,6 +609,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get menuNewDriver => 'Nouveau chauffeur';
 
   @override
+  String get acctDeleteTitle => 'Supprimer mon compte';
+
+  @override
+  String get acctDeleteBody =>
+      'Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées.';
+
+  @override
+  String get acctDeleteKept =>
+      'Conservés : vos courses, gains et virements pour la loi comptable et, si vous devez de l’argent à Movera, votre nom, numéro et le montant jusqu’au paiement.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Supprimer votre compte ?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'Action irréversible. Votre compte est fermé maintenant.';
+
+  @override
+  String get acctDeleteConfirm => 'Supprimer le compte';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Terminez ou annulez d’abord votre course, puis supprimez votre compte.';
+
+  @override
+  String get acctDeleteFailed =>
+      'Impossible de supprimer le compte. Réessayez.';
+
+  @override
   String get airportQueueTitle => 'File de l\'aéroport';
 
   @override

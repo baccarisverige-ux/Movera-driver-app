@@ -598,6 +598,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuNewDriver => 'New driver';
 
   @override
+  String get acctDeleteTitle => 'Delete my account';
+
+  @override
+  String get acctDeleteBody =>
+      'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.';
+
+  @override
+  String get acctDeleteKept =>
+      'Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Delete your account?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'This cannot be undone. Your account closes now.';
+
+  @override
+  String get acctDeleteConfirm => 'Delete account';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Finish or cancel your ride first, then delete your account.';
+
+  @override
+  String get acctDeleteFailed => 'Could not delete the account. Try again.';
+
+  @override
   String get airportQueueTitle => 'Airport queue';
 
   @override

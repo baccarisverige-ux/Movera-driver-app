@@ -169,5 +169,13 @@
   "contactCodeSentTo": "Vi har skickat en kod till {email}.",
   "contactCodeNotSentYet": "E-postkoder kan inte skickas än. Försök igen senare.",
   "contactEmailVerifiedDone": "E-postadressen är verifierad",
-  "menuNewDriver": "Ny förare"
+  "menuNewDriver": "Ny förare",
+  "acctDeleteTitle": "Radera mitt konto",
+  "acctDeleteBody": "Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter.",
+  "acctDeleteKept": "Sparas: dina resor, intäkter och utbetalningar enligt bokföringslagen, och om du är skyldig Movera ditt namn, nummer och beloppet tills det är betalt.",
+  "acctDeleteConfirmQ": "Radera ditt konto?",
+  "acctDeleteConfirmBody": "Det går inte att ångra. Ditt konto stängs nu.",
+  "acctDeleteConfirm": "Radera konto",
+  "acctDeleteOpenTrip": "Avsluta eller avbryt din resa först och radera sedan kontot.",
+  "acctDeleteFailed": "Kontot kunde inte raderas. Försök igen."
 }

@@ -41,6 +41,15 @@ class DriverAccountRepository {
   static String notificationReadPath(String notificationId) =>
       '$notificationsPath/${Uri.encodeComponent(notificationId)}/read';
 
+  static const accountDeletionPath = '/api/v1/driver/account/deletion';
+
+  /// Contract v0.18.140 (`contract.json#accountDeletion.driver`): Profile >
+  /// Delete my account. 202 = the account is closed now (sessions ended,
+  /// offline) and erased 30 days later; a debt never blocks it. 409
+  /// `deletion_open_trip` is thrown as [ApiError] (finish or cancel first).
+  Future<AccountDeletionAnswer> requestAccountDeletion() async =>
+      AccountDeletionAnswer.fromJson(await _api.post(accountDeletionPath));
+
   /// Contract v0.18.14 `deepFix1.accountChange` (decision driver-g1 "One
   /// phone at a time"): the new number gets a code; `409 phone_taken`.
   /// Returns the code session's id.
@@ -352,4 +361,25 @@ class DriverAccountRepository {
       timeout: DocumentUploadPolicy.timeout,
     ),
   );
+}
+
+/// `AccountDeletion` (contract v0.18.140): `status` (`requested`) and, from
+/// a v0.18.140 server, when it was asked and when the erase may run.
+class AccountDeletionAnswer {
+  const AccountDeletionAnswer({
+    required this.status,
+    this.requestedAt,
+    this.eraseDueAt,
+  });
+
+  factory AccountDeletionAnswer.fromJson(Map<String, dynamic> json) =>
+      AccountDeletionAnswer(
+        status: '${json['status'] ?? 'requested'}',
+        requestedAt: DateTime.tryParse('${json['requestedAt'] ?? ''}'),
+        eraseDueAt: DateTime.tryParse('${json['eraseDueAt'] ?? ''}'),
+      );
+
+  final String status;
+  final DateTime? requestedAt;
+  final DateTime? eraseDueAt;
 }
