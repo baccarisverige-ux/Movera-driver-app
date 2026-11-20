@@ -715,6 +715,7 @@ class _AcceptRideState extends State<AcceptRide>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _chatAlerts?.start();
+    _AcceptRideTrip(this)._seedMeter();
     // A RideCheck demo trip drives its own scripted GPS (DemoTripDrive).
     _locationService =
         DemoTripDrive.forTrip(
@@ -893,6 +894,7 @@ class _AcceptRideState extends State<AcceptRide>
   void dispose() {
     OpenTripScreens.remove(widget.tripId, _bringToFront);
     _chatAlerts?.dispose();
+    _meterNotice.dispose();
     driverRouteObserver.unsubscribe(this);
     driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);

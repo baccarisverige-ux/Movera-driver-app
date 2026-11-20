@@ -26,11 +26,11 @@ Future<void> _frames(WidgetTester tester, [int count = 12]) async {
   }
 }
 
-void _view(WidgetTester tester) {
+void _view(WidgetTester tester, {Map<String, Object> prefs = const {}}) {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues(prefs);
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -51,8 +51,9 @@ Map<String, dynamic> _trip(
 Future<MemoryDriverRealtime> _open(
   WidgetTester tester, {
   ActiveRideStage stage = ActiveRideStage.onTrip,
+  Map<String, Object> prefs = const {},
 }) async {
-  _view(tester);
+  _view(tester, prefs: prefs);
   final realtime = MemoryDriverRealtime();
   addTearDown(realtime.dispose);
   await tester.pumpWidget(
@@ -76,9 +77,11 @@ void _send(MemoryDriverRealtime realtime, Map<String, dynamic> trip) =>
     realtime.emit(
       tripId: 'meter-1',
       kind: DriverRealtimeKind.tripProjection,
-      status: trip['status'] == 'in_trip'
-          ? TripStatus.inTrip
-          : TripStatus.driverToPickup,
+      status: switch (trip['status']) {
+        'in_trip' => TripStatus.inTrip,
+        'cancelled_by_rider' => TripStatus.cancelledByRider,
+        _ => TripStatus.driverToPickup,
+      },
       projection: trip,
     );
 
@@ -157,6 +160,74 @@ void main() {
     _send(realtime, _trip(24000, status: 'driver_to_pickup', version: 6));
     await _frames(tester);
     expect(find.byKey(const ValueKey('meter-change-notice')), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+  });
+
+  final notice = find.byKey(const ValueKey('meter-change-notice'));
+  const stored = '{"amountMinor":21500,"currency":"SEK"}';
+
+  testWidgets('restore: a price changed while the app was closed shows '
+      'the notice; OK stores it', (tester) async {
+    final realtime = await _open(
+      tester,
+      prefs: {'movera.meter_fare.meter-1': stored},
+    );
+    _send(realtime, _trip(24000));
+    await _frames(tester);
+    expect(notice, findsOneWidget, reason: 'stored 215, server 240');
+    await tester.tap(find.byKey(const ValueKey('meter-change-ok')));
+    await _frames(tester);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('movera.meter_fare.meter-1'), contains('24000'));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+  });
+
+  testWidgets('restore: the stored price equal to the server shows nothing', (
+    tester,
+  ) async {
+    final realtime = await _open(
+      tester,
+      prefs: {'movera.meter_fare.meter-1': stored},
+    );
+    _send(realtime, _trip(21500));
+    await _frames(tester);
+    expect(notice, findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+  });
+
+  testWidgets('the trip ends while the notice is open: it closes', (
+    tester,
+  ) async {
+    final realtime = await _open(tester);
+    _send(realtime, _trip(21500));
+    await _frames(tester);
+    _send(realtime, _trip(24000, version: 6));
+    await _frames(tester);
+    expect(notice, findsOneWidget);
+    _send(realtime, _trip(24000, status: 'cancelled_by_rider', version: 7));
+    await _frames(tester, 30);
+    expect(notice, findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+  });
+
+  testWidgets('the start projection with a new price: no notice (the meter '
+      'is set at the start); a later change shows one', (tester) async {
+    final realtime = await _open(
+      tester,
+      stage: ActiveRideStage.waitingForRider,
+    );
+    _send(realtime, _trip(21500, status: 'arrived'));
+    await _frames(tester);
+    _send(realtime, _trip(23000, version: 6));
+    await _frames(tester, 30);
+    expect(notice, findsNothing);
+    _send(realtime, _trip(24000, version: 7));
+    await _frames(tester);
+    expect(notice, findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 2);
   });

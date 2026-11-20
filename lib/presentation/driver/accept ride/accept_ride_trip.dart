@@ -370,6 +370,10 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (!mounted || event.tripId != widget.tripId) {
       return;
     }
+    if (event.status?.isTerminal == true) {
+      _meterNotice.close();
+      unawaited(MeterPriceStore.clear(widget.tripId));
+    }
 
     final disposition = _realtimeGate.evaluate(event);
     if (disposition == DriverRealtimeDisposition.duplicate ||
@@ -487,10 +491,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       next.fare,
       started: _stage == ActiveRideStage.onTrip,
     );
+    _afterMeter(meter);
     if (initial) return;
-    if (meter != null && mounted && !_rideLifecycle.terminal) {
-      _meterNotice.show(context, meter.formatted);
-    }
     if (mounted && (rebuild || pickupChanged || alert != null)) {
       _rebuild(() {
         if (pickupChanged) {
@@ -504,6 +506,33 @@ extension _AcceptRideTrip on _AcceptRideState {
       });
     }
     if (pickupChanged) _afterPickupMoved();
+  }
+
+  /// Owner 2026-11-20 "Change meter to app": the price confirmed for this
+  /// trip before a restart; a different server price shows the notice.
+  void _seedMeter() => unawaited(
+    MeterPriceStore.read(widget.tripId).then((stored) {
+      if (mounted) _afterMeter(_meterWatch.seed(stored));
+    }),
+  );
+
+  /// A new server price shows the notice and is stored on OK; a price
+  /// taken without a notice is stored at once.
+  void _afterMeter(Money? changed) {
+    if (changed == null) {
+      if (_meterNotice.isOpen) return;
+      if (_meterWatch.meter case final meter?
+          when _stage == ActiveRideStage.onTrip) {
+        unawaited(MeterPriceStore.write(widget.tripId, meter));
+      }
+      return;
+    }
+    if (!mounted || _rideLifecycle.terminal) return;
+    _meterNotice.show(
+      context,
+      changed.formatted,
+      onOk: () => unawaited(MeterPriceStore.write(widget.tripId, changed)),
+    );
   }
 
   /// `pickupWaiting.follow`: while the event stream is down, read the
