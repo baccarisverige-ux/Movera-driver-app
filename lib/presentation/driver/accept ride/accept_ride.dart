@@ -1,6 +1,8 @@
 import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
+import 'package:movera/core/live/live_location_share.dart';
+import 'package:movera/presentation/driver/accept ride/driver_live_location_card.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -131,6 +133,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 part 'accept_ride_trip.dart';
 part 'accept_ride_trip_chat.dart';
+part 'accept_ride_live_location.dart';
 part 'accept_ride_trip_outcome.dart';
 part 'accept_ride_trip_drive.dart';
 part 'accept_ride_trip_next.dart';

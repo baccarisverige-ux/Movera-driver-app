@@ -7150,6 +7150,36 @@ abstract class AppLocalizations {
   /// **'Next trips could not be changed. Try again.'**
   String get nextTripsSwitchFailed;
 
+  /// Share my location switch on the trip sheet (v0.18.144, owner OK pending).
+  ///
+  /// In en, this message translates to:
+  /// **'Share my location'**
+  String get liveShareSwitch;
+
+  /// Under the switch: the rider sees the driver (v0.18.144).
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} sees you on the map.'**
+  String liveDriverShareBody(String rider);
+
+  /// Consent / privacy line under the switch (v0.18.144, owner + legal OK pending).
+  ///
+  /// In en, this message translates to:
+  /// **'Your live location is sent only to your rider during this ride and is not saved.'**
+  String get liveDriverPrivacyNote;
+
+  /// The rider shares; metres from the pickup (v0.18.144).
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is sharing their location ({meters} m from pickup)'**
+  String liveRiderSharing(String rider, String meters);
+
+  /// Map label of the rider live dot (v0.18.144).
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} · live'**
+  String liveRiderLive(String rider);
+
   /// No description provided for @islandRadarOffers.
   ///
   /// In en, this message translates to:
