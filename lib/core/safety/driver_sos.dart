@@ -72,6 +72,10 @@ class DriverSos {
   /// logged and dropped.
   static const maxAge = Duration(minutes: 30);
 
+  /// Set by the app root: a kept SOS passed [maxAge] without reaching
+  /// Movera; the driver is told so.
+  static void Function()? onExpired;
+
   /// One background retry loop per app run.
   static Future<void>? _retrying;
 
@@ -225,6 +229,9 @@ class DriverSos {
       if (at == null || _now().difference(at) > maxAge) {
         DriverLog.warn('kept sos too old, dropped', name: 'safety');
         await _pending.clear(sos.key);
+        // Owner 2026-11-20 "Show 'SOS not sent'": the driver is told it
+        // never reached Movera (existing text safetySosNotSent).
+        onExpired?.call();
         return;
       }
       try {

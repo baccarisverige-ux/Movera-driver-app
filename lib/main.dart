@@ -279,6 +279,13 @@ class _MoveraAppState extends State<MoveraApp> {
       // Audit 2026-11-20 item 1: an SOS not confirmed before the app
       // stopped is sent again now.
       unawaited(DriverSos(api: live.api).retryPending());
+      DriverSos.onExpired = () {
+        final context = _navigatorKey.currentContext;
+        if (context == null || !context.mounted) return;
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(tr.safetySosNotSent)));
+      };
       // v0.18.38 §62 (fix job 8, owner G15 "Both rider and driver"): the
       // rider's in-app call rings here: the call screen with Answer /
       // Decline opens over whatever screen is up.
