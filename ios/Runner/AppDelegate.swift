@@ -37,6 +37,20 @@ import GoogleMaps
         }
       }
     }
+    // Audit 2026-11-20 item 2: the screen stays on during an active trip
+    // (lib/core/device/screen_awake.dart).
+    if let registrar = self.registrar(forPlugin: "MoveraScreenAwake") {
+      let screen = FlutterMethodChannel(
+        name: "se.movera.driver/screen", binaryMessenger: registrar.messenger())
+      screen.setMethodCallHandler { call, result in
+        guard call.method == "keepOn" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        UIApplication.shared.isIdleTimerDisabled = (call.arguments as? Bool) == true
+        result(nil)
+      }
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

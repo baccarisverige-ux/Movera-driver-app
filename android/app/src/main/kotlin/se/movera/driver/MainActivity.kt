@@ -8,6 +8,7 @@ import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -55,6 +56,23 @@ class MainActivity : FlutterActivity() {
     // notice; Go online asks once (lib/core/push/notification_permission.dart).
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Audit 2026-11-20 item 2: the screen stays on during an active trip
+        // (lib/core/device/screen_awake.dart); a window flag, no permission.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "se.movera.driver/screen",
+        ).setMethodCallHandler { call, result ->
+            if (call.method != "keepOn") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            if (call.arguments == true) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+            result.success(null)
+        }
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "se.movera.driver/notifications",
