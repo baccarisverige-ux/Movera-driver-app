@@ -8272,6 +8272,12 @@ abstract class AppLocalizations {
   /// **'The payment did not go through. Try again.'**
   String get payMoveraCardFailed;
 
+  /// Pay Movera (DRAFT, Stripe): what he owes changed before the sheet opened; the screen reloads.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount changed. Check it and try again.'**
+  String get payMoveraAmountChanged;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

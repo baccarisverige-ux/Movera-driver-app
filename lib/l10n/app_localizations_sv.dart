@@ -4772,6 +4772,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Betalningen gick inte igenom. Försök igen.';
 
   @override
+  String get payMoveraAmountChanged =>
+      'Beloppet har ändrats. Kontrollera det och försök igen.';
+
+  @override
   String get reservation => 'Bokning';
 
   @override

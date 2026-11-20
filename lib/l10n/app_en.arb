@@ -3772,6 +3772,10 @@
   "@payMoveraCardFailed": {
     "description": "Pay Movera (DRAFT, Stripe): the payment failed or could not start."
   },
+  "payMoveraAmountChanged": "The amount changed. Check it and try again.",
+  "@payMoveraAmountChanged": {
+    "description": "Pay Movera (DRAFT, Stripe): what he owes changed before the sheet opened; the screen reloads."
+  },
   "reservation": "Reservation",
   "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
   "@leaveNowForPickupTimePickup": {

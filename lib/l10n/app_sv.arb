@@ -1360,6 +1360,7 @@
   "payMoveraCardPaid": "Betalt. Tack.",
   "payMoveraCardChecking": "Betalningen är mottagen. Vi kontrollerar den.",
   "payMoveraCardFailed": "Betalningen gick inte igenom. Försök igen.",
+  "payMoveraAmountChanged": "Beloppet har ändrats. Kontrollera det och försök igen.",
   "reservation": "Bokning",
   "leaveNowForPickupTimePickup": "Åk nu till upphämtningen {pickupTime}",
   "reservationTime": "Bokning · {time}",

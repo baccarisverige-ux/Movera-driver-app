@@ -11,5 +11,6 @@
   "payMoveraPayByCard": "Betala {amount} med kort",
   "payMoveraCardPaid": "Betalt. Tack.",
   "payMoveraCardChecking": "Betalningen är mottagen. Vi kontrollerar den.",
-  "payMoveraCardFailed": "Betalningen gick inte igenom. Försök igen."
+  "payMoveraCardFailed": "Betalningen gick inte igenom. Försök igen.",
+  "payMoveraAmountChanged": "Beloppet har ändrats. Kontrollera det och försök igen."
 }
