@@ -257,6 +257,7 @@
   "authCodeFieldLabelSix": "Sexsiffrig kod från sms:et",
   "authSignedOutElsewhere": "Inloggad på en annan telefon",
   "authErrLockedToday": "För många fel koder i dag. Försök igen senare.",
+  "authErrDeviceCheckFailed": "Telefonen kunde inte kontrolleras. Installera appen från den officiella appbutiken och försök igen.",
   "dontMatchRiderAgain": "Matcha mig inte med den här kunden igen",
   "callFailed": "Samtalet misslyckades",
   "callCalling": "Ringer…",

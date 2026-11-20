@@ -78,5 +78,6 @@
   "authCodeFieldLabel": "Code à 4 chiffres reçu par SMS",
   "authCodeFieldLabelSix": "Code à 6 chiffres reçu par SMS",
   "authSignedOutElsewhere": "Connecté sur un autre téléphone",
-  "authErrLockedToday": "Trop de codes erronés aujourd’hui. Réessayez plus tard."
+  "authErrLockedToday": "Trop de codes erronés aujourd’hui. Réessayez plus tard.",
+  "authErrDeviceCheckFailed": "Ce téléphone n’a pas pu être vérifié. Installez l’application depuis la boutique officielle et réessayez."
 }

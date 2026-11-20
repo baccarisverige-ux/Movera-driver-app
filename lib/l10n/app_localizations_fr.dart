@@ -931,6 +931,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
 
   @override
+  String get authErrDeviceCheckFailed =>
+      'Ce téléphone n’a pas pu être vérifié. Installez l’application depuis la boutique officielle et réessayez.';
+
+  @override
   String get dontMatchRiderAgain => 'Ne plus me proposer ce client';
 
   @override

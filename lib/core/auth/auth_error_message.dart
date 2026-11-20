@@ -48,6 +48,12 @@ bool isSmsNotSent(Object error) =>
 bool isSmsDailyLimit(Object error) =>
     error is ApiError && error.detail == 'sms_daily_limit';
 
+/// Contract v0.18.138 `deviceCheck.errors`: `403 forbidden`, reason
+/// `device_check_failed` — the country asks for the real-phone check and
+/// this phone could not pass it; no SMS was sent.
+bool isDeviceCheckFailed(Object error) =>
+    error is ApiError && error.detail == 'device_check_failed';
+
 /// Owner 2026-10-29, decision 4 (`fixtures/sign_in.json#waitDisplay`): a
 /// wait under one minute in seconds, else in whole minutes rounded up
 /// ("42 min").
@@ -116,6 +122,8 @@ String authErrorMessage(Object error, AuthAction action) {
         return tr.authInvalidMobileNumber;
       case 'sign_in_restricted':
         return tr.authSignInRestricted;
+      case 'device_check_failed':
+        return tr.authErrDeviceCheckFailed;
     }
     if (status == 403) return tr.authSignInRestricted;
     if (status == 410) return tr.authCodeExpired;

@@ -22,6 +22,7 @@ import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
+import 'package:movera/core/auth/device_identity.dart';
 import 'package:movera/core/auth/phone_country_default.dart';
 import 'package:movera/core/auth/secure_token_store.dart';
 import 'package:movera/core/auth/token_store.dart';
@@ -245,7 +246,11 @@ class _MoveraAppState extends State<MoveraApp> {
       );
     }
     _auth = AuthController(
-      repository: AuthRepository(api: _api, tokens: _tokens),
+      repository: AuthRepository(
+        api: _api,
+        tokens: _tokens,
+        device: DeviceIdentity(),
+      ),
       // Contract v0.18.2 `auth.beforeSignIn`: the signed-in calls start
       // after the sign-in, not on the sign-in screen.
       onSignedIn: _signedIn,

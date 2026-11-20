@@ -915,6 +915,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'För många fel koder i dag. Försök igen senare.';
 
   @override
+  String get authErrDeviceCheckFailed =>
+      'Telefonen kunde inte kontrolleras. Installera appen från den officiella appbutiken och försök igen.';
+
+  @override
   String get dontMatchRiderAgain => 'Matcha mig inte med den här kunden igen';
 
   @override

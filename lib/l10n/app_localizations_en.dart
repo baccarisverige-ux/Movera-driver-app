@@ -914,6 +914,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many wrong codes today. Try again later.';
 
   @override
+  String get authErrDeviceCheckFailed =>
+      'This phone could not be checked. Install the app from the official store and try again.';
+
+  @override
   String get dontMatchRiderAgain => 'Don\'t match me with this rider again';
 
   @override

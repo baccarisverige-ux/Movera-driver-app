@@ -43,12 +43,12 @@ void main() {
     }
   });
 
-  test('the copy is contract v0.18.133', () {
+  test('the copy is contract v0.18.138', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
-      contains('"version": "0.18.133"'),
+      contains('"version": "0.18.138"'),
     );
-    expect(TripTransitions.contractVersion, '0.18.133');
+    expect(TripTransitions.contractVersion, '0.18.138');
   });
 
   // v0.18.87 (owner 2026-11-13 "Movera commission is how much movera

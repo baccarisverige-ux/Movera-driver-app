@@ -1642,6 +1642,12 @@ abstract class AppLocalizations {
   /// **'Too many wrong codes today. Try again later.'**
   String get authErrLockedToday;
 
+  /// Contract v0.18.138 deviceCheck.texts.deviceCheckFailed (403 forbidden, reason device_check_failed).
+  ///
+  /// In en, this message translates to:
+  /// **'This phone could not be checked. Install the app from the official store and try again.'**
+  String get authErrDeviceCheckFailed;
+
   /// v0.18.43 §64 (fix job 10): tick on the rating screen at a low rating. The rider is never told.
   ///
   /// In en, this message translates to:
