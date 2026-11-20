@@ -32,6 +32,40 @@ class DriverAccountSession extends ChangeNotifier {
   /// Home's hold: the account is not active yet (or not read yet).
   bool get onHold => !(_account?.isActive ?? false);
 
+  /// Contract v0.18.145 (`loadCut.homeBadges`): [read] fetches a profile
+  /// another way (`GET /driver/home-badges`). It shares the one-profile-
+  /// at-a-time guard with [refresh]: it waits for a profile read already
+  /// out, is itself the profile read in flight (a [refresh] meanwhile
+  /// shares it), and an answer older than the account already held (a
+  /// lower `version`) never replaces it.
+  Future<T> readProfileWith<T>(
+    Future<T> Function() read,
+    DriverAccount Function(T answer) profileOf,
+  ) async {
+    final active = _loading;
+    if (active != null) await active.then((_) {}, onError: (_) {});
+    final answer = read();
+    final pending = answer.then(
+      (value) => _replaceIfNotOlder(profileOf(value)),
+    );
+    _loading = pending;
+    pending.whenComplete(() {
+      if (identical(_loading, pending)) _loading = null;
+    }).ignore();
+    await pending;
+    return answer;
+  }
+
+  DriverAccount _replaceIfNotOlder(DriverAccount next) {
+    final held = _account;
+    if (held != null &&
+        held.driverId == next.driverId &&
+        next.version < held.version) {
+      return held;
+    }
+    return replace(next);
+  }
+
   /// `GET /driver/profile`; one request at a time.
   Future<DriverAccount> refresh() {
     final active = _loading;

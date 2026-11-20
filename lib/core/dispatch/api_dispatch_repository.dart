@@ -750,7 +750,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
                   final kind = event['kind'];
                   if (linked != null &&
                       (kind == 'config_published' ||
-                          kind == 'driver_reservations_changed')) {
+                          kind == 'driver_reservations_changed' ||
+                          kind == 'airport_queue_changed')) {
                     // L20 stream: a settings event, to the settings.
                     if (generation == _generation) {
                       linked.deliver(Map<String, dynamic>.from(event));
