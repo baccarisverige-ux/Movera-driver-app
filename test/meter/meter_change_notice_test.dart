@@ -231,4 +231,38 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 2);
   });
+
+  testWidgets('start, restart, new price: the notice shows', (tester) async {
+    var realtime = await _open(tester, stage: ActiveRideStage.waitingForRider);
+    _send(realtime, _trip(21500, status: 'arrived'));
+    await _frames(tester);
+    _send(realtime, _trip(21500, version: 6));
+    await _frames(tester, 30);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('movera.meter_fare.meter-1'), contains('21500'));
+    // The app is closed and opened again on the trip (prefs stay).
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+    realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          home: AcceptRide(
+            tripId: 'meter-1',
+            initialStage: ActiveRideStage.onTrip,
+            activeRideRepository: MemoryActiveRideRepository(),
+            realtime: realtime,
+          ),
+        ),
+      ),
+    );
+    await _frames(tester);
+    _send(realtime, _trip(24000, version: 8));
+    await _frames(tester);
+    expect(notice, findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+  });
 }

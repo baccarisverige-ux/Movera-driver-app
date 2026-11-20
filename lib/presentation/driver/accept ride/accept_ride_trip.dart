@@ -512,7 +512,12 @@ extension _AcceptRideTrip on _AcceptRideState {
   /// trip before a restart; a different server price shows the notice.
   void _seedMeter() => unawaited(
     MeterPriceStore.read(widget.tripId).then((stored) {
-      if (mounted) _afterMeter(_meterWatch.seed(stored));
+      if (!mounted) return;
+      if (_rideLifecycle.terminal) {
+        unawaited(MeterPriceStore.clear(widget.tripId));
+        return;
+      }
+      _afterMeter(_meterWatch.seed(stored));
     }),
   );
 
@@ -521,8 +526,10 @@ extension _AcceptRideTrip on _AcceptRideState {
   void _afterMeter(Money? changed) {
     if (changed == null) {
       if (_meterNotice.isOpen) return;
+      // The start price (and any price taken without a notice) is
+      // stored, only when it changed.
       if (_meterWatch.meter case final meter?
-          when _stage == ActiveRideStage.onTrip) {
+          when !_rideLifecycle.terminal && _meterWatch.needsStore(meter)) {
         unawaited(MeterPriceStore.write(widget.tripId, meter));
       }
       return;
@@ -531,7 +538,11 @@ extension _AcceptRideTrip on _AcceptRideState {
     _meterNotice.show(
       context,
       changed.formatted,
-      onOk: () => unawaited(MeterPriceStore.write(widget.tripId, changed)),
+      onOk: () {
+        if (_meterWatch.needsStore(changed)) {
+          unawaited(MeterPriceStore.write(widget.tripId, changed));
+        }
+      },
     );
   }
 

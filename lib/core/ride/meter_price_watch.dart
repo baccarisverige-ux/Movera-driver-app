@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// the device per trip ([MeterPriceStore]), so a change made while the
 /// app was closed is shown after a restart.
 class MeterPriceWatch {
-  Money? _meter, _pending;
+  Money? _meter, _pending, _stored;
   bool _seeded = false;
 
   /// The meter's price as this phone knows it.
@@ -40,6 +40,7 @@ class MeterPriceWatch {
   /// price when one seen meanwhile differs from it.
   Money? seed(Money? stored) {
     _seeded = true;
+    _stored = stored;
     final pending = _pending;
     _pending = null;
     _meter ??= stored;
@@ -47,6 +48,16 @@ class MeterPriceWatch {
     final before = _meter;
     _meter = pending;
     return before != null && before != pending ? pending : null;
+  }
+}
+
+extension MeterPriceStoreMark on MeterPriceWatch {
+  /// True when [fare] is not the price stored last (then it is marked as
+  /// stored): the store is written only when the value changes.
+  bool needsStore(Money fare) {
+    if (_stored == fare) return false;
+    _stored = fare;
+    return true;
   }
 }
 

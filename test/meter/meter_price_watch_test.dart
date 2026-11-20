@@ -45,4 +45,11 @@ void main() {
       isNotNull,
     );
   });
+
+  test('the store is written only when the value changes', () {
+    final watch = MeterPriceWatch()..seed(_sek(21500));
+    expect(watch.needsStore(_sek(21500)), isFalse);
+    expect(watch.needsStore(_sek(24000)), isTrue);
+    expect(watch.needsStore(_sek(24000)), isFalse);
+  });
 }
