@@ -1,5 +1,6 @@
 import 'package:movera/core/safety/emergency_numbers.dart';
 import 'package:movera/core/safety/sos_contacts_sms.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -110,6 +111,7 @@ class LiveDriverConfig extends ChangeNotifier {
     this.onZonesPublished,
     this.onEventsPublished,
     this.onReservationsChanged,
+    this.onAirportQueueChanged,
     this.onZoneChanged,
     String? Function()? zoneId,
     DriverConfigCache? cache,
@@ -192,6 +194,11 @@ class LiveDriverConfig extends ChangeNotifier {
   /// `driver_reservations_changed` (a hint only) and each time the stream
   /// opens, so a reconnect catches what was missed while it was down.
   final void Function()? onReservationsChanged;
+
+  /// Contract v0.18.145 (`contract.json#loadCut.airportQueueLive`): the
+  /// driver's place in an airport line must be read again. Called on each
+  /// `airport_queue_changed` (a hint only) and each time the stream opens.
+  final void Function()? onAirportQueueChanged;
   final Duration retryAfter;
 
   /// Owner 2026-11-10: a refused stream waits [retryAfter] (5 s), then
@@ -408,7 +415,10 @@ class LiveDriverConfig extends ChangeNotifier {
 
   /// L20 stream: the one stream (re)opened: as on every (re)connect of the
   /// settings stream, the booked rides are read again (§68).
-  void oneStreamOpened() => onReservationsChanged?.call();
+  void oneStreamOpened() {
+    onReservationsChanged?.call();
+    onAirportQueueChanged?.call();
+  }
 
   /// L20 stream: one settings event from the one stream.
   void deliver(Map<String, dynamic> event) {
@@ -545,8 +555,10 @@ class LiveDriverConfig extends ChangeNotifier {
       // A stream a resume or a zone change replaced counts its own uptime.
       _endUptime();
       _openedAt = _now();
-      // §68: every (re)connect reads the booked rides again.
+      // §68: every (re)connect reads the booked rides again; v0.18.145 the
+      // airport queue too.
       onReservationsChanged?.call();
+      onAirportQueueChanged?.call();
       // D12-5: only a received line shows the stream is alive.
       _lastLine = null;
       // L20 fix: never two open: one kept before is closed first.
@@ -592,6 +604,10 @@ class LiveDriverConfig extends ChangeNotifier {
   void _event(Map<dynamic, dynamic> event) {
     if (event['kind'] == 'driver_reservations_changed') {
       onReservationsChanged?.call();
+      return;
+    }
+    if (event['kind'] == 'airport_queue_changed') {
+      onAirportQueueChanged?.call();
       return;
     }
     if (event['kind'] != 'config_published') return;

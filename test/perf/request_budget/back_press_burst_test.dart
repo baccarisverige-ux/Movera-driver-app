@@ -93,6 +93,21 @@ void main() {
           'activeTripId': ?serverTrip,
         }),
         '/api/v1/notifications' => json({'items': <Object>[]}),
+        // Contract v0.18.145 (`loadCut.homeBadges`): Home's four in one.
+        '/api/v1/driver/home-badges' => json({
+          'profile': {
+            'driverId': 'd1',
+            'accountStatus': 'active',
+            'firstName': 'Amira',
+            'version': 3,
+            'country': 'SE',
+            'onlineStatus': 'offline',
+            'activeTripId': ?serverTrip,
+          },
+          'notifications': {'items': <Object>[]},
+          'reminders': {'items': <Object>[]},
+          'onboardingSettings': null,
+        }),
         _ => json(<String, Object>{}),
       };
     });
@@ -177,6 +192,8 @@ void main() {
   const unread = 'GET /api/v1/notifications';
   const reminders = 'GET /api/v1/driver/reminders';
   const settings = 'GET /api/v1/driver/onboarding/settings';
+  // Contract v0.18.145 (`loadCut.homeBadges`): Home's four badge reads in one.
+  const badges = 'GET /api/v1/driver/home-badges';
 
   testWidgets('G27: closing a menu page over Home (badges due) reads the '
       'profile once, not again for the server trip', (tester) async {
@@ -185,10 +202,11 @@ void main() {
     // Even when the server names a trip: a menu page changed none.
     serverTrip = 'srv-trip-9';
     final sent = await openAndClose(tester, home.sent, menuPage());
-    expect(sent[profile], 1, reason: '$sent');
-    expect(sent[unread], 1, reason: '$sent');
-    expect(sent[reminders], 1, reason: '$sent');
-    expect(sent[settings], 1, reason: '$sent');
+    expect(sent[badges], 1, reason: '$sent');
+    expect(sent[profile], isNull, reason: '$sent');
+    expect(sent[unread], isNull, reason: '$sent');
+    expect(sent[reminders], isNull, reason: '$sent');
+    expect(sent[settings], isNull, reason: '$sent');
     expect(sent.keys.where((k) => k.contains('/trips/')), isEmpty);
     await leave(tester, home.live);
   });
@@ -198,6 +216,7 @@ void main() {
     final home = await pumpHome(tester);
     now = now.add(const Duration(seconds: 30));
     final sent = await openAndClose(tester, home.sent, menuPage());
+    expect(sent[badges], isNull, reason: '$sent');
     expect(sent[profile], isNull, reason: '$sent');
     expect(sent[unread], isNull, reason: '$sent');
     expect(sent[reminders], isNull, reason: '$sent');
@@ -217,10 +236,11 @@ void main() {
       ActiveRideTransition(const Scaffold(body: Text('trip'))),
     );
     expect(sent['GET /api/v1/trips/srv-trip-9'], 1, reason: '$sent');
+    expect(sent[badges], 1, reason: '$sent');
     expect(sent[profile], 1, reason: '$sent');
-    expect(sent[unread], 1, reason: '$sent');
-    expect(sent[reminders], 1, reason: '$sent');
-    expect(sent[settings], 1, reason: '$sent');
+    expect(sent[unread], isNull, reason: '$sent');
+    expect(sent[reminders], isNull, reason: '$sent');
+    expect(sent[settings], isNull, reason: '$sent');
     await leave(tester, home.live);
   });
 
@@ -234,8 +254,10 @@ void main() {
     tester.state<NavigatorState>(find.byType(Navigator)).pop();
     await frames(tester);
     final after = home.sent.skip(from).toList();
-    expect(after.where((k) => k == unread), hasLength(1), reason: '$after');
-    expect(after.where((k) => k == profile), hasLength(1), reason: '$after');
+    // v0.18.145: the bell and the profile come in Home's one badges read.
+    expect(after.where((k) => k == badges), hasLength(1), reason: '$after');
+    expect(after.where((k) => k == unread), isEmpty, reason: '$after');
+    expect(after.where((k) => k == profile), isEmpty, reason: '$after');
     // Within 60 s of that read: the Notifications screen still refreshes.
     now = now.add(const Duration(seconds: 10));
     await tester.tap(find.byKey(const ValueKey('home-notifications-bell')));

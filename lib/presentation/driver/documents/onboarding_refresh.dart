@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
 
@@ -34,13 +35,95 @@ Future<OnboardingSettings> refreshOnboardingSettings(
 Future<void> refreshReminders(DriverAccountSession session) async {
   try {
     await DriverRemindersStore.instance.refresh(() async {
-      final list = await session.repository.reminders();
-      final me = session.account;
-      return list.forViewer(
-        owner: me == null || me.isFleetAccount || (me.fleet?.isOwner ?? false),
-      );
+      return _forViewer(session, await session.repository.reminders());
     });
   } catch (_) {
     // Offline or a server fault: the sheet keeps what it showed.
   }
 }
+
+DriverReminderList _forViewer(
+  DriverAccountSession session,
+  DriverReminderList list,
+) {
+  final me = session.account;
+  return list.forViewer(
+    owner: me == null || me.isFleetAccount || (me.fleet?.isOwner ?? false),
+  );
+}
+
+/// Contract v0.18.145 (`contract.json#loadCut.homeBadges`): set once an
+/// older server answered `GET /driver/home-badges` with 404; the app then
+/// sends the four reads until it restarts.
+bool homeBadgesMissing = false;
+
+/// Contract v0.18.145: Home's badges (profile, unread count, reminders,
+/// onboarding settings) in ONE request, `GET /driver/home-badges`, instead
+/// of four. On 404 (an older server) the four reads as before. Quiet on
+/// failure: every badge keeps its last value. [afterProfile] runs once the
+/// profile was read (or its read failed), as after
+/// [DriverAccountSession.refreshBadges].
+///
+/// One request at a time per session (as G27 for the profile and the
+/// bell): a second caller while one is out shares its answer.
+Future<void> refreshHomeBadges(
+  DriverAccountSession session, {
+  void Function()? afterProfile,
+}) {
+  final active = _homeBadgesLoading[session];
+  if (active != null) return active.then((_) => afterProfile?.call());
+  final pending = _readHomeBadges(session, afterProfile: afterProfile);
+  _homeBadgesLoading[session] = pending;
+  pending.whenComplete(() {
+    if (identical(_homeBadgesLoading[session], pending)) {
+      _homeBadgesLoading[session] = null;
+    }
+  }).ignore();
+  return pending;
+}
+
+final _homeBadgesLoading = Expando<Future<void>>('homeBadges');
+
+Future<void> _readHomeBadges(
+  DriverAccountSession session, {
+  void Function()? afterProfile,
+}) async {
+  if (!homeBadgesMissing) {
+    try {
+      final badges = await session.repository.homeBadges();
+      session.replace(badges.profile);
+      session.unreadNotifications.value = badges.unread.length;
+      afterProfile?.call();
+      await _quiet(
+        DriverRemindersStore.instance.refresh(
+          () async => _forViewer(session, badges.reminders),
+        ),
+      );
+      final settings = badges.onboardingSettings;
+      if (settings != null) {
+        final store = OnboardingSettingsStore.instance;
+        store.country = session.account?.country ?? store.country;
+        await _quiet(store.refresh(() async => settings));
+      }
+      return;
+    } on ApiError catch (error) {
+      if (error.statusCode != 404) {
+        afterProfile?.call();
+        return;
+      }
+      homeBadgesMissing = true;
+    } catch (_) {
+      // Offline or a server fault: the badges keep what they showed.
+      afterProfile?.call();
+      return;
+    }
+  }
+  final profile = session.refreshBadges().then((_) => afterProfile?.call());
+  await Future.wait([
+    profile,
+    refreshReminders(session),
+    _quiet(refreshOnboardingSettings(session)),
+  ]);
+}
+
+Future<void> _quiet(Future<Object?> work) => work.then((_) {}, onError: (_) {});

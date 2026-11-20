@@ -133,6 +133,15 @@ class CountingClient extends http.BaseClient {
     if (path == '/api/v1/driver/profile') {
       return {'onlineStatus': onlineStatus, 'version': 1};
     }
+    // Contract v0.18.145 (`loadCut.homeBadges`): Home's four badges in one.
+    if (path == '/api/v1/driver/home-badges') {
+      return {
+        'profile': {'onlineStatus': onlineStatus, 'version': 1},
+        'notifications': {'items': <Object>[]},
+        'reminders': {'items': <Object>[]},
+        'onboardingSettings': null,
+      };
+    }
     if (path.startsWith('/api/v1/trips/')) {
       return {
         'tripId': tripId,
@@ -276,11 +285,8 @@ void _enter(
   final session = DriverAccountSession(
     repository: DriverAccountRepository(live.api),
   );
-  void badges() {
-    unawaited(session.refreshBadges());
-    unawaited(refreshReminders(session));
-    unawaited(refreshOnboardingSettings(session).then((_) {}, onError: (_) {}));
-  }
+  // Contract v0.18.145 (`loadCut.homeBadges`): one GET /driver/home-badges.
+  void badges() => unawaited(refreshHomeBadges(session));
 
   if (homeVisible) {
     badges();
