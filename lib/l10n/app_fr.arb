@@ -1742,6 +1742,8 @@
   "tripUpdate": "MISE À JOUR DE LA COURSE",
   "waitingInProgress": "Attente en cours",
   "cashFromRider": "Montant à encaisser en espèces",
+  "collectRideLine": "Course",
+  "collectEarlierFeeLine": "Frais antérieurs (à Movera)",
   "riderPaidMoreThanYourFare": "Le passager a payé davantage que le montant prévu pour vous (promotion). La différence sera régularisée lors de votre prochain versement.",
   "riderPaidLessThanYourFare": "Le passager a payé moins que le montant prévu pour vous (promotion). Movera ajoutera la différence à votre prochain versement.",
   "pickupArrived": "Prise en charge · sur place",

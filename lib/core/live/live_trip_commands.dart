@@ -37,6 +37,8 @@ class CompletePreview {
     this.repriced,
     this.arrivedLimitMeters,
     this.distanceToDropoffMeters,
+    this.cashDueRide,
+    this.cashDueOutstandingFee,
   });
 
   /// The answer's money, or null when it is not a `CompletePreview`.
@@ -52,6 +54,11 @@ class CompletePreview {
       final repriced = json['repriced'];
       final limit = json['arrivedLimitMeters'];
       final distance = json['distanceToDropoffMeters'];
+      final split = _cashSplit(
+        json['cashDueRide'],
+        json['cashDueOutstandingFee'],
+        Money.fromJson(Map<String, dynamic>.from(cash)).currency,
+      );
       final parsed = CompletePreview(
         previewId: id is String && id.isNotEmpty ? id : null,
         total: Money.fromJson(Map<String, dynamic>.from(total)),
@@ -67,11 +74,22 @@ class CompletePreview {
         repriced: repriced is bool ? repriced : null,
         arrivedLimitMeters: limit is num ? limit.round() : null,
         distanceToDropoffMeters: distance is num ? distance.round() : null,
+        cashDueRide: split?.$1,
+        cashDueOutstandingFee: split?.$2,
       );
       return parsed.cashDue.currency == parsed.total.currency ? parsed : null;
     } on FormatException {
       return null;
     }
+  }
+
+  /// v0.18.140 (`completePreview.cashDueSplit`): both parts or none, in
+  /// [cashDue]'s currency; the app never works one out from the other.
+  static (Money, Money)? _cashSplit(Object? ride, Object? fee, String cur) {
+    if (ride is! Map || fee is! Map) return null;
+    final r = Money.fromJson(Map<String, dynamic>.from(ride));
+    final f = Money.fromJson(Map<String, dynamic>.from(fee));
+    return r.currency == cur && f.currency == cur ? (r, f) : null;
   }
 
   /// The frozen price's id (2 minutes, contract v0.18.1 §26), sent back
@@ -104,6 +122,12 @@ class CompletePreview {
 
   /// v0.18.58 §80: the meters for "You are {m} m from the destination",
   /// only when the server says the trip ends early.
+  /// v0.18.140 M3 (owner 2026-11-19): the server's split of [cashDue]
+  /// when it holds the rider's earlier unpaid fee: the ride, and the fee
+  /// owed to Movera. Both null with no fee or from an older server.
+  final Money? cashDueRide;
+  final Money? cashDueOutstandingFee;
+
   int? get farFromDropoffMeters => earlyEnd ? distanceToDropoffMeters : null;
 
   /// The driver's money for the sheet: [driverTotal], else the older

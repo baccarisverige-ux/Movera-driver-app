@@ -855,6 +855,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       recalculated: preview?.earlyEnd ?? false,
       earlyEndNote: _earlyEndNote(preview),
       breakdown: preview?.earningsBreakdown ?? const [],
+      // v0.18.140 M3: the server's ride / earlier-fee rows, or none.
+      rideCash: preview?.cashDueRide,
+      earlierFee: preview?.cashDueOutstandingFee,
     );
     if (!complete || !mounted || !_collectsCashNow) {
       return;
