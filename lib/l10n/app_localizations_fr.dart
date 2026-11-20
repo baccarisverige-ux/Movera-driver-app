@@ -4834,6 +4834,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de charger ce que vous devez à Movera. Réessayez plus tard.';
 
   @override
+  String payMoveraPayByCard(String amount) {
+    return 'Payer $amount par carte';
+  }
+
+  @override
+  String get payMoveraCardPaid => 'Payé. Merci.';
+
+  @override
+  String get payMoveraCardChecking => 'Paiement reçu. Nous le vérifions.';
+
+  @override
+  String get payMoveraCardFailed => 'Le paiement n\'a pas abouti. Réessayez.';
+
+  @override
   String get reservation => 'Réservation';
 
   @override

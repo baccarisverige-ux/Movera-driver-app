@@ -4756,6 +4756,22 @@ class AppLocalizationsSv extends AppLocalizations {
       'Det gick inte att läsa in vad du är skyldig Movera. Försök igen senare.';
 
   @override
+  String payMoveraPayByCard(String amount) {
+    return 'Betala $amount med kort';
+  }
+
+  @override
+  String get payMoveraCardPaid => 'Betalt. Tack.';
+
+  @override
+  String get payMoveraCardChecking =>
+      'Betalningen är mottagen. Vi kontrollerar den.';
+
+  @override
+  String get payMoveraCardFailed =>
+      'Betalningen gick inte igenom. Försök igen.';
+
+  @override
   String get reservation => 'Bokning';
 
   @override

@@ -1,0 +1,130 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/core/payments/stripe_sheet.dart';
+import 'package:movera/presentation/driver/pay_movera/pay_movera.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// DRAFT contract driverPayRequest.stripe (owner 2026-11-20 "Stripe is used
+/// for exactly TWO things: ... (2) the DRIVER paying his monthly invoice to
+/// Movera"): the Pay Movera button pays by Stripe for the server's amount;
+/// the link button is gone while the server says stripe: true; paid is what
+/// the server's owed says afterwards.
+void main() {
+  Map<String, dynamic> money(int minor) => {
+    'amountMinor': minor,
+    'currency': 'SEK',
+  };
+  Map<String, dynamic> answer({int owed = 2384, bool stripe = true}) => {
+    'enabled': true,
+    'owedToMovera': money(owed),
+    'reference': 'drv_01ALI-202611',
+    'payLink': 'https://pay.sumup.com/b2c/MOVERA1',
+    'minAmount': money(0),
+    'stripe': stripe,
+  };
+  Finder key(String k) => find.byKey(ValueKey<String>(k));
+
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('StripeDriverPayment: the server secret and a TEST key only', () {
+    final ok = StripeDriverPayment.of({
+      'paymentIntentId': 'pi_1',
+      'amount': money(2384),
+      'status': 'requires_payment',
+      'clientSecret': 'pi_1_secret',
+      'publishableKey': 'pk_test_x',
+      'createdAt': '2026-11-01T09:30:00Z',
+    });
+    expect(ok.amount.minorUnits, 2384);
+    expect(
+      () => StripeDriverPayment.of({
+        'amount': money(1),
+        'clientSecret': 's',
+        'publishableKey': 'pk_live_x',
+      }),
+      throwsFormatException,
+    );
+    expect(kGooglePayEnabled, isFalse);
+    expect(PayMovera.of(answer()).canPayByCard, isTrue);
+    expect(PayMovera.of({...answer(), 'enabled': false}).canPayByCard, isFalse);
+  });
+
+  Future<List<String>> show(
+    WidgetTester tester, {
+    required bool paid,
+    required List<Map<String, dynamic>> answers,
+  }) async {
+    final shown = <String>[];
+    var n = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PayMoveraScreen(
+          load: () async =>
+              PayMovera.of(answers[n < answers.length - 1 ? n++ : n]),
+          openLink: (_) async => throw StateError('the link must not open'),
+          startCard: () async => StripeDriverPayment.of({
+            'amount': money(2384),
+            'clientSecret': 'pi_1_secret',
+            'publishableKey': 'pk_test_x',
+          }),
+          presentCard: (intent) async {
+            shown.add(intent.clientSecret);
+            return paid;
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    return shown;
+  }
+
+  testWidgets(
+    'stripe: true: "Pay 23,84 kr by card", no link button; after the sheet the server says 0: Paid',
+    (tester) async {
+      final shown = await show(
+        tester,
+        paid: true,
+        answers: [answer(), answer(owed: 0)],
+      );
+      expect(key('pay-movera-button'), findsNothing);
+      expect(find.text('Pay 23,84 kr by card'), findsOneWidget);
+      await tester.tap(key('pay-movera-card-button'));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      expect(
+        find.text('The payment did not go through. Try again.'),
+        findsNothing,
+      );
+      expect(shown, ['pi_1_secret']);
+      expect(find.text('Paid. Thank you.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the sheet said paid but the server still shows the amount: "checking", never paid',
+    (tester) async {
+      await show(tester, paid: true, answers: [answer(), answer()]);
+      await tester.tap(key('pay-movera-card-button'));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+      expect(
+        find.text('The payment did not go through. Try again.'),
+        findsNothing,
+      );
+      expect(
+        find.text('Payment received. We are checking it.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('stripe: false keeps the link button', (tester) async {
+    await show(tester, paid: false, answers: [answer(stripe: false)]);
+    expect(key('pay-movera-button'), findsOneWidget);
+    expect(key('pay-movera-card-button'), findsNothing);
+  });
+}

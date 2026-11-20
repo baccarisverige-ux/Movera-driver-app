@@ -3751,6 +3751,27 @@
   "@payMoveraUnavailable": {
     "description": "Pay Movera: GET /driver/pay-movera failed; never a made-up amount."
   },
+  "payMoveraPayByCard": "Pay {amount} by card",
+  "@payMoveraPayByCard": {
+    "description": "Pay Movera (DRAFT, Stripe): the button that pays what he owes now by card or Apple Pay; the amount is the server's.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payMoveraCardPaid": "Paid. Thank you.",
+  "@payMoveraCardPaid": {
+    "description": "Pay Movera (DRAFT, Stripe): the server's owed went down after the payment."
+  },
+  "payMoveraCardChecking": "Payment received. We are checking it.",
+  "@payMoveraCardChecking": {
+    "description": "Pay Movera (DRAFT, Stripe): the sheet said paid, the server has not confirmed yet."
+  },
+  "payMoveraCardFailed": "The payment did not go through. Try again.",
+  "@payMoveraCardFailed": {
+    "description": "Pay Movera (DRAFT, Stripe): the payment failed or could not start."
+  },
   "reservation": "Reservation",
   "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
   "@leaveNowForPickupTimePickup": {
