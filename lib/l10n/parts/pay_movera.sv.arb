@@ -1,0 +1,11 @@
+{
+  "payMoveraTitle": "Betala Movera",
+  "payMoveraReference": "Referens",
+  "payMoveraHowTo": "Betalningssidan öppnas i din webbläsare. Ange beloppet och referensen där.",
+  "payMoveraConfirmNote": "Beloppet minskar när Movera har bekräftat din betalning.",
+  "payMoveraCopy": "Kopiera",
+  "payMoveraCopied": "Kopierat",
+  "payMoveraAmountToPay": "Belopp att betala",
+  "payMoveraLinkFailed": "Det gick inte att öppna betalningssidan. Försök igen.",
+  "payMoveraUnavailable": "Det gick inte att läsa in vad du är skyldig Movera. Försök igen senare."
+}
