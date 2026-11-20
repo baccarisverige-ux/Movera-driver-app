@@ -336,6 +336,23 @@ void main() {
       expect(find.text(tr.contactPhoneSaved), findsOneWidget);
     });
 
+    testWidgets('v0.18.138: the number goes out without spaces or dashes '
+        '(as sign-in sends it, so the device check binds the same text)', (
+      tester,
+    ) async {
+      final sent = await run(tester, ContactKind.phone, '+46 70-174 06 33', (
+        r,
+      ) {
+        return {
+          'sessionId': 'ses_1',
+          'requestId': 'req_1',
+          'expiresAt': '2026-11-02T12:05:00Z',
+          'retryAfterSeconds': 30,
+        };
+      });
+      expect(jsonDecode(sent.single.body), {'phone': '+46701740633'});
+    });
+
     testWidgets('a number already used says so', (tester) async {
       await run(
         tester,

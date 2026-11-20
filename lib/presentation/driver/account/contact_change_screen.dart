@@ -104,8 +104,15 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
     return accountErrorMessage(error, fallback: tr.contactChangeFailed);
   }
 
+  /// Contract v0.18.138 `deviceCheck.binding`: a number is sent (and bound
+  /// in the device check) as the server reads it, without spaces or dashes,
+  /// the same way sign-in sends it; an e-mail only trimmed.
+  String get _entered => _phone
+      ? _value.text.replaceAll(RegExp(r'[\s-]'), '').trim()
+      : _value.text.trim();
+
   Future<void> _send() async {
-    final value = _value.text.trim();
+    final value = _entered;
     if (value.isEmpty || _busy) return;
     setState(() {
       _busy = true;
@@ -149,7 +156,7 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
     try {
       if (_phone) {
         await repo.verifyPhone(
-          phone: _value.text.trim(),
+          phone: _entered,
           sessionId: challenge,
           code: code,
         );

@@ -12,7 +12,9 @@ import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.util.Log
 import com.google.android.play.core.integrity.IntegrityManagerFactory
+import com.google.android.play.core.integrity.IntegrityServiceException
 import com.google.android.play.core.integrity.IntegrityTokenRequest
 
 class MainActivity : FlutterActivity() {
@@ -91,7 +93,13 @@ class MainActivity : FlutterActivity() {
                 IntegrityManagerFactory.create(applicationContext)
                     .requestIntegrityToken(IntegrityTokenRequest.builder().setNonce(nonce).build())
                     .addOnSuccessListener { answer -> result.success(answer.token()) }
-                    .addOnFailureListener { result.success(null) }
+                    .addOnFailureListener { error ->
+                        // Debug level, the failure code only (never a token or number).
+                        val code = (error as? IntegrityServiceException)?.errorCode?.toString()
+                            ?: error.javaClass.simpleName
+                        Log.d("MoveraDeviceCheck", "Play Integrity failed: " + code)
+                        result.success(null)
+                    }
             } catch (_: Exception) {
                 result.success(null)
             }
