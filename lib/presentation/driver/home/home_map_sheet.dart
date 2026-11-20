@@ -118,6 +118,15 @@ extension _HomeMapSheet on _DriverHomeState {
     if (!mounted || !_liveVisible) {
       return;
     }
+    if (_motion.update(
+          speedMps: location.speedMetersPerSecond,
+          at: location.measuredAt ?? DateTime.now(),
+        ) &&
+        showRideRequests &&
+        !DriverOfferRules.current.radarApp.listOpen(moving: _motion.moving)) {
+      // Dispatch › Modes: the full-screen list locks once the car drives.
+      _rebuild(() => showRideRequests = false);
+    }
     _HomeOnlineGate(this)._locationWorks();
     if (!location.isDisplayableAt(DateTime.now())) {
       // Driver group 3 (live test: the map stayed on a zoomed-out

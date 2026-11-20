@@ -1,4 +1,5 @@
 // Split from test/widget_test.dart (step 54, Rule 25: no file over 1500 lines).
+import 'package:movera/core/dispatch/radar_app_limits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -11,6 +12,15 @@ import 'package:movera/core/sound/radar_offer_sound.dart';
 import '_helpers.dart';
 
 void main() {
+  // These cases look at a deck of up to 4 Radar cards: admin sets that in
+  // Dispatch › Modes (`offers.radarApp.popup`, contract §3.3; default 2).
+  setUp(
+    () => DriverOfferRules.current = const DriverOfferRules(
+      radarApp: RadarAppLimits(popup: 4),
+    ),
+  );
+  tearDown(() => DriverOfferRules.current = const DriverOfferRules());
+
   registerCommonSetUp();
 
   testWidgets('Full radar orb responds near its outer edge', (

@@ -215,6 +215,14 @@ class _HomeDirectOffer {
 }
 
 extension _HomeOfferRadar on _DriverHomeState {
+  /// Radar trips waiting for a card, shown or held, at most this many.
+  static const int _homeRadarQueue = 4;
+
+  /// Dispatch › Modes: Radar cards over the map now (`offers.radarApp`,
+  /// contract §3.3), stopped or driving.
+  int get _maxHomeRadarOffers =>
+      DriverOfferRules.current.radarApp.cardLimit(moving: _motion.moving);
+
   void _maybeShowSoonReservation() {
     if (!_soonReservationReady ||
         !mounted ||
@@ -481,7 +489,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         _radarHomeOffers.any((item) => item.id == offer.id) ||
         _pendingRadarHomeOffers.any((item) => item.id == offer.id) ||
         _radarHomeOffers.length + _pendingRadarHomeOffers.length >=
-            _DriverHomeState._maxHomeRadarOffers) {
+            math.max(_homeRadarQueue, _maxHomeRadarOffers)) {
       return;
     }
 
@@ -499,7 +507,7 @@ extension _HomeOfferRadar on _DriverHomeState {
 
     // New trips join the back of the deck, so the front card the driver
     // reads never changes under them.
-    if (_radarHomeOffers.length < _DriverHomeState._maxHomeRadarOffers) {
+    if (_radarHomeOffers.length < _maxHomeRadarOffers) {
       _activateRadarHomeOffer(offer);
       return;
     }
@@ -513,7 +521,7 @@ extension _HomeOfferRadar on _DriverHomeState {
   void _activateRadarHomeOffer(_HomeDirectOffer offer) {
     if (!mounted ||
         !_isOnline ||
-        _radarHomeOffers.length >= _DriverHomeState._maxHomeRadarOffers ||
+        _radarHomeOffers.length >= _maxHomeRadarOffers ||
         _radarHomeOffers.any((item) => item.id == offer.id)) {
       return;
     }
@@ -551,7 +559,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (seen.add(offer.id)) {
         next.add(offer);
       }
-      if (next.length >= _DriverHomeState._maxHomeRadarOffers) {
+      if (next.length >= _maxHomeRadarOffers) {
         break;
       }
     }

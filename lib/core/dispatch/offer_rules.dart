@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/dispatch/radar_app_limits.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
@@ -18,6 +19,7 @@ class DriverOfferRules {
     this.commissionRate = WaybillPayment.serviceFeeRate,
     this.exclusiveAcceptTime = const Duration(seconds: 15),
     this.radarTime = const Duration(seconds: 15),
+    this.radarApp = const RadarAppLimits(),
   });
 
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
@@ -62,6 +64,9 @@ class DriverOfferRules {
   /// can be taken before its Match fades.
   final Duration radarTime;
 
+  /// Dispatch › Modes Radar limits (`offers.radarApp`, contract §3.3).
+  final RadarAppLimits radarApp;
+
   /// These rules with the zone's auto-offline setting
   /// (`offers.autoOffline`, Q46); everything else unchanged.
   DriverOfferRules withAutoOffline({required bool on, required int after}) =>
@@ -76,6 +81,7 @@ class DriverOfferRules {
         commissionRate: commissionRate,
         exclusiveAcceptTime: exclusiveAcceptTime,
         radarTime: radarTime,
+        radarApp: radarApp,
       );
 
   /// These rules with the published `DriverAppConfig.offers` (owner
@@ -128,6 +134,13 @@ class DriverOfferRules {
       radarTime: switch (seconds(offers['radarSeconds'])) {
         final value? => Duration(seconds: value),
         null => radarTime,
+      },
+      radarApp: switch (offers['radarApp']) {
+        final Map<dynamic, dynamic> app => RadarAppLimits.fromJson(
+          app,
+          base: radarApp,
+        ),
+        _ => radarApp,
       },
     );
   }
