@@ -127,24 +127,9 @@ void main() {
       );
       expect(query.containsKey('to'), isFalse);
       expect(find.text('6,00 kr'), findsWidgets);
-      expect(metric(tester, 'Rides'), '6');
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
-    'Audit N5: "View all N rides" uses the same count as "Rides"',
-    (tester) async {
-      await open(
-        tester,
-        (_) async => http.Response(
-          jsonEncode(threeDays),
-          200,
-          headers: {'content-type': 'application/json'},
-        ),
-      );
-      expect(metric(tester, 'Rides'), '6');
-      expect(find.text('View all 6 rides'), findsOneWidget);
+      // Owner 2026-11-20 "Must see all kind": Rides counts the listed rides
+      // (none here), not the server's completed count.
+      expect(metric(tester, 'Rides'), '0');
       expect(tester.takeException(), isNull);
     },
   );
@@ -245,7 +230,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('7,00 kr'), findsWidgets);
     expect(find.text('6,00 kr'), findsNothing);
-    expect(metric(tester, 'Rides'), '7');
+    // Owner 2026-11-20 "Must see all kind": Rides counts the listed rides
+    // (none here), not the server's completed count.
+    expect(metric(tester, 'Rides'), '0');
   });
 
   testWidgets('G28 fix F4: Retry also reads the server totals again', (
@@ -275,7 +262,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('6,00 kr'), findsWidgets);
     expect(find.text('Unavailable'), findsNothing);
-    expect(metric(tester, 'Rides'), '6');
+    // Owner 2026-11-20 "Must see all kind": Rides counts the listed rides
+    // (none here), not the server's completed count.
+    expect(metric(tester, 'Rides'), '0');
   });
 
   testWidgets(
