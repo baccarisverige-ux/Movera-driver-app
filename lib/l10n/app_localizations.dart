@@ -1174,6 +1174,12 @@ abstract class AppLocalizations {
   /// **'Could not delete the account. Try again.'**
   String get acctDeleteFailed;
 
+  /// v0.18.140 (contract.json#accountDeletion.closeAtOnce): sign-in answered 403 account_closed.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is closed and is being deleted. It can\'t be used to sign in.'**
+  String get acctClosedSignIn;
+
   /// No description provided for @airportQueueTitle.
   ///
   /// In en, this message translates to:

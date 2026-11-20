@@ -626,6 +626,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get acctDeleteFailed => 'Kontot kunde inte raderas. Försök igen.';
 
   @override
+  String get acctClosedSignIn =>
+      'Kontot är stängt och håller på att raderas. Det går inte att logga in med det.';
+
+  @override
   String get airportQueueTitle => 'Flygplatskö';
 
   @override

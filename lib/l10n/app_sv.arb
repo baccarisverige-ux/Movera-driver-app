@@ -178,6 +178,7 @@
   "acctDeleteConfirm": "Radera konto",
   "acctDeleteOpenTrip": "Avsluta eller avbryt din resa först och radera sedan kontot.",
   "acctDeleteFailed": "Kontot kunde inte raderas. Försök igen.",
+  "acctClosedSignIn": "Kontot är stängt och håller på att raderas. Det går inte att logga in med det.",
   "airportQueueTitle": "Flygplatskö",
   "airportQueuePlace": "Du är nummer {place} i kön",
   "airportQueueAheadWaiting": "{ahead} förare före dig · väntat {minutes} min",

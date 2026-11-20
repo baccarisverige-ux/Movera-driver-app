@@ -404,6 +404,10 @@
   "@acctDeleteFailed": {
     "description": "v0.18.140 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. other error."
   },
+  "acctClosedSignIn": "This account is closed and is being deleted. It can't be used to sign in.",
+  "@acctClosedSignIn": {
+    "description": "v0.18.140 (contract.json#accountDeletion.closeAtOnce): sign-in answered 403 account_closed."
+  },
   "airportQueueTitle": "Airport queue",
   "airportQueuePlace": "You are number {place} in line",
   "@airportQueuePlace": {

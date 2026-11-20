@@ -638,6 +638,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de supprimer le compte. Réessayez.';
 
   @override
+  String get acctClosedSignIn =>
+      'Ce compte est fermé et en cours de suppression. Il ne permet plus de se connecter.';
+
+  @override
   String get airportQueueTitle => 'File de l\'aéroport';
 
   @override

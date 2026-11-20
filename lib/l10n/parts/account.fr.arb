@@ -177,5 +177,6 @@
   "acctDeleteConfirmBody": "Action irréversible. Votre compte est fermé maintenant.",
   "acctDeleteConfirm": "Supprimer le compte",
   "acctDeleteOpenTrip": "Terminez ou annulez d’abord votre course, puis supprimez votre compte.",
-  "acctDeleteFailed": "Impossible de supprimer le compte. Réessayez."
+  "acctDeleteFailed": "Impossible de supprimer le compte. Réessayez.",
+  "acctClosedSignIn": "Ce compte est fermé et en cours de suppression. Il ne permet plus de se connecter."
 }

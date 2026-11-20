@@ -1,11 +1,11 @@
-# Movera API v0.18.140 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
+# Movera API v0.18.124 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
 openapi: 3.1.0
 info:
   title: Movera API
-  version: 0.18.140
+  version: 0.18.124
   description: '**Proposed contract — no backend exists yet.** One future backend serves the Rider (Flutter), Driver (Flutter)
     and Admin (React/TS) apps. Source of truth for names, enums, transitions, realtime and errors is `contract.json` + `CONTRACT.md`
-    v0.18.140 in this folder; this file must agree with them.
+    v0.18.124 in this folder; this file must agree with them.
 
 
     Wire rules: ids match `^[A-Za-z0-9_-]{1,64}$`; times are RFC 3339 UTC with `Z`; durations are integer seconds; money is
@@ -84,7 +84,7 @@ tags:
 - name: Admin · Finance
 x-contract:
   name: movera
-  version: 0.18.140
+  version: 0.18.124
   source: contract.json
 paths:
   /auth/otp/request:
@@ -101,14 +101,11 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
-        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
-        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
-        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
-        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
-        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
-        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
-        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
+        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
+        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
+        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
+        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -174,14 +171,11 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
-        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
-        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
-        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
-        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
-        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
-        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
-        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
+        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
+        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
+        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
+        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -323,14 +317,11 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
-        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
-        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
-        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
-        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
-        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
-        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
-        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
+        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
+        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
+        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
+        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -1555,8 +1546,6 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
-      description: 'v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one session on
-        a server copy are logged and counted, never refused in this version.'
   /rider/profile:
     get:
       operationId: getRiderProfile
@@ -1735,14 +1724,7 @@ paths:
         rider for places, the signed-in driver for preferences and contacts); another rider or driver never sees it and an
         id of someone else''s place is 404 place_not_found. Admins only read (never edit): emergency contacts through an OPEN
         safety case of that driver, saved places and ride preferences on the rider / driver profile page; every admin view
-        is written to the admin audit without the addresses, names or numbers. Logs never carry them. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
-        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
-        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
-        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
-        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
-        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
-        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
-        (step 6).'
+        is written to the admin audit without the addresses, names or numbers. Logs never carry them.'
   /rider/places/{placeId}:
     delete:
       operationId: deleteSavedPlace
@@ -1785,14 +1767,7 @@ paths:
       description: 'v0.18.26: only the rider''s own place (else 404 place_not_found). kind home and kind work: one each; saving
         a new home (or work) replaces the old one and keeps its placeId. kind other: as many as maxPlaces allows, each with
         its own placeId. type is the app''s finer word for an other place (gym, mall, school, airport, family, restaurant,
-        other); the app picks the icon and label from it. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
-        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
-        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
-        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
-        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
-        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
-        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
-        (step 6).'
+        other); the app picks the icon and label from it.'
       tags:
       - Rider · Account
       x-actor:
@@ -2830,8 +2805,6 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
-      description: 'v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one session on
-        a server copy are logged and counted, never refused in this version.'
   /driver/offers/{offerId}:
     get:
       operationId: getDriverOffer
@@ -3539,8 +3512,7 @@ paths:
         stream to another zone, so the app reopens it (app rule above). ?zoneId= always wins (unchanged). A zone that does
         not exist is 404 zone_not_found (config and stream); on GET /driver/config a zone with nothing published (own or country
         standard) is 404 config_not_published and the app keeps its document. There is no rule limiting which zone a driver
-        may read (unchanged). v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one
-        session on a server copy are logged and counted, never refused in this version.'
+        may read (unchanged).'
   /driver/earnings:
     get:
       operationId: getDriverEarnings
@@ -7070,24 +7042,13 @@ paths:
         the country -> 403 zone_out_of_scope. v0.18.23: AlertBookState also carries alerts [LiveAlert] (serverDetection):
         the alerts the server found, open or solved by itself, of the admin''s zones in that country and the groups the admin
         may see (same filter as records). v0.18.117 (alertDesk.serverDetection.liveList): AlertBookState.alerts: Every open
-        alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s zones and
-        kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000) are sent:
-        level critical, important, info, then the newest since, then alertId; the rest are left out. After the open ones,
-        at most solvedCap (1000) solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000
-        with the safety kinds first and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups
-        group safety: sos, car_lost, ride_check, sos_slow), then level critical, important, info, then the newest since, then
-        alertId. Solved: the safety kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId.
-        v0.18.131: AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true
-        when open non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left
-        out. Missing = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it
-        is there (alertDesk.serverDetection.liveList.adminLine); it never hides or cuts a safety alert. v0.18.131 (alertDesk.serverDetection.liveList):
-        Every open alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s
-        zones and kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000)
-        are sent: level critical, important, info, then the newest since, then alertId; the rest are left out. v0.18.131:
-        AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true when open
-        non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left out. Missing
-        = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
-        it never hides or cuts a safety alert.'
+        alert of the admin''s zones and kind groups is sent: no limit, never cut. After the open ones, at most solvedCap (1000)
+        solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000 with the safety kinds first
+        and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups group safety: sos, car_lost,
+        ride_check, sos_slow), then level critical, important, info, then the newest since, then alertId. Solved: the safety
+        kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId. Not built yet: past solvedCap
+        the older solved alerts are left out and nothing in the answer says so (no ''more'' marker, no count). A marker and
+        a limit for open non-safety alerts are a later job (MF3).'
       tags:
       - Admin · Alerts
       x-actor:
@@ -8508,17 +8469,7 @@ paths:
       summary: Admin incident feed (opened, updated, escalated, closed)
       description: 'v0.7.0. Any signed-in admin may listen. Events of an incident go to admins with incidents.read whose zones
         cover its zone; once it is escalated (not taken in contract.json#safety.escalateAfterSeconds) to every signed-in admin.
-        Without Accept: text/event-stream: a JSON page of the same events (polling fallback). v0.18.126 (contract.json#safety.feedStart):
-        v0.18.126 (S7 W2 Q126 = Q-B4; owner 2026-11-15 "Yes, open ones only (Rec.)", Rules decisions/session-2026-11-06.md;
-        Rule 33): GET /admin/incidents/stream with no cursor (no `after`, `after=0`, no Last-Event-ID) starts from the OPEN
-        incidents: first the newest event of each open or investigating incident (at or before the newest sequence when the
-        stream opened), oldest first, then live after that newest sequence. Closed incidents'' history is not replayed. The
-        open start is never cut by `limit`: every open case is an alarm. The JSON page (polling) without a cursor answers
-        the same open start, with `nextCursor` = the newest sequence when it is newer than the last item, else null. With
-        a cursor (`after` > 0 or Last-Event-ID) nothing changes: every event after it, in order. Zone rules unchanged (mayHear).
-        Rule 33: the start and the newest sequence are read from the one incident_events table; a Last-Event-ID from one server
-        copy is valid on every copy; no shared memory. Admin: no change needed (the panel already reads the open incident
-        list on load and keeps the highest sequence it saw); rider and driver apps: none (they do not use this stream).'
+        Without Accept: text/event-stream: a JSON page of the same events (polling fallback).'
       tags:
       - Admin · Safety
       x-actor:
@@ -9410,13 +9361,7 @@ paths:
         unchanged (the draft is already whole). Rule for later: a field that no whole-document admin screen owns goes on this
         list in the same contract version that adds it. ConfigDraftUpdate.removeKeys (optional, array of dotted paths): each
         must be a kept key of that document, else 400 invalid_request, reason unknown_kept_key, details ["key:<path>"], nothing
-        saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep). v0.18.130 (configDocs.keptKeys;
-        driver_app_config: realtime.oneStream): v0.18.130 (SCS guard re-check follow-up, owner Q-SCS-1 "Keep values, save
-        rest (Rec.)"): the driver document keeps realtime.oneStream (driverOneStream, v0.18.122) when a save leaves out realtime,
-        so the one-live-connection switch never falls back to off by a save from another screen. offers.autoOffline is not
-        listed: every admin save of the driver document starts from the server document and writes offers whole from the Dispatch
-        page that owns it. Publish and Restore are unchanged (Restore names a removed kept key in removeKeys, as for the other
-        documents).'
+        saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep).'
       tags:
       - Admin · Config
       x-actor:
@@ -10145,18 +10090,16 @@ paths:
         that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays) ago:
         still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the app
         refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid token).
-        A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules audits/impact/s7-q117-followup.md):
-        POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh:
-        the refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget, whether or not an access token is sent (a valid or expired token
-        is not read on these four calls). A call on these four whose body cannot be read (not valid JSON, too large, wrong
-        media type) counts against the client address at the address budget: over it, 429 rate_limited instead of the 400.
-        On these four calls the phone alone and the address alone are only ceilings of 10 × the address budget (a fixed server
-        factor, not an admin setting); the address ceiling is counted before the body is read, and a call refused on its phone
-        + address key adds nothing to the phone''s ceiling, so one address alone never fills a number''s ceiling. So one address
-        may cause up to 10 × the address budget refresh look-ups a minute (one indexed read each). The two code calls are
-        counted in production only (signInOutsideProduction). Every other call without a valid token: the client address (the
-        address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this limit: auth.otp.note.'
+        A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request and /auth/otp/verify:
+        the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session
+        + the client address (an unknown token, a body without a valid phone or a failed look-up: the client address); each
+        at the address budget. On these four calls the phone alone and the address alone are only ceilings of 10 × the address
+        budget (a fixed server factor, not an admin setting); the address ceiling is counted before the body is read, and
+        a call refused on its phone + address key adds nothing to the phone''s ceiling, so one address alone never fills a
+        number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups a minute (one indexed read
+        each). The two code calls are counted in production only (signInOutsideProduction). Every other call without a valid
+        token: the client address (the address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this
+        limit: auth.otp.note.'
       tags:
       - Admin · Auth
       x-actor:
@@ -10992,30 +10935,6 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
-      description: 'v0.18.140 (accountDeletion): v0.18.140: on the request, in the same transaction: every session of the
-        account ends (the next call is 401 session_ended), push addresses are removed, a driver is set offline (offers withdrawn);
-        from then on sign-in and refresh with that number or identity answer 403 forbidden reason account_closed until the
-        erase is done. After the erase the number is free and signs up as a new account. Change of mind during the 30 days:
-        not decided (owner question open); until then there is no way back. v0.18.140 (accountDeletion): v0.18.140: never
-        refused because of a debt (store rules: deletion must always be possible). Refused only during an open trip: searching,
-        offered, accepted, arrived, on board or a booked ride not yet done (409 conflict reason deletion_open_trip; the app
-        says to finish or cancel the ride first). v0.18.140 (accountDeletion): v0.18.140: when the account owes money at the
-        request (a rider: unpaid fees, riders.outstanding; a driver: debtModel.driverOwes.owed > 0, i.e. drivers who owe Movera),
-        one debt record is kept: name, phone number and amount with its currency and the trip or period it comes from. It
-        is kept until it is paid or written off by an admin (Mark as paid / Driver paid Movera), then it goes with the next
-        erase run. It is never sent to an app. v0.18.140 (accountDeletion): v0.18.140: 30 days after the request (CountryRules.accountDeletion.eraseAfterDays,
-        never less than 30) the job erases the account: the person row is emptied in place (phone replaced by a unique placeholder
-        so the number is free, first name / e-mail / language / consents / moderation reason emptied, erased_at set), and
-        the rows that hang off it are deleted: saved places, emergency contacts, favourite drivers, sessions and sign-in links,
-        push addresses, notifications, Apple / Google links, e-mail changes, driver phone data and last position, document
-        rows and files. Chat, GPS traces and share links go by their own timed clean-ups (90 / 30 / 30 days). v0.18.140 (accountDeletion):
-        v0.18.140: kept, linked only to the emptied account id: trips with price, times, zone and fare lines, rider fees,
-        wallet entries, refunds, earnings entries, payouts, ratings (stars only), admin audit rows and the debt record. Swedish
-        bookkeeping law keeps money records for 7 years; how long exactly for each table, and whether trip addresses and the
-        driver''s name on money records may go, is for the lawyer (FLAGGED, not decided; owner privacy Q2 + Q5 open). Until
-        decided: nothing in this list is erased, the driver''s first and last name stay on his row for the money records.
-        v0.18.140: Account > Delete account (since v0.5.1) works with the same rules: on 202 it signs out and wipes the phone;
-        409 deletion_open_trip shows the same text. It accepts any status text (older servers answer requested only).'
   /trips/{tripId}/path:
     get:
       operationId: getTripPath
@@ -17430,14 +17349,7 @@ paths:
       description: 'v0.18.26: One-time upload of the places a phone kept before v0.18.26. Applied only the first time for
         this rider (the server remembers it); later calls change nothing and answer the server''s list. Items follow the POST
         rules (home / work replace, others added); items past maxPlaces are dropped. The app calls it once after sign-in,
-        then reads GET /rider/places and from then on the server''s list is the one shown. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
-        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
-        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
-        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
-        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
-        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
-        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
-        (step 6).'
+        then reads GET /rider/places and from then on the server''s list is the one shown.'
       tags:
       - Rider · Account
       x-actor:
@@ -19601,116 +19513,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DriverTripHistoryPage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/Unavailable'
-  /driver/account/deletion:
-    post:
-      operationId: requestDriverAccountDeletion
-      summary: Ask to delete the driver account
-      description: 'v0.18.140 (accountDeletion): v0.18.140: on the request, in the same transaction: every session of the
-        account ends (the next call is 401 session_ended), push addresses are removed, a driver is set offline (offers withdrawn);
-        from then on sign-in and refresh with that number or identity answer 403 forbidden reason account_closed until the
-        erase is done. After the erase the number is free and signs up as a new account. Change of mind during the 30 days:
-        not decided (owner question open); until then there is no way back. v0.18.140 (accountDeletion): v0.18.140: never
-        refused because of a debt (store rules: deletion must always be possible). Refused only during an open trip: searching,
-        offered, accepted, arrived, on board or a booked ride not yet done (409 conflict reason deletion_open_trip; the app
-        says to finish or cancel the ride first). v0.18.140 (accountDeletion): v0.18.140: when the account owes money at the
-        request (a rider: unpaid fees, riders.outstanding; a driver: debtModel.driverOwes.owed > 0, i.e. drivers who owe Movera),
-        one debt record is kept: name, phone number and amount with its currency and the trip or period it comes from. It
-        is kept until it is paid or written off by an admin (Mark as paid / Driver paid Movera), then it goes with the next
-        erase run. It is never sent to an app. v0.18.140 (accountDeletion): v0.18.140: 30 days after the request (CountryRules.accountDeletion.eraseAfterDays,
-        never less than 30) the job erases the account: the person row is emptied in place (phone replaced by a unique placeholder
-        so the number is free, first name / e-mail / language / consents / moderation reason emptied, erased_at set), and
-        the rows that hang off it are deleted: saved places, emergency contacts, favourite drivers, sessions and sign-in links,
-        push addresses, notifications, Apple / Google links, e-mail changes, driver phone data and last position, document
-        rows and files. Chat, GPS traces and share links go by their own timed clean-ups (90 / 30 / 30 days). v0.18.140 (accountDeletion):
-        v0.18.140: kept, linked only to the emptied account id: trips with price, times, zone and fare lines, rider fees,
-        wallet entries, refunds, earnings entries, payouts, ratings (stars only), admin audit rows and the debt record. Swedish
-        bookkeeping law keeps money records for 7 years; how long exactly for each table, and whether trip addresses and the
-        driver''s name on money records may go, is for the lawyer (FLAGGED, not decided; owner privacy Q2 + Q5 open). Until
-        decided: nothing in this list is erased, the driver''s first and last name stay on his row for the money records.
-        v0.18.140: Profile > Delete my account: a confirm step (what closes at once, what is kept, 30 days), then the request;
-        on 202 the app signs out and wipes the phone; 409 deletion_open_trip shows "Finish or cancel your ride first". sv
-        / fr / en.'
-      tags:
-      - Driver · Account
-      x-actor:
-      - driver
-      parameters:
-      - $ref: '#/components/parameters/IdempotencyKey'
-      - $ref: '#/components/parameters/RequestId'
-      - $ref: '#/components/parameters/ApiVersion'
-      responses:
-        '202':
-          description: Accepted; the account is closed now and erased 30 days later.
-          headers:
-            X-Request-Id:
-              description: Echo of the request id (server-generated if absent).
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccountDeletion'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '429':
-          $ref: '#/components/responses/RateLimited'
-        '503':
-          $ref: '#/components/responses/Unavailable'
-  /admin/deletion-requests:
-    get:
-      operationId: adminDeletionRequests
-      summary: Account deletion requests and their status
-      description: 'v0.18.140 (accountDeletion): v0.18.140: GET /admin/deletion-requests (riders.read, read only, own zones
-        not applied: accounts are country-wide) lists every request, newest first: DeletionRequest { accountKind, accountId,
-        firstName, requestedAt, eraseDueAt, status, waitingReason?, debt?, erasedAt? }. status requested (before eraseDueAt),
-        waiting (due, but blocked or eraseEnabled is off), erased. The phone number is never in the list. v0.18.140: account_erase:
-        one recurring housekeeping timer (hourly, own kind, so it has a heartbeat in system health), at most 10 accounts per
-        run, one transaction per account, idempotent (erased_at set last in the same transaction; a second run finds nothing;
-        a run that fails undoes only its own account). Re-checks the blocks at run time (open trip, open safety case: the
-        account waits and shows as waiting). While CountryRules.accountDeletion.eraseEnabled is false (default) it only counts:
-        the admin list shows the accounts that would be erased, nothing is erased. One admin audit row per erased account
-        (account.erase) with table counts, no personal data.'
-      tags:
-      - Admin · Riders
-      x-actor:
-      - admin
-      x-permission: riders.read
-      x-read-only: true
-      parameters:
-      - $ref: '#/components/parameters/RequestId'
-      - $ref: '#/components/parameters/ApiVersion'
-      responses:
-        '200':
-          description: OK
-          headers:
-            X-Request-Id:
-              description: Echo of the request id (server-generated if absent).
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeletionRequestPage'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -23092,17 +22894,6 @@ components:
           $ref: '#/components/schemas/Timestamp'
         updatedAt:
           $ref: '#/components/schemas/Timestamp'
-        preferredCategoryId:
-          description: 'v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory): SavedPlace.preferredCategoryId:
-            CategoryId | null, always sent by a v0.18.129 server (left optional in the schema so older answers still validate)
-            in reads (GET /rider/places, POST / PUT answers, POST /rider/places/import answer, GET /admin/riders/{riderId}/saved-places);
-            null = no fixed category (every place saved before v0.18.129). The id must be a category in the admin Pricing
-            catalog (contract.json#categories; the exact id, no alias); an unknown id is 400 invalid_request, reason unknown_category
-            (as driverPreferences.categoriesOff). A category deactivated or removed later is NOT cleared by the server: the
-            read still answers the id, and the rider app treats it as not available (step 6).'
-          oneOf:
-          - $ref: '#/components/schemas/CategoryId'
-          - type: 'null'
     SupportTicket:
       type: object
       required:
@@ -23567,24 +23358,13 @@ components:
         the country -> 403 zone_out_of_scope. v0.18.23: AlertBookState also carries alerts [LiveAlert] (serverDetection):
         the alerts the server found, open or solved by itself, of the admin''s zones in that country and the groups the admin
         may see (same filter as records). v0.18.117 (alertDesk.serverDetection.liveList): AlertBookState.alerts: Every open
-        alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s zones and
-        kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000) are sent:
-        level critical, important, info, then the newest since, then alertId; the rest are left out. After the open ones,
-        at most solvedCap (1000) solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000
-        with the safety kinds first and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups
-        group safety: sos, car_lost, ride_check, sos_slow), then level critical, important, info, then the newest since, then
-        alertId. Solved: the safety kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId.
-        v0.18.131: AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true
-        when open non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left
-        out. Missing = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it
-        is there (alertDesk.serverDetection.liveList.adminLine); it never hides or cuts a safety alert. v0.18.131 (alertDesk.serverDetection.liveList):
-        Every open alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s
-        zones and kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000)
-        are sent: level critical, important, info, then the newest since, then alertId; the rest are left out. v0.18.131:
-        AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true when open
-        non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left out. Missing
-        = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
-        it never hides or cuts a safety alert.'
+        alert of the admin''s zones and kind groups is sent: no limit, never cut. After the open ones, at most solvedCap (1000)
+        solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000 with the safety kinds first
+        and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups group safety: sos, car_lost,
+        ride_check, sos_slow), then level critical, important, info, then the newest since, then alertId. Solved: the safety
+        kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId. Not built yet: past solvedCap
+        the older solved alerts are left out and nothing in the answer says so (no ''more'' marker, no count). A marker and
+        a limit for open non-safety alerts are a later job (MF3).'
       required:
       - country
       - rev
@@ -23653,22 +23433,6 @@ components:
               name:
                 type: string
                 description: 'v0.18.16: the first name; absent until set.'
-        alertsMore:
-          type: object
-          description: 'v0.18.131 (alertDesk.serverDetection.liveList.more): v0.18.131: AlertBookState.alertsMore { open:
-            boolean, solved: boolean } is sent only when a part was cut: open true when open non-safety alerts past openOtherCap
-            were left out, solved true when solved alerts past solvedCap were left out. Missing = nothing was left out. No
-            count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
-            it never hides or cuts a safety alert.'
-          required:
-          - open
-          - solved
-          additionalProperties: false
-          properties:
-            open:
-              type: boolean
-            solved:
-              type: boolean
     AlertTakeCommand:
       type: object
       description: v0.18.15.
@@ -25257,8 +25021,6 @@ components:
             amount of one bonus campaign (CountryRules.bonusCampaignMax, per country standard or zone, Admin › Pricing › Tips
             & limits, settings.publish). Builder default values (plan §12 D13), admin-changeable. Defaults SE 2 000,00 kr
             (200000 SEK), FR 200,00 € (20000 EUR), TN 200.000 DT (200000 TND). Optional: absent → configDefaults.bonusCampaignMax.'
-        accountDeletion:
-          $ref: '#/components/schemas/AccountDeletionSetting'
       x-server-only: true
     FeeRule:
       type: object
@@ -29379,9 +29141,7 @@ components:
     AccountDeletion:
       type: object
       description: 'v0.5.1: POST /account/deletion (rider) answers 202 { status: requested }; the server erases the account
-        on its own schedule (legal retention, open payments). v0.18.140 (accountDeletion): v0.18.140: POST /account/deletion
-        (rider, since v0.5.1) and POST /driver/account/deletion (driver, new) answer 202 AccountDeletion { status: requested,
-        requestedAt, eraseDueAt }. A second request answers the first one again (same requestedAt; nothing changes).'
+        on its own schedule (legal retention, open payments).'
       required:
       - status
       properties:
@@ -29389,14 +29149,6 @@ components:
           type: string
           enum:
           - requested
-        requestedAt:
-          allOf:
-          - $ref: '#/components/schemas/Timestamp'
-          description: 'v0.18.140 (accountDeletion): when the account asked (the first request).'
-        eraseDueAt:
-          allOf:
-          - $ref: '#/components/schemas/Timestamp'
-          description: 'v0.18.140 (accountDeletion): requestedAt + eraseAfterDays: from then the job may erase it.'
     RiderConsents:
       type: object
       properties:
@@ -29551,9 +29303,7 @@ components:
     RiderTripEvent:
       type: object
       description: 'v0.18.32 (contract.json#bookedRideSeen.riderTripEvent, P21): a trip of this rider changed (made, accepted,
-        any status), also when made elsewhere. The rider app reads GET /rider/trips/active again. v0.18.127 (contract.json#bookedRideSeen.riderTripEvent):
-        not sent for a GPS update (trip event kind location: a position fix or an ETA tick); every other event of the rider''s
-        trips still sends it.'
+        any status), also when made elsewhere. The rider app reads GET /rider/trips/active again.'
       required:
       - eventId
       - kind
@@ -30684,17 +30434,6 @@ components:
           description: 'v0.18.26: the app''s word for an other place (gym, mall, ...).'
         place:
           $ref: '#/components/schemas/SavedPlaceAddress'
-        preferredCategoryId:
-          description: 'v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory): SavedPlaceRequest.preferredCategoryId
-            (optional, CategoryId | null): on POST a new place without it gets null; a POST that replaces home / work and
-            a PUT without the field keep the stored value (older apps never clear it by accident); null clears it; a category
-            id sets it. An item of POST /rider/places/import may carry it too, checked the same way. The id must be a category
-            in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown id is 400 invalid_request,
-            reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or removed later is NOT cleared
-            by the server: the read still answers the id, and the rider app treats it as not available (step 6).'
-          oneOf:
-          - $ref: '#/components/schemas/CategoryId'
-          - type: 'null'
     VehicleRequest:
       type: object
       required:
@@ -31517,8 +31256,7 @@ components:
             - payoutMode
             - payoutSchedule
             - radar.reaskAfterSeconds
-            - realtime.oneStream
-          maxItems: 9
+          maxItems: 8
           description: 'v0.18.123 (configDocs.keptKeys.removeKeys): ConfigDraftUpdate.removeKeys (optional, array of dotted
             paths): each must be a kept key of that document, else 400 invalid_request, reason unknown_kept_key, details ["key:<path>"],
             nothing saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep).'
@@ -39233,94 +38971,3 @@ components:
           - string
           - 'null'
           description: Opaque; null on the last page.
-    DeletionRequest:
-      type: object
-      description: 'v0.18.140 (accountDeletion): v0.18.140: GET /admin/deletion-requests (riders.read, read only, own zones
-        not applied: accounts are country-wide) lists every request, newest first: DeletionRequest { accountKind, accountId,
-        firstName, requestedAt, eraseDueAt, status, waitingReason?, debt?, erasedAt? }. status requested (before eraseDueAt),
-        waiting (due, but blocked or eraseEnabled is off), erased. The phone number is never in the list.'
-      required:
-      - accountKind
-      - accountId
-      - requestedAt
-      - eraseDueAt
-      - status
-      properties:
-        accountKind:
-          type: string
-          enum:
-          - rider
-          - driver
-        accountId:
-          $ref: '#/components/schemas/Id'
-        firstName:
-          type: string
-          maxLength: 100
-          description: First name while the account is not erased; '' after.
-        requestedAt:
-          $ref: '#/components/schemas/Timestamp'
-        eraseDueAt:
-          $ref: '#/components/schemas/Timestamp'
-        status:
-          type: string
-          enum:
-          - requested
-          - waiting
-          - erased
-        waitingReason:
-          type: string
-          enum:
-          - erase_off
-          - open_trip
-          - open_safety_case
-          description: 'Why a due account is not erased yet: erase_off (the setting is off: count only), open_trip, open_safety_case.'
-        debt:
-          type: object
-          description: The kept debt record (amount only here).
-          required:
-          - amount
-          - settled
-          properties:
-            amount:
-              $ref: '#/components/schemas/Money'
-            settled:
-              type: boolean
-              description: 'Paid or written off: the record goes with the next run.'
-          additionalProperties: false
-        erasedAt:
-          $ref: '#/components/schemas/Timestamp'
-      additionalProperties: false
-    DeletionRequestPage:
-      type: object
-      description: 'v0.18.140 (accountDeletion): newest first, at most 200.'
-      required:
-      - items
-      - dueNow
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/DeletionRequest'
-          maxItems: 200
-        dueNow:
-          type: integer
-          minimum: 0
-          description: How many accounts are due now (the dry-run count while eraseEnabled is off).
-      additionalProperties: false
-    AccountDeletionSetting:
-      type: object
-      description: 'v0.18.140 (accountDeletion): v0.18.140: CountryRules.accountDeletion { eraseEnabled (default false = count
-        only), eraseAfterDays (default 30, minimum 30) } on the country standard in Admin Pricing; a zone''s own value is
-        ignored. The account''s country: a driver''s country, else SE.'
-      properties:
-        eraseEnabled:
-          type: boolean
-          description: Off = the job only counts (dry-run); on = due accounts are erased.
-          default: false
-        eraseAfterDays:
-          type: integer
-          minimum: 30
-          maximum: 365
-          description: Days from the request to the erase.
-          default: 30
-      additionalProperties: false

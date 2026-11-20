@@ -626,6 +626,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get acctDeleteFailed => 'Could not delete the account. Try again.';
 
   @override
+  String get acctClosedSignIn =>
+      'This account is closed and is being deleted. It can\'t be used to sign in.';
+
+  @override
   String get airportQueueTitle => 'Airport queue';
 
   @override
