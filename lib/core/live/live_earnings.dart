@@ -388,13 +388,14 @@ class PayMovera {
   bool get canPay => payLink != null && owedToMovera.minorUnits > 0;
 
   /// A plain https link, as the server's own rule (movera-server
-  /// src/drivers/payRequestSetting.ts): it starts with "https://", has a
-  /// host, no "user:password@" part (so the address he reads is where it
-  /// goes), and no white space, control or invisible character.
+  /// src/drivers/payRequestSetting.ts): "https://" then printable ASCII
+  /// only (no white space, control, invisible or look-alike character) and
+  /// no backslash (a browser reads it as "/", hiding the real host), at
+  /// most 500 characters, a host, and no "user:password@" part: the
+  /// address he reads is where it goes.
   static Uri? linkOf(Object? value) {
     if (value is! String || value.length > 500) return null;
-    if (!value.startsWith('https://')) return null;
-    if (value.runes.any(_badLinkChar)) return null;
+    if (!_linkShape.hasMatch(value)) return null;
     final uri = Uri.tryParse(value);
     return uri != null &&
             uri.scheme == 'https' &&
@@ -404,13 +405,7 @@ class PayMovera {
         : null;
   }
 
-  static bool _badLinkChar(int c) =>
-      c <= 0x20 ||
-      (c >= 0x7f && c <= 0xa0) ||
-      (c >= 0x200b && c <= 0x200f) ||
-      (c >= 0x2028 && c <= 0x202e) ||
-      (c >= 0x2060 && c <= 0x2069) ||
-      c == 0xfeff;
+  static final RegExp _linkShape = RegExp(r'^https://[\x21-\x5B\x5D-\x7E]+$');
 }
 
 /// G28 step 1: an `EarningsReport` summed over all its periods: `net`,

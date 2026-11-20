@@ -54,6 +54,16 @@ void main() {
       expect(view.canPay, isTrue);
     });
 
+    test('ordinary payment links open as they are', () {
+      for (final ok in [
+        link,
+        'https://sumup.se/pay/movera?ref=1&x=%20y#top',
+        'https://pay.example:8443/a/b',
+      ]) {
+        expect(PayMovera.of(answer(payLink: ok)).payLink.toString(), ok);
+      }
+    });
+
     test('only a plain https link is ever opened', () {
       for (final bad in [
         'http://pay.sumup.com/b2c/X',
@@ -70,6 +80,12 @@ void main() {
         'https://pay.sumup.com/\u200bx',
         'https://pay.sumup.com/\u202ex',
         ' https://pay.sumup.com/x',
+        // Printable ASCII only, no backslash (the server's rule).
+        r'https://evil.example\@pay.sumup.com/',
+        'https://pay.sumup.com/\u00adx',
+        'https://pay.sumup.com/\u2003x',
+        'https://pay.sumup.com/\u3000x',
+        'https://p\u0430y.sumup.com/x',
         '',
         42,
         'https://pay.sumup.com/${'x' * 500}',
