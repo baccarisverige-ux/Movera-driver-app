@@ -202,17 +202,31 @@ public class MainActivityTest {
       case "location-on": location(instrumentation, true); break;
       case "net-off": net(instrumentation, false); break;
       case "net-on": net(instrumentation, true); break;
+      // Device proof 2026-11-20 (M1, M4): the app really to the background
+      // and back, the offer notices in the phone's list, the top screen.
+      case "home":
+        shell(instrumentation, "pm grant se.movera.driver android.permission.POST_NOTIFICATIONS");
+        shell(instrumentation, "input keyevent KEYCODE_HOME");
+        break;
+      case "front":
+        shell(instrumentation, "am start -n se.movera.driver/.MainActivity");
+        break;
+      case "notif":
+      case "top":
+        break;
       default: return;
     }
-    SystemClock.sleep(1500);
-    String state =
-        word
-            + " location_mode="
-            + shellOut(instrumentation, "settings get secure location_mode")
-            + " location="
-            + shellOut(instrumentation, "cmd location is-location-enabled")
-            + " airplane="
-            + shellOut(instrumentation, "settings get global airplane_mode_on");
+    String state;
+    if (word.equals("notif")) {
+      state = word + " offers=" + offerNotices(instrumentation);
+    } else if (word.equals("home") || word.equals("front") || word.equals("top")) {
+      SystemClock.sleep(1500);
+      String[] top = topAndTel(instrumentation);
+      state = word + " top=" + top[0] + " telact=" + top[1];
+    } else {
+      SystemClock.sleep(1500);
+      state = locationState(instrumentation, word);
+    }
     Log.i(TAG, "control " + state);
     File ack = new File(file.getAbsolutePath() + ".ack");
     try (java.io.FileOutputStream outStream = new java.io.FileOutputStream(ack)) {
@@ -220,6 +234,78 @@ public class MainActivityTest {
     } catch (IOException e) {
       Log.w(TAG, "control ack: " + e.getClass().getSimpleName());
     }
+  }
+
+  /** The whole output of a shell command (at most [max] bytes), for dumpsys. */
+  private static String shellAll(Instrumentation instrumentation, String command, int max) {
+    ParcelFileDescriptor pfd = instrumentation.getUiAutomation().executeShellCommand(command);
+    java.io.ByteArrayOutputStream text = new java.io.ByteArrayOutputStream();
+    try (InputStream in = new FileInputStream(pfd.getFileDescriptor())) {
+      byte[] buffer = new byte[8192];
+      int n;
+      while ((n = in.read(buffer)) != -1) {
+        if (text.size() < max) text.write(buffer, 0, Math.min(n, max - text.size()));
+      }
+    } catch (IOException e) {
+      return "";
+    } finally {
+      try {
+        pfd.close();
+      } catch (IOException ignored) {
+        // Closed already.
+      }
+    }
+    return new String(text.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+  }
+
+  /** Posted notices of this app on the offer channels (movera_offers*); a count only. */
+  private static int offerNotices(Instrumentation instrumentation) {
+    String dump = shellAll(instrumentation, "dumpsys notification", 4 << 20);
+    int count = 0;
+    for (String line : dump.split("\n")) {
+      if (line.contains("NotificationRecord(")
+          && line.contains("pkg=se.movera.driver")
+          && line.contains("channel=movera_offers")) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * The resumed activity (component) and the action of the newest activity
+   * intent with a tel: uri ("none" when none). Names only: no number.
+   */
+  private static String[] topAndTel(Instrumentation instrumentation) {
+    String dump = shellAll(instrumentation, "dumpsys activity activities", 4 << 20);
+    String top = "?";
+    String tel = "none";
+    java.util.regex.Pattern component =
+        java.util.regex.Pattern.compile("([A-Za-z0-9_.]+/[A-Za-z0-9_.$]+)");
+    java.util.regex.Pattern act =
+        java.util.regex.Pattern.compile("act=([A-Za-z0-9_.]+)[^}]*dat=tel:");
+    for (String line : dump.split("\n")) {
+      if (top.equals("?")
+          && (line.contains("topResumedActivity") || line.contains("mResumedActivity"))) {
+        java.util.regex.Matcher m = component.matcher(line);
+        if (m.find()) top = m.group(1);
+      }
+      if (tel.equals("none")) {
+        java.util.regex.Matcher m = act.matcher(line);
+        if (m.find()) tel = m.group(1);
+      }
+    }
+    return new String[] {top, tel};
+  }
+
+  private static String locationState(Instrumentation instrumentation, String word) {
+    return word
+            + " location_mode="
+            + shellOut(instrumentation, "settings get secure location_mode")
+            + " location="
+            + shellOut(instrumentation, "cmd location is-location-enabled")
+            + " airplane="
+            + shellOut(instrumentation, "settings get global airplane_mode_on");
   }
 
   private static double parse(String value, double fallback) {

@@ -109,7 +109,15 @@ class PhoneSwitches {
 
   /// Writes [word] (location-off, location-on, net-off, net-on) and waits
   /// up to 15 s for the phone's answer; returns it (null: none).
-  Future<String?> send(WidgetTester tester, String word) async {
+  ///
+  /// [pump] false: plain time passes between reads, no frame is pumped
+  /// (the app is really in the background then and frames are off; a
+  /// pump would wait forever, run 6). Also words home, front, notif, top.
+  Future<String?> send(
+    WidgetTester tester,
+    String word, {
+    bool pump = true,
+  }) async {
     final path = _path;
     if (path == null) return null;
     final ack = File('$path.ack');
@@ -119,7 +127,9 @@ class PhoneSwitches {
     tmp.renameSync(path);
     final end = DateTime.now().add(const Duration(seconds: 15));
     while (DateTime.now().isBefore(end)) {
-      await wait(tester, const Duration(milliseconds: 500));
+      pump
+          ? await wait(tester, const Duration(milliseconds: 500))
+          : await Future<void>.delayed(const Duration(milliseconds: 500));
       if (ack.existsSync()) {
         final text = ack.readAsStringSync().trim();
         if (text.startsWith(word)) {
