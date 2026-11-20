@@ -91,6 +91,15 @@ void main() {
     },
   );
 
+  test('a 401 (sign-in renewing) keeps the queue', () async {
+    final r = reporter();
+    await r.sendNow(first: fix(0));
+    networkUp = true;
+    status = 401;
+    expect(await r.sendNow(first: fix(10)), isFalse);
+    expect(r.unsent, [fix(0), fix(10)]);
+  });
+
   test('a refused batch is not kept', () async {
     final r = reporter();
     await r.sendNow(first: fix(0));

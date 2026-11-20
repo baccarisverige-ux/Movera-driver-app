@@ -1112,8 +1112,13 @@ class LiveLocationReporter {
     } catch (error) {
       DriverLog.warn('location not sent: ${error.runtimeType}', name: 'live');
       final status = error is ApiError ? error.statusCode : null;
-      if (status == null || status >= 500 || status == 429 || status == 408) {
-        // A network drop or a busy server: kept for the next send.
+      if (status == null ||
+          status >= 500 ||
+          status == 429 ||
+          status == 408 ||
+          status == 401) {
+        // A network drop, a busy server or a sign-in being renewed: kept
+        // for the next send.
         if (tried != null) _keepUnsent(tried);
       } else {
         // The server refused the batch: the kept fixes go no further.
