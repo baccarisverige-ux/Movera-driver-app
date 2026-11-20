@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/auth/phone_country.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movera/core/account/driver_account.dart';
@@ -336,6 +337,77 @@ void main() {
       expect(find.text(tr.contactPhoneSaved), findsOneWidget);
     });
 
+    testWidgets('v0.18.138: the number goes out without spaces or dashes '
+        '(as sign-in sends it, so the device check binds the same text)', (
+      tester,
+    ) async {
+      final sent = await run(tester, ContactKind.phone, '+46 70-174 06 33', (
+        r,
+      ) {
+        return {
+          'sessionId': 'ses_1',
+          'requestId': 'req_1',
+          'expiresAt': '2026-11-02T12:05:00Z',
+          'retryAfterSeconds': 30,
+        };
+      });
+      expect(jsonDecode(sent.single.body), {'phone': '+46701740633'});
+    });
+
+    for (final (typed, country, phone) in [
+      ('06 12 34 56 78', 'FR', '+33612345678'),
+      ('+46 (0)70 174 06 33', 'SE', '+46701740633'),
+      ('+46 (0)70 174 06 33', 'FR', '+46701740633'),
+    ]) {
+      testWidgets('v0.18.138: "$typed" with the sign-in start country '
+          '$country goes out as $phone', (tester) async {
+        final sent = <http.Request>[];
+        final api = ApiClient(
+          client: MockClient((request) async {
+            sent.add(request);
+            return http.Response(
+              jsonEncode({'sessionId': 'ses_1', 'retryAfterSeconds': 30}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ContactChangeScreen(
+              account: DriverAccountSession(
+                repository: DriverAccountRepository(api),
+              ),
+              kind: ContactKind.phone,
+              startCountry: () => PhoneCountries.byIso(country)!,
+            ),
+          ),
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('contact-value')),
+          typed,
+        );
+        await tester.tap(find.byKey(const ValueKey('contact-submit')));
+        await tester.pumpAndSettle();
+        expect(jsonDecode(sent.single.body), {'phone': phone});
+      });
+    }
+
+    testWidgets('v0.18.138: a national number with a trunk 0 and any '
+        'separators goes out in E.164, as sign-in reads it', (tester) async {
+      final sent = await run(tester, ContactKind.phone, '(070) 174-06.33', (r) {
+        return {
+          'sessionId': 'ses_1',
+          'requestId': 'req_1',
+          'expiresAt': '2026-11-02T12:05:00Z',
+          'retryAfterSeconds': 30,
+        };
+      });
+      expect(jsonDecode(sent.single.body), {'phone': '+46701740633'});
+    });
+
     testWidgets('a number already used says so', (tester) async {
       await run(
         tester,
@@ -354,6 +426,9 @@ void main() {
     for (final (status, reason, text) in [
       (403, 'reauth_required', () => tr.contactReauthRequired),
       (429, 'change_too_many', () => tr.contactChangeTooMany),
+      // v0.18.138 deviceCheck.phoneChange: a phone change that fails the
+      // real-phone check says so, not the generic message.
+      (403, 'device_check_failed', () => tr.authErrDeviceCheckFailed),
     ]) {
       testWidgets('$status $reason has its own message', (tester) async {
         await run(

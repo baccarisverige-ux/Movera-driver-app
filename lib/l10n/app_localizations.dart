@@ -1249,7 +1249,7 @@ abstract class AppLocalizations {
   /// No description provided for @authTextFourDigitCode.
   ///
   /// In en, this message translates to:
-  /// **'We\'ll text you a 4-digit code.'**
+  /// **'We\'ll text you a 6-digit code.'**
   String get authTextFourDigitCode;
 
   /// No description provided for @authInvalidMobileNumber.
@@ -1456,6 +1456,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t send the code. Try again.'**
   String get authErrSendCode;
 
+  /// Contract v0.18.133 smsSignIn.texts.smsNotSent (503 unavailable, reason sms_not_sent).
+  ///
+  /// In en, this message translates to:
+  /// **'We could not send the SMS. Check the number and try again.'**
+  String get authErrSmsNotSent;
+
+  /// Contract v0.18.133 smsSignIn.texts.smsDailyLimit (503 unavailable, reason sms_daily_limit).
+  ///
+  /// In en, this message translates to:
+  /// **'We cannot send more SMS codes right now. Try again later.'**
+  String get authErrSmsDailyLimit;
+
   /// No description provided for @authErrCheckCode.
   ///
   /// In en, this message translates to:
@@ -1612,6 +1624,12 @@ abstract class AppLocalizations {
   /// **'4-digit code from the SMS'**
   String get authCodeFieldLabel;
 
+  /// Screen-reader label of the code boxes when the code has 6 digits (a code sent by SMS, contract v0.18.133 smsSignIn.codeLength).
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code from the SMS'**
+  String get authCodeFieldLabelSix;
+
   /// Contract v0.18.14 sign-in (authSignedOutElsewhere).
   ///
   /// In en, this message translates to:
@@ -1623,6 +1641,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many wrong codes today. Try again later.'**
   String get authErrLockedToday;
+
+  /// Contract v0.18.138 deviceCheck.texts.deviceCheckFailed (403 forbidden, reason device_check_failed).
+  ///
+  /// In en, this message translates to:
+  /// **'This phone could not be checked. Install the app from the official store and try again.'**
+  String get authErrDeviceCheckFailed;
 
   /// v0.18.43 §64 (fix job 10): tick on the rating screen at a low rating. The rider is never told.
   ///

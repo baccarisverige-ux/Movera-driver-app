@@ -38,7 +38,12 @@ void main() {
     final repo = AuthRepository(api: api, tokens: MemoryTokenStore());
     final challenge = await repo.requestCode('+46 70 123 45 67');
     expect(seen!.url.path, AuthRepository.requestPath);
-    expect(jsonDecode(seen!.body), {'phone': '+46701234567', 'app': 'driver'});
+    // v0.18.133 smsSignIn.language: the app language rides along (en here).
+    expect(jsonDecode(seen!.body), {
+      'phone': '+46701234567',
+      'app': 'driver',
+      'locale': 'en',
+    });
     expect(seen!.headers.containsKey('Authorization'), isFalse);
     expect(challenge.phone, '+46701234567');
     expect(challenge.sessionId, 'otp-7');

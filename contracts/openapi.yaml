@@ -1,11 +1,11 @@
-# Movera API v0.18.124 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
+# Movera API v0.18.138 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
 openapi: 3.1.0
 info:
   title: Movera API
-  version: 0.18.124
+  version: 0.18.138
   description: '**Proposed contract — no backend exists yet.** One future backend serves the Rider (Flutter), Driver (Flutter)
     and Admin (React/TS) apps. Source of truth for names, enums, transitions, realtime and errors is `contract.json` + `CONTRACT.md`
-    v0.18.124 in this folder; this file must agree with them.
+    v0.18.138 in this folder; this file must agree with them.
 
 
     Wire rules: ids match `^[A-Za-z0-9_-]{1,64}$`; times are RFC 3339 UTC with `Z`; durations are integer seconds; money is
@@ -84,7 +84,7 @@ tags:
 - name: Admin · Finance
 x-contract:
   name: movera
-  version: 0.18.124
+  version: 0.18.138
   source: contract.json
 paths:
   /auth/otp/request:
@@ -101,11 +101,14 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
-        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
-        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
-        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
+        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
+        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
+        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
+        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
+        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
+        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
+        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -115,7 +118,39 @@ paths:
         the app says "Too many wrong codes today. Try again later." with the wait from retryAfterSeconds and disables Send
         code v0.18.119 (S7 W2 Q118, owner OQ-1 "Lock at 60 for 24 h (Rec.)"): also when the number alone reaches 4 × wrongCodesPerDay
         wrong codes in 24 h over all addresses (default 60): then every address gets it for that number, even with the right
-        code, for up to 24 h or until an admin unlocks it (auth.otp.note). The app text and handling are unchanged.'
+        code, for up to 24 h or until an admin unlocks it (auth.otp.note). The app text and handling are unchanged. v0.18.133
+        (contract.json#smsSignIn): A number that is not a test number gets a real code only when ALL hold: (1) the server
+        has the SMS company''s two keys (serverKeys; set by the owner on the server, never in a repository, never sent to
+        an app or the admin panel); (2) the number is a mobile number of a country Movera serves (countries, mobileNumbers);
+        (3) CountryRules.smsSignIn.enabled of that country''s standard is true. Otherwise the answer is 403 forbidden, reason
+        sign_in_restricted, exactly as before (the apps offer the waiting list). A test number (outside production) never
+        gets an SMS and keeps the fixed test code, whatever the switch says. Cost guard (SMS pumping): per country, the sign-in
+        SMS handed to the SMS company in the last 24 hours are counted, and the new one is booked, in one step per country
+        (two requests at once can never both pass the limit). Counted: accepted, still being sent, and every hand-over the
+        company did not answer or answered with a server error (a time-out, a broken connection, a 5xx answer: it may still
+        have sent and billed it); only an SMS the company answered with a refusal (a 4xx answer) is not counted. At dailyCap
+        the request is refused: 503 unavailable, reason sms_daily_limit, Retry-After = until the oldest leaves the 24 h window
+        (at most 24 h); no code is made and nothing is sent (fail closed). Test numbers are not counted and not stopped. The
+        code is stored first, then the SMS is handed to the SMS company (one try, short time limit) before the answer. Accepted:
+        200 as before (requestId, sessionId, expiresAt, retryAfterSeconds) plus codeLength (codeLengthNote). Refused by the
+        company, answered with an error, or not answered (a time-out or a broken connection): the code is void at once and
+        the answer is 503 unavailable, reason sms_not_sent, Retry-After = auth.otp.retryAfterSeconds; the app may ask again
+        after that wait. The try still counts on the hourly limits. v0.18.138 (contract.json#deviceCheck): Codes per installId
+        in the last hour, over every phone number and both apps, counted before the resend wait of the number: at countryLimits.codesPerDevicePerHour
+        (the phone''s country; default 5, range 1-100, admin setting per country) the answer is 429 rate_limited reason otp_too_many
+        with retryAfterSeconds until the oldest of them is an hour old (the apps'' text and handling are unchanged). Test
+        numbers count too, except on the staging fast path (auth.testSignIn). A request without installId (an app before v0.18.138,
+        a script) is not counted on this limit; with requireDeviceCheck on, it gets no SMS (setting). 403 forbidden (v0.18.138):
+        requireDeviceCheck is on for the number''s country and the request has no valid check (setting). No SMS. The apps
+        show texts.deviceCheckFailed and stop; they do not ask again by themselves. On POST /auth/otp/request, after the test-number
+        and sign_in_restricted decisions: the device limit, the resend wait and the hourly limits, the wrong-code locks, then
+        (requireDeviceCheck on) the check, then the daily SMS cap, then the SMS. A refusal sends nothing. The check itself
+        (the only call to Google) runs only after the cheap guards hold: the switch, the number, the per-install count and
+        the one-use list; at most 20 checks at once per server copy, a circuit breaker (5 Google errors or time-outs in a
+        row: checks fail for 30 s), a time-out that aborts the call, and at most 20 failed checks per client address per hour
+        (then that address fails without a call; only a token the check refused counts, never Google trouble (429, 5xx, a
+        time-out), Google refusing the server''s own credentials (401 / 403, also a breaker error), a full cap or an open
+        breaker, so people behind one shared address are not blocked by an outage). All fail closed.'
       tags:
       - Auth
       x-actor:
@@ -171,11 +206,14 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
-        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
-        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
-        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
+        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
+        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
+        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
+        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
+        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
+        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
+        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -317,11 +355,14 @@ paths:
         token that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays)
         ago: still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the
         app refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid
-        token). A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request
-        and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the
-        refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
-        the client address); each at the address budget. On these four calls the phone alone and the address alone are only
-        ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
+        token). A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules
+        audits/impact/s7-q117-followup.md): POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client
+        address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session + the client address (an unknown
+        token, a body without a valid phone or a failed look-up: the client address); each at the address budget, whether
+        or not an access token is sent (a valid or expired token is not read on these four calls). A call on these four whose
+        body cannot be read (not valid JSON, too large, wrong media type) counts against the client address at the address
+        budget: over it, 429 rate_limited instead of the 400. On these four calls the phone alone and the address alone are
+        only ceilings of 10 × the address budget (a fixed server factor, not an admin setting); the address ceiling is counted
         before the body is read, and a call refused on its phone + address key adds nothing to the phone''s ceiling, so one
         address alone never fills a number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups
         a minute (one indexed read each). The two code calls are counted in production only (signInOutsideProduction). Every
@@ -1546,6 +1587,8 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+      description: 'v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one session on
+        a server copy are logged and counted, never refused in this version.'
   /rider/profile:
     get:
       operationId: getRiderProfile
@@ -1724,7 +1767,14 @@ paths:
         rider for places, the signed-in driver for preferences and contacts); another rider or driver never sees it and an
         id of someone else''s place is 404 place_not_found. Admins only read (never edit): emergency contacts through an OPEN
         safety case of that driver, saved places and ride preferences on the rider / driver profile page; every admin view
-        is written to the admin audit without the addresses, names or numbers. Logs never carry them.'
+        is written to the admin audit without the addresses, names or numbers. Logs never carry them. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
+        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
+        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
+        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
+        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
+        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
+        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
+        (step 6).'
   /rider/places/{placeId}:
     delete:
       operationId: deleteSavedPlace
@@ -1767,7 +1817,14 @@ paths:
       description: 'v0.18.26: only the rider''s own place (else 404 place_not_found). kind home and kind work: one each; saving
         a new home (or work) replaces the old one and keeps its placeId. kind other: as many as maxPlaces allows, each with
         its own placeId. type is the app''s finer word for an other place (gym, mall, school, airport, family, restaurant,
-        other); the app picks the icon and label from it.'
+        other); the app picks the icon and label from it. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
+        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
+        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
+        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
+        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
+        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
+        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
+        (step 6).'
       tags:
       - Rider · Account
       x-actor:
@@ -2805,6 +2862,8 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+      description: 'v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one session on
+        a server copy are logged and counted, never refused in this version.'
   /driver/offers/{offerId}:
     get:
       operationId: getDriverOffer
@@ -3512,7 +3571,8 @@ paths:
         stream to another zone, so the app reopens it (app rule above). ?zoneId= always wins (unchanged). A zone that does
         not exist is 404 zone_not_found (config and stream); on GET /driver/config a zone with nothing published (own or country
         standard) is 404 config_not_published and the app keeps its document. There is no rule limiting which zone a driver
-        may read (unchanged).'
+        may read (unchanged). v0.18.128 (contract.json#realtime.appStreamsPerSession): more than 3 open app streams of one
+        session on a server copy are logged and counted, never refused in this version.'
   /driver/earnings:
     get:
       operationId: getDriverEarnings
@@ -7042,13 +7102,24 @@ paths:
         the country -> 403 zone_out_of_scope. v0.18.23: AlertBookState also carries alerts [LiveAlert] (serverDetection):
         the alerts the server found, open or solved by itself, of the admin''s zones in that country and the groups the admin
         may see (same filter as records). v0.18.117 (alertDesk.serverDetection.liveList): AlertBookState.alerts: Every open
-        alert of the admin''s zones and kind groups is sent: no limit, never cut. After the open ones, at most solvedCap (1000)
-        solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000 with the safety kinds first
-        and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups group safety: sos, car_lost,
-        ride_check, sos_slow), then level critical, important, info, then the newest since, then alertId. Solved: the safety
-        kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId. Not built yet: past solvedCap
-        the older solved alerts are left out and nothing in the answer says so (no ''more'' marker, no count). A marker and
-        a limit for open non-safety alerts are a later job (MF3).'
+        alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s zones and
+        kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000) are sent:
+        level critical, important, info, then the newest since, then alertId; the rest are left out. After the open ones,
+        at most solvedCap (1000) solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000
+        with the safety kinds first and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups
+        group safety: sos, car_lost, ride_check, sos_slow), then level critical, important, info, then the newest since, then
+        alertId. Solved: the safety kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId.
+        v0.18.131: AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true
+        when open non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left
+        out. Missing = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it
+        is there (alertDesk.serverDetection.liveList.adminLine); it never hides or cuts a safety alert. v0.18.131 (alertDesk.serverDetection.liveList):
+        Every open alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s
+        zones and kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000)
+        are sent: level critical, important, info, then the newest since, then alertId; the rest are left out. v0.18.131:
+        AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true when open
+        non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left out. Missing
+        = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
+        it never hides or cuts a safety alert.'
       tags:
       - Admin · Alerts
       x-actor:
@@ -8469,7 +8540,17 @@ paths:
       summary: Admin incident feed (opened, updated, escalated, closed)
       description: 'v0.7.0. Any signed-in admin may listen. Events of an incident go to admins with incidents.read whose zones
         cover its zone; once it is escalated (not taken in contract.json#safety.escalateAfterSeconds) to every signed-in admin.
-        Without Accept: text/event-stream: a JSON page of the same events (polling fallback).'
+        Without Accept: text/event-stream: a JSON page of the same events (polling fallback). v0.18.126 (contract.json#safety.feedStart):
+        v0.18.126 (S7 W2 Q126 = Q-B4; owner 2026-11-15 "Yes, open ones only (Rec.)", Rules decisions/session-2026-11-06.md;
+        Rule 33): GET /admin/incidents/stream with no cursor (no `after`, `after=0`, no Last-Event-ID) starts from the OPEN
+        incidents: first the newest event of each open or investigating incident (at or before the newest sequence when the
+        stream opened), oldest first, then live after that newest sequence. Closed incidents'' history is not replayed. The
+        open start is never cut by `limit`: every open case is an alarm. The JSON page (polling) without a cursor answers
+        the same open start, with `nextCursor` = the newest sequence when it is newer than the last item, else null. With
+        a cursor (`after` > 0 or Last-Event-ID) nothing changes: every event after it, in order. Zone rules unchanged (mayHear).
+        Rule 33: the start and the newest sequence are read from the one incident_events table; a Last-Event-ID from one server
+        copy is valid on every copy; no shared memory. Admin: no change needed (the panel already reads the open incident
+        list on load and keeps the highest sequence it saw); rider and driver apps: none (they do not use this stream).'
       tags:
       - Admin · Safety
       x-actor:
@@ -9361,7 +9442,13 @@ paths:
         unchanged (the draft is already whole). Rule for later: a field that no whole-document admin screen owns goes on this
         list in the same contract version that adds it. ConfigDraftUpdate.removeKeys (optional, array of dotted paths): each
         must be a kept key of that document, else 400 invalid_request, reason unknown_kept_key, details ["key:<path>"], nothing
-        saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep).'
+        saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep). v0.18.130 (configDocs.keptKeys;
+        driver_app_config: realtime.oneStream): v0.18.130 (SCS guard re-check follow-up, owner Q-SCS-1 "Keep values, save
+        rest (Rec.)"): the driver document keeps realtime.oneStream (driverOneStream, v0.18.122) when a save leaves out realtime,
+        so the one-live-connection switch never falls back to off by a save from another screen. offers.autoOffline is not
+        listed: every admin save of the driver document starts from the server document and writes offers whole from the Dispatch
+        page that owns it. Publish and Restore are unchanged (Restore names a removed kept key in removeKeys, as for the other
+        documents).'
       tags:
       - Admin · Config
       x-actor:
@@ -10090,16 +10177,18 @@ paths:
         that ran out but carries the server''s signature, at most the refresh lifetime (auth.tokens.refreshExpiresDays) ago:
         still its user, on a key of its own apart from the live one, at the user budget; the answer is still 401 (the app
         refreshes), not 429 from a shared address budget, and it gets no safety-write pass (safetyWrites needs a valid token).
-        A forged token, a changed sub or an older token: the client address. Without a token, POST /auth/otp/request and /auth/otp/verify:
-        the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh: the refresh token''s session
-        + the client address (an unknown token, a body without a valid phone or a failed look-up: the client address); each
-        at the address budget. On these four calls the phone alone and the address alone are only ceilings of 10 × the address
-        budget (a fixed server factor, not an admin setting); the address ceiling is counted before the body is read, and
-        a call refused on its phone + address key adds nothing to the phone''s ceiling, so one address alone never fills a
-        number''s ceiling. So one address may cause up to 10 × the address budget refresh look-ups a minute (one indexed read
-        each). The two code calls are counted in production only (signInOutsideProduction). Every other call without a valid
-        token: the client address (the address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this
-        limit: auth.otp.note.'
+        A forged token, a changed sub or an older token: the client address. v0.18.132 (follow-up SF-1 + SF-2, Rules audits/impact/s7-q117-followup.md):
+        POST /auth/otp/request and /auth/otp/verify: the phone in the body + the client address; POST /auth/refresh and /admin/auth/refresh:
+        the refresh token''s session + the client address (an unknown token, a body without a valid phone or a failed look-up:
+        the client address); each at the address budget, whether or not an access token is sent (a valid or expired token
+        is not read on these four calls). A call on these four whose body cannot be read (not valid JSON, too large, wrong
+        media type) counts against the client address at the address budget: over it, 429 rate_limited instead of the 400.
+        On these four calls the phone alone and the address alone are only ceilings of 10 × the address budget (a fixed server
+        factor, not an admin setting); the address ceiling is counted before the body is read, and a call refused on its phone
+        + address key adds nothing to the phone''s ceiling, so one address alone never fills a number''s ceiling. So one address
+        may cause up to 10 × the address budget refresh look-ups a minute (one indexed read each). The two code calls are
+        counted in production only (signInOutsideProduction). Every other call without a valid token: the client address (the
+        address the trusted proxy saw, TRUST_PROXY_HOPS). The wrong-code locks are not this limit: auth.otp.note.'
       tags:
       - Admin · Auth
       x-actor:
@@ -17349,7 +17438,14 @@ paths:
       description: 'v0.18.26: One-time upload of the places a phone kept before v0.18.26. Applied only the first time for
         this rider (the server remembers it); later calls change nothing and answer the server''s list. Items follow the POST
         rules (home / work replace, others added); items past maxPlaces are dropped. The app calls it once after sign-in,
-        then reads GET /rider/places and from then on the server''s list is the one shown.'
+        then reads GET /rider/places and from then on the server''s list is the one shown. v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory):
+        SavedPlaceRequest.preferredCategoryId (optional, CategoryId | null): on POST a new place without it gets null; a POST
+        that replaces home / work and a PUT without the field keep the stored value (older apps never clear it by accident);
+        null clears it; a category id sets it. An item of POST /rider/places/import may carry it too, checked the same way.
+        The id must be a category in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown
+        id is 400 invalid_request, reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or
+        removed later is NOT cleared by the server: the read still answers the id, and the rider app treats it as not available
+        (step 6).'
       tags:
       - Rider · Account
       x-actor:
@@ -22894,6 +22990,17 @@ components:
           $ref: '#/components/schemas/Timestamp'
         updatedAt:
           $ref: '#/components/schemas/Timestamp'
+        preferredCategoryId:
+          description: 'v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory): SavedPlace.preferredCategoryId:
+            CategoryId | null, always sent by a v0.18.129 server (left optional in the schema so older answers still validate)
+            in reads (GET /rider/places, POST / PUT answers, POST /rider/places/import answer, GET /admin/riders/{riderId}/saved-places);
+            null = no fixed category (every place saved before v0.18.129). The id must be a category in the admin Pricing
+            catalog (contract.json#categories; the exact id, no alias); an unknown id is 400 invalid_request, reason unknown_category
+            (as driverPreferences.categoriesOff). A category deactivated or removed later is NOT cleared by the server: the
+            read still answers the id, and the rider app treats it as not available (step 6).'
+          oneOf:
+          - $ref: '#/components/schemas/CategoryId'
+          - type: 'null'
     SupportTicket:
       type: object
       required:
@@ -23358,13 +23465,24 @@ components:
         the country -> 403 zone_out_of_scope. v0.18.23: AlertBookState also carries alerts [LiveAlert] (serverDetection):
         the alerts the server found, open or solved by itself, of the admin''s zones in that country and the groups the admin
         may see (same filter as records). v0.18.117 (alertDesk.serverDetection.liveList): AlertBookState.alerts: Every open
-        alert of the admin''s zones and kind groups is sent: no limit, never cut. After the open ones, at most solvedCap (1000)
-        solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000 with the safety kinds first
-        and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups group safety: sos, car_lost,
-        ride_check, sos_slow), then level critical, important, info, then the newest since, then alertId. Solved: the safety
-        kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId. Not built yet: past solvedCap
-        the older solved alerts are left out and nothing in the answer says so (no ''more'' marker, no count). A marker and
-        a limit for open non-safety alerts are a later job (MF3).'
+        alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s zones and
+        kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000) are sent:
+        level critical, important, info, then the newest since, then alertId; the rest are left out. After the open ones,
+        at most solvedCap (1000) solved alerts: per kind the 1000 newest by solvedAt, then, over all kinds, the first 1000
+        with the safety kinds first and then the newest solvedAt. Open before solved. Open: the safety kinds first (kindGroups
+        group safety: sos, car_lost, ride_check, sos_slow), then level critical, important, info, then the newest since, then
+        alertId. Solved: the safety kinds first, then the newest solvedAt (an alert without solvedAt last), then alertId.
+        v0.18.131: AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true
+        when open non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left
+        out. Missing = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it
+        is there (alertDesk.serverDetection.liveList.adminLine); it never hides or cuts a safety alert. v0.18.131 (alertDesk.serverDetection.liveList):
+        Every open alert of the safety kinds (kindGroups group safety: sos, car_lost, ride_check, sos_slow) of the admin''s
+        zones and kind groups is sent: no limit, never cut. v0.18.131: of the other open alerts at most openOtherCap (1000)
+        are sent: level critical, important, info, then the newest since, then alertId; the rest are left out. v0.18.131:
+        AlertBookState.alertsMore { open: boolean, solved: boolean } is sent only when a part was cut: open true when open
+        non-safety alerts past openOtherCap were left out, solved true when solved alerts past solvedCap were left out. Missing
+        = nothing was left out. No count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
+        it never hides or cuts a safety alert.'
       required:
       - country
       - rev
@@ -23433,6 +23551,22 @@ components:
               name:
                 type: string
                 description: 'v0.18.16: the first name; absent until set.'
+        alertsMore:
+          type: object
+          description: 'v0.18.131 (alertDesk.serverDetection.liveList.more): v0.18.131: AlertBookState.alertsMore { open:
+            boolean, solved: boolean } is sent only when a part was cut: open true when open non-safety alerts past openOtherCap
+            were left out, solved true when solved alerts past solvedCap were left out. Missing = nothing was left out. No
+            count is sent. The admin panel shows a line at the end of the list when it is there (alertDesk.serverDetection.liveList.adminLine);
+            it never hides or cuts a safety alert.'
+          required:
+          - open
+          - solved
+          additionalProperties: false
+          properties:
+            open:
+              type: boolean
+            solved:
+              type: boolean
     AlertTakeCommand:
       type: object
       description: v0.18.15.
@@ -25021,6 +25155,34 @@ components:
             amount of one bonus campaign (CountryRules.bonusCampaignMax, per country standard or zone, Admin › Pricing › Tips
             & limits, settings.publish). Builder default values (plan §12 D13), admin-changeable. Defaults SE 2 000,00 kr
             (200000 SEK), FR 200,00 € (20000 EUR), TN 200.000 DT (200000 TND). Optional: absent → configDefaults.bonusCampaignMax.'
+        smsSignIn:
+          type: object
+          description: 'v0.18.133 (contract.json#smsSignIn): CountryRules.smsSignIn { enabled (boolean), dailyCap (integer,
+            dailyCapRange) } of the COUNTRY STANDARD only (standard-<CC>), like sosContactsSms: Admin › Pricing › Tips & limits
+            per country, card "Real SMS sign-in codes" (settings.edit, published with the country_rules document by settings.publish).
+            A zone''s own country_rules carrying it is 400 invalid_request, reason sms_sign_in_country_only; enabled not true
+            / false, dailyCap not a whole number inside dailyCapRange, or another key inside it, is 400 invalid_request, reason
+            invalid_document. Never saved, or a part missing = configDefaults.smsSignIn (off, 200).'
+          properties:
+            enabled:
+              type: boolean
+              description: Real SMS sign-in codes for this country's numbers.
+              default: false
+            dailyCap:
+              type: integer
+              minimum: 10
+              maximum: 100000
+              default: 200
+              description: Sign-in SMS per 24 hours for this country before new codes are refused (sms_daily_limit).
+            requireDeviceCheck:
+              type: boolean
+              description: 'Real-phone check before a sign-in SMS (Play Integrity / App Attest). INACTIVE until the owner''s
+                Apple account exists: the iPhone apps send a check only in a build made with APP_ATTEST=true (App Attest capability
+                on the owner''s Apple team) and the server checks it only with the two ios serverKeys set. Until then an iPhone
+                sends no check: do NOT switch requireDeviceCheck on for a country while iPhones sign in there. Turning it
+                on later needs no contract change.'
+              default: false
+          additionalProperties: false
       x-server-only: true
     FeeRule:
       type: object
@@ -26160,9 +26322,30 @@ components:
           description: 'From a PHONE_REQUIRED provider sign-in: links this phone to that account.'
         locale:
           $ref: '#/components/schemas/Language'
+        installId:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{16,64}$
+          description: 'v0.18.138 (contract.json#deviceCheck): OtpRequest.installId (optional, 16-64 of A-Z a-z 0-9 - _):
+            a random id the rider and driver apps make once per install (a random UUID v4) and keep in the app''s own storage
+            until the app is removed or its data is cleared; never derived from the phone''s hardware ids, never shown. Sent
+            on every POST /auth/otp/request. The web rider app sends one kept in its browser storage. The server keeps it
+            with the code (otp_sessions.install_id) only to count codes per install.'
+        deviceCheck:
+          allOf:
+          - $ref: '#/components/schemas/DeviceCheck'
+          description: 'v0.18.138 (contract.json#deviceCheck): CountryRules.smsSignIn.requireDeviceCheck (boolean, default
+            false; country standard only, with smsSignIn.enabled and dailyCap: Admin › Pricing › Tips & limits, card "Real
+            SMS sign-in codes"). true: a number of that country that is not a test number gets a code ONLY with a valid OtpRequest.deviceCheck
+            (check); missing, unreadable, not valid or already used = 403 forbidden reason device_check_failed, no SMS, nothing
+            counted on dailyCap. The web rider app cannot send a check: with the switch on, web sign-in of that country''s
+            numbers stops. Switch it on only once the store builds that send the check are the ones in use (and, for iPhones,
+            once ios.active holds). Inside smsSignIn the key requireDeviceCheck is allowed besides enabled and dailyCap (v0.18.138);
+            a value that is not true / false is 400 invalid_request, reason invalid_document. false (default): deviceCheck
+            is not read and every other limit works as before.'
     OtpChallenge:
       type: object
-      description: The code is 4 digits and lives 300 s; at most 5 attempts.
+      description: 'The code lives 300 s; at most 5 attempts. v0.18.133 (contract.json#smsSignIn): it is 4 digits for a test
+        number and 6 digits when sent by SMS (codeLength).'
       required:
       - requestId
       - sessionId
@@ -26179,6 +26362,13 @@ components:
           type: integer
           minimum: 0
           default: 30
+        codeLength:
+          type: integer
+          enum:
+          - 4
+          - 6
+          description: 'v0.18.133 (contract.json#smsSignIn): how many digits this code has: 4 for a test number (auth.otp.codeLength),
+            6 for a code sent by SMS (smsSignIn.codeLength). Missing = 4.'
     OtpVerifyRequest:
       type: object
       required:
@@ -26192,7 +26382,7 @@ components:
           $ref: '#/components/schemas/Id'
         code:
           type: string
-          pattern: ^[0-9]{4}$
+          pattern: ^([0-9]{4}|[0-9]{6})$
         linkToken:
           type: string
           minLength: 1
@@ -29303,7 +29493,9 @@ components:
     RiderTripEvent:
       type: object
       description: 'v0.18.32 (contract.json#bookedRideSeen.riderTripEvent, P21): a trip of this rider changed (made, accepted,
-        any status), also when made elsewhere. The rider app reads GET /rider/trips/active again.'
+        any status), also when made elsewhere. The rider app reads GET /rider/trips/active again. v0.18.127 (contract.json#bookedRideSeen.riderTripEvent):
+        not sent for a GPS update (trip event kind location: a position fix or an ETA tick); every other event of the rider''s
+        trips still sends it.'
       required:
       - eventId
       - kind
@@ -30434,6 +30626,17 @@ components:
           description: 'v0.18.26: the app''s word for an other place (gym, mall, ...).'
         place:
           $ref: '#/components/schemas/SavedPlaceAddress'
+        preferredCategoryId:
+          description: 'v0.18.129 (contract.json#phoneDataToServer.riderPlaces.preferredCategory): SavedPlaceRequest.preferredCategoryId
+            (optional, CategoryId | null): on POST a new place without it gets null; a POST that replaces home / work and
+            a PUT without the field keep the stored value (older apps never clear it by accident); null clears it; a category
+            id sets it. An item of POST /rider/places/import may carry it too, checked the same way. The id must be a category
+            in the admin Pricing catalog (contract.json#categories; the exact id, no alias); an unknown id is 400 invalid_request,
+            reason unknown_category (as driverPreferences.categoriesOff). A category deactivated or removed later is NOT cleared
+            by the server: the read still answers the id, and the rider app treats it as not available (step 6).'
+          oneOf:
+          - $ref: '#/components/schemas/CategoryId'
+          - type: 'null'
     VehicleRequest:
       type: object
       required:
@@ -31256,7 +31459,8 @@ components:
             - payoutMode
             - payoutSchedule
             - radar.reaskAfterSeconds
-          maxItems: 8
+            - realtime.oneStream
+          maxItems: 9
           description: 'v0.18.123 (configDocs.keptKeys.removeKeys): ConfigDraftUpdate.removeKeys (optional, array of dotted
             paths): each must be a kept key of that document, else 400 invalid_request, reason unknown_kept_key, details ["key:<path>"],
             nothing saved. A named key that the sent document carries is saved as sent (removeKeys only stops the keep).'
@@ -36065,6 +36269,14 @@ components:
           description: 'v0.18.26 (owner 2026-11-04): emergency contacts per person (each rider and each driver; 112 is built
             in and not counted) (400 too_many_contacts). Range 1–50.'
           default: 10
+        codesPerDevicePerHour:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: 'v0.18.138 (owner 2026-11-20 "Ok", contract.json#deviceCheck.installId): sign-in codes per app install
+            (OtpRequest.installId) per hour, over every phone number and both apps (429 otp_too_many). A request without installId
+            is not counted here (the other limits still apply). Range 1–100.'
+          default: 5
     AccountPhoneChange:
       type: object
       required:
@@ -36072,6 +36284,29 @@ components:
       properties:
         phone:
           $ref: '#/components/schemas/PhoneE164'
+        installId:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{16,64}$
+          description: 'v0.18.138 (contract.json#deviceCheck): OtpRequest.installId (optional, 16-64 of A-Z a-z 0-9 - _):
+            a random id the rider and driver apps make once per install (a random UUID v4) and keep in the app''s own storage
+            until the app is removed or its data is cleared; never derived from the phone''s hardware ids, never shown. Sent
+            on every POST /auth/otp/request. The web rider app sends one kept in its browser storage. The server keeps it
+            with the code (otp_sessions.install_id) only to count codes per install.'
+        deviceCheck:
+          allOf:
+          - $ref: '#/components/schemas/DeviceCheck'
+          description: 'v0.18.138 (contract.json#deviceCheck): CountryRules.smsSignIn.requireDeviceCheck (boolean, default
+            false; country standard only, with smsSignIn.enabled and dailyCap: Admin › Pricing › Tips & limits, card "Real
+            SMS sign-in codes"). true: a number of that country that is not a test number gets a code ONLY with a valid OtpRequest.deviceCheck
+            (check); missing, unreadable, not valid or already used = 403 forbidden reason device_check_failed, no SMS, nothing
+            counted on dailyCap. The web rider app cannot send a check: with the switch on, web sign-in of that country''s
+            numbers stops. Switch it on only once the store builds that send the check are the ones in use (and, for iPhones,
+            once ios.active holds). Inside smsSignIn the key requireDeviceCheck is allowed besides enabled and dailyCap (v0.18.138);
+            a value that is not true / false is 400 invalid_request, reason invalid_document. false (default): deviceCheck
+            is not read and every other limit works as before.'
+      description: 'v0.18.138 (contract.json#deviceCheck): POST /account/phone/change { phone, installId?, deviceCheck? }
+        takes the same two fields (same binding with the account''s app) and sends a real SMS under the same rules: with requireDeviceCheck
+        on, a phone change to a real number needs a valid check; the per-install limit counts it.'
     AccountPhoneVerify:
       type: object
       required:
@@ -36085,7 +36320,7 @@ components:
           $ref: '#/components/schemas/Id'
         code:
           type: string
-          pattern: ^[0-9]{4}$
+          pattern: ^([0-9]{4}|[0-9]{6})$
     AccountEmailChange:
       type: object
       required:
@@ -38971,3 +39206,44 @@ components:
           - string
           - 'null'
           description: Opaque; null on the last page.
+    DeviceCheck:
+      type: object
+      description: 'v0.18.138 (contract.json#deviceCheck): OtpRequest.deviceCheck { platform: android | ios, token (string,
+        base64; at most 16384 characters), keyId? (iOS: the App Attest key id, base64) }. Android: token = a Google Play Integrity
+        token (classic request with the binding as nonce); the server decodes it with Google (playintegrity.googleapis.com
+        decodeIntegrityToken, service account) and accepts it only when requestDetails.requestPackageName is one of PLAY_INTEGRITY_PACKAGES,
+        requestDetails.nonce = the binding, requestDetails.timestampMillis is at most maxAgeSeconds old (and at most 60 s
+        ahead), appIntegrity.appRecognitionVerdict = PLAY_RECOGNIZED and deviceIntegrity.deviceRecognitionVerdict holds MEETS_DEVICE_INTEGRITY.
+        iPhone: token = an App Attest attestation object (CBOR) for a key made for this request, keyId its id; the server
+        checks it as Apple says (certificate chain to the Apple App Attestation root, nonce = SHA-256(authenticatorData +
+        binding) in the leaf certificate, keyId = SHA-256 of the leaf''s public key, rpIdHash = SHA-256 of one of APPLE_APP_ATTEST_APP_IDS,
+        counter 0, aaguid appattest, or appattestdevelop outside production, credential id = keyId). A token is used once:
+        the server keeps its SHA-256 (otp_sessions.device_check_sha256) and a token seen before is device_check_failed. Google
+        or the check not answering within timeoutSeconds = device_check_failed (fail closed). A token is used once by its
+        canonical bytes: iPhone = the decoded attestation (strict base64 only), Android = the decoded bytes of each segment
+        of the token (a JWE in compact form: exactly 5 base64url segments joined by dots; every segment must be canonical
+        base64url: no padding, zero padding bits); any other spelling is device_check_failed. Both checks are bound to the
+        request: binding = SHA-256 of the UTF-8 text "movera-sms-code|" + app + "|" + phone + "|" + installId (32 bytes).
+        Android sends it as the nonce (base64url without padding, 43 characters); iPhone as the clientDataHash (the 32 bytes).
+        So a token is good for one app, number and install only.'
+      required:
+      - platform
+      - token
+      properties:
+        platform:
+          type: string
+          enum:
+          - android
+          - ios
+          description: Which check this is.
+        token:
+          type: string
+          minLength: 1
+          maxLength: 16384
+          description: 'Android: the Play Integrity token. iPhone: the App Attest attestation object, base64.'
+        keyId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: 'iPhone only: the App Attest key id, base64.'
+      additionalProperties: false

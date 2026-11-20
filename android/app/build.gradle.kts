@@ -101,6 +101,9 @@ flutter {
 }
 
 dependencies {
+    // Contract v0.18.138 (deviceCheck): Google Play Integrity for the
+    // real-phone check before a sign-in SMS (lib/core/auth/device_identity.dart).
+    implementation("com.google.android.play:integrity:1.4.0")
     // Test APK only (assembleAndroidTest); never packed into the app.
     androidTestImplementation("androidx.test:runner:1.2.0")
     androidTestImplementation("androidx.test:rules:1.2.0")

@@ -668,7 +668,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authEnterPhone => 'Enter your phone number';
 
   @override
-  String get authTextFourDigitCode => 'We\'ll text you a 4-digit code.';
+  String get authTextFourDigitCode => 'We\'ll text you a 6-digit code.';
 
   @override
   String get authInvalidMobileNumber => 'Enter a valid mobile number.';
@@ -794,6 +794,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrSendCode => 'Couldn\'t send the code. Try again.';
 
   @override
+  String get authErrSmsNotSent =>
+      'We could not send the SMS. Check the number and try again.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'We cannot send more SMS codes right now. Try again later.';
+
+  @override
   String get authErrCheckCode => 'Couldn\'t check the code. Try again.';
 
   @override
@@ -896,11 +904,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCodeFieldLabel => '4-digit code from the SMS';
 
   @override
+  String get authCodeFieldLabelSix => '6-digit code from the SMS';
+
+  @override
   String get authSignedOutElsewhere => 'Signed in on another phone';
 
   @override
   String get authErrLockedToday =>
       'Too many wrong codes today. Try again later.';
+
+  @override
+  String get authErrDeviceCheckFailed =>
+      'This phone could not be checked. Install the app from the official store and try again.';
 
   @override
   String get dontMatchRiderAgain => 'Don\'t match me with this rider again';

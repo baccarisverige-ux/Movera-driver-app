@@ -37,6 +37,23 @@ bool isWrongCode(Object error) =>
 bool isSignInRestricted(Object error) =>
     error is ApiError && error.detail == 'sign_in_restricted';
 
+/// Contract v0.18.133 `smsSignIn.delivery`: `503 unavailable`, reason
+/// `sms_not_sent` — the SMS company did not take the SMS; the code is void
+/// and the driver may ask again after the usual resend wait.
+bool isSmsNotSent(Object error) =>
+    error is ApiError && error.detail == 'sms_not_sent';
+
+/// Contract v0.18.133 `smsSignIn.dailyCap`: `503 unavailable`, reason
+/// `sms_daily_limit` — no more sign-in SMS for this country right now.
+bool isSmsDailyLimit(Object error) =>
+    error is ApiError && error.detail == 'sms_daily_limit';
+
+/// Contract v0.18.138 `deviceCheck.errors`: `403 forbidden`, reason
+/// `device_check_failed` — the country asks for the real-phone check and
+/// this phone could not pass it; no SMS was sent.
+bool isDeviceCheckFailed(Object error) =>
+    error is ApiError && error.detail == 'device_check_failed';
+
 /// Owner 2026-10-29, decision 4 (`fixtures/sign_in.json#waitDisplay`): a
 /// wait under one minute in seconds, else in whole minutes rounded up
 /// ("42 min").
@@ -80,6 +97,11 @@ String authErrorMessage(Object error, AuthAction action) {
     if (error.detail == 'provider_not_configured') {
       return tr.authProviderComingSoon;
     }
+    // Contract v0.18.133 `smsSignIn.errors` (503 unavailable): the SMS with
+    // the code could not be sent, or the country's daily SMS limit is
+    // reached. Said plainly, not "Movera is having trouble".
+    if (isSmsNotSent(error)) return tr.authErrSmsNotSent;
+    if (isSmsDailyLimit(error)) return tr.authErrSmsDailyLimit;
     if (status >= 500) return tr.authErrServer;
     switch (error.detail) {
       case 'invalid_provider_token' ||
@@ -100,6 +122,8 @@ String authErrorMessage(Object error, AuthAction action) {
         return tr.authInvalidMobileNumber;
       case 'sign_in_restricted':
         return tr.authSignInRestricted;
+      case 'device_check_failed':
+        return tr.authErrDeviceCheckFailed;
     }
     if (status == 403) return tr.authSignInRestricted;
     if (status == 410) return tr.authCodeExpired;

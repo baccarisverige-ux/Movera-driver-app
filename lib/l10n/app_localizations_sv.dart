@@ -669,7 +669,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authEnterPhone => 'Ange ditt telefonnummer';
 
   @override
-  String get authTextFourDigitCode => 'Vi skickar en fyrsiffrig kod via sms.';
+  String get authTextFourDigitCode => 'Vi skickar en sexsiffrig kod via sms.';
 
   @override
   String get authInvalidMobileNumber => 'Ange ett giltigt mobilnummer.';
@@ -797,6 +797,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authErrSendCode => 'Kunde inte skicka koden. Försök igen.';
 
   @override
+  String get authErrSmsNotSent =>
+      'Vi kunde inte skicka sms:et. Kontrollera numret och försök igen.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'Vi kan inte skicka fler sms-koder just nu. Försök igen senare.';
+
+  @override
   String get authErrCheckCode => 'Kunde inte kontrollera koden. Försök igen.';
 
   @override
@@ -897,11 +905,18 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authCodeFieldLabel => 'Fyrsiffrig kod från sms:et';
 
   @override
+  String get authCodeFieldLabelSix => 'Sexsiffrig kod från sms:et';
+
+  @override
   String get authSignedOutElsewhere => 'Inloggad på en annan telefon';
 
   @override
   String get authErrLockedToday =>
       'För många fel koder i dag. Försök igen senare.';
+
+  @override
+  String get authErrDeviceCheckFailed =>
+      'Telefonen kunde inte kontrolleras. Installera appen från den officiella appbutiken och försök igen.';
 
   @override
   String get dontMatchRiderAgain => 'Matcha mig inte med den här kunden igen';

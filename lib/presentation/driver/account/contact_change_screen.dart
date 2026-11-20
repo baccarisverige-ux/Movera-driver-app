@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/auth/phone_country_default.dart';
+import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_error.dart';
@@ -24,10 +26,16 @@ class ContactChangeScreen extends StatefulWidget {
     required this.account,
     required this.kind,
     this.verifyCurrent,
+    this.startCountry = defaultPhoneCountry,
   });
 
   final DriverAccountSession account;
   final ContactKind kind;
+
+  /// Contract v0.18.138: how a typed number without "+" is read — the SAME
+  /// start country as the sign-in field (last fix, last zone, then the
+  /// device region; lib/presentation/driver/auth/sign_in.dart).
+  final PhoneCountry Function() startCountry;
 
   /// G30 `emailVerified.verifyCurrent`: the driver's current, Not verified
   /// e-mail. The field is filled with it and read-only; "Change e-mail"
@@ -96,13 +104,27 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
           return tr.contactReauthRequired;
         case 'change_too_many':
           return tr.contactChangeTooMany;
+        // Contract v0.18.138 deviceCheck.phoneChange: no SMS was sent.
+        case 'device_check_failed':
+          return tr.authErrDeviceCheckFailed;
       }
     }
     return accountErrorMessage(error, fallback: tr.contactChangeFailed);
   }
 
+  /// Contract v0.18.138 `deviceCheck.binding`: a number is sent (and bound
+  /// in the device check) in E.164 exactly as sign-in reads the field
+  /// (separators out, a trunk 0 replaced by the start country's code);
+  /// a field it cannot read goes without separators (the server answers
+  /// invalid_phone). An e-mail is only trimmed.
+  String get _entered {
+    if (!_phone) return _value.text.trim();
+    return phoneNumberFromField(_value.text, widget.startCountry()) ??
+        _value.text.replaceAll(RegExp(r'[\s\-(). ]'), '');
+  }
+
   Future<void> _send() async {
-    final value = _value.text.trim();
+    final value = _entered;
     if (value.isEmpty || _busy) return;
     setState(() {
       _busy = true;
@@ -146,7 +168,7 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
     try {
       if (_phone) {
         await repo.verifyPhone(
-          phone: _value.text.trim(),
+          phone: _entered,
           sessionId: challenge,
           code: code,
         );

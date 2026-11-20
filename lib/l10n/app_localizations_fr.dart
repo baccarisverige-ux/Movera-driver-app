@@ -680,7 +680,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authTextFourDigitCode =>
-      'Nous vous enverrons un code à 4 chiffres par SMS.';
+      'Nous vous enverrons un code à 6 chiffres par SMS.';
 
   @override
   String get authInvalidMobileNumber => 'Saisissez un numéro de mobile valide.';
@@ -811,6 +811,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authErrSendCode => 'Impossible d’envoyer le code. Réessayez.';
 
   @override
+  String get authErrSmsNotSent =>
+      'Nous n’avons pas pu envoyer le SMS. Vérifiez le numéro et réessayez.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'Nous ne pouvons plus envoyer de codes par SMS pour le moment. Réessayez plus tard.';
+
+  @override
   String get authErrCheckCode => 'Impossible de vérifier le code. Réessayez.';
 
   @override
@@ -913,11 +921,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authCodeFieldLabel => 'Code à 4 chiffres reçu par SMS';
 
   @override
+  String get authCodeFieldLabelSix => 'Code à 6 chiffres reçu par SMS';
+
+  @override
   String get authSignedOutElsewhere => 'Connecté sur un autre téléphone';
 
   @override
   String get authErrLockedToday =>
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
+
+  @override
+  String get authErrDeviceCheckFailed =>
+      'Ce téléphone n’a pas pu être vérifié. Installez l’application depuis la boutique officielle et réessayez.';
 
   @override
   String get dontMatchRiderAgain => 'Ne plus me proposer ce client';
