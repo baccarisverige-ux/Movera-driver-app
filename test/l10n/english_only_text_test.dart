@@ -45,6 +45,10 @@ const _allowed = <String, Set<String>>{
     'kept sos of another driver, dropped',
     'kept sos refused:',
   },
+  'contract v0.18.138 deviceCheck.binding: hashed, never shown '
+      '(lib/core/auth/device_identity.dart)': {
+    'movera-sms-code| | |',
+  },
   'restart diagnostic, never shown: a crash-report message and DOM tag '
       'names (lib/core/*/restart_watch*.dart)': {
     'flutter-view, flt-glass-pane',
