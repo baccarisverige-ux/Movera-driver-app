@@ -32,7 +32,9 @@ class PendingSos {
   }
 }
 
-/// Where the one pending SOS is kept (the phone's preferences).
+/// Where the one pending SOS is kept (the phone's preferences). One slot:
+/// a newer press replaces an older unconfirmed one (each press is one
+/// incident on the same trip, so the newest carries the latest GPS).
 class PendingSosStore {
   const PendingSosStore();
 

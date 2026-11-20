@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_driver_services.dart';
@@ -65,8 +67,32 @@ class DriverSos {
   /// longer live (409): it is kept and tried again at this pace.
   static const refusedDelay = Duration(minutes: 5);
 
+  /// A kept SOS older than this (from its `at`) is not sent any more: a
+  /// trip-less or refused SOS must never attach to a later trip. It is
+  /// logged and dropped.
+  static const maxAge = Duration(minutes: 30);
+
   /// One background retry loop per app run.
   static Future<void>? _retrying;
+
+  /// The phone storage writes of the SOS, in order; the send never waits
+  /// for them (the POST goes out at once).
+  static Future<void> _writes = Future<void>.value();
+
+  static void _store(Future<void> Function() write) {
+    _writes = _writes.then((_) => write()).catchError((Object _) {});
+  }
+
+  @visibleForTesting
+  static Future<void> get writesDone => _writes;
+
+  @visibleForTesting
+  static Future<void> resetForTesting() async {
+    await _writes;
+    await _retrying?.catchError((Object _) {});
+    _retrying = null;
+  }
+
   final Future<void> Function(Duration) _sleep;
   final DateTime Function() _now;
 
@@ -116,31 +142,33 @@ class DriverSos {
     var id = tripId;
     // Kept before the first try: an app killed or a network lost now
     // still sends it later (audit 2026-11-20 item 1).
-    await _pending.save(PendingSos(key: key, tripId: id, body: body));
+    _store(() => _pending.save(PendingSos(key: key, tripId: id, body: body)));
     for (var attempt = 0; ; attempt++) {
       try {
         if (id == null) {
           id = await _activeTripId();
           if (id == null) {
-            await _pending.clear(key);
+            _store(() => _pending.clear(key));
             return noTrip;
           }
           // The trip it is for, kept: a later retry still finds it.
-          await _pending.save(PendingSos(key: key, tripId: id, body: body));
+          _store(
+            () => _pending.save(PendingSos(key: key, tripId: id, body: body)),
+          );
         }
         final receipt = await _api.post(
           '/api/v1/driver/trips/${Uri.encodeComponent(id)}/sos',
           body: body,
           idempotencyKey: key,
         );
-        await _pending.clear(key);
+        _store(() => _pending.clear(key));
         return DriverSosResult(
           DriverSosOutcome.sent,
           contactsSms: SosContactsSms.fromJson(receipt['contactsSms']),
         );
       } on ApiError catch (error) {
         if (error.statusCode == 404) {
-          await _pending.clear(key);
+          _store(() => _pending.clear(key));
           return noTrip;
         }
         if (error.statusCode == 409) {
@@ -153,7 +181,7 @@ class DriverSos {
           return failed;
         }
         if (!_keepTrying(error)) {
-          await _pending.clear(key);
+          _store(() => _pending.clear(key));
           DriverLog.warn('sos not sent: ${error.code}', name: 'safety');
           return failed;
         }
@@ -190,8 +218,15 @@ class DriverSos {
 
   Future<void> _retryLoop() async {
     for (var attempt = 0; ; attempt++) {
+      await _writes;
       final sos = await _pending.read();
       if (sos == null) return;
+      final at = DateTime.tryParse('${sos.body['at']}');
+      if (at == null || _now().difference(at) > maxAge) {
+        DriverLog.warn('kept sos too old, dropped', name: 'safety');
+        await _pending.clear(sos.key);
+        return;
+      }
       try {
         final id = sos.tripId ?? await _activeTripId();
         if (id == null) {
