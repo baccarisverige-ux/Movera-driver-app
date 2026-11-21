@@ -1,6 +1,7 @@
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/payments/stripe_keys.dart';
 
 /// `GET /driver/earnings?period=day` (contract `EarningsReport`): today's
 /// earnings as the server counts them, in the zone's currency. A live
@@ -509,7 +510,8 @@ class EarningsTotals {
 }
 
 /// DRAFT (contract driverPayRequest.stripe, `StripeDriverPayment`): the
-/// PaymentIntent the server made for what he owes now. Test keys only.
+/// PaymentIntent the server made for what he owes now. The server's test or
+/// live publishable key (live mode, owner 2026-11-21); any other = refused.
 class StripeDriverPayment {
   const StripeDriverPayment({
     required this.amount,
@@ -525,7 +527,7 @@ class StripeDriverPayment {
         secret is! String ||
         secret.isEmpty ||
         key is! String ||
-        !key.startsWith('pk_test_')) {
+        !isStripePublishableKey(key)) {
       throw FormatException('pay-movera/pay answer', json);
     }
     return StripeDriverPayment(

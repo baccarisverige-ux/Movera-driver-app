@@ -27,28 +27,45 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('StripeDriverPayment: the server secret and a TEST key only', () {
-    final ok = StripeDriverPayment.of({
-      'paymentIntentId': 'pi_1',
-      'amount': money(2384),
-      'status': 'requires_payment',
-      'clientSecret': 'pi_1_secret',
-      'publishableKey': 'pk_test_x',
-      'createdAt': '2026-11-01T09:30:00Z',
-    });
-    expect(ok.amount.minorUnits, 2384);
-    expect(
-      () => StripeDriverPayment.of({
+  test(
+    'StripeDriverPayment: the server secret and its test or live publishable key (live mode, owner 2026-11-21)',
+    () {
+      final ok = StripeDriverPayment.of({
+        'paymentIntentId': 'pi_1',
+        'amount': money(2384),
+        'status': 'requires_payment',
+        'clientSecret': 'pi_1_secret',
+        'publishableKey': 'pk_test_x',
+        'createdAt': '2026-11-01T09:30:00Z',
+      });
+      expect(ok.amount.minorUnits, 2384);
+      final live = StripeDriverPayment.of({
         'amount': money(1),
         'clientSecret': 's',
-        'publishableKey': 'pk_live_x',
-      }),
-      throwsFormatException,
-    );
-    expect(kGooglePayEnabled, isFalse);
-    expect(PayMovera.of(answer()).canPayByCard, isTrue);
-    expect(PayMovera.of({...answer(), 'enabled': false}).canPayByCard, isFalse);
-  });
+        'publishableKey': 'pk_live_FAKE_not_real',
+      });
+      expect(live.publishableKey, 'pk_live_FAKE_not_real');
+      for (final bad in ['sk_live_FAKE', 'rk_live_FAKE', 'pk_FAKE', '']) {
+        expect(
+          () => StripeDriverPayment.of({
+            'amount': money(1),
+            'clientSecret': 's',
+            'publishableKey': bad,
+          }),
+          throwsFormatException,
+        );
+      }
+      expect(stripeGooglePayTestEnv('pk_test_FAKE'), isTrue);
+      expect(stripeGooglePayTestEnv('pk_live_FAKE'), isFalse);
+      expect(kGooglePayEnabled, isFalse);
+      expect(kApplePayMerchantId, 'merchant.se.movera.driver');
+      expect(PayMovera.of(answer()).canPayByCard, isTrue);
+      expect(
+        PayMovera.of({...answer(), 'enabled': false}).canPayByCard,
+        isFalse,
+      );
+    },
+  );
 
   Future<List<String>> show(
     WidgetTester tester, {
