@@ -1618,6 +1618,12 @@ abstract class AppLocalizations {
   /// **'Signed in on another phone'**
   String get authSignedOutElsewhere;
 
+  /// Contract v0.18.149 auth.signedOut.byMoveraTexts (owner G12 Q6): an admin signed this phone out. Owner to confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'You were signed out by Movera'**
+  String get authSignedOutByMovera;
+
   /// Contract v0.18.14 sign-in (authErrLockedToday).
   ///
   /// In en, this message translates to:

@@ -899,6 +899,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignedOutElsewhere => 'Signed in on another phone';
 
   @override
+  String get authSignedOutByMovera => 'You were signed out by Movera';
+
+  @override
   String get authErrLockedToday =>
       'Too many wrong codes today. Try again later.';
 
