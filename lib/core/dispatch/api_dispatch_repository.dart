@@ -626,8 +626,11 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _endUptime();
     _reconnect?.cancel();
     _stopIdle();
-    await _feed?.cancel();
-    _feed = null;
+    final old = _feed;
+    await old?.cancel();
+    // v0.18.150 review: a return try adopted during that await is the feed
+    // now (and bumped the generation): never drop it here.
+    if (identical(_feed, old)) _feed = null;
     if (_disposed || generation != _generation) return;
     // L20 stream: the one connection while the zone's switch is on and the
     // server has it; the settings then close their own stream. Decided
@@ -789,6 +792,12 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
           (line) {
             // Any line, the heartbeat comment too, shows the feed is alive.
             if (identical(owner, _main)) _lastLine = _now();
+            owner.lines++;
+            if (owner.upLongEnough) {
+              final adopt = owner.connected;
+              owner.connected = null;
+              adopt?.call();
+            }
             owner.idle?.cancel();
             owner.idle = Timer(feedIdleTimeout, quiet);
             if (line.startsWith('data:')) {
@@ -865,7 +874,9 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _openedAt = null;
     if (opened != null && _now().difference(opened) >= streamConnectedAfter) {
       _reconnects = 0;
-      if (_oneMode) _oneFailures = 0;
+      // v0.18.150 review: the one stream counts as connected on time only
+      // when it delivered at least one line (a heartbeat counts).
+      if (_oneMode && (_main?.lines ?? 0) > 0) _oneFailures = 0;
     }
   }
 

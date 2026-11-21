@@ -26,6 +26,14 @@ class _FeedOwner {
   void Function()? connected;
   Timer? idle;
   Timer? upFor;
+
+  /// Lines received (a heartbeat comment counts). A stream that heard no
+  /// line never counts as connected, whatever its time up (review: a silent
+  /// 200 must not beat the backup).
+  int lines = 0;
+
+  /// [streamConnectedAfter] has passed since the 200; the next line adopts.
+  bool upLongEnough = false;
   StreamSubscription<String>? sub;
   DateTime? openedAt;
 }
@@ -90,9 +98,12 @@ extension _OneStreamBackup on ApiDispatchRepository {
   /// backup (the caller then opens the two old streams at once).
   bool _countOneTry({required bool counts}) {
     final opened = _openedAt;
+    final heard = (_main?.lines ?? 0) > 0;
     final connected =
         _oneConnected ||
-        (opened != null && _now().difference(opened) >= streamConnectedAfter);
+        (heard &&
+            opened != null &&
+            _now().difference(opened) >= streamConnectedAfter);
     if (connected) {
       _oneFailures = 0;
       return false;
@@ -199,7 +210,12 @@ extension _OneStreamBackup on ApiDispatchRepository {
     }
     owner.openedAt = _now();
     owner.connected = () => _adopt(owner, link);
-    owner.upFor = Timer(streamConnectedAfter, () => _adopt(owner, link));
+    owner.upFor = _backupTimer(streamConnectedAfter, () {
+      // 30 s up counts only with a line heard; else the first line adopts,
+      // and a silent stream ends as a failed return try (idle timeout).
+      owner.upLongEnough = true;
+      if (owner.lines > 0) _adopt(owner, link);
+    });
     owner.sub = _listenFeed(response, owner, link);
   }
 

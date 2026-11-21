@@ -56,7 +56,15 @@ enum _One {
 /// The backup timer, fired by the test (no real minutes).
 class _Timers {
   final all = <_FakeTimer>[];
-  _FakeTimer? get last => all.isEmpty ? null : all.last;
+
+  /// The backup timers (minutes); the 30 s "up long enough" timers apart.
+  List<_FakeTimer> get backups => [
+    for (final timer in all)
+      if (timer.after >= const Duration(minutes: 1)) timer,
+  ];
+  _FakeTimer? get last => backups.isEmpty ? null : backups.last;
+  _FakeTimer? get upFor =>
+      all.lastWhere((t) => t.after == const Duration(seconds: 30));
   Timer create(Duration after, void Function() run) {
     final timer = _FakeTimer(after, run);
     all.add(timer);
@@ -91,6 +99,9 @@ class _Server {
   /// Answers used first, one per GET /driver/stream, before [one].
   final plan = <_One>[];
   int version = 5;
+
+  /// When set, cancelling an old offer feed waits for it (a slow cancel).
+  Completer<void>? slowCancel;
   final asked = <http.BaseRequest>[];
   final open = <String, int>{};
   final feeds = <String, List<StreamController<List<int>>>>{};
@@ -137,7 +148,11 @@ class _Server {
       late StreamController<List<int>> feed;
       feed = StreamController<List<int>>(
         onListen: () => open[stream] = (open[stream] ?? 0) + 1,
-        onCancel: () => open[stream] = (open[stream] ?? 1) - 1,
+        onCancel: () {
+          open[stream] = (open[stream] ?? 1) - 1;
+          final gate = slowCancel;
+          return stream == '/driver/offers/stream' ? gate?.future : null;
+        },
       );
       (feeds[stream] ??= []).add(feed);
       return http.StreamedResponse(feed.stream, 200);
@@ -359,7 +374,7 @@ void main() {
           reason: 'one return try ($kind)',
         );
         expect(p.dispatch.oneStreamBackup, isTrue, reason: '$kind');
-        expect(timers.all, hasLength(2), reason: 'another period ($kind)');
+        expect(timers.backups, hasLength(2), reason: 'another period ($kind)');
         expect(timers.last!.after, const Duration(minutes: 10));
         expect(
           server.open['/driver/offers/stream'],
@@ -449,6 +464,146 @@ void main() {
       await q.dispatch.dispose();
       expect(more.last!.cancelled, isTrue);
       q.config.dispose();
+    },
+  );
+
+  test(
+    'a silent return try is not adopted on time alone; the first line after 30 s adopts it',
+    () async {
+      final server = _Server()..one = _One.busy;
+      final timers = _Timers();
+      final p = await phone(
+        server,
+        () => DateTime.utc(2026, 11, 21, 9),
+        timers: timers,
+      );
+      server.one = _One.ok;
+      timers.last!.fire();
+      await _settle();
+      expect(server.open['/driver/stream'], 1);
+      timers.upFor!.fire(); // 30 s up, no line heard
+      await _settle();
+      expect(
+        p.dispatch.oneStreamBackup,
+        isTrue,
+        reason: 'a silent 200 must not beat the backup',
+      );
+      expect(server.open['/driver/offers/stream'], 1);
+      expect(server.open['/driver/config/stream'], 1);
+      // A heartbeat comment line after that: connected, adopted.
+      server.feeds['/driver/stream']!.last.add(utf8.encode(': heartbeat\n\n'));
+      await _settle();
+      expect(p.dispatch.oneStreamBackup, isFalse);
+      expect(p.dispatch.usesOneStream, isTrue);
+      expect(server.open['/driver/offers/stream'], 0);
+      expect(server.open['/driver/config/stream'], 0);
+      await p.dispatch.disconnect();
+      p.config.dispose();
+    },
+  );
+
+  test(
+    'a silent return try that ends is a failed return try (old two stay)',
+    () async {
+      final server = _Server()..one = _One.busy;
+      final timers = _Timers();
+      final p = await phone(
+        server,
+        () => DateTime.utc(2026, 11, 21, 9),
+        timers: timers,
+      );
+      server.one = _One.ok;
+      timers.last!.fire();
+      await _settle();
+      timers.upFor!.fire();
+      await _settle();
+      await server.feeds['/driver/stream']!.last
+          .close(); // as the idle loss: no line ever
+      await _settle();
+      expect(p.dispatch.oneStreamBackup, isTrue);
+      expect(timers.backups, hasLength(2));
+      expect(server.open['/driver/offers/stream'], 1);
+      await p.dispatch.disconnect();
+      p.config.dispose();
+    },
+  );
+
+  test(
+    'a one stream up 60 s with no line heard is a failed try; with a heartbeat it is connected',
+    () async {
+      for (final heartbeat in [false, true]) {
+        final server = _Server()
+          ..plan.add(_One.busy)
+          ..one = _One.ok;
+        var now = DateTime.utc(2026, 11, 21, 9);
+        final p = await phone(server, () => now, timers: _Timers());
+        expect(p.dispatch.oneStreamFailures, 1);
+        expect(server.open['/driver/stream'], 1);
+        if (heartbeat) {
+          server.feeds['/driver/stream']!.last.add(
+            utf8.encode(': heartbeat\n\n'),
+          );
+          await _settle();
+        }
+        now = now.add(const Duration(seconds: 60));
+        server.one = _One.busy;
+        await server.feeds['/driver/stream']!.last.close();
+        await _settle();
+        // Silent: 1 + this one + one more 503 = 3 = backup. Heard: count reset, then 503s up to 3.
+        expect(
+          p.dispatch.oneStreamBackup,
+          isTrue,
+          reason: 'heartbeat $heartbeat',
+        );
+        expect(
+          server.asks('/driver/stream'),
+          heartbeat ? 5 : 3,
+          reason: 'heartbeat $heartbeat',
+        );
+        await p.dispatch.disconnect();
+        p.config.dispose();
+      }
+    },
+  );
+
+  test(
+    'a return try adopted while connect() waits for the old feed to cancel is kept (no leak)',
+    () async {
+      final server = _Server()..one = _One.busy;
+      final timers = _Timers();
+      final p = await phone(
+        server,
+        () => DateTime.utc(2026, 11, 21, 9),
+        timers: timers,
+      );
+      server.one = _One.ok;
+      timers.last!.fire();
+      await _settle();
+      expect(server.open['/driver/stream'], 1);
+      // A reopen starts while the old offer feed takes long to cancel.
+      server.slowCancel = Completer<void>();
+      final reopening = p.dispatch.connect();
+      await _settle();
+      // Meanwhile the return try gets its first event: adopted.
+      server.feeds['/driver/stream']!.last.add(
+        utf8.encode('id: 1.5\ndata: ${jsonEncode(_offer(1))}\n\n'),
+      );
+      await _settle();
+      expect(p.dispatch.usesOneStream, isTrue);
+      server.slowCancel!.complete();
+      server.slowCancel = null;
+      await reopening;
+      await _settle();
+      expect(
+        server.open['/driver/stream'],
+        1,
+        reason: 'the adopted stream is the feed',
+      );
+      // It can still be closed: going offline cancels it.
+      await p.dispatch.disconnect();
+      await _settle();
+      expect(server.open['/driver/stream'], 0, reason: 'not leaked');
+      p.config.dispose();
     },
   );
 
