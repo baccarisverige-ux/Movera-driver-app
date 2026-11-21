@@ -506,6 +506,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get walletPayoutEarned => 'Earned';
+
+  @override
+  String get walletPayoutOwedToMovera => 'Owed to Movera';
+
+  @override
+  String get walletPayoutPaidOut => 'Paid out';
+
+  @override
+  String walletPayoutMovesNextWeek(String amount) {
+    return 'Moves to next week: $amount';
+  }
+
+  @override
   String get contactChangePhone => 'Change phone number';
 
   @override

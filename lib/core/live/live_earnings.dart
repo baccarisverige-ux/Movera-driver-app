@@ -153,6 +153,7 @@ class DriverPayout {
     required this.periodEnd,
     required this.tripCount,
     this.summary,
+    this.parts,
   });
 
   final Money amount;
@@ -161,6 +162,11 @@ class DriverPayout {
   /// server's two numbers for this payout, his view; null from an older
   /// server (the card then shows [amount] only). Never worked out here.
   final PayoutSummary? summary;
+
+  /// v0.18.133 (S5 J15, contract.json#payoutLines): Earned / Owed to Movera /
+  /// Paid out (+ carriedOut) as the server sent them; null on a payout made
+  /// before the switch or from an older server (the card keeps [summary]).
+  final PayoutParts? parts;
   final bool paid;
   final DateTime periodStart;
   final DateTime periodEnd;
@@ -179,6 +185,53 @@ class DriverPayout {
         periodEnd: end,
         tripCount: (json['tripCount'] as num?)?.toInt() ?? 0,
         summary: PayoutSummary.tryParse(json['summary']),
+        parts: PayoutParts.tryParse(json),
+      );
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// v0.18.133 (S5 J15, contract.json#payoutLines.driver; owner 2026-11-19
+/// "driver payout 3 lines", "carry line only when needed"): the payout's parts,
+/// each one server amount. The app never works money out.
+class PayoutParts {
+  const PayoutParts({
+    required this.earned,
+    required this.owedToMovera,
+    required this.paidOut,
+    required this.carriedOut,
+  });
+
+  final Money earned;
+  final Money owedToMovera;
+  final Money paidOut;
+
+  /// "Moves to next week": shown only when above 0.
+  final Money carriedOut;
+
+  bool get movesToNextWeek => carriedOut.amountMinor > 0;
+
+  /// Null unless all four amounts are there (never a half card).
+  static PayoutParts? tryParse(Map<String, dynamic> json) {
+    final values = [
+      json['earned'],
+      json['owedToMovera'],
+      json['paidOut'],
+      json['carriedOut'],
+    ];
+    if (values.any((v) => v is! Map)) return null;
+    try {
+      final m = [
+        for (final v in values)
+          Money.fromJson(Map<String, dynamic>.from(v as Map)),
+      ];
+      return PayoutParts(
+        earned: m[0],
+        owedToMovera: m[1],
+        paidOut: m[2],
+        carriedOut: m[3],
       );
     } on FormatException {
       return null;

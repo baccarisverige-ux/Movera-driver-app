@@ -664,7 +664,7 @@ class _LivePayoutsState extends State<_LivePayouts> {
                           // BQ-M22 (contract.json#priceDisplay.payoutSummary):
                           // the server's two lines when sent (below, full
                           // width), else the amount.
-                          if (payout.summary == null)
+                          if (payout.summary == null && payout.parts == null)
                             Text(
                               payout.amount.formatted,
                               style: const TextStyle(
@@ -675,7 +675,13 @@ class _LivePayoutsState extends State<_LivePayouts> {
                             ),
                         ],
                       ),
-                      if (payout.summary != null) ...[
+                      // v0.18.133 (S5 J15, contract.json#payoutLines.driver):
+                      // Earned · Owed to Movera · Paid out (+ Moves to next
+                      // week only when above 0) when the server sent them.
+                      if (payout.parts != null) ...[
+                        const SizedBox(height: 6),
+                        _PayoutPartLines(parts: payout.parts!),
+                      ] else if (payout.summary != null) ...[
                         const SizedBox(height: 6),
                         _PayoutSummaryLines(summary: payout.summary!),
                       ],
@@ -688,6 +694,69 @@ class _LivePayoutsState extends State<_LivePayouts> {
       ),
     );
   }
+}
+
+/// v0.18.133 (S5 J15; owner 2026-11-19 "driver payout 3 lines", "carry line
+/// only when needed"): three lines, and "Moves to next week: X" only in a
+/// week where he owed more than he earned. Server amounts as sent.
+class _PayoutPartLines extends StatelessWidget {
+  const _PayoutPartLines({required this.parts});
+
+  final PayoutParts parts;
+
+  Widget _line(String key, String label, Money amount) => Row(
+    key: ValueKey<String>(key),
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: WalletScreen._muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Text(
+        amount.formatted,
+        style: const TextStyle(
+          color: WalletScreen._text,
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _line('wallet-payout-earned', tr.walletPayoutEarned, parts.earned),
+      const SizedBox(height: 2),
+      _line(
+        'wallet-payout-owed-to-movera',
+        tr.walletPayoutOwedToMovera,
+        parts.owedToMovera,
+      ),
+      const SizedBox(height: 2),
+      _line('wallet-payout-paid-out', tr.walletPayoutPaidOut, parts.paidOut),
+      if (parts.movesToNextWeek) ...[
+        const SizedBox(height: 2),
+        Text(
+          tr.walletPayoutMovesNextWeek(parts.carriedOut.formatted),
+          key: const ValueKey<String>('wallet-payout-moves-next-week'),
+          style: const TextStyle(
+            color: WalletScreen._muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    ],
+  );
 }
 
 /// The payout card's two lines (owner 2026-11-14 "U show how much driver get

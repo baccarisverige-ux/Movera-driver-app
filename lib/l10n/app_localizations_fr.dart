@@ -515,6 +515,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get walletPayoutEarned => 'Gagné';
+
+  @override
+  String get walletPayoutOwedToMovera => 'Dû à Movera';
+
+  @override
+  String get walletPayoutPaidOut => 'Versé';
+
+  @override
+  String walletPayoutMovesNextWeek(String amount) {
+    return 'Reporté à la semaine prochaine : $amount';
+  }
+
+  @override
   String get contactChangePhone => 'Changer de numéro de téléphone';
 
   @override

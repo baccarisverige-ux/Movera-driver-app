@@ -504,6 +504,20 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get walletPayoutEarned => 'Intjänat';
+
+  @override
+  String get walletPayoutOwedToMovera => 'Skuld till Movera';
+
+  @override
+  String get walletPayoutPaidOut => 'Utbetalt';
+
+  @override
+  String walletPayoutMovesNextWeek(String amount) {
+    return 'Flyttas till nästa vecka: $amount';
+  }
+
+  @override
   String get contactChangePhone => 'Ändra telefonnummer';
 
   @override
