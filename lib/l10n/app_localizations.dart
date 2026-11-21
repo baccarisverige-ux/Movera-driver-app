@@ -9172,11 +9172,11 @@ abstract class AppLocalizations {
   /// **'You are not at the stop yet.'**
   String get liveTripNotAtStop;
 
-  /// Owner button 2026-11-20 "Change meter to app (Rec.)": notice that stays until OK when the server's trip price (TripProjection.fare) changed after the start; amount = the server's new fare, formatted.
+  /// Owner 2026-11-21 14:40: short notice (5 s, goes by itself, no tap) when the server's trip price (TripProjection.fare) changes after the accept: before pickup, during the trip, or by waiting. Shows ONLY the new price; amount = the server's new fare, formatted.
   ///
   /// In en, this message translates to:
-  /// **'Change the taximeter to {amount}'**
-  String meterChangeToAppPrice(String amount);
+  /// **'New price: {amount}'**
+  String tripNewPrice(String amount);
 
   /// No description provided for @call112.
   ///

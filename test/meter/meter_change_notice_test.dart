@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,16 +11,19 @@ import 'package:movera/core/money/money.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/accept%20ride/meter_change_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
-/// Owner button 2026-11-20 "Change meter to app (Rec.)": when the server's
-/// trip price changes after the start (a stop, a new route, an admin
-/// change), the driver sees "Ändra taxametern till 240,00 kr" with the
-/// server's new `fare` (never worked out on the phone), and it stays until
-/// he taps OK. Example: Ali typed 215 kr, Sara adds a stop, app 240 kr.
+/// Owner 2026-11-21 14:40 ("Don't make philosophy"): when the server's
+/// trip price changes after the accept (the rider changes the destination
+/// or a stop before pickup or during the trip, or waiting adds to it), the
+/// driver sees ONLY "Nytt pris: 240,00 kr" (the server's new `fare`, never
+/// worked out on the phone) for 5 s; it goes by itself, never blocks the
+/// map, and the waybill gets the new price. No taximeter wording.
 
 Future<void> _frames(WidgetTester tester, [int count = 12]) async {
   for (var i = 0; i < count; i++) {
@@ -64,6 +69,7 @@ Future<MemoryDriverRealtime> _open(
           tripId: 'meter-1',
           initialStage: stage,
           activeRideRepository: MemoryActiveRideRepository(),
+          waybillRepository: InMemoryWaybillRepository.instance,
           realtime: realtime,
         ),
       ),
@@ -85,9 +91,19 @@ void _send(MemoryDriverRealtime realtime, Map<String, dynamic> trip) =>
       projection: trip,
     );
 
+String _sek(int minor) => Money(minorUnits: minor, currency: 'SEK').formatted;
+
+final _notice = find.byKey(const ValueKey('meter-change-notice'));
+
+Future<void> _close(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await _frames(tester, 2);
+}
+
 void main() {
   final previous = DriverRuntimeConfig.current;
   setUp(() {
+    InMemoryWaybillRepository.instance.reset();
     DriverRuntimeConfig.current = const DriverRuntimeConfig(
       simulatedArrival: false,
       externalRouting: false,
@@ -98,90 +114,117 @@ void main() {
     );
   });
   tearDown(() {
+    InMemoryWaybillRepository.instance.reset();
     DriverRuntimeConfig.current = previous;
     DriverAppTexts.reset();
   });
 
   for (final language in ['sv', 'fr', 'en']) {
-    testWidgets('a new server price after the start asks the driver to '
-        'change the taximeter, until OK ($language)', (tester) async {
+    testWidgets('during the trip: a new server price shows only the new '
+        'price, then goes by itself after ~5 s ($language)', (tester) async {
       DriverAppTexts.language = language;
       final realtime = await _open(tester);
-      final notice = find.byKey(const ValueKey('meter-change-notice'));
       _send(realtime, _trip(21500));
       await _frames(tester);
-      expect(notice, findsNothing, reason: 'the price the meter got');
-      _send(realtime, _trip(21500, version: 6));
+      expect(_notice, findsNothing, reason: 'the first price seen');
+      _send(realtime, _trip(24000, version: 6));
       await _frames(tester);
-      expect(notice, findsNothing, reason: 'same price, no notice');
-      _send(realtime, _trip(24000, version: 7));
-      await _frames(tester);
-      expect(notice, findsOneWidget);
-      final amount = const Money(minorUnits: 24000, currency: 'SEK').formatted;
-      expect(find.text(tr.meterChangeToAppPrice(amount)), findsOneWidget);
-      if (language == 'sv') {
-        expect(
-          tr.meterChangeToAppPrice(amount),
-          'Ändra taxametern till $amount',
-        );
-      }
-      // Stays: time passes, a tap beside it, a back press.
-      await _frames(tester, 40);
-      await tester.tapAt(const Offset(5, 5));
-      await _frames(tester);
-      await tester.binding.handlePopRoute();
-      await _frames(tester);
-      expect(notice, findsOneWidget, reason: 'stays until OK');
-      await tester.tap(find.descendant(of: notice, matching: find.text(tr.ok)));
-      await _frames(tester);
-      expect(notice, findsNothing);
-      // A later change: the notice comes back with the newest amount.
-      _send(realtime, _trip(26000, version: 8));
-      await _frames(tester);
-      _send(realtime, _trip(26500, version: 9));
-      await _frames(tester);
-      expect(notice, findsOneWidget);
-      final newest = const Money(minorUnits: 26500, currency: 'SEK').formatted;
-      expect(find.text(tr.meterChangeToAppPrice(newest)), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-      await _frames(tester, 2);
+      expect(_notice, findsOneWidget);
+      final text = tr.tripNewPrice(_sek(24000));
+      expect(find.text(text), findsOneWidget);
+      expect(text, switch (language) {
+        'sv' => 'Nytt pris: ${_sek(24000)}',
+        'fr' => 'Nouveau prix : ${_sek(24000)}',
+        _ => 'New price: ${_sek(24000)}',
+      });
+      // Never blocks the map or the navigation: taps go through it.
+      final ignore = tester.widget<IgnorePointer>(
+        find.ancestor(of: _notice, matching: find.byType(IgnorePointer)).first,
+      );
+      expect(ignore.ignoring, isTrue);
+      // Still there at 4 s, gone by itself at 5 s (no tap).
+      await tester.pump(const Duration(seconds: 4));
+      expect(_notice, findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 1100));
+      await tester.pump();
+      expect(_notice, findsNothing);
+      await _close(tester);
     });
   }
 
-  testWidgets('before the start a new price shows no meter notice', (
-    tester,
-  ) async {
+  testWidgets('before pickup (driving to the rider): a new price shows the '
+      'notice', (tester) async {
     final realtime = await _open(
       tester,
       stage: ActiveRideStage.headingToPickup,
     );
     _send(realtime, _trip(21500, status: 'driver_to_pickup'));
     await _frames(tester);
+    expect(_notice, findsNothing);
     _send(realtime, _trip(24000, status: 'driver_to_pickup', version: 6));
     await _frames(tester);
-    expect(find.byKey(const ValueKey('meter-change-notice')), findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
+    expect(_notice, findsOneWidget);
+    expect(find.text(tr.tripNewPrice(_sek(24000))), findsOneWidget);
+    await tester.pump(MeterChangeNotice.visibleFor);
+    await tester.pump();
+    expect(_notice, findsNothing);
+    await _close(tester);
   });
 
-  final notice = find.byKey(const ValueKey('meter-change-notice'));
+  testWidgets('the same price again: no notice; each change once', (
+    tester,
+  ) async {
+    final realtime = await _open(tester);
+    _send(realtime, _trip(21500));
+    await _frames(tester);
+    _send(realtime, _trip(21500, version: 6));
+    await _frames(tester);
+    expect(_notice, findsNothing, reason: 'unchanged price');
+    _send(realtime, _trip(24000, version: 7));
+    await _frames(tester);
+    expect(_notice, findsOneWidget);
+    await tester.pump(MeterChangeNotice.visibleFor);
+    await tester.pump();
+    expect(_notice, findsNothing);
+    _send(realtime, _trip(24000, version: 8));
+    await _frames(tester);
+    expect(_notice, findsNothing, reason: 'the same change is not said twice');
+    // A newer price while one shows: the newest amount, time starts again.
+    _send(realtime, _trip(26000, version: 9));
+    await _frames(tester);
+    _send(realtime, _trip(26500, version: 10));
+    await _frames(tester);
+    expect(_notice, findsOneWidget);
+    expect(find.text(tr.tripNewPrice(_sek(26500))), findsOneWidget);
+    await _close(tester);
+  });
+
+  testWidgets('the waybill shows the new price', (tester) async {
+    final realtime = await _open(tester);
+    _send(realtime, _trip(21500));
+    await _frames(tester);
+    _send(realtime, _trip(24000, version: 6));
+    await _frames(tester);
+    final record = InMemoryWaybillRepository.instance.current;
+    expect(record?.tripId, 'meter-1');
+    expect(record?.riderFare, _sek(24000));
+    await _close(tester);
+  });
+
   const stored = '{"amountMinor":21500,"currency":"SEK"}';
 
   testWidgets('restore: a price changed while the app was closed shows '
-      'the notice; OK stores it', (tester) async {
+      'the notice and is stored', (tester) async {
     final realtime = await _open(
       tester,
       prefs: {'movera.meter_fare.meter-1': stored},
     );
     _send(realtime, _trip(24000));
     await _frames(tester);
-    expect(notice, findsOneWidget, reason: 'stored 215, server 240');
-    await tester.tap(find.byKey(const ValueKey('meter-change-ok')));
-    await _frames(tester);
+    expect(_notice, findsOneWidget, reason: 'stored 215, server 240');
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('movera.meter_fare.meter-1'), contains('24000'));
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
+    await _close(tester);
   });
 
   testWidgets('restore: the stored price equal to the server shows nothing', (
@@ -193,12 +236,11 @@ void main() {
     );
     _send(realtime, _trip(21500));
     await _frames(tester);
-    expect(notice, findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
+    expect(_notice, findsNothing);
+    await _close(tester);
   });
 
-  testWidgets('the trip ends while the notice is open: it closes', (
+  testWidgets('the trip ends while the notice shows: it closes', (
     tester,
   ) async {
     final realtime = await _open(tester);
@@ -206,63 +248,27 @@ void main() {
     await _frames(tester);
     _send(realtime, _trip(24000, version: 6));
     await _frames(tester);
-    expect(notice, findsOneWidget);
+    expect(_notice, findsOneWidget);
     _send(realtime, _trip(24000, status: 'cancelled_by_rider', version: 7));
-    await _frames(tester, 30);
-    expect(notice, findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
+    await _frames(tester);
+    expect(_notice, findsNothing);
+    await _close(tester);
   });
 
-  testWidgets('the start projection with a new price: no notice (the meter '
-      'is set at the start); a later change shows one', (tester) async {
-    final realtime = await _open(
-      tester,
-      stage: ActiveRideStage.waitingForRider,
-    );
-    _send(realtime, _trip(21500, status: 'arrived'));
-    await _frames(tester);
-    _send(realtime, _trip(23000, version: 6));
-    await _frames(tester, 30);
-    expect(notice, findsNothing);
-    _send(realtime, _trip(24000, version: 7));
-    await _frames(tester);
-    expect(notice, findsOneWidget);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
-  });
-
-  testWidgets('start, restart, new price: the notice shows', (tester) async {
-    var realtime = await _open(tester, stage: ActiveRideStage.waitingForRider);
-    _send(realtime, _trip(21500, status: 'arrived'));
-    await _frames(tester);
-    _send(realtime, _trip(21500, version: 6));
-    await _frames(tester, 30);
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('movera.meter_fare.meter-1'), contains('21500'));
-    // The app is closed and opened again on the trip (prefs stay).
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
-    realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    await tester.pumpWidget(
-      ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, _) => MaterialApp(
-          home: AcceptRide(
-            tripId: 'meter-1',
-            initialStage: ActiveRideStage.onTrip,
-            activeRideRepository: MemoryActiveRideRepository(),
-            realtime: realtime,
-          ),
-        ),
-      ),
-    );
-    await _frames(tester);
-    _send(realtime, _trip(24000, version: 8));
-    await _frames(tester);
-    expect(notice, findsOneWidget);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester, 2);
+  test('no taximeter text in the new notice, the old key is gone', () {
+    for (final language in ['en', 'sv', 'fr']) {
+      final arb = File('lib/l10n/app_$language.arb').readAsStringSync();
+      expect(arb, isNot(contains('meterChangeToAppPrice')), reason: language);
+      final line = arb
+          .split('\n')
+          .firstWhere((l) => l.contains('"tripNewPrice"'));
+      expect(line.toLowerCase(), isNot(contains('taxi')), reason: language);
+      expect(line.toLowerCase(), isNot(contains('taxa')), reason: language);
+    }
+    final notice = File(
+      'lib/presentation/driver/accept ride/meter_change_notice.dart',
+    ).readAsStringSync();
+    expect(notice.toLowerCase(), isNot(contains('taxamet')));
+    expect(notice.toLowerCase(), isNot(contains('taximet')));
   });
 }

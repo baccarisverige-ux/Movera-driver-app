@@ -1,85 +1,80 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 
-/// Owner button 2026-11-20 "Change meter to app (Rec.)": "Ändra
-/// taxametern till 240,00 kr". It stays until the driver taps OK (no tap
-/// beside it, no back press closes it); a newer price while it is open
-/// replaces the amount in the same notice. [close] takes it away when the
-/// trip ends or the screen goes.
+/// Owner 2026-11-21 14:40 ("Don't make philosophy"): when the trip price
+/// changes, the driver sees ONLY the new price ("Nytt pris: 240 kr") for
+/// [visibleFor], then it goes by itself: no tap needed, and it never
+/// blocks the map or the navigation (taps go through it). A newer price
+/// while it shows replaces the amount and starts the time again. [close]
+/// takes it away when the trip ends or the screen goes.
 class MeterChangeNotice {
+  static const visibleFor = Duration(seconds: 5);
+
   final ValueNotifier<String?> _amount = ValueNotifier<String?>(null);
-  BuildContext? _dialog;
-  VoidCallback? _onOk;
-  bool _open = false, _disposed = false;
+  OverlayEntry? _entry;
+  Timer? _timer;
+  bool _disposed = false;
 
-  bool get isOpen => _open;
+  bool get isOpen => _entry != null;
 
-  /// Shows [amount] (the server's formatted fare) on [context]'s
-  /// navigator; [onOk] runs when the driver taps OK on that amount.
-  void show(BuildContext context, String amount, {VoidCallback? onOk}) {
+  /// Shows [amount] (the server's formatted fare) over [context]'s screen.
+  void show(BuildContext context, String amount) {
     if (_disposed) return;
     _amount.value = amount;
-    _onOk = onOk;
-    if (_open) return;
-    _open = true;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        _dialog = dialogContext;
-        return PopScope(
-          canPop: false,
-          child: ValueListenableBuilder<String?>(
-            valueListenable: _amount,
-            builder: (_, value, _) => AlertDialog(
-              key: const ValueKey('meter-change-notice'),
-              content: Text(
-                tr.meterChangeToAppPrice(value ?? amount),
-                style: Theme.of(dialogContext).textTheme.titleLarge,
-              ),
-              actions: [
-                FilledButton(
-                  key: const ValueKey('meter-change-ok'),
-                  onPressed: () {
-                    _onOk?.call();
-                    _pop();
-                  },
-                  child: Text(tr.ok),
+    _timer?.cancel();
+    _timer = Timer(visibleFor, close);
+    if (_entry != null) return;
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return;
+    final entry = OverlayEntry(
+      builder: (overlayContext) => Positioned(
+        left: 16,
+        right: 16,
+        top: MediaQuery.paddingOf(overlayContext).top + 12,
+        child: IgnorePointer(
+          child: Material(
+            key: const ValueKey('meter-change-notice'),
+            color: const Color(0xFF303A3F),
+            elevation: 6,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: ValueListenableBuilder<String?>(
+                valueListenable: _amount,
+                builder: (_, value, _) => Text(
+                  tr.tripNewPrice(value ?? amount),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
-        );
-      },
-    ).whenComplete(() {
-      _open = false;
-      _dialog = null;
-    });
+        ),
+      ),
+    );
+    _entry = entry;
+    overlay.insert(entry);
   }
 
-  void _pop() {
-    final dialog = _dialog;
-    if (dialog != null && dialog.mounted) Navigator.of(dialog).pop();
-  }
-
-  /// Takes an open notice away without OK (the trip ended).
+  /// Takes the notice away (its time is up, the trip ended).
   void close() {
-    _onOk = null;
-    if (_open) _pop();
+    _timer?.cancel();
+    _timer = null;
+    final entry = _entry;
+    _entry = null;
+    if (entry != null && entry.mounted) entry.remove();
   }
 
-  /// The screen goes: the notice goes with it (after this frame, as the
-  /// navigator may be busy).
+  /// The screen goes: the notice goes with it.
   void dispose() {
     _disposed = true;
-    _onOk = null;
-    if (_open) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _pop();
-        _amount.dispose();
-      });
-    } else {
-      _amount.dispose();
-    }
+    close();
+    _amount.dispose();
   }
 }

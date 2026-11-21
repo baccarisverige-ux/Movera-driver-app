@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5451,8 +5452,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get liveTripNotAtStop => 'Vous n’êtes pas encore à l’arrêt.';
 
   @override
-  String meterChangeToAppPrice(String amount) {
-    return 'Réglez le taximètre sur $amount';
+  String tripNewPrice(String amount) {
+    return 'Nouveau prix : $amount';
   }
 
   @override

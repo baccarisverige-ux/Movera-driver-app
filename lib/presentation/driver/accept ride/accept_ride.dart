@@ -638,7 +638,7 @@ class _AcceptRideState extends State<AcceptRide>
 
   _ChangedRoute? _changedRoute; // G7, accept_ride_route_change.dart
   final Set<String> _routeChangesSeen = {}, _serverChecksOpened = {};
-  // Owner 2026-11-20 "Change meter to app" (accept_ride_trip.dart).
+  // Owner 2026-11-21 "New price: X" for 5 s (accept_ride_trip.dart).
   final _meterWatch = MeterPriceWatch();
   final _meterNotice = MeterChangeNotice();
   // Strip line (moved pickup) and G6 island alert, each said once per key.

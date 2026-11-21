@@ -3,36 +3,36 @@ import 'dart:convert';
 import 'package:movera/core/money/money.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Owner button 2026-11-20 "Change meter to app (Rec.)": the driver sets
-/// the taximeter to the app's price. Before the start the meter follows
-/// the server's `fare` as it is at the start; after the start every new
-/// `fare` from the server is a price the driver must type in again.
+/// Owner 2026-11-21 14:40: when the server's trip price (`fare`) changes
+/// after the driver accepted (the rider changes the destination or a stop
+/// before pickup or during the trip, or waiting adds to it), the driver
+/// sees a short "New price: 240 kr" notice. This keeps the last price the
+/// driver was shown and says when the server's price is a new one.
 ///
 /// Only the server's own amount is kept and handed back: nothing is added
-/// or worked out on the phone. The price the driver confirmed is kept on
-/// the device per trip ([MeterPriceStore]), so a change made while the
-/// app was closed is shown after a restart.
+/// or worked out on the phone. The price last shown is kept on the device
+/// per trip ([MeterPriceStore]), so a change made while the app was closed
+/// is shown after a restart.
 class MeterPriceWatch {
   Money? _meter, _pending, _stored;
   bool _seeded = false;
 
-  /// The meter's price as this phone knows it.
+  /// The last price this phone knows the driver saw.
   Money? get meter => _meter;
 
-  /// The server's new price when [fare] differs from the price the meter
-  /// has, while the trip is [started]; null otherwise. Before the start
-  /// (or the first price seen) [fare] only becomes the meter's price.
-  /// While the stored price is not read yet ([seed]), a started trip's
-  /// price waits for it.
-  Money? observe(Money? fare, {required bool started}) {
+  /// The server's new price when [fare] differs from the price known
+  /// before; null otherwise (the first price seen only becomes the known
+  /// one). While the stored price is not read yet ([seed]), the price
+  /// waits for it.
+  Money? observe(Money? fare) {
     if (fare == null) return null;
-    if (started && !_seeded) {
+    if (!_seeded) {
       _pending = fare;
       return null;
     }
     final meter = _meter;
     _meter = fare;
-    if (!started || meter == null || meter == fare) return null;
+    if (meter == null || meter == fare) return null;
     return fare;
   }
 
@@ -61,7 +61,7 @@ extension MeterPriceStoreMark on MeterPriceWatch {
   }
 }
 
-/// The confirmed meter price per trip on this device.
+/// The price last shown to the driver, per trip, on this device.
 class MeterPriceStore {
   static String _key(String tripId) => 'movera.meter_fare.$tripId';
 
