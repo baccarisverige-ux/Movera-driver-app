@@ -900,6 +900,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authSignedOutElsewhere => 'Inloggad på en annan telefon';
 
   @override
+  String get authSignedOutByMovera => 'Du loggades ut av Movera';
+
+  @override
   String get authErrLockedToday =>
       'För många fel koder i dag. Försök igen senare.';
 

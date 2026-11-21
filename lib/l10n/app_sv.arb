@@ -253,6 +253,7 @@
   "authPhoneFieldLabel": "Mobilnummer ({dial})",
   "authCodeFieldLabel": "Fyrsiffrig kod från sms:et",
   "authSignedOutElsewhere": "Inloggad på en annan telefon",
+  "authSignedOutByMovera": "Du loggades ut av Movera",
   "authErrLockedToday": "För många fel koder i dag. Försök igen senare.",
   "dontMatchRiderAgain": "Matcha mig inte med den här kunden igen",
   "callFailed": "Samtalet misslyckades",
