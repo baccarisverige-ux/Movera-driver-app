@@ -110,6 +110,11 @@ jobs:
             --dart-define=MOVERA_APP_VERSION="$app_version"
           # B9: let the page open the API connection early (hint only).
           sed -i "s|  <!-- MOVERA_API_PRECONNECT -->|  <link rel=\"preconnect\" href=\"${LIVE_API%/}\" crossorigin>|" build/web/index.html
+          # P12 (owner 2026-11-21): the static deletion page reads the support
+          # e-mail from the public legal endpoint; it learns the API base from
+          # this tiny file, written from the same value as the app define.
+          test -f build/web/delete-account.html || { echo "::error::delete-account.html missing from the web build"; exit 1; }
+          LIVE_API="$LIVE_API" python3 -c 'import json, os; print("window.MOVERA_API_BASE_URL = %s;" % json.dumps(os.environ["LIVE_API"].rstrip("/")))' > build/web/delete-account-config.js
 
       # The site root (where the demo used to be) and unknown paths open the
       # live app.

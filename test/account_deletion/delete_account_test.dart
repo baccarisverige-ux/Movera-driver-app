@@ -135,6 +135,36 @@ void main() {
     expect(page, contains('Delete my account'));
     expect(page, contains('Radera mitt konto'));
     expect(page, contains('Supprimer mon compte'));
+    // P12 (owner 2026-11-21): one page for riders and drivers, in sv/en/fr.
+    expect(page, contains('For Movera riders and drivers'));
+    expect(page, contains('För Moveras resenärer och förare'));
+    expect(page, contains('Pour les passagers et les chauffeurs Movera'));
+    for (final id in ['id="en"', 'id="sv"', 'id="fr"']) {
+      expect(page, contains(id));
+    }
+    // A way without the app: support e-mail read from the public legal
+    // endpoint (never hard-coded), with a no-link fallback text.
+    expect(page, contains('/api/v1/legal/'));
+    expect(page, contains('supportEmail'));
+    expect(page, contains('delete-account-config.js'));
+    expect(page, contains("Write to Movera support from the app's Help page"));
+    // Honest retention text, marked for the lawyer.
+    expect(page, contains('kept for 7 years because Swedish bookkeeping law'));
+    expect(page, contains('sparas i 7 år eftersom svensk bokföringslag'));
+    expect(page, contains('conservés 7 ans'));
+    expect(page, contains('erased 30 days after your request'));
+    expect('LAWYER TO CONFIRM'.allMatches(page).length, 3);
+    expect(
+      page,
+      contains(
+        'Do not submit this URL to a store before the owner switches Erase on',
+      ),
+    );
+    // The Pages workflow writes the API base next to the page and fails the
+    // build when the page is missing from the web output.
+    final pages = File('.github/workflows/deploy-pages.yml').readAsStringSync();
+    expect(pages, contains('build/web/delete-account-config.js'));
+    expect(pages, contains('test -f build/web/delete-account.html'));
     // No e-mail address or phone number on the page (Rules: no addresses).
     expect(RegExp(r'[\w.+-]+@[\w-]+\.[\w.]+').hasMatch(page), isFalse);
     expect(RegExp(r'\+\d{8,}').hasMatch(page), isFalse);

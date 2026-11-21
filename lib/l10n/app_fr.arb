@@ -171,7 +171,7 @@
   "contactEmailVerifiedDone": "E-mail vérifié",
   "menuNewDriver": "Nouveau chauffeur",
   "acctDeleteTitle": "Supprimer mon compte",
-  "acctDeleteBody": "Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées.",
+  "acctDeleteBody": "Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées, sauf les données de course et de paiement exigées par la loi.",
   "acctDeleteKept": "Conservés : vos courses, gains et virements pour la loi comptable et, si vous devez de l’argent à Movera, votre nom, numéro et le montant jusqu’au paiement.",
   "acctDeleteConfirmQ": "Supprimer votre compte ?",
   "acctDeleteConfirmBody": "Action irréversible. Votre compte est fermé maintenant.",

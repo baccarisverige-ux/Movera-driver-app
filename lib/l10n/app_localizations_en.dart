@@ -602,7 +602,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get acctDeleteBody =>
-      'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.';
+      'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased, except the trip and payment records the law requires.';
 
   @override
   String get acctDeleteKept =>

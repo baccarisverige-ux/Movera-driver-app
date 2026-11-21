@@ -1135,7 +1135,7 @@ abstract class AppLocalizations {
   /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what happens.
   ///
   /// In en, this message translates to:
-  /// **'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.'**
+  /// **'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased, except the trip and payment records the law requires.'**
   String get acctDeleteBody;
 
   /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what is kept.
