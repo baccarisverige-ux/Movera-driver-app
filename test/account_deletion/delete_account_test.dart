@@ -157,8 +157,12 @@ void main() {
     expect(
       page,
       contains(
-        'Do not submit this URL to a store before the owner switches Erase on',
+        'Do not submit this URL to a store before ALL of: (1) the owner switches Erase on',
       ),
+    );
+    expect(
+      page,
+      contains('the support e-mail is set in Admin › Content › Legal'),
     );
     // The Pages workflow writes the API base next to the page and fails the
     // build when the page is missing from the web output.
