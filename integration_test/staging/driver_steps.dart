@@ -4,6 +4,7 @@ import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
+import 'package:movera/presentation/driver/home/components/island_waiting.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 
 import 'check_log.dart';
@@ -51,6 +52,38 @@ Future<bool> pumpUntil(
     if (dismiss) await dismissPrompts(tester);
   }
   return done();
+}
+
+/// Waits for Home's menu button to take a tap; true when it does.
+///
+/// Online and waiting for a trip (after Rate → Done), the island shows
+/// "Finding trips" or a waiting message and tucks its menu button
+/// (R13-1, home_map_top_island.dart: `tucked` includes `waiting`); the
+/// button only comes back when the island is touched
+/// (island_waiting.dart `touch()`), for 8 s. So: when that waiting face
+/// is up, touch the island once (the tap only closes the face), then
+/// wait for the button. Any other face that tucks the menu (a passing
+/// message, a reservation) is not tapped: its tap does something else.
+/// The plain [timeout] wait stays as the fallback.
+Future<bool> homeMenuTappable(
+  WidgetTester tester,
+  Finder menu, {
+  Duration timeout = const Duration(seconds: 15),
+}) async {
+  final waitingFace = find.byType(DigitalWaitingFace);
+  final island = byKey('last-trip-launcher');
+  if (shows(menu)) return true;
+  await pumpUntil(
+    tester,
+    () => shows(menu) || (shows(waitingFace) && shows(island)),
+    timeout: timeout,
+  );
+  if (shows(menu)) return true;
+  if (!(shows(waitingFace) && shows(island))) return false;
+  CheckLog.say('STEP touched the island to bring the menu back');
+  await tester.tap(island.first, warnIfMissed: false);
+  await tester.pump(const Duration(milliseconds: 400));
+  return pumpUntil(tester, () => shows(menu), timeout: timeout);
 }
 
 /// Lets [duration] pass on the phone, dismissing one-off prompts.
