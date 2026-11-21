@@ -470,7 +470,10 @@ class DriverLocationService implements DriverLocationRepository {
     return DriverLocation(
       point: GeoPoint(position.latitude, position.longitude),
       headingDegrees: position.heading,
-      speedMetersPerSecond: position.speed,
+      // A speed of 0 with no accuracy is "unknown" (web), not "stopped".
+      speedMetersPerSecond: position.speed == 0 && position.speedAccuracy == 0
+          ? null
+          : position.speed,
       measuredAt: position.timestamp,
       accuracyMeters: position.accuracy,
     );

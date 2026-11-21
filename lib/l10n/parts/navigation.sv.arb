@@ -168,5 +168,7 @@
   "destSearchUnavailable": "Adressökningen fungerar inte just nu",
   "destSearchTryAgain": "Kontrollera anslutningen och försök igen.",
   "destSearchStart": "Sök efter en adress",
-  "destSearchStartBody": "Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här."
+  "destSearchStartBody": "Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här.",
+  "islandRadarListDriving": "Radarlistan är låst under körning",
+  "islandRadarListOff": "Radarlistan är avstängd"
 }

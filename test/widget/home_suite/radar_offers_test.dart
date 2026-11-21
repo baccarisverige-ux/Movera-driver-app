@@ -1,4 +1,5 @@
 // Split from test/widget_test.dart (step 54, Rule 25: no file over 1500 lines).
+import 'package:movera/core/dispatch/radar_app_limits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -11,6 +12,15 @@ import 'package:movera/core/sound/radar_offer_sound.dart';
 import '_helpers.dart';
 
 void main() {
+  // These cases look at a deck of up to 4 Radar cards: admin sets that in
+  // Dispatch › Modes (`offers.radarApp.popup`, contract §3.3; default 2).
+  setUp(
+    () => DriverOfferRules.current = const DriverOfferRules(
+      radarApp: RadarAppLimits(popup: 4),
+    ),
+  );
+  tearDown(() => DriverOfferRules.current = const DriverOfferRules());
+
   registerCommonSetUp();
 
   testWidgets('Full radar orb responds near its outer edge', (
@@ -430,6 +440,41 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 520));
     expect(find.byType(AcceptRide), findsOneWidget);
+    expectNoException(tester);
+  });
+
+  testWidgets('Admin Radar limits: 1 card, list off (offers.radarApp)', (
+    WidgetTester tester,
+  ) async {
+    DriverOfferRules.current = const DriverOfferRules(
+      radarApp: RadarAppLimits(fullOn: false, popup: 1),
+    );
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    RadarOfferSound.debugPlayer = FakeRadarSound();
+    addTearDown(() => RadarOfferSound.debugPlayer = null);
+    OfferVibration.debugVibrate = (_) {};
+    addTearDown(() => OfferVibration.debugVibrate = null);
+    await pumpHome(tester, const Size(375, 812));
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 3850));
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 900));
+    }
+    final cards = find.byWidgetPredicate(
+      (w) =>
+          w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('radar-offer-card-'),
+    );
+    // One card over the map; the others are held, not lost.
+    expect(cards, findsOneWidget);
+    final island = find.byKey(const ValueKey<String>('island-radar-offers'));
+    if (island.evaluate().isNotEmpty) {
+      await tester.tap(island, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 160));
+    }
+    // The full-screen list is off in admin: it never opens.
+    expect(find.byType(RideRequests), findsNothing);
     expectNoException(tester);
   });
 }

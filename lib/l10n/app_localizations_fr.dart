@@ -4789,6 +4789,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici.';
 
   @override
+  String get islandRadarListDriving => 'Liste radar bloquée en roulant';
+
+  @override
+  String get islandRadarListOff => 'Liste radar désactivée';
+
+  @override
   String get reservation => 'Réservation';
 
   @override

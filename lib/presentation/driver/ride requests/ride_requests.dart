@@ -187,8 +187,10 @@ class _RideRequestsState extends State<RideRequests> {
       // on the way carry the "On your way" badge.
       return widget.offerFilter?.call(offer.source) ?? true;
     }).toList()..sort((a, b) => a.pickupKm.compareTo(b.pickupKm));
-    // Every Radar trip, each with its full details.
-    return List<_RadarTrip>.unmodifiable(nearby);
+    // Every Radar trip, each with its full details, up to the list limit
+    // admin sets in Dispatch › Modes (`offers.radarApp.full`, §3.3).
+    final limit = DriverOfferRules.current.radarApp.listLimit;
+    return List<_RadarTrip>.unmodifiable(nearby.take(limit));
   }
 
   /// A new dispatch offer Refresh would add as a card: the same rules as

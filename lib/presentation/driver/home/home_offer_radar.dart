@@ -215,6 +215,35 @@ class _HomeDirectOffer {
 }
 
 extension _HomeOfferRadar on _DriverHomeState {
+  /// Radar trips waiting for a card, shown or held, at most this many.
+  static const int _homeRadarQueue = 4;
+
+  /// Dispatch › Modes: Radar cards over the map now (`offers.radarApp`,
+  /// contract §3.3), stopped or driving.
+  int get _maxHomeRadarOffers =>
+      DriverOfferRules.current.radarApp.cardLimit(moving: _motion.moving);
+
+  /// Whether the full-screen Radar list may open now (off, or locked while
+  /// driving, in Dispatch › Modes).
+  bool get _radarListAllowed =>
+      DriverOfferRules.current.radarApp.listOpen(moving: _motion.moving);
+
+  /// Tapped while the list cannot open: say why on the island.
+  void _radarListRefused() => IslandMessages.show(
+    HomeIslandNotices.radarListClosed(
+      driving: DriverOfferRules.current.radarApp.fullOn,
+    ),
+  );
+
+  /// Stopped ↔ driving changed the limits: close a locked list and move
+  /// cards over the new limit back to held (or held ones onto the deck).
+  void _onMotionChanged() {
+    if (showRideRequests && !_radarListAllowed) {
+      _rebuild(() => showRideRequests = false);
+    }
+    _refreshRadarHomeOffers();
+  }
+
   void _maybeShowSoonReservation() {
     if (!_soonReservationReady ||
         !mounted ||
@@ -481,7 +510,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         _radarHomeOffers.any((item) => item.id == offer.id) ||
         _pendingRadarHomeOffers.any((item) => item.id == offer.id) ||
         _radarHomeOffers.length + _pendingRadarHomeOffers.length >=
-            _DriverHomeState._maxHomeRadarOffers) {
+            math.max(_homeRadarQueue, _maxHomeRadarOffers)) {
       return;
     }
 
@@ -499,7 +528,7 @@ extension _HomeOfferRadar on _DriverHomeState {
 
     // New trips join the back of the deck, so the front card the driver
     // reads never changes under them.
-    if (_radarHomeOffers.length < _DriverHomeState._maxHomeRadarOffers) {
+    if (_radarHomeOffers.length < _maxHomeRadarOffers) {
       _activateRadarHomeOffer(offer);
       return;
     }
@@ -513,7 +542,7 @@ extension _HomeOfferRadar on _DriverHomeState {
   void _activateRadarHomeOffer(_HomeDirectOffer offer) {
     if (!mounted ||
         !_isOnline ||
-        _radarHomeOffers.length >= _DriverHomeState._maxHomeRadarOffers ||
+        _radarHomeOffers.length >= _maxHomeRadarOffers ||
         _radarHomeOffers.any((item) => item.id == offer.id)) {
       return;
     }
@@ -536,7 +565,8 @@ extension _HomeOfferRadar on _DriverHomeState {
         RideCheckGate.open ||
         _outsideRadarOffer != null ||
         _HomeReservation(this)._reservationUp ||
-        _pendingRadarHomeOffers.isEmpty) {
+        (_pendingRadarHomeOffers.isEmpty &&
+            _radarHomeOffers.length <= _maxHomeRadarOffers)) {
       return;
     }
 
@@ -545,16 +575,13 @@ extension _HomeOfferRadar on _DriverHomeState {
       ..._pendingRadarHomeOffers,
     ];
 
-    final seen = <String>{};
-    final next = <_HomeDirectOffer>[];
-    for (final offer in refreshed) {
-      if (seen.add(offer.id)) {
-        next.add(offer);
-      }
-      if (next.length >= _DriverHomeState._maxHomeRadarOffers) {
-        break;
-      }
-    }
+    // Over the card limit (§3.3): held until a slot frees, never lost.
+    final (shown: next, held: held) = splitRadarDeck(
+      refreshed,
+      limit: _maxHomeRadarOffers,
+      id: (offer) => offer.id,
+      gone: (offer) => _radarOfferExpired.contains(offer.id),
+    );
 
     // Trips whose pick window ran out leave on refresh.
     next.removeWhere((offer) => _radarOfferExpired.contains(offer.id));
@@ -570,8 +597,11 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarHomeOffers
         ..clear()
         ..addAll(next);
-      _pendingRadarHomeOffers.clear();
-      _hasRideOffers = _radarHomeOffers.isNotEmpty;
+      _pendingRadarHomeOffers
+        ..clear()
+        ..addAll(held);
+      _hasRideOffers =
+          _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
     });
 
     _dispatch.refreshOffers();

@@ -1,3 +1,4 @@
+import 'package:movera/core/dispatch/radar_app_limits.dart';
 import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
@@ -167,6 +168,15 @@ const _radarBadge = ValueKey<String>(
 );
 
 void main() {
+  // These cases look at a deck of up to 4 Radar cards: admin sets that in
+  // Dispatch › Modes (`offers.radarApp.popup`, contract §3.3; default 2).
+  setUp(
+    () => DriverOfferRules.current = const DriverOfferRules(
+      radarApp: RadarAppLimits(popup: 4),
+    ),
+  );
+  tearDown(() => DriverOfferRules.current = const DriverOfferRules());
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     IslandMessages.reset();

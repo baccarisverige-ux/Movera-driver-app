@@ -8170,6 +8170,18 @@ abstract class AppLocalizations {
   /// **'Type a street, a place or a city. Your last 5 destinations show here.'**
   String get destSearchStartBody;
 
+  /// Island notice: the full-screen Radar list is locked while the car drives (Dispatch › Modes, offers.radarApp.fullLockWhileDriving).
+  ///
+  /// In en, this message translates to:
+  /// **'Radar list locked while driving'**
+  String get islandRadarListDriving;
+
+  /// Island notice: admin switched the full-screen Radar list off (offers.radarApp.fullOn).
+  ///
+  /// In en, this message translates to:
+  /// **'Radar list is off'**
+  String get islandRadarListOff;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

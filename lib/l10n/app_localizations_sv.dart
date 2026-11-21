@@ -4711,6 +4711,12 @@ class AppLocalizationsSv extends AppLocalizations {
       'Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här.';
 
   @override
+  String get islandRadarListDriving => 'Radarlistan är låst under körning';
+
+  @override
+  String get islandRadarListOff => 'Radarlistan är avstängd';
+
+  @override
   String get reservation => 'Bokning';
 
   @override

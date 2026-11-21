@@ -40,6 +40,7 @@ import 'package:movera/core/dispatch/destination_filter.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/radar_app_limits.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
@@ -387,7 +388,8 @@ class _DriverHomeState extends State<DriverHome>
   /// Dispatch's time on the radar (15 s by default).
   static Duration get _radarOfferPickWindow =>
       DriverOfferRules.current.radarTime;
-  static const int _maxHomeRadarOffers = 4;
+
+  final DriverMotion _motion = DriverMotion(); // §3.3 Radar limits
   double _sheetPointerVelocity = 0;
   double _sheetPointerTravel = 0;
   double _sheetPointerStartPos = 0;
@@ -1163,6 +1165,7 @@ class _DriverHomeState extends State<DriverHome>
     _radarOfferTwoTimer?.cancel();
     _radarOfferThreeTimer?.cancel();
     _offlineHeld = false;
+    _motion.reset();
 
     setState(() {
       _driverSession.setOnline(false);
@@ -1188,6 +1191,10 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   void _openRideOffers() {
+    // Dispatch › Modes: the full-screen list is off, or locked while driving.
+    if (!_HomeOfferRadar(this)._radarListAllowed) {
+      return _HomeOfferRadar(this)._radarListRefused();
+    }
     if (_mainPanelPosition > 0.04 || isPanelOpen) {
       return;
     }
