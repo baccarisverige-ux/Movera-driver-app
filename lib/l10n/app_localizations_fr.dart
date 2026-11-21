@@ -613,7 +613,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get acctDeleteBody =>
-      'Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées, sauf les données de course et de paiement exigées par la loi.';
+      'Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées.';
 
   @override
   String get acctDeleteKept =>

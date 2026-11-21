@@ -602,7 +602,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get acctDeleteBody =>
-      'Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter, utom de rese- och betalningsuppgifter som lagen kräver.';
+      'Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter.';
 
   @override
   String get acctDeleteKept =>
