@@ -60,6 +60,10 @@ class _DriverContentGateState extends State<DriverContentGate> {
   /// waits for its end.
   bool get _tripActive => _onTrip || widget.session.activeTripId != null;
 
+  /// v0.18.154 P16c: a trip was seen in this run, so the start check is
+  /// past (the block may come after it).
+  bool _sawTrip = false;
+
   void _openSos() {
     final navigator = widget.navigatorKey.currentState;
     if (navigator == null) return;
@@ -98,13 +102,16 @@ class _DriverContentGateState extends State<DriverContentGate> {
         _legal,
         MinAppVersion.rule,
         MinAppVersion.serverSaid,
+        MinAppVersion.tripChecked,
       ]),
       builder: (context, _) {
         final view = _store.updateView(onTrip: _onTrip);
         final terms = _store.termsDue;
         // v0.18.154 P16c: below the zone's minimum version of this
         // platform; never while a trip is active.
-        final belowMin = MinAppVersion.required;
+        if (_tripActive) _sawTrip = true;
+        final known = MinAppVersion.tripChecked.value || _sawTrip;
+        final belowMin = MinAppVersion.required && (known || _tripActive);
         Widget? cover;
         if (belowMin && !_tripActive) {
           cover = _sosOpen

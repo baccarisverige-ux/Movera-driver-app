@@ -1,3 +1,4 @@
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
@@ -631,6 +632,8 @@ class _DriverHomeState extends State<DriverHome>
     if (repo == null) {
       if (mounted) {
         setState(() => _recoveryResolved = true);
+        // v0.18.154 P16c: the active-trip check answered: no trip.
+        MinAppVersion.tripChecked.value = true;
       }
       return;
     }
@@ -687,6 +690,8 @@ class _DriverHomeState extends State<DriverHome>
     }
     if (snapshot == null) {
       setState(() => _recoveryResolved = true);
+      // v0.18.154 P16c: the active-trip check answered: no trip.
+      MinAppVersion.tripChecked.value = true;
       return;
     }
 

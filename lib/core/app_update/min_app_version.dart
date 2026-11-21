@@ -87,6 +87,11 @@ abstract final class MinAppVersion {
   /// one in use); cleared by the next document.
   static final ValueNotifier<bool> serverSaid = ValueNotifier(false);
 
+  /// The start's active-trip check answered with no trip (Home's restore,
+  /// saved trip + server). Until then, or a trip was seen, nothing blocks:
+  /// a cold start mid-trip never flashes the block before the trip screen.
+  static final ValueNotifier<bool> tripChecked = ValueNotifier(false);
+
   /// A new driver document: its rule replaces the one in use.
   static void accept(Object? appUpdate) {
     rule.value = MinAppVersionRule.fromJson(appUpdate);
@@ -95,8 +100,8 @@ abstract final class MinAppVersion {
 
   /// A 426 answer with reason `app_update_required`.
   static void markServerSaid(Map<String, dynamic>? body) {
-    final reason = body?['reason'];
-    if (body != null && reason != 'app_update_required') return;
+    // A body that cannot be read, or another reason, never blocks.
+    if (body?['reason'] != 'app_update_required') return;
     serverSaid.value = true;
   }
 
@@ -105,6 +110,7 @@ abstract final class MinAppVersion {
   static void reset() {
     rule.value = MinAppVersionRule.off;
     serverSaid.value = false;
+    tripChecked.value = false;
   }
 
   /// This build's version x.y.z (`MOVERA_APP_VERSION`); null for a local

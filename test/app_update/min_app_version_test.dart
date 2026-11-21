@@ -24,6 +24,7 @@ void main() {
     MinAppVersion.reset();
     MinAppVersion.running = const AppVersion(1, 4, 0);
     MinAppVersion.platform = 'android';
+    MinAppVersion.tripChecked.value = true;
   });
   tearDown(MinAppVersion.reset);
 
@@ -185,5 +186,39 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets('cold start: no block until the active-trip check answered', (
+      tester,
+    ) async {
+      MinAppVersion.tripChecked.value = false;
+      MinAppVersion.accept(doc('1.5.0'));
+      await pumpGate(tester);
+      expect(find.byKey(screen), findsNothing);
+      MinAppVersion.tripChecked.value = true;
+      await tester.pump();
+      expect(find.byKey(screen), findsOneWidget);
+    });
+
+    testWidgets(
+      'cold start mid-trip: the trip comes first, the block after it',
+      (tester) async {
+        MinAppVersion.tripChecked.value = false;
+        MinAppVersion.accept(doc('1.5.0'));
+        final session = await pumpGate(tester);
+        expect(find.byKey(screen), findsNothing);
+        session.beginTrip('trip_restored');
+        await tester.pump();
+        expect(find.byKey(screen), findsNothing);
+        session.endTrip();
+        await tester.pump();
+        expect(find.byKey(screen), findsOneWidget);
+      },
+    );
+  });
+
+  test('a 426 with an unreadable body or another reason does not block', () {
+    MinAppVersion.markServerSaid(null);
+    MinAppVersion.markServerSaid({'reason': 'other'});
+    expect(MinAppVersion.required, isFalse);
   });
 }

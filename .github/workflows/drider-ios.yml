@@ -98,8 +98,10 @@ jobs:
             echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."
             exit 1
           fi
+          # v0.18.154 P16c: the build knows its version (minimum app version check).
           flutter build ios --release --no-codesign \
-            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}" \
+            --dart-define=MOVERA_APP_VERSION="$(sh tool/app_version.sh "${GITHUB_RUN_NUMBER:-}")"
 
       - name: Missing maps key fails an iOS release candidate
         run: |
