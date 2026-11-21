@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/content/driver_content.dart';
 import 'package:movera/core/content/driver_content_store.dart';
@@ -9,6 +10,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/presentation/driver/content/min_version_screen.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -53,6 +55,11 @@ class _DriverContentGateState extends State<DriverContentGate> {
 
   bool get _onTrip => widget.session.status == DriverOnlineStatus.onTrip;
 
+  /// v0.18.154 P16c (`contract.json#appUpdate.apps`): a trip is active
+  /// (accepted, to pickup, arrived, on trip): the minimum-version block
+  /// waits for its end.
+  bool get _tripActive => _onTrip || widget.session.activeTripId != null;
+
   void _openSos() {
     final navigator = widget.navigatorKey.currentState;
     if (navigator == null) return;
@@ -85,12 +92,29 @@ class _DriverContentGateState extends State<DriverContentGate> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([_store, widget.session, _legal]),
+      listenable: Listenable.merge([
+        _store,
+        widget.session,
+        _legal,
+        MinAppVersion.rule,
+        MinAppVersion.serverSaid,
+      ]),
       builder: (context, _) {
         final view = _store.updateView(onTrip: _onTrip);
         final terms = _store.termsDue;
+        // v0.18.154 P16c: below the zone's minimum version of this
+        // platform; never while a trip is active.
+        final belowMin = MinAppVersion.required;
         Widget? cover;
-        if (!_sosOpen && view == UpdateView.blocked) {
+        if (belowMin && !_tripActive) {
+          cover = _sosOpen
+              ? null
+              : MinVersionScreen(
+                  onSos: _openSos,
+                  fallbackStore: driverStoreUri().toString(),
+                  openStore: widget.openStore,
+                );
+        } else if (!_sosOpen && view == UpdateView.blocked) {
           cover = UpdateRequiredScreen(
             onSos: _openSos,
             openStore: widget.openStore,
@@ -116,7 +140,7 @@ class _DriverContentGateState extends State<DriverContentGate> {
                 onClose: _store.closeRecommended,
                 onTap: () => unawaited(_launchStore(widget.openStore)),
               ),
-            if (view == UpdateView.tripMessage)
+            if (view == UpdateView.tripMessage || (belowMin && _tripActive))
               _Banner(
                 key: const ValueKey<String>('content-update-trip'),
                 text: tr.contentUpdateAfterTrip,

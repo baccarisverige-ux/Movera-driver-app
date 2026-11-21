@@ -634,6 +634,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get minVersionTitle => 'Mettez à jour Movera pour continuer';
+
+  @override
+  String get minVersionBody =>
+      'Cette version de l\'application est trop ancienne. Installez la dernière version depuis le store pour continuer à utiliser Movera.';
+
+  @override
+  String get minVersionUpdate => 'Mettre à jour';
+
+  @override
   String get phoneVibratesWhenRequestArrives =>
       'Le téléphone vibre à l’arrivée d’une demande.';
 
