@@ -7558,4 +7558,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera chooses the ride types when it approves the car.';
+
+  @override
+  String get yearStatementTitle => 'Year statement';
+
+  @override
+  String yearStatementReported(int year) {
+    return 'What Movera reports to the tax office for $year';
+  }
+
+  @override
+  String get yearStatementEmpty => 'No earnings in this year.';
+
+  @override
+  String get yearStatementTooBig =>
+      'Too many trips to show at once. Pick a month.';
+
+  @override
+  String get yearStatementUnavailable =>
+      'The year statement could not be loaded.';
+
+  @override
+  String yearStatementRides(int count) {
+    return '$count rides';
+  }
+
+  @override
+  String get yearStatementEarnings => 'Earnings';
+
+  @override
+  String get yearStatementFares => 'Fares';
+
+  @override
+  String get yearStatementCommission => 'Movera commission';
+
+  @override
+  String get yearStatementTips => 'Tips';
+
+  @override
+  String get yearStatementBonuses => 'Bonuses';
+
+  @override
+  String get yearStatementCash => 'Cash in the car';
+
+  @override
+  String get yearStatementPaidOut => 'Paid out by Movera';
+
+  @override
+  String yearStatementOwnPart(String company) {
+    return 'Your own part of $company';
+  }
+
+  @override
+  String get yearStatementBonusLine => 'Bonus campaign';
+
+  @override
+  String get yearStatementShare => 'Share';
+
+  @override
+  String get yearStatementYear => 'Year';
+
+  @override
+  String get yearStatementOpen => 'Year statement for the tax office';
 }
