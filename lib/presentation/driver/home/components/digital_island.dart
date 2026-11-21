@@ -497,11 +497,18 @@ class DigitalMessageFace extends StatefulWidget {
     required this.icon,
     this.pulse = false,
     this.tappable = false,
+    this.textRoom,
   });
 
   final String title;
   final Color color;
   final IconData icon;
+
+  /// Width the words get once the island has its final size (see
+  /// [textRoomIn]). Words longer than that go on two lines, a little
+  /// smaller when needed, instead of being cut off with "…". Null: one
+  /// line, as before.
+  final double? textRoom;
 
   /// A live dot (e.g. "online") breathes instead of showing an icon.
   final bool pulse;
@@ -535,6 +542,11 @@ class DigitalMessageFace extends StatefulWidget {
     )..layout();
     return 2 * (_lamp + _gap) + painter.width;
   }
+
+  /// Room for the words in an island [islandWidth] wide whose sides are
+  /// tucked away (14 + 14) inside its border (2).
+  static double textRoomIn(double islandWidth) =>
+      islandWidth - 14 - 14 - 2 - 2 * (_lamp + _gap);
 
   @override
   State<DigitalMessageFace> createState() => _DigitalMessageFaceState();
@@ -648,7 +660,11 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
           const SizedBox(width: DigitalMessageFace._gap),
           Flexible(
             child: _written(
-              _TickerLine(text: widget.title, style: messageStyle),
+              _TickerLine(
+                text: widget.title,
+                style: messageStyle,
+                room: widget.textRoom,
+              ),
             ),
           ),
           SizedBox(
@@ -684,21 +700,72 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
 }
 
 /// Long copy remains accessible without moving the message away from center.
+///
+/// With [room] (the width the words get in the finished island): words
+/// that do not fit on one line go on two, at the largest size that shows
+/// them whole, so e.g. "Rider cancelled · +35,00 kr" is never cut off.
 class _TickerLine extends StatelessWidget {
-  const _TickerLine({required this.text, required this.style});
+  const _TickerLine({required this.text, required this.style, this.room});
   final String text;
   final TextStyle style;
+  final double? room;
+
+  /// Two lines stay inside the island's height at these sizes.
+  static const double _twoLineHeight = 1.15;
+  static const int _smallerSteps = 4;
+
+  /// One line at the normal size when it fits [room]; else two lines at
+  /// the first size (normal, then 1 px smaller each step) that shows all
+  /// the words.
+  (int, TextStyle) _fit(BuildContext context, double room) {
+    final base = DefaultTextStyle.of(context).style.merge(style);
+    final scaler = MediaQuery.textScalerOf(context);
+    bool fits(TextStyle s, int lines) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: s),
+        textDirection: Directionality.of(context),
+        textScaler: scaler,
+        maxLines: lines,
+      )..layout(maxWidth: room);
+      // Whole, and (large system text) not taller than the island.
+      final ok =
+          !painter.didExceedMaxLines &&
+          (lines == 1 || painter.height <= DigitalIslandParts.height);
+      painter.dispose();
+      return ok;
+    }
+
+    if (fits(base, 1)) {
+      return (1, style);
+    }
+    final size = style.fontSize ?? 15;
+    var two = style.copyWith(height: _twoLineHeight);
+    for (var step = 0; step <= _smallerSteps; step++) {
+      two = two.copyWith(fontSize: size - step);
+      if (fits(base.merge(two), 2)) {
+        break;
+      }
+    }
+    return (2, two);
+  }
+
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: text,
-    child: Text(
-      text,
-      textAlign: TextAlign.center,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: style,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final room = this.room;
+    final (lines, fitted) = room == null || room <= 0
+        ? (1, style)
+        : _fit(context, room);
+    return Tooltip(
+      message: text,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        maxLines: lines,
+        overflow: TextOverflow.ellipsis,
+        style: fitted,
+      ),
+    );
+  }
 }
 
 /// Island pieces shared by Home and the trip screen, so both islands look

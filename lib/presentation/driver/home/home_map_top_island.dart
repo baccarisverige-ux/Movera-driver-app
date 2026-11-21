@@ -287,7 +287,12 @@ extension _HomeMapTopIsland on _DriverHomeState {
                             child: hold != null
                                 ? _islandMessageView(hold, hold: true)
                                 : message != null
-                                ? _islandMessageView(message)
+                                ? _islandMessageView(
+                                    message,
+                                    textRoom: DigitalMessageFace.textRoomIn(
+                                      width,
+                                    ),
+                                  )
                                 : feedDown != null
                                 ? _islandFeedDownView(feedDown)
                                 : reservation != null
