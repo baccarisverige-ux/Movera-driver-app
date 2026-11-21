@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5357,6 +5358,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get liveTripNotAtStop => 'Du är inte vid stoppet än.';
+
+  @override
+  String tripNewPrice(String amount) {
+    return 'Nytt pris: $amount';
+  }
 
   @override
   String get call112 => 'Ring 112';

@@ -1,5 +1,7 @@
 import 'package:movera/core/device/screen_awake.dart';
 import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
+import 'package:movera/presentation/driver/accept ride/meter_change_notice.dart';
+import 'package:movera/core/ride/meter_price_watch.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
@@ -642,6 +644,9 @@ class _AcceptRideState extends State<AcceptRide>
 
   _ChangedRoute? _changedRoute; // G7, accept_ride_route_change.dart
   final Set<String> _routeChangesSeen = {}, _serverChecksOpened = {};
+  // Owner 2026-11-21 "New price: X" for 5 s (accept_ride_trip.dart).
+  final _meterWatch = MeterPriceWatch();
+  final _meterNotice = MeterChangeNotice();
   // Strip line (moved pickup) and G6 island alert, each said once per key.
   int _islandNoticeKey = 0, _waitingAlertKey = 0;
   String? _islandNotice, _waitingAlert;
@@ -716,6 +721,7 @@ class _AcceptRideState extends State<AcceptRide>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _chatAlerts?.start();
+    _AcceptRideTrip(this)._seedMeter();
     // A RideCheck demo trip drives its own scripted GPS (DemoTripDrive).
     _locationService =
         DemoTripDrive.forTrip(
@@ -899,6 +905,7 @@ class _AcceptRideState extends State<AcceptRide>
     ScreenAwake.instance.release(this);
     OpenTripScreens.remove(widget.tripId, _bringToFront);
     _chatAlerts?.dispose();
+    _meterNotice.dispose();
     driverRouteObserver.unsubscribe(this);
     driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);

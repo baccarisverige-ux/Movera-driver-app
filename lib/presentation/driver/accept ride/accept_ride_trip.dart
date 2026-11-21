@@ -370,6 +370,10 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (!mounted || event.tripId != widget.tripId) {
       return;
     }
+    if (event.status?.isTerminal == true) {
+      _meterNotice.close();
+      unawaited(MeterPriceStore.clear(widget.tripId));
+    }
 
     final disposition = _realtimeGate.evaluate(event);
     if (disposition == DriverRealtimeDisposition.duplicate ||
@@ -481,6 +485,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     _AcceptRidePickup(this)._followServerWaitClock();
     // G7 (contract v0.18.9): the server's ride check and route change.
     _AcceptRideRouteChange(this)._onTripExtras(next, initial: initial);
+    // Owner 2026-11-21 14:40: every new server price after the accept
+    // (before pickup and on the trip) shows "New price: X" for 5 s.
+    _afterMeter(_meterWatch.observe(next.fare));
     if (initial) return;
     if (mounted && (rebuild || pickupChanged || alert != null)) {
       _rebuild(() {
@@ -495,6 +502,49 @@ extension _AcceptRideTrip on _AcceptRideState {
       });
     }
     if (pickupChanged) _afterPickupMoved();
+  }
+
+  /// Owner 2026-11-21 14:40: the price last shown for this trip before a
+  /// restart; a different server price shows the notice.
+  void _seedMeter() => unawaited(
+    MeterPriceStore.read(widget.tripId).then((stored) {
+      if (!mounted) return;
+      if (_rideLifecycle.terminal) {
+        unawaited(MeterPriceStore.clear(widget.tripId));
+        return;
+      }
+      _afterMeter(_meterWatch.seed(stored));
+    }),
+  );
+
+  /// A new server price: "New price: X" for 5 s, and the waybill gets the
+  /// server's new money. The price is stored (only when it changed) so a
+  /// restart does not show it again.
+  void _afterMeter(Money? changed) {
+    if (_rideLifecycle.terminal) return;
+    final known = changed ?? _meterWatch.meter;
+    if (known != null && _meterWatch.needsStore(known)) {
+      unawaited(MeterPriceStore.write(widget.tripId, known));
+    }
+    if (changed == null || !mounted) return;
+    _meterNotice.show(context, changed.formatted);
+    _priceOnWaybill(changed);
+  }
+
+  /// Owner 2026-11-21 (2): the waybill always shows the new price and its
+  /// details, the server's own lines (never worked out here).
+  void _priceOnWaybill(Money fare) {
+    final current = _waybills.current;
+    if (current == null || current.tripId != widget.tripId) return;
+    final projection = _liveTrips?.projectionOf(widget.tripId);
+    final money = projection == null
+        ? null
+        : LiveTripMoney.tryParse(projection);
+    _waybills.beginCurrent(
+      money != null && money.riderFare == fare && money.driverPay != null
+          ? _withMoney(current, money)
+          : current.copyWith(riderFare: fare.formatted),
+    );
   }
 
   /// `pickupWaiting.follow`: while the event stream is down, read the
@@ -1012,9 +1062,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       _completionInFlight = false;
       _stageTransitioning = false;
       // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
-      final changed = _AcceptRideLive(
-        this,
-      )._liveTrips?.takePriceChanged(widget.tripId);
+      final changed = _AcceptRideLive(this)._liveTrips
+          ?.takePriceChanged(widget.tripId);
       if (changed != null && mounted) {
         unawaited(_collectCash(changed: changed));
       }

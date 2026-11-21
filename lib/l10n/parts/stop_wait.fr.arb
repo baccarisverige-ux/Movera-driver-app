@@ -1,5 +1,6 @@
 {
   "waitingPausedAtStop": "Attente en pause : vous êtes à plus de {leave} m de l’arrêt. Revenez à moins de {arrive} m pour continuer.",
   "waitingBackAtStop": "Je suis de retour à l’arrêt",
-  "liveTripNotAtStop": "Vous n’êtes pas encore à l’arrêt."
+  "liveTripNotAtStop": "Vous n’êtes pas encore à l’arrêt.",
+  "tripNewPrice": "Nouveau prix : {amount}"
 }
