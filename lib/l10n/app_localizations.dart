@@ -8248,6 +8248,36 @@ abstract class AppLocalizations {
   /// **'Could not load what you owe Movera. Try again later.'**
   String get payMoveraUnavailable;
 
+  /// Pay Movera (DRAFT, Stripe): the button that pays what he owes now by card or Apple Pay; the amount is the server's.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount} by card'**
+  String payMoveraPayByCard(String amount);
+
+  /// Pay Movera (DRAFT, Stripe): the server's owed went down after the payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid. Thank you.'**
+  String get payMoveraCardPaid;
+
+  /// Pay Movera (DRAFT, Stripe): the sheet said paid, the server has not confirmed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received. We are checking it.'**
+  String get payMoveraCardChecking;
+
+  /// Pay Movera (DRAFT, Stripe): the payment failed or could not start.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment did not go through. Try again.'**
+  String get payMoveraCardFailed;
+
+  /// Pay Movera (DRAFT, Stripe): what he owes changed before the sheet opened; the screen reloads.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount changed. Check it and try again.'**
+  String get payMoveraAmountChanged;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

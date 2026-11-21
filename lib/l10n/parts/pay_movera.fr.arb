@@ -7,5 +7,10 @@
   "payMoveraCopied": "Copié",
   "payMoveraAmountToPay": "Montant à payer",
   "payMoveraLinkFailed": "Impossible d’ouvrir la page de paiement. Veuillez réessayer.",
-  "payMoveraUnavailable": "Impossible de charger ce que vous devez à Movera. Réessayez plus tard."
+  "payMoveraUnavailable": "Impossible de charger ce que vous devez à Movera. Réessayez plus tard.",
+  "payMoveraPayByCard": "Payer {amount} par carte",
+  "payMoveraCardPaid": "Payé. Merci.",
+  "payMoveraCardChecking": "Paiement reçu. Nous le vérifions.",
+  "payMoveraCardFailed": "Le paiement n'a pas abouti. Réessayez.",
+  "payMoveraAmountChanged": "Le montant a changé. Vérifiez-le et réessayez."
 }
