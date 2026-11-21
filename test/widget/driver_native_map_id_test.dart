@@ -71,7 +71,11 @@ void main() {
     // app under test once more (debug, for the on-phone tests). Every build
     // passes the Map ID.
     expect(apkBuilds, 2, reason: 'test APKs + device-checks app under test');
-    expect(define.allMatches(apk).length, apkBuilds);
+    // The optional App Bundle (input app_bundle, default off) is a native
+    // build too and passes the Map ID as well.
+    final bundleBuilds = 'flutter build appbundle'.allMatches(apk).length;
+    expect(bundleBuilds, 1, reason: 'optional App Bundle');
+    expect(define.allMatches(apk).length, apkBuilds + bundleBuilds);
 
     for (final (path, command) in [
       (

@@ -10,6 +10,7 @@ import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
+import 'package:movera/core/ride/trip_live_details.dart';
 
 /// The trip's live events from the server: `GET /trips/{tripId}/events`
 /// with `Accept: text/event-stream` (contract §4). `id:` is the trip's
@@ -23,6 +24,12 @@ import 'package:movera/core/realtime/driver_realtime.dart';
 /// the trip a second time. A rider cancel, an admin's change or anything
 /// else comes through to the screen as before. A chat message
 /// (`kind: message`) goes to [LiveTripChat] as well.
+///
+/// The server's ride check ("Is everything OK?", contract
+/// `onTrip.rideCheck.ask`) comes as a `trip_projection` WITHOUT a version
+/// change, so after Start it looks like the echo of Start: a projection
+/// that carries a ride check this stream has not passed on yet, still open
+/// for the driver, is never an echo.
 class ApiDriverRealtime implements DriverRealtime {
   ApiDriverRealtime({
     required http.Client client,
@@ -76,6 +83,10 @@ class ApiDriverRealtime implements DriverRealtime {
   Timer? _idle;
   DateTime? _lastLineAt;
 
+  /// The `checkId`s of the server ride checks passed on to the screen for
+  /// the trip of this stream ([_tripId]).
+  final Set<String> _rideChecksPassed = <String>{};
+
   static Duration _backoff(int attempt) => reconnectBackoff(attempt);
 
   /// True while the stream is open.
@@ -95,6 +106,7 @@ class ApiDriverRealtime implements DriverRealtime {
       _tripId = tripId;
       _last = 0;
       _attempts = 0;
+      _rideChecksPassed.clear();
       unawaited(_connect());
     }
     return _out.stream.where((event) => event.tripId == tripId);
@@ -304,7 +316,29 @@ class ApiDriverRealtime implements DriverRealtime {
     // v0.18.50 §72 L7: the rider's stream hears this driver's own cancel
     // as driver_cancelled; on his phone it is his own echo, like the
     // trip_projection one.
-    if ((kind == 'trip_projection' || kind == 'driver_cancelled') &&
+    // Contract `onTrip.rideCheck.ask` (safety): the server asks with a
+    // trip_projection that keeps the trip's status and version, which
+    // after this phone's own Start is exactly what its echo looks like.
+    // A ride check the screen has not been handed yet, that the driver
+    // can still answer, must reach the trip screen: never an echo. The
+    // same check again, an answered or timed-out one and a terminal echo
+    // stay filtered as before.
+    final check = projection is Map
+        ? TripRideCheck.tryParse(projection['rideCheck'])
+        : null;
+    final asks =
+        check != null &&
+        kind == 'trip_projection' &&
+        status != null &&
+        !_isTerminal(status) &&
+        // Back in the queue (searching/requested) there is no ride to
+        // check: a check on that echo is not a question to the driver.
+        status != 'searching' &&
+        status != 'requested' &&
+        !_rideChecksPassed.contains(check.checkId) &&
+        check.openForDriver(_now().toUtc());
+    if (!asks &&
+        (kind == 'trip_projection' || kind == 'driver_cancelled') &&
         (_trips?.isOwnEcho(
               tripId,
               status,
@@ -318,7 +352,12 @@ class ApiDriverRealtime implements DriverRealtime {
     // The screen still hears it (its sequence gate counts every event);
     // the chat shows it and counts it as unread.
     if (event.chat case final message?) _chat?.receive(tripId, message);
-    if (!_out.isClosed) _out.add(event);
+    if (_out.isClosed) return;
+    // Counted as handed over only when a screen is listening.
+    if (check != null && _out.hasListener) {
+      _rideChecksPassed.add(check.checkId);
+    }
+    _out.add(event);
   }
 
   /// The trip left this driver without an event they could read: the

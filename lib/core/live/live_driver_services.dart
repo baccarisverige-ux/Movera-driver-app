@@ -886,6 +886,40 @@ class LiveLocationReporter {
   /// The last fix sent, as the contract's `GeoFix`.
   LiveFix? lastFix;
 
+  /// Audit 2026-11-20 item 4: the fixes not sent during a network drop,
+  /// oldest first, sent with the next fix (contract `LocationBatch`, at
+  /// most 50); only the newest [maxQueued] are kept.
+  final List<LiveFix> _unsent = <LiveFix>[];
+  static const maxQueued = 30;
+
+  @visibleForTesting
+  List<LiveFix> get unsent => List.unmodifiable(_unsent);
+
+  void _keepUnsent(LiveFix fix) {
+    final at = fix['measuredAt'];
+    if (_unsent.any((f) => f['measuredAt'] == at)) return;
+    _unsent.add(fix);
+    if (_unsent.length > maxQueued) {
+      _unsent.removeRange(0, _unsent.length - maxQueued);
+    }
+  }
+
+  /// The kept fixes the server still takes (younger than [maxResendAge]),
+  /// then [fix]; the same fix is not sent twice.
+  List<LiveFix> _batchWith(LiveFix fix) {
+    final at = fix['measuredAt'];
+    return [
+      for (final kept in _unsent)
+        if (kept['measuredAt'] != at && _youngEnough(kept)) kept,
+      fix,
+    ];
+  }
+
+  bool _youngEnough(LiveFix fix) {
+    final at = DateTime.tryParse('${fix['measuredAt']}');
+    return at != null && _now().difference(at) <= maxResendAge;
+  }
+
   /// Where the phone last was, from [lastFix]: a screen that opens before its
   /// own GPS read lands (the trip screen right after an accept) starts the
   /// car here instead of at a fixed point in Stockholm.
@@ -1048,6 +1082,7 @@ class LiveLocationReporter {
     final paused = _pausedUntil;
     if (paused != null && _now().isBefore(paused)) return false;
     _sending = true;
+    LiveFix? tried;
     try {
       var fix = first ?? (fresh ? null : _heldFix());
       if (fix == null) {
@@ -1063,12 +1098,12 @@ class LiveLocationReporter {
       // A [fresh] ask (the tab shows again, a resume) wants a new read only.
       if (fix == null && !_restamp && !fresh) fix = _lastOsFix();
       if (fix == null) return false;
+      tried = fix;
       final ack = await _api.post(
         locationPath,
-        body: {
-          'fixes': [fix],
-        },
+        body: {'fixes': _batchWith(fix)},
       );
+      _unsent.clear();
       lastFix = fix;
       onSent?.call();
       // G3-R2: "You are not eligible to drive in this area" once per entry.
@@ -1076,6 +1111,19 @@ class LiveLocationReporter {
       return true;
     } catch (error) {
       DriverLog.warn('location not sent: ${error.runtimeType}', name: 'live');
+      final status = error is ApiError ? error.statusCode : null;
+      if (status == null ||
+          status >= 500 ||
+          status == 429 ||
+          status == 408 ||
+          status == 401) {
+        // A network drop, a busy server or a sign-in being renewed: kept
+        // for the next send.
+        if (tried != null) _keepUnsent(tried);
+      } else {
+        // The server refused the batch: the kept fixes go no further.
+        _unsent.clear();
+      }
       if (error is ApiError &&
           (error.statusCode == 429 || error.statusCode == 503)) {
         final wait = error.retryAfter;

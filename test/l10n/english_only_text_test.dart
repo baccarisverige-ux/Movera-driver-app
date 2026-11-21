@@ -39,6 +39,12 @@ const _dataFiles = {
 };
 
 const _allowed = <String, Set<String>>{
+  'log only, not shown: DriverLog lines of the kept SOS '
+      '(lib/core/safety/driver_sos.dart)': {
+    'kept sos too old, dropped',
+    'kept sos of another driver, dropped',
+    'kept sos refused:',
+  },
   'restart diagnostic, never shown: a crash-report message and DOM tag '
       'names (lib/core/*/restart_watch*.dart)': {
     'flutter-view, flt-glass-pane',

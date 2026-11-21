@@ -26,6 +26,12 @@ on:
           - trip-scheduled
           - trip-frozen
         default: robo
+      app_bundle:
+        # Store prep (Rules plan/stores/STORE-READINESS.md 2a): Google Play needs an App Bundle (.aab), not an APK.
+        # Off by default: a run without ticking it builds and uploads exactly what it did before.
+        description: 'Also build an App Bundle (.aab) of new_ref with the same signing as the APK (this run''s throw-away test key, NOT a Play upload key) and keep it as a separate artifact'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -114,6 +120,27 @@ jobs:
             build "$NEW_REF" 100001 "2-install-second-new.apk"
           fi
           ls -la out
+      # Only when the app_bundle box is ticked; runs before the key is removed. The checkout is still at new_ref (built
+      # last above). Same entry file, dart-defines, build number and signing as the newest APK.
+      - name: Build App Bundle (only when asked)
+        if: ${{ inputs.app_bundle }}
+        run: |
+          set -euo pipefail
+          app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"; app_version="${app_version%%+*}+${GITHUB_RUN_NUMBER}"
+          flutter build appbundle --release \
+            -t lib/main.dart \
+            --build-number=100001 \
+            --dart-define=MOVERA_AUTH_REQUIRED=true \
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
+            --dart-define=MOVERA_APP_VERSION="$app_version" \
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
+          aab=build/app/outputs/bundle/release/app-release.aab
+          test -f "$aab"
+          jarsigner -verify -certs "$aab" > "$RUNNER_TEMP/aab-verify.txt" || { echo '::error::App Bundle signature check failed'; exit 1; }
+          grep -q 'jar verified' "$RUNNER_TEMP/aab-verify.txt" || { echo '::error::App Bundle is not signed'; exit 1; }
+          mkdir -p out-aab
+          cp "$aab" out-aab/driver-test-key.aab
+          ls -la out-aab
       - name: Remove test key
         if: always()
         run: rm -rf "$RUNNER_TEMP/test-signing"
@@ -121,6 +148,13 @@ jobs:
         with:
           name: driver-test-apks
           path: out/*.apk
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: ${{ inputs.app_bundle }}
+        with:
+          name: driver-app-bundle-TEST-KEY
+          path: out-aab/*.aab
           retention-days: 7
           if-no-files-found: error
       # Firebase Test Lab (owner 2026-11-12: free Spark plan, 5 real-phone runs a day).
