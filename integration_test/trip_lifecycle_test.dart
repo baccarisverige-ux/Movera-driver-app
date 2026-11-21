@@ -37,8 +37,13 @@ void main() {
   // T7 (owner 2026-11-19 "You test with Firebase"): testlab_test
   // `trip-frozen`, MOVERA_TL_SCENARIO=frozen.
   final frozen = tlEnv('MOVERA_TL_SCENARIO') == 'frozen';
+  // L20 (contract v0.18.122): testlab_test `trip-one-stream`,
+  // MOVERA_TL_SCENARIO=onestream.
+  final oneStream = tlEnv('MOVERA_TL_SCENARIO') == 'onestream';
   final live = DriverRuntimeConfig.current.authRequired;
-  final name = frozen
+  final name = oneStream
+      ? 'one live connection (L20)'
+      : frozen
       ? 'frozen GPS long stop (T7)'
       : scheduled
       ? 'booked ride lifecycle'
@@ -83,7 +88,13 @@ void main() {
         outDir: tlEnv('MOVERA_TL_OUT'),
         shots: tlEnv('MOVERA_TL_SHOTS') != '0',
       );
-      final run = TripRun(tester, log, scheduled: scheduled, frozen: frozen);
+      final run = TripRun(
+        tester,
+        log,
+        scheduled: scheduled,
+        frozen: frozen,
+        oneStream: oneStream,
+      );
       try {
         await run.start();
         await run.all(phone: phone!, code: code!, riderPhone: riderPhone!);

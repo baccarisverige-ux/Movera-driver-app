@@ -19,6 +19,7 @@ import 'check_log.dart';
 import 'driver_steps.dart';
 import 'mock_position.dart';
 import 'movera_api.dart';
+import 'recording_client.dart';
 import 'session.dart';
 import 'transition_watch.dart';
 import 'trip_steps.dart';
@@ -28,6 +29,7 @@ part 'trip_cleanup.dart';
 part 'trip_money.dart';
 part 'trip_scheduled.dart';
 part 'trip_frozen.dart';
+part 'trip_one_stream.dart';
 
 /// Owner 2026-11-12 ("U can't make all trip lifecycle test on firebase?"):
 /// one full trip on a real Test Lab phone. The DRIVER is the real app on
@@ -43,7 +45,10 @@ class TripRun extends StagingSession {
     super.log, {
     this.scheduled = false,
     this.frozen = false,
+    this.oneStream = false,
   }) {
+    // L20 (test seam, see trip_one_stream.dart): set before the app starts.
+    rec.forceOneStream = oneStream;
     rider = RiderApi(
       Uri(scheme: base.scheme, host: base.host, port: base.port),
     );
@@ -61,6 +66,10 @@ class TripRun extends StagingSession {
   /// Firebase"): the long-stop check with a frozen position, no network,
   /// and a frozen position while moving ([_frozenScenario]).
   final bool frozen;
+
+  /// The `trip-one-stream` scenario (L20): the app on the one stream
+  /// ([_oneStreamScenario]).
+  final bool oneStream;
 
   /// More time for `trip-frozen` (three waits of 3-4 min): every stop below
   /// moves by this much, Test Lab's --timeout is 30 min for it.
@@ -267,7 +276,9 @@ class TripRun extends StagingSession {
             : log.fail('RIDER-SIGN-IN', 'rider signs in over HTTP', error);
       });
       if (!rider.signedIn) return;
-      if (frozen) {
+      if (oneStream) {
+        await _oneStreamScenario();
+      } else if (frozen) {
         await _frozenScenario();
       } else if (scheduled) {
         await _scheduledScenario();
