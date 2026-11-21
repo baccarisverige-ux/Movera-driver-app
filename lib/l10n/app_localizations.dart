@@ -12972,6 +12972,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera chooses the ride types when it approves the car.'**
   String get carTypesByMovera;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Year statement'**
+  String get yearStatementTitle;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. contract driverIncomeYear.texts.reported.
+  ///
+  /// In en, this message translates to:
+  /// **'What Movera reports to the tax office for {year}'**
+  String yearStatementReported(int year);
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. texts.empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No earnings in this year.'**
+  String get yearStatementEmpty;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. texts.tooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many trips to show at once. Pick a month.'**
+  String get yearStatementTooBig;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'The year statement could not be loaded.'**
+  String get yearStatementUnavailable;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rides'**
+  String yearStatementRides(int count);
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. netEarnings (the DAC7 amount).
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings'**
+  String get yearStatementEarnings;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. grossFares.
+  ///
+  /// In en, this message translates to:
+  /// **'Fares'**
+  String get yearStatementFares;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. moveraCommission.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera commission'**
+  String get yearStatementCommission;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get yearStatementTips;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonuses'**
+  String get yearStatementBonuses;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. cashCollectedByDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash in the car'**
+  String get yearStatementCash;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. paidOutByMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid out by Movera'**
+  String get yearStatementPaidOut;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. ownPartOnly: a fleet driver who does not own the fleet sees only his own money.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own part of {company}'**
+  String yearStatementOwnPart(String company);
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. a line with no trip.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus campaign'**
+  String get yearStatementBonusLine;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the share button.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get yearStatementShare;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the year picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get yearStatementYear;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the Wallet tile that opens the screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Year statement for the tax office'**
+  String get yearStatementOpen;
 }
 
 class _AppLocalizationsDelegate
