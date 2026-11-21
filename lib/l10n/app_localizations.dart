@@ -1126,6 +1126,60 @@ abstract class AppLocalizations {
   /// **'New driver'**
   String get menuNewDriver;
 
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. row and screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get acctDeleteTitle;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what happens.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.'**
+  String get acctDeleteBody;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what is kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.'**
+  String get acctDeleteKept;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get acctDeleteConfirmQ;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Your account closes now.'**
+  String get acctDeleteConfirmBody;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get acctDeleteConfirm;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. 409 deletion_open_trip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish or cancel your ride first, then delete your account.'**
+  String get acctDeleteOpenTrip;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. other error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Try again.'**
+  String get acctDeleteFailed;
+
+  /// v0.18.134 (contract.json#accountDeletion.closeAtOnce): sign-in answered 403 account_closed.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is closed and is being deleted. It can\'t be used to sign in.'**
+  String get acctClosedSignIn;
+
   /// No description provided for @airportQueueTitle.
   ///
   /// In en, this message translates to:

@@ -598,6 +598,38 @@ class AppLocalizationsSv extends AppLocalizations {
   String get menuNewDriver => 'Ny förare';
 
   @override
+  String get acctDeleteTitle => 'Radera mitt konto';
+
+  @override
+  String get acctDeleteBody =>
+      'Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter.';
+
+  @override
+  String get acctDeleteKept =>
+      'Sparas: dina resor, intäkter och utbetalningar enligt bokföringslagen, och om du är skyldig Movera ditt namn, nummer och beloppet tills det är betalt.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Radera ditt konto?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'Det går inte att ångra. Ditt konto stängs nu.';
+
+  @override
+  String get acctDeleteConfirm => 'Radera konto';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Avsluta eller avbryt din resa först och radera sedan kontot.';
+
+  @override
+  String get acctDeleteFailed => 'Kontot kunde inte raderas. Försök igen.';
+
+  @override
+  String get acctClosedSignIn =>
+      'Kontot är stängt och håller på att raderas. Det går inte att logga in med det.';
+
+  @override
   String get airportQueueTitle => 'Flygplatskö';
 
   @override
