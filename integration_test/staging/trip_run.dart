@@ -28,6 +28,7 @@ part 'trip_cleanup.dart';
 part 'trip_money.dart';
 part 'trip_scheduled.dart';
 part 'trip_frozen.dart';
+part 'trip_device.dart';
 
 /// Owner 2026-11-12 ("U can't make all trip lifecycle test on firebase?"):
 /// one full trip on a real Test Lab phone. The DRIVER is the real app on
@@ -272,7 +273,13 @@ class TripRun extends StagingSession {
       } else if (scheduled) {
         await _scheduledScenario();
       } else {
-        await step('BOOK', 'rider books a cash trip', () => _book('BOOK'));
+        // M1 (device proof 2026-11-20): the booking is made while the
+        // app is really in the background; the offer notice must show.
+        await step(
+          'OFFER-PUSH',
+          'offer push shows while the app is in the background',
+          _bookInBackground,
+        );
         if (tripId == null) return;
         await step('OFFER', 'offer shows on the driver phone', _offerAndAccept);
         if (!accepted) return;
@@ -391,6 +398,12 @@ class TripRun extends StagingSession {
         () => _switches('2'),
       );
       await step('SOS', 'SOS visible during the trip', _sos);
+      // M4 (device proof 2026-11-20): SOS pressed: dialer + Movera alert.
+      await step(
+        'SOS-PRESS',
+        'SOS opens the 112 dialer and alerts Movera',
+        _sosPress,
+      );
       await step(
         'RIDE-CHECK',
         'server ride check reaches the driver',
