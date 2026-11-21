@@ -65,9 +65,9 @@ void main() {
   });
 
   test(
-    'the split kept every message (2865 en entries, 2143 fr / sv; +D18b history month picker; +J11 owes-limit line; +BQ-V44 campaigns; +BQ-V15 menu new driver; +0.18.109 fleet other country; +0.18.108 C9b stop paused + back + not at stop; +0.18.101 SOS contacts SMS; +V42 arrive hint distance; +A5 next payout; +0.18.93 C9 waiting paused + no-show away; +A7 refund-taken notice; +SV break, +G30 e-mail verified, +G32 waybill commission, +0.18.66 call hint + version line, +0.18.65 next trips switch, +0.18.56 chat, +0.18.57 emergency numbers, +0.18.58 arrived distance; +job 9 airport_queue, +go_offline, +job 8 calls, +job 10 blocked_pairs, +L8 driver early end, +0.18.51 beforePickup, +M22 payout summary)',
+    'the split kept every message (2867 en entries, 2145 fr / sv; +M3 collect rows; +D18b history month picker; +J11 owes-limit line; +BQ-V44 campaigns; +BQ-V15 menu new driver; +0.18.109 fleet other country; +0.18.108 C9b stop paused + back + not at stop; +0.18.101 SOS contacts SMS; +V42 arrive hint distance; +A5 next payout; +0.18.93 C9 waiting paused + no-show away; +A7 refund-taken notice; +SV break, +G30 e-mail verified, +G32 waybill commission, +0.18.66 call hint + version line, +0.18.65 next trips switch, +0.18.56 chat, +0.18.57 emergency numbers, +0.18.58 arrived distance; +job 9 airport_queue, +go_offline, +job 8 calls, +job 10 blocked_pairs, +L8 driver early end, +0.18.51 beforePickup, +M22 payout summary)',
     () {
-      const counts = {'en': 2865, 'fr': 2143, 'sv': 2143};
+      const counts = {'en': 2867, 'fr': 2145, 'sv': 2145};
       for (final lang in _langs) {
         final arb =
             jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())

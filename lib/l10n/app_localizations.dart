@@ -10573,6 +10573,18 @@ abstract class AppLocalizations {
   /// **'Cash from rider'**
   String get cashFromRider;
 
+  /// No description provided for @collectRideLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride'**
+  String get collectRideLine;
+
+  /// No description provided for @collectEarlierFeeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier fee (to Movera)'**
+  String get collectEarlierFeeLine;
+
   /// No description provided for @riderPaidMoreThanYourFare.
   ///
   /// In en, this message translates to:

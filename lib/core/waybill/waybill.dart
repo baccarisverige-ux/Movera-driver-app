@@ -30,6 +30,8 @@ class WaybillRecord {
     this.endedEarlyBy,
     this.commission,
     this.moveraKeepsNow,
+    this.cashRide,
+    this.cashEarlierFee,
   });
 
   final String tripId;
@@ -85,6 +87,15 @@ class WaybillRecord {
   /// An earlier unpaid fee in [riderFare] that goes to that trip, not to
   /// Movera's commission; null for none.
   final Money? debtCollected;
+
+  /// Owner 2026-11-21 14:40 (3), v0.18.140 M3: the server's split of the
+  /// cash to collect when it holds the rider's earlier unpaid fee
+  /// (`CompletePreview.cashDueRide` / `cashDueOutstandingFee`): "Resa"
+  /// and "Tidigare avgift (till Movera)", shown on the waybill only (the
+  /// collect sheet shows the one total). Both or none; never worked out
+  /// on the phone.
+  final Money? cashRide;
+  final Money? cashEarlierFee;
 
   /// `rider | driver` when the trip ended before the drop-off; null when
   /// it did not.
@@ -239,6 +250,9 @@ class WaybillRecord {
     bool clearCommission = false,
     String? moveraKeepsNow,
     bool clearMoveraKeepsNow = false,
+    Money? cashRide,
+    Money? cashEarlierFee,
+    bool clearCashSplit = false,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -271,6 +285,10 @@ class WaybillRecord {
       moveraKeepsNow: clearMoveraKeepsNow
           ? null
           : moveraKeepsNow ?? this.moveraKeepsNow,
+      cashRide: clearCashSplit ? null : cashRide ?? this.cashRide,
+      cashEarlierFee: clearCashSplit
+          ? null
+          : cashEarlierFee ?? this.cashEarlierFee,
     );
   }
 
@@ -300,6 +318,8 @@ class WaybillRecord {
         endedEarlyBy: endedEarlyBy,
         commission: commission,
         moveraKeepsNow: moveraKeepsNow,
+        cashRide: cashRide,
+        cashEarlierFee: cashEarlierFee,
       );
 }
 

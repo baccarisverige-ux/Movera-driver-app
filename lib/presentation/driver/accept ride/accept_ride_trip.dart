@@ -840,6 +840,21 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
     }
+    // Owner 2026-11-21 14:40 (3): the collect sheet shows only the one
+    // total (cashDue); the server's split goes on the waybill.
+    final current = _waybills.current;
+    if (preview != null && current?.tripId == widget.tripId) {
+      _waybills.beginCurrent(switch ((
+        preview.cashDueRide,
+        preview.cashDueOutstandingFee,
+      )) {
+        (final ride?, final fee?) => current!.copyWith(
+          cashRide: ride,
+          cashEarlierFee: fee,
+        ),
+        _ => current!.copyWith(clearCashSplit: true),
+      });
+    }
     final complete = await showCashCollectSheet(
       context,
       // The driver's own money (owner decision 2026-10-26): no fee is
@@ -1012,9 +1027,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       _completionInFlight = false;
       _stageTransitioning = false;
       // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
-      final changed = _AcceptRideLive(
-        this,
-      )._liveTrips?.takePriceChanged(widget.tripId);
+      final changed = _AcceptRideLive(this)._liveTrips
+          ?.takePriceChanged(widget.tripId);
       if (changed != null && mounted) {
         unawaited(_collectCash(changed: changed));
       }
