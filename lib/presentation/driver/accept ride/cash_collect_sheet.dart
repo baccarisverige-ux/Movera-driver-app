@@ -25,8 +25,6 @@ Future<bool> showCashCollectSheet(
   bool riderEnded = false,
   bool driverEnded = false,
   Money? owedToMovera,
-  Money? rideCash,
-  Money? earlierFee,
 }) async {
   final ended = riderEnded || driverEnded;
   final done = await showModalBottomSheet<bool>(
@@ -45,8 +43,6 @@ Future<bool> showCashCollectSheet(
       riderEnded: riderEnded,
       driverEnded: driverEnded,
       owedToMovera: owedToMovera,
-      rideCash: rideCash,
-      earlierFee: earlierFee,
     ),
     isDismissible: !ended,
     enableDrag: !ended,
@@ -67,8 +63,6 @@ class CashCollectSheet extends StatelessWidget {
     this.riderEnded = false,
     this.driverEnded = false,
     this.owedToMovera,
-    this.rideCash,
-    this.earlierFee,
     bool? live,
   }) : cash = cash ?? fare,
        _live = live;
@@ -113,14 +107,6 @@ class CashCollectSheet extends StatelessWidget {
   /// P89S), so it need not equal the sheet's share − cash rows.
   /// The "You owe Movera" / "Movera owes you" line shows only this.
   final Money? owedToMovera;
-
-  /// v0.18.140 M3 (owner 2026-11-19 "Yes, build M2 + M3 (Rec.)"): the
-  /// server's split of [cash] when it holds the rider's earlier unpaid fee
-  /// (`CompletePreview.cashDueRide` / `cashDueOutstandingFee`): "Resa" and
-  /// "Tidigare avgift (till Movera)" under the big amount. Shown only when
-  /// the server sent both; never worked out on the phone.
-  final Money? rideCash;
-  final Money? earlierFee;
 
   /// Against a live server (default: [LiveDriverServices.active]) the
   /// balance line needs [owedToMovera]; the demo still works it out.
@@ -397,18 +383,6 @@ class CashCollectSheet extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              if (rideCash != null && earlierFee != null) ...[
-                const SizedBox(height: 12),
-                KeyedSubtree(
-                  key: const ValueKey<String>('cash-collect-ride'),
-                  child: _row(tr.collectRideLine, rideCash!.formatted),
-                ),
-                const SizedBox(height: 4),
-                KeyedSubtree(
-                  key: const ValueKey<String>('cash-collect-earlier-fee'),
-                  child: _row(tr.collectEarlierFeeLine, earlierFee!.formatted),
-                ),
-              ],
             ],
           ),
         ),

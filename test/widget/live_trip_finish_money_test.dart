@@ -18,6 +18,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
@@ -324,8 +325,9 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('M3 (v0.18.140): the sheet shows the server\'s ride and earlier '
-      'fee rows; a 409 fresh preview brings its own rows', (tester) async {
+  testWidgets('M3 (v0.18.140) + owner 2026-11-21: the collect sheet shows '
+      'only the one total; the split goes on the waybill, a 409 fresh '
+      'preview brings its own', (tester) async {
     preview = () => json(200, {
       'previewId': 'cpv_first',
       'tripId': 'live-trip',
@@ -357,17 +359,37 @@ void main() {
         },
       }),
     );
-    Finder row(String key, String text) => find.descendant(
-      of: find.byKey(ValueKey<String>(key)),
-      matching: find.text(text),
-    );
+    final caseBox = find.byKey(const ValueKey<String>('cash-collect-case'));
+    void onlyTotal(String total, String ride) {
+      expect(
+        find.descendant(of: caseBox, matching: find.text(total)),
+        findsOneWidget,
+      );
+      expect(find.text(ride), findsNothing);
+      expect(find.text('35,00 kr'), findsNothing);
+    }
+
     final sent = await openCashSheet(tester);
-    expect(row('cash-collect-ride', '215,00 kr'), findsOneWidget);
-    expect(row('cash-collect-earlier-fee', '35,00 kr'), findsOneWidget);
+    onlyTotal('250,00 kr', '215,00 kr');
+    var waybill = InMemoryWaybillRepository.instance.current;
+    expect(waybill?.cashRide, const Money(minorUnits: 21500, currency: 'SEK'));
+    expect(
+      waybill?.cashEarlierFee,
+      const Money(minorUnits: 3500, currency: 'SEK'),
+    );
     await finish(tester);
-    expect(row('cash-collect-ride', '220,00 kr'), findsOneWidget);
-    expect(row('cash-collect-earlier-fee', '35,00 kr'), findsOneWidget);
+    onlyTotal('255,00 kr', '220,00 kr');
+    waybill = InMemoryWaybillRepository.instance.current;
+    expect(waybill?.cashRide, const Money(minorUnits: 22000, currency: 'SEK'));
     await finish(tester);
+    final done =
+        InMemoryWaybillRepository.instance.last ??
+        InMemoryWaybillRepository.instance.current;
+    expect(done?.cashRide, const Money(minorUnits: 22000, currency: 'SEK'));
+    expect(
+      done?.cashEarlierFee,
+      const Money(minorUnits: 3500, currency: 'SEK'),
+    );
     final bodies = [
       for (final r in sent.where((r) => r.url.path.endsWith('/complete')))
         jsonDecode(r.body) as Map,
