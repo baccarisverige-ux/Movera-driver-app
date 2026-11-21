@@ -11,8 +11,10 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/one_stream_fallback.dart';
 import 'package:movera/core/dispatch/owes_movera_refusal.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
 
 /// Contract v0.4.0 `Offer` → [RideOffer] (`openapi.yaml#Offer`).
@@ -178,7 +180,9 @@ class OfferFeedEvent {
 /// `DriverAppConfig.realtime.oneStream`; [deliver] gets the settings events
 /// (`config_published`, `driver_reservations_changed`); [attached] tells the
 /// settings to close (true) or keep (false) their own stream; [opened]
-/// runs on every open of the one stream.
+/// runs on every open of the one stream. [fallback] (v0.18.150) is the
+/// zone's `realtime.oneStreamFallback`: when to use the two old streams as
+/// a backup, and for how long.
 class OneStreamLink {
   const OneStreamLink({
     required this.wanted,
@@ -187,7 +191,10 @@ class OneStreamLink {
     required this.deliver,
     required this.attached,
     required this.opened,
+    this.fallback = _defaultFallback,
   });
+
+  static OneStreamFallback _defaultFallback() => const OneStreamFallback();
 
   final bool Function() wanted;
   final String? Function() zoneId;
@@ -195,6 +202,7 @@ class OneStreamLink {
   final void Function(Map<String, dynamic> event) deliver;
   final void Function(bool on) attached;
   final void Function() opened;
+  final OneStreamFallback Function() fallback;
 }
 
 class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
@@ -384,6 +392,77 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// MF-2: a 404 `zone_not_found` (stale zoneId) opens the two old streams
   /// for the next try only; the one stream is asked again after that.
   bool _oldStreamsOnce = false;
+
+  /// L20 stream backup (contract v0.18.150, contract.json#driverOneStreamFallback;
+  /// owner 2026-11-21 "Switch to old two (Rec.)"): failed tries of the one
+  /// stream in a row (D2: a 200 alone is not connected; a renewed 401 and a
+  /// 404 do not count). At `fallback.failuresInARow` the two old streams are
+  /// used until [_backupUntil]; a connected try resets the count. Kept in
+  /// memory only: an app restart asks the one stream first again.
+  int _oneFailures = 0;
+  bool _oneConnected = false;
+  DateTime? _backupUntil;
+  Timer? _backupEnd;
+
+  /// Whether the two old streams are used as the one stream's backup now.
+  bool get oneStreamBackup => _backupUntil != null;
+
+  /// Failed tries of the one stream in a row (for tests and logs).
+  @visibleForTesting
+  int get oneStreamFailures => _oneFailures;
+
+  /// True while on backup; ends it (and logs) once its time is up.
+  bool _onBackup() {
+    final until = _backupUntil;
+    if (until == null) return false;
+    if (_now().isBefore(until)) return true;
+    _endBackup();
+    return false;
+  }
+
+  void _endBackup() {
+    _backupUntil = null;
+    _backupEnd?.cancel();
+    _backupEnd = null;
+    DriverLog.info(
+      'offer_feed.one_stream_backup_end: asking GET /driver/stream again',
+    );
+  }
+
+  /// Counts the one-stream try that just ended; true when it starts the
+  /// backup (the caller then opens the two old streams).
+  bool _countOneTry({required bool counts}) {
+    final opened = _openedAt;
+    final connected =
+        _oneConnected ||
+        (opened != null && _now().difference(opened) >= streamConnectedAfter);
+    if (connected) {
+      _oneFailures = 0;
+      return false;
+    }
+    if (!counts) return false;
+    final link = oneStream;
+    final rule = link?.fallback() ?? const OneStreamFallback();
+    if (++_oneFailures < rule.failuresInARow) return false;
+    _oneFailures = 0;
+    _oneMode = false;
+    _backupUntil = _now().add(rule.retryOneAfter);
+    _backupEnd?.cancel();
+    // After the backup time the online feed asks the one stream again.
+    _backupEnd = Timer(rule.retryOneAfter, () {
+      _backupEnd = null;
+      if (_feedOpen && _wanted && !_disposed && !_oneMode) {
+        unawaited(connect());
+      }
+    });
+    DriverLog.info(
+      'offer_feed.one_stream_backup: ${rule.failuresInARow} failed tries of '
+      'GET /driver/stream in a row; the two old streams for '
+      '${rule.retryOneAfterMinutes} min',
+    );
+    link?.attached(false);
+    return true;
+  }
 
   /// Whether the feed now open (or being opened) is the one stream.
   bool get usesOneStream => _oneMode;
@@ -600,8 +679,15 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       final link = oneStream;
       final skipOne = _oldStreamsOnce;
       _oldStreamsOnce = false;
+      // v0.18.150: on backup after failed tries, the two old streams.
+      final backup = _onBackup();
+      _oneConnected = false;
       final one =
-          link != null && !_oneStreamRefused && !skipOne && link.wanted();
+          link != null &&
+          !_oneStreamRefused &&
+          !skipOne &&
+          !backup &&
+          link.wanted();
       _oneMode = one;
       link?.attached(one);
       if (generation != _generation) return;
@@ -679,6 +765,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       // not ask sooner.
       _feedLost(
         atLeast: streamRetryAfter(response.statusCode, response.headers),
+        // v0.18.150: a 401 the app renews is not a failed try.
+        oneTry: !(response.statusCode == 401 && renewSession != null),
       );
       return;
     }
@@ -746,7 +834,13 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
                 final event = jsonDecode(raw);
                 if (event is Map) {
                   // A real event: the feed is connected (owner R3).
-                  if (generation == _generation) _reconnects = 0;
+                  if (generation == _generation) {
+                    _reconnects = 0;
+                    if (linked != null) {
+                      _oneConnected = true;
+                      _oneFailures = 0;
+                    }
+                  }
                   final kind = event['kind'];
                   if (linked != null &&
                       (kind == 'config_published' ||
@@ -781,12 +875,16 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _openedAt = null;
     if (opened != null && _now().difference(opened) >= streamConnectedAfter) {
       _reconnects = 0;
+      if (_oneMode) _oneFailures = 0;
     }
   }
 
   /// The feed is gone: not live, and it tries again after a while, never
   /// sooner than [atLeast] (the server's Retry-After).
-  void _feedLost({Duration? atLeast}) {
+  void _feedLost({Duration? atLeast, bool oneTry = true}) {
+    // v0.18.150: a failed try of the one stream counts; at the limit the
+    // two old streams open at once (never before the server's Retry-After).
+    final backup = _oneMode && _countOneTry(counts: oneTry);
     _feedIdle?.cancel();
     _feedIdle = null;
     _endUptime();
@@ -794,6 +892,10 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     if (_disposed || !_wanted) return;
     _reloadOnOpen = true;
     _reconnect?.cancel();
+    if (backup) {
+      _reconnect = Timer(atLeast ?? Duration.zero, () => unawaited(connect()));
+      return;
+    }
     final backoff = _reconnectDelay(_reconnects++);
     _reconnect = Timer(
       atLeast != null && atLeast > backoff ? atLeast : backoff,
@@ -811,6 +913,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _reconnect = null;
     // The next Go online starts again from the shortest wait.
     _reconnects = 0;
+    _oneFailures = 0;
     _openedAt = null;
     _feedIdle?.cancel();
     _feedIdle = null;
@@ -1188,6 +1291,7 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   Future<void> dispose() async {
     _disposed = true;
     _reconnect?.cancel();
+    _backupEnd?.cancel();
     _feedIdle?.cancel();
     await _feed?.cancel();
     await _live.close();

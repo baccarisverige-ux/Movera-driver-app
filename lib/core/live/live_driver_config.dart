@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
+import 'package:movera/core/dispatch/one_stream_fallback.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -364,6 +365,11 @@ class LiveDriverConfig extends ChangeNotifier {
       DriverAppConfig.fromJson(document),
       zone: _zoneOf(document),
       oneStream: one,
+      // v0.18.150 (contract.json#driverOneStreamFallback): the backup
+      // numbers; missing or out of range = 3 / 10.
+      fallback: OneStreamFallback.fromJson(
+        realtime is Map ? realtime['oneStreamFallback'] : null,
+      ),
     );
   }
 
@@ -372,6 +378,12 @@ class LiveDriverConfig extends ChangeNotifier {
   /// stream (`DriverAppConfig.realtime.oneStream`, default off).
   bool get oneStream => _oneStream;
   bool _oneStream = false;
+
+  /// L20 stream backup (v0.18.150): after how many failed tries of the one
+  /// stream the offer feed opens the two old streams, and for how long
+  /// (`DriverAppConfig.realtime.oneStreamFallback`, default 3 / 10 min).
+  OneStreamFallback get oneStreamFallback => _oneStreamFallback;
+  OneStreamFallback _oneStreamFallback = const OneStreamFallback();
 
   /// L20 stream: while true the offer feed's one stream carries this
   /// stream's events ([deliver]) and this class opens no stream of its own.
@@ -478,7 +490,12 @@ class LiveDriverConfig extends ChangeNotifier {
 
   /// Puts [next] in use unless the app has the same or a newer version of
   /// the same zone (G17: another zone's document always replaces it).
-  bool _use(DriverAppConfig next, {String? zone, bool oneStream = false}) {
+  bool _use(
+    DriverAppConfig next, {
+    String? zone,
+    bool oneStream = false,
+    OneStreamFallback fallback = const OneStreamFallback(),
+  }) {
     final known = _current;
     final sameZone = known == null || zone == null || zone == _currentZone;
     if (known != null && sameZone && known.version >= next.version) {
@@ -486,6 +503,7 @@ class LiveDriverConfig extends ChangeNotifier {
     }
     final moved = known != null && !sameZone;
     _oneStream = oneStream;
+    _oneStreamFallback = fallback;
     _current = next;
     _currentZone = zone ?? _currentZone;
     next.apply();
