@@ -528,7 +528,7 @@
     }
   },
   "authOr": "or",
-  "authProviderPhoneOnce": "Confirm your phone number once to finish signing in with {provider}. We’ll text you a 4-digit code.",
+  "authProviderPhoneOnce": "Confirm your phone number once to finish signing in with {provider}. We’ll text you a 6-digit code.",
   "@authProviderPhoneOnce": {
     "placeholders": {
       "provider": {

@@ -830,7 +830,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String authProviderPhoneOnce(String provider) {
-    return 'Confirm your phone number once to finish signing in with $provider. We’ll text you a 4-digit code.';
+    return 'Confirm your phone number once to finish signing in with $provider. We’ll text you a 6-digit code.';
   }
 
   @override

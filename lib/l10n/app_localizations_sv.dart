@@ -833,7 +833,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String authProviderPhoneOnce(String provider) {
-    return 'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med $provider. Vi skickar en fyrsiffrig kod via sms.';
+    return 'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med $provider. Vi skickar en sexsiffrig kod via sms.';
   }
 
   @override

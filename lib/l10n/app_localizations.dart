@@ -1513,7 +1513,7 @@ abstract class AppLocalizations {
   /// No description provided for @authProviderPhoneOnce.
   ///
   /// In en, this message translates to:
-  /// **'Confirm your phone number once to finish signing in with {provider}. We’ll text you a 4-digit code.'**
+  /// **'Confirm your phone number once to finish signing in with {provider}. We’ll text you a 6-digit code.'**
   String authProviderPhoneOnce(String provider);
 
   /// No description provided for @authUsePhoneInstead.

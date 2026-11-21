@@ -235,7 +235,7 @@
   "authLinkExpired": "Cette connexion a pris trop de temps. Recommencez avec Apple ou Google, ou utilisez votre numéro.",
   "authContinueWith": "Continuer avec {provider}",
   "authOr": "ou",
-  "authProviderPhoneOnce": "Confirmez votre numéro une seule fois pour terminer la connexion avec {provider}. Nous vous envoyons un code à 4 chiffres par SMS.",
+  "authProviderPhoneOnce": "Confirmez votre numéro une seule fois pour terminer la connexion avec {provider}. Nous vous envoyons un code à 6 chiffres par SMS.",
   "authUsePhoneInstead": "Me connecter uniquement avec mon numéro",
   "authStartingServer": "Démarrage du serveur…",
   "authErrTooManyWrongCodes": "Trop d’essais erronés – touchez {button}",

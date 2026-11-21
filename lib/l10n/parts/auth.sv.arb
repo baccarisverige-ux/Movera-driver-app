@@ -57,7 +57,7 @@
   "authLinkExpired": "Inloggningen tog för lång tid. Börja om med Apple eller Google, eller använd ditt telefonnummer.",
   "authContinueWith": "Fortsätt med {provider}",
   "authOr": "eller",
-  "authProviderPhoneOnce": "Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med {provider}. Vi skickar en fyrsiffrig kod via sms.",
+  "authProviderPhoneOnce": "Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med {provider}. Vi skickar en sexsiffrig kod via sms.",
   "authUsePhoneInstead": "Logga in bara med mitt telefonnummer",
   "authStartingServer": "Servern startar…",
   "authErrTooManyWrongCodes": "För många fel försök – tryck på {button}",

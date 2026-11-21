@@ -847,7 +847,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String authProviderPhoneOnce(String provider) {
-    return 'Confirmez votre numéro une seule fois pour terminer la connexion avec $provider. Nous vous envoyons un code à 4 chiffres par SMS.';
+    return 'Confirmez votre numéro une seule fois pour terminer la connexion avec $provider. Nous vous envoyons un code à 6 chiffres par SMS.';
   }
 
   @override
