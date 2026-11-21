@@ -249,4 +249,86 @@ void main() {
       );
     },
   );
+
+  test(
+    'trip lines read lineKind: a payout is "Paid out by Movera" with its paid-out amount; '
+    'a credit is labelled by what it holds (tip, bonus, change by Movera)',
+    () {
+      IncomeTripLine line(
+        String kind,
+        Map<String, dynamic> totals, {
+        String? tripId,
+      }) => IncomeStatement.of({
+        'year': 2025,
+        'items': [
+          {
+            'kind': 'driver',
+            'name': 'Inc Test',
+            'currency': 'SEK',
+            ..._t(0, 0),
+            'months': [
+              {
+                'month': '2025-04',
+                ..._t(0, 0),
+                'days': [
+                  {
+                    'day': '2025-04-07',
+                    ..._t(0, 0),
+                    'trips': [
+                      {
+                        'localTime': '2025-04-07T10:00',
+                        'lineKind': kind,
+                        'tripId': tripId,
+                        'paymentMethod': null,
+                        ...totals,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }).rows.single.months.single.days!.single.trips!.single;
+      final payout = line('payout', {..._t(0, 0), 'paidOutByMovera': _m(5000)});
+      expect(payout.lineKind, 'payout');
+      expect(tripLineLabel(payout), 'Paid out by Movera');
+      expect(tripLineAmount(payout).minorUnits, 5000);
+      final tip = line('credit', {
+        ..._t(0, 700),
+        'tips': _m(700),
+      }, tripId: 'trp_inc_1');
+      expect(tripLineLabel(tip), 'Tips');
+      expect(tripLineAmount(tip).minorUnits, 700);
+      expect(
+        tripLineLabel(
+          line('credit', {
+            ..._t(0, 777),
+            'adjustments': _m(777),
+          }, tripId: 'trp_inc_1'),
+        ),
+        'Changed by Movera',
+      );
+      expect(
+        tripLineLabel(line('credit', {..._t(0, 5000), 'bonuses': _m(5000)})),
+        'Bonus campaign',
+      );
+      expect(
+        tripLineLabel(
+          line('credit', {
+            ..._t(0, 300),
+            'bonuses': _m(300),
+          }, tripId: 'trp_inc_1'),
+        ),
+        'Bonuses',
+      );
+      final trip = line(
+        'trip',
+        _t(1, 12000, gross: 15000),
+        tripId: 'trp_inc_1',
+      );
+      expect(tripLineLabel(trip), 'trp_inc_1');
+      expect(tripLineAmount(trip).minorUnits, 12000);
+    },
+  );
 }

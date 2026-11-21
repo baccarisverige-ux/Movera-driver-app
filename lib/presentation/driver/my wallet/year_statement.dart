@@ -3,6 +3,7 @@ import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_income_statement.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -29,6 +30,30 @@ String yearStatementError(Object? error) =>
     error is ApiError && error.reason == 'income_detail_too_big'
     ? tr.yearStatementTooBig
     : tr.yearStatementUnavailable;
+
+/// A trip line's label (existing texts only): a payout is "Paid out by
+/// Movera"; a credit says what it holds (tip, bonus, a change by Movera);
+/// a trip line names its trip.
+String tripLineLabel(IncomeTripLine t) {
+  if (t.lineKind == 'payout') return tr.yearStatementPaidOut;
+  if (t.lineKind == 'credit') {
+    final x = t.totals;
+    if (x.tips.minorUnits != 0) return tr.yearStatementTips;
+    if (x.bonuses.minorUnits != 0) {
+      return t.tripId == null
+          ? tr.yearStatementBonusLine
+          : tr.yearStatementBonuses;
+    }
+    if ((x.adjustments?.minorUnits ?? 0) != 0) return tr.g8LineAdjustment;
+    return tr.yearStatementEarnings;
+  }
+  return t.tripId ?? tr.yearStatementBonusLine;
+}
+
+/// The amount a line shows: what Movera paid out for a payout line, else
+/// the line's earnings.
+Money tripLineAmount(IncomeTripLine t) =>
+    t.lineKind == 'payout' ? t.totals.paidOut : t.totals.netEarnings;
 
 class _YearStatementScreenState extends State<YearStatementScreen> {
   late final DateTime _now = widget.now ?? DateTime.now();
@@ -243,12 +268,14 @@ class _YearStatementScreenState extends State<YearStatementScreen> {
             ListTile(
               dense: true,
               title: Text(
-                '${t.localTime.length >= 16 ? t.localTime.substring(11, 16) : t.localTime} · ${t.tripId ?? tr.yearStatementBonusLine}',
+                '${t.localTime.length >= 16 ? t.localTime.substring(11, 16) : t.localTime} · ${tripLineLabel(t)}${t.lineKind == 'credit' && t.tripId != null ? ' · ${t.tripId}' : ''}',
               ),
-              subtitle: Text(
-                '${tr.yearStatementFares} ${t.totals.grossFares.formatted} · ${tr.yearStatementCommission} ${t.totals.moveraCommission.formatted}${t.paymentMethod == 'cash' ? ' · ${tr.yearStatementCash} ${t.totals.cash.formatted}' : ''}',
-              ),
-              trailing: Text(t.totals.netEarnings.formatted),
+              subtitle: t.lineKind != 'trip'
+                  ? null
+                  : Text(
+                      '${tr.yearStatementFares} ${t.totals.grossFares.formatted} · ${tr.yearStatementCommission} ${t.totals.moveraCommission.formatted}${t.paymentMethod == 'cash' ? ' · ${tr.yearStatementCash} ${t.totals.cash.formatted}' : ''}',
+                    ),
+              trailing: Text(tripLineAmount(t).formatted),
             ),
         ],
       );

@@ -39,6 +39,7 @@ class IncomeTotals {
     required this.moveraCommission,
     required this.tips,
     required this.bonuses,
+    this.adjustments,
     required this.cash,
     required this.paidOut,
   });
@@ -49,6 +50,9 @@ class IncomeTotals {
   final Money moveraCommission;
   final Money tips;
   final Money bonuses;
+
+  /// Movera's changes to the pay (may be negative); null from an older answer.
+  final Money? adjustments;
   final Money cash;
   final Money paidOut;
 
@@ -64,6 +68,7 @@ class IncomeTotals {
         moveraCommission: _money(json['moveraCommission'], currency),
         tips: _money(json['tips'], currency),
         bonuses: _money(json['bonuses'], currency),
+        adjustments: _money(json['adjustments'], currency),
         cash: _money(json['cashCollectedByDriver'], currency),
         paidOut: _money(json['paidOutByMovera'], currency),
       );
@@ -73,12 +78,18 @@ class IncomeTotals {
 class IncomeTripLine {
   const IncomeTripLine({
     required this.localTime,
+    this.lineKind = 'trip',
     required this.tripId,
     required this.paymentMethod,
     required this.totals,
   });
 
   final String localTime;
+
+  /// v0.18.153 review: `trip` (the trip's own entries), `credit` (money
+  /// credited later or with no trip: a tip, bonus or change by Movera) or
+  /// `payout` (a paid payout: only paidOutByMovera).
+  final String lineKind;
   final String? tripId;
   final String? paymentMethod;
   final IncomeTotals totals;
@@ -163,6 +174,7 @@ class IncomeStatement {
                                     for (final t in _list(d['trips']))
                                       IncomeTripLine(
                                         localTime: '${t['localTime'] ?? ''}',
+                                        lineKind: '${t['lineKind'] ?? 'trip'}',
                                         tripId: t['tripId'] as String?,
                                         paymentMethod:
                                             t['paymentMethod'] as String?,
