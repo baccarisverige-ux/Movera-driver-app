@@ -29,10 +29,18 @@ enum DriverSosOutcome {
 /// driver's emergency contacts (v0.18.101 §92 `SosReceipt.contactsSms`;
 /// null when the answer has none).
 class DriverSosResult {
-  const DriverSosResult(this.outcome, {this.contactsSms});
+  const DriverSosResult(
+    this.outcome, {
+    this.contactsSms,
+    this.toldByNotice = false,
+  });
 
   final DriverSosOutcome outcome;
   final SosContactsSms? contactsSms;
+
+  /// Review 2026-11-21: a refusal already raised the persistent "SOS not
+  /// sent" notice, so the screen shows no second message for it.
+  final bool toldByNotice;
 }
 
 /// Contract v0.7.0 §15 (owner safety part 1, 2026-10-27): the driver's SOS
@@ -226,7 +234,7 @@ class DriverSos {
         if (error.statusCode == 409) {
           // Contract v0.18.148 (sosPressTime): the server judges an SOS
           // of an ended trip by its press time `at`, so a 409 (pressed
-          // outside the trip, too old, ahead of the clock, not live) is a
+          // outside the trip, too old, not live) is a
           // final refusal: dropped, and the driver is told "SOS not sent,
           // call 112" (owner 2026-11-20 "after 30 min or any refusal").
           DriverLog.warn(
@@ -235,7 +243,10 @@ class DriverSos {
           );
           _store(() => _pending.clear(key));
           onExpired?.call();
-          return failed;
+          return const DriverSosResult(
+            DriverSosOutcome.failed,
+            toldByNotice: true,
+          );
         }
         if (!_keepTrying(error)) {
           _store(() => _pending.clear(key));
@@ -403,7 +414,10 @@ class DriverSos {
     return id is String && id.trim().isNotEmpty ? id : null;
   }
 
+  /// Review 2026-11-21: any 408, 429 or 5xx (also a bare 429 from a proxy
+  /// with no JSON code) is retried, never taken as a refusal.
   static bool _retryable(ApiError error) =>
+      error.isRetryable ||
       error.code == ApiError.network ||
       error.code == ApiError.timeout ||
       error.code == 'rate_limited' ||

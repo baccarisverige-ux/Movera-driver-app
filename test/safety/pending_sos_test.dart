@@ -24,6 +24,8 @@ void main() {
       }
       posts.add(request);
       if (!networkUp) throw http.ClientException('offline');
+      // A bare 429 from an edge proxy: no JSON body, no code.
+      if (status == 429) return http.Response('Too Many Requests', 429);
       return http.Response(
         jsonEncode(
           status == 200
@@ -149,8 +151,70 @@ void main() {
       await DriverSos.writesDone;
       expect(await const PendingSosStore().read(), isNull);
       expect(told, 1);
+      // One notice: the screen shows no second message for this refusal.
+      final again = await DriverSos(
+        api: api(),
+        sleep: (_) async => throw StateError('no retry after a refusal'),
+      ).sendWithReceipt(tripId: 'trp_1');
+      expect(again.toldByNotice, isTrue);
     },
   );
+
+  for (final busy in [429, 503]) {
+    test('a kept SOS answered $busy is retried, not refused', () async {
+      // Review 2026-11-21 (MUST): a bare 429 dropped the SOS as a refusal.
+      var told = 0;
+      DriverSos.onExpired = () => told++;
+      addTearDown(() => DriverSos.onExpired = null);
+      await const PendingSosStore().save(
+        PendingSos(key: 'sos-k5', tripId: 'trp_9', body: {'at': at}),
+      );
+      networkUp = true;
+      status = busy;
+      await DriverSos(
+        api: api(),
+        now: () => t0.add(const Duration(minutes: 2)),
+        sleep: (_) async => status = 200,
+      ).retryPending();
+      expect(posts, hasLength(2));
+      expect(posts.map((r) => r.headers['Idempotency-Key']).toSet(), {
+        'sos-k5',
+      });
+      expect(told, 0);
+      expect(await const PendingSosStore().read(), isNull);
+    });
+
+    test(
+      'a press answered $busy is kept and sent by the background retry',
+      () async {
+        var told = 0;
+        DriverSos.onExpired = () => told++;
+        addTearDown(() => DriverSos.onExpired = null);
+        networkUp = true;
+        status = busy;
+        var sleeps = 0;
+        final sos = DriverSos(
+          api: api(),
+          sleep: (_) async {
+            // Busy through the quick tries; Movera answers in the background.
+            if (++sleeps > DriverSos.retryDelays.length) status = 200;
+          },
+        );
+        final result = await sos.sendWithReceipt(tripId: 'trp_1');
+        expect(result.outcome, DriverSosOutcome.failed);
+        expect(result.toldByNotice, isFalse);
+        await sos.retryPending();
+        await DriverSos.writesDone;
+        expect(posts.length, greaterThan(DriverSos.retryDelays.length));
+        expect(
+          posts.map((r) => r.headers['Idempotency-Key']).toSet(),
+          hasLength(1),
+        );
+        expect(told, 0);
+        expect(await const PendingSosStore().read(), isNull);
+      },
+    );
+  }
 
   test('older than 30 min: dropped, never sent to a later trip', () async {
     await const PendingSosStore().save(
