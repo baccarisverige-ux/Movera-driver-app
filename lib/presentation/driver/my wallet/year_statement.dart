@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_income_statement.dart';
@@ -20,6 +21,14 @@ class YearStatementScreen extends StatefulWidget {
   @override
   State<YearStatementScreen> createState() => _YearStatementScreenState();
 }
+
+/// The line for a failed read: the server's too-big answer has its own
+/// text (contract driverIncomeYear.texts.tooBig), anything else the
+/// generic one.
+String yearStatementError(Object? error) =>
+    error is ApiError && error.reason == 'income_detail_too_big'
+    ? tr.yearStatementTooBig
+    : tr.yearStatementUnavailable;
 
 class _YearStatementScreenState extends State<YearStatementScreen> {
   late final DateTime _now = widget.now ?? DateTime.now();
@@ -135,7 +144,7 @@ class _YearStatementScreenState extends State<YearStatementScreen> {
               if (snap.hasError) {
                 return Column(
                   children: [
-                    Text(tr.yearStatementUnavailable),
+                    Text(yearStatementError(snap.error)),
                     TextButton(
                       onPressed: () => setState(() => _statement = _load()),
                       child: Text(tr.retry),
@@ -220,7 +229,7 @@ class _YearStatementScreenState extends State<YearStatementScreen> {
       if (snap.connectionState != ConnectionState.done) {
         return const LinearProgressIndicator();
       }
-      if (snap.hasError) return Text(tr.yearStatementUnavailable);
+      if (snap.hasError) return Text(yearStatementError(snap.error));
       final same = snap.data!.rows.where((r) => r.currency == row.currency);
       final lines = [
         for (final r in same)

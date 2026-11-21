@@ -61,48 +61,65 @@ Map<String, dynamic> _row({
   ],
 };
 
-ApiClient _api(List<Uri> asked, {bool own = false, bool empty = false}) =>
-    ApiClient(
-      client: MockClient((request) async {
-        asked.add(request.url);
-        final trips = request.url.queryParameters['detail'] == 'trips';
-        return http.Response(
-          jsonEncode({
-            'year': 2025,
-            'detail': request.url.queryParameters['detail'],
-            'items': empty
-                ? []
-                : [
-                    _row(
-                      own: own,
-                      trips: trips
-                          ? [
-                              {
-                                'localTime': '2025-01-01T00:30',
-                                'tripId': 'trp_inc_1',
-                                'zoneId': 'Z001',
-                                'paymentMethod': 'cash',
-                                ..._t(1, 12000, gross: 15000, cash: 15000),
-                              },
-                              {
-                                'localTime': '2025-01-01T09:00',
-                                'tripId': 'trp_inc_2',
-                                'zoneId': 'Z001',
-                                'paymentMethod': 'card',
-                                ..._t(1, 12000, gross: 15000),
-                              },
-                            ]
-                          : null,
-                    ),
-                  ],
-          }),
-          200,
-          headers: {'content-type': 'application/json'},
-        );
+ApiClient _api(
+  List<Uri> asked, {
+  bool own = false,
+  bool empty = false,
+  bool tooBig = false,
+}) => ApiClient(
+  client: MockClient((request) async {
+    asked.add(request.url);
+    if (tooBig && request.url.queryParameters['detail'] == 'trips') {
+      return http.Response(
+        jsonEncode({
+          'code': 'invalid_request',
+          'message': 'More than 10000 trip lines',
+          'requestId': 'r1',
+          'retryable': false,
+          'reason': 'income_detail_too_big',
+        }),
+        400,
+        headers: {'content-type': 'application/json'},
+      );
+    }
+    final trips = request.url.queryParameters['detail'] == 'trips';
+    return http.Response(
+      jsonEncode({
+        'year': 2025,
+        'detail': request.url.queryParameters['detail'],
+        'items': empty
+            ? []
+            : [
+                _row(
+                  own: own,
+                  trips: trips
+                      ? [
+                          {
+                            'localTime': '2025-01-01T00:30',
+                            'tripId': 'trp_inc_1',
+                            'zoneId': 'Z001',
+                            'paymentMethod': 'cash',
+                            ..._t(1, 12000, gross: 15000, cash: 15000),
+                          },
+                          {
+                            'localTime': '2025-01-01T09:00',
+                            'tripId': 'trp_inc_2',
+                            'zoneId': 'Z001',
+                            'paymentMethod': 'card',
+                            ..._t(1, 12000, gross: 15000),
+                          },
+                        ]
+                      : null,
+                ),
+              ],
       }),
-      baseUri: Uri.parse('https://api.test.movera.se'),
-      tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+      200,
+      headers: {'content-type': 'application/json'},
     );
+  }),
+  baseUri: Uri.parse('https://api.test.movera.se'),
+  tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+);
 
 void main() {
   test('reads the driver\'s own statement with the server\'s totals', () async {
@@ -197,4 +214,39 @@ void main() {
     );
     expect(share.onPressed, isNull);
   });
+
+  testWidgets(
+    'the server\'s income_detail_too_big shows "Too many trips to show at once. Pick a month."',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final asked = <Uri>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: YearStatementScreen(
+            source: LiveIncomeStatement(api: _api(asked, tooBig: true)),
+            now: DateTime(2026, 11, 21),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey<String>('year-month-2025-01')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey<String>('year-day-2025-01-01')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Too many trips to show at once. Pick a month.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('The year statement could not be loaded.'),
+        findsNothing,
+      );
+    },
+  );
 }
