@@ -1456,6 +1456,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t send the code. Try again.'**
   String get authErrSendCode;
 
+  /// Contract v0.18.135 smsSignIn.texts.smsNotSent (503 unavailable, reason sms_not_sent).
+  ///
+  /// In en, this message translates to:
+  /// **'We could not send the SMS. Check the number and try again.'**
+  String get authErrSmsNotSent;
+
+  /// Contract v0.18.135 smsSignIn.texts.smsDailyLimit (503 unavailable, reason sms_daily_limit).
+  ///
+  /// In en, this message translates to:
+  /// **'We cannot send more SMS codes right now. Try again later.'**
+  String get authErrSmsDailyLimit;
+
   /// No description provided for @authErrCheckCode.
   ///
   /// In en, this message translates to:
@@ -1611,6 +1623,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'4-digit code from the SMS'**
   String get authCodeFieldLabel;
+
+  /// Screen-reader label of the code boxes when the code has 6 digits (a code sent by SMS, contract v0.18.135 smsSignIn.codeLength).
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code from the SMS'**
+  String get authCodeFieldLabelSix;
 
   /// Contract v0.18.14 sign-in (authSignedOutElsewhere).
   ///

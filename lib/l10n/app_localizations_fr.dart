@@ -811,6 +811,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authErrSendCode => 'Impossible d’envoyer le code. Réessayez.';
 
   @override
+  String get authErrSmsNotSent =>
+      'Nous n’avons pas pu envoyer le SMS. Vérifiez le numéro et réessayez.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'Nous ne pouvons plus envoyer de codes par SMS pour le moment. Réessayez plus tard.';
+
+  @override
   String get authErrCheckCode => 'Impossible de vérifier le code. Réessayez.';
 
   @override
@@ -911,6 +919,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authCodeFieldLabel => 'Code à 4 chiffres reçu par SMS';
+
+  @override
+  String get authCodeFieldLabelSix => 'Code à 6 chiffres reçu par SMS';
 
   @override
   String get authSignedOutElsewhere => 'Connecté sur un autre téléphone';

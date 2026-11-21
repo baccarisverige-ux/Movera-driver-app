@@ -2,6 +2,7 @@ import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/token_store.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 /// Phone sign-in over the contract's auth endpoints, saving the session
@@ -20,10 +21,19 @@ class AuthRepository {
   static const signOutPath = '/api/v1/auth/sign-out';
   static const waitlistPath = '/api/v1/auth/waitlist';
 
-  /// A 4-digit code, as the server checks it.
-  static bool isValidCode(String code) => RegExp(r'^\d{4}$').hasMatch(code);
+  /// The languages the server writes the code SMS in (contract `languages`).
+  static const _smsLanguages = {'sv', 'fr', 'en'};
 
-  /// Sends a 4-digit code to [phone] (E.164) for the driver app. With
+  /// A code of exactly [length] digits, as the server checks it: 4 (a test
+  /// number's code) or 6 (a code sent by SMS, contract v0.18.135
+  /// `smsSignIn.codeLength`). The length comes from the code request's
+  /// answer ([OtpChallenge.codeLength]).
+  static bool isValidCode(
+    String code, {
+    int length = OtpChallenge.defaultCodeLength,
+  }) => RegExp('^[0-9]{$length}\$').hasMatch(code);
+
+  /// Sends a code to [phone] (E.164) for the driver app. With
   /// [link] (round 4b) the phone confirms an Apple / Google identity.
   Future<OtpChallenge> requestCode(String phone, {ProviderLink? link}) async {
     final normalized = phone.replaceAll(' ', '').trim();
@@ -36,6 +46,10 @@ class AuthRepository {
         'phone': normalized,
         'app': 'driver',
         if (link != null) 'linkToken': link.linkToken,
+        // Contract §8 OtpRequest.locale (v0.18.135 smsSignIn.language): the
+        // SMS with the code is written in the app's language.
+        if (_smsLanguages.contains(DriverAppTexts.language))
+          'locale': DriverAppTexts.language,
       },
       authenticated: false,
       timeout: ApiClient.signInTimeout,
@@ -56,6 +70,9 @@ class AuthRepository {
       expiresAt: expiresAt.toUtc(),
       retryAfter: Duration(seconds: retryAfterSeconds),
       link: link,
+      // Contract v0.18.135 `smsSignIn.codeLengthNote`: the server says how
+      // many digits this code has; no field (an older server) = 4.
+      codeLength: OtpChallenge.codeLengthOf(response['codeLength']),
     );
   }
 
@@ -66,10 +83,15 @@ class AuthRepository {
     String sessionId,
     String code, {
     ProviderLink? link,
+    int codeLength = OtpChallenge.defaultCodeLength,
   }) async {
     final normalizedCode = code.trim();
-    if (!isValidCode(normalizedCode)) {
-      throw ArgumentError.value(code, 'code', 'A 4-digit code is required.');
+    if (!isValidCode(normalizedCode, length: codeLength)) {
+      throw ArgumentError.value(
+        code,
+        'code',
+        'A $codeLength-digit code is required.',
+      );
     }
     final response = await _api.post(
       verifyPath,

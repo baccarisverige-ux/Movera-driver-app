@@ -19,9 +19,11 @@ import 'package:movera/widgets/keep_above_keyboard.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:pinput/pinput.dart';
 
-/// Step 2: enter the 4-digit code. The fourth digit sends it (Verify also
-/// unlocks at four digits); a wrong code empties the boxes; resend
-/// unlocks when the server's retry window has passed.
+/// Step 2: enter the code. It has as many boxes as the server says
+/// ([OtpChallenge.codeLength]: 4 for a test number's code, 6 for a code
+/// sent by SMS, contract v0.18.135). The last digit sends it (Verify also
+/// unlocks then); a wrong code empties the boxes; resend unlocks when the
+/// server's retry window has passed.
 class DriverPhoneVerification extends StatefulWidget {
   /// Whether this build runs in a browser (tests set it).
   @visibleForTesting
@@ -81,6 +83,13 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
   AuthController? get _auth => widget.controller ?? authControllerOf(context);
 
   String? get _phone => _challenge?.phone;
+
+  /// How many boxes: the challenge's code length (4 with no challenge).
+  int get _codeLength =>
+      _challenge?.codeLength ?? OtpChallenge.defaultCodeLength;
+
+  bool _complete(String code) =>
+      AuthRepository.isValidCode(code, length: _codeLength);
 
   @override
   void initState() {
@@ -181,7 +190,7 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
     }
     // No device-clock expiry check: the server answers 410 for an expired
     // code and authErrorMessage says so.
-    if (!AuthRepository.isValidCode(code)) return;
+    if (!_complete(code)) return;
     // Contract v0.18.5 G1-B3: after "Too many wrong tries" this code
     // session is spent; only Send new code goes on.
     if (_tooManyWrong) return;
@@ -220,7 +229,7 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
   @override
   Widget build(BuildContext context) {
     final phone = _phone;
-    final complete = AuthRepository.isValidCode(_pin.text.trim());
+    final complete = _complete(_pin.text.trim());
     // No way back while the code is being checked: leaving here would
     // unmount the screen that opens the app once the verify signs the
     // driver in.
@@ -257,29 +266,10 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
         children: [
           // Owner G1-B6: the code boxes have a name for a screen reader.
           Semantics(
-            label: tr.authCodeFieldLabel,
-            child: Pinput(
-              key: const ValueKey('auth-code'),
-              length: 4,
-              controller: _pin,
-              focusNode: _pinFocus,
-              autofocus: DriverPhoneVerification.autofocusCode,
-              onTap: _refocus,
-              // Owner decision 7: one-time-code autofill (iOS, the web's
-              // autocomplete="one-time-code", Android autofill services).
-              autofillHints: const [AutofillHints.oneTimeCode],
-              keyboardType: TextInputType.number,
-              forceErrorState: _error != null,
-              // Contract v0.18.2 `auth.codeAutoSubmit` (owner 2026-10-30,
-              // "Check by itself"): the last digit sends the code at once;
-              // Verify stays, and [_verify] sends one call at a time.
-              onCompleted: (_) => _verify(),
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              defaultPinTheme: _box(),
-              focusedPinTheme: _box(focused: true),
-              submittedPinTheme: _box(),
-              errorPinTheme: _box(error: true),
-            ),
+            label: _codeLength == OtpChallenge.smsCodeLength
+                ? tr.authCodeFieldLabelSix
+                : tr.authCodeFieldLabel,
+            child: _codeBoxes(),
           ),
           if (_error != null) AuthErrorText(_error!),
           if (_info != null && _error == null)
@@ -321,6 +311,48 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
     );
   }
 
+  /// The width of one code box. Four boxes keep their 68 (as before); six
+  /// share the row, at most 68 and never under 36 each.
+  static const _boxWidth = 68.0;
+  static const _boxGap = 8.0;
+
+  /// The code boxes: [_codeLength] of them, one row.
+  Widget _codeBoxes() {
+    final length = _codeLength;
+    // The card is edge to edge with [AuthScaffold.cardSidePadding] on each
+    // side, so the row is that much narrower than the screen. (No
+    // LayoutBuilder: the page measures the card's height first.)
+    final room =
+        MediaQuery.sizeOf(context).width - 2 * AuthScaffold.cardSidePadding;
+    final width = length <= OtpChallenge.defaultCodeLength
+        ? _boxWidth
+        : ((room - (length - 1) * _boxGap) / length)
+              .clamp(36.0, _boxWidth)
+              .toDouble();
+    return Pinput(
+      key: const ValueKey('auth-code'),
+      length: length,
+      controller: _pin,
+      focusNode: _pinFocus,
+      autofocus: DriverPhoneVerification.autofocusCode,
+      onTap: _refocus,
+      // Owner decision 7: one-time-code autofill (iOS, the web's
+      // autocomplete="one-time-code", Android autofill services).
+      autofillHints: const [AutofillHints.oneTimeCode],
+      keyboardType: TextInputType.number,
+      forceErrorState: _error != null,
+      // Contract v0.18.2 `auth.codeAutoSubmit` (owner 2026-10-30,
+      // "Check by itself"): the last digit sends the code at once;
+      // Verify stays, and [_verify] sends one call at a time.
+      onCompleted: (_) => _verify(),
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      defaultPinTheme: _box(width: width),
+      focusedPinTheme: _box(width: width, focused: true),
+      submittedPinTheme: _box(width: width),
+      errorPinTheme: _box(width: width, error: true),
+    );
+  }
+
   void _refocus() {
     if (!DriverPhoneVerification.refocusOnTap || !_pinFocus.hasFocus) return;
     // Both changes are applied at once, not in the next microtask, so the
@@ -334,9 +366,13 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
   }
 
   /// Each digit on its own underline, ink while focused.
-  PinTheme _box({bool focused = false, bool error = false}) {
+  PinTheme _box({
+    double width = _boxWidth,
+    bool focused = false,
+    bool error = false,
+  }) {
     return PinTheme(
-      width: 68,
+      width: width,
       height: 66,
       textStyle: AuthText.urbanist(size: 26, weight: FontWeight.w800),
       decoration: BoxDecoration(
