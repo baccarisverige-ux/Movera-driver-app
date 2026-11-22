@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/content/driver_content.dart';
 import 'package:movera/core/content/driver_content_store.dart';
@@ -9,6 +10,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/presentation/driver/content/min_version_screen.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -53,6 +55,71 @@ class _DriverContentGateState extends State<DriverContentGate> {
 
   bool get _onTrip => widget.session.status == DriverOnlineStatus.onTrip;
 
+  /// v0.18.154 P16c (`contract.json#appUpdate.apps`): a trip is active
+  /// (accepted, to pickup, arrived, on trip): the minimum-version block
+  /// waits for its end.
+  bool get _tripActive => _onTrip || widget.session.activeTripId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.session.addListener(_onSession);
+    _onSession();
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_onSession);
+    super.dispose();
+  }
+
+  /// v0.18.154 P16c review S-D3: a trip makes "no trip" unknown again; the
+  /// block may come only after Home asked the server once more after it
+  /// (a queued next trip or a started booked ride then opens instead).
+  void _onSession() {
+    MinAppVersion.sessionTrip(active: _tripActive);
+  }
+
+  /// Review O-2: the held booked rides are read once while below the
+  /// minimum and not known.
+  bool _bookedAsked = false;
+
+  /// Review S-D4: the full block sent go-offline once.
+  bool _offlineSent = false;
+
+  void _afterBlock(bool blocked) {
+    if (!blocked) {
+      _offlineSent = false;
+      return;
+    }
+    if (_offlineSent) return;
+    _offlineSent = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // The existing set-offline path (LiveDriverServices follows the
+      // session): no rider waits on offers this phone cannot show.
+      if (mounted && widget.session.status == DriverOnlineStatus.online) {
+        widget.session.setOnline(false);
+      }
+    });
+  }
+
+  void _askBooked() {
+    if (_bookedAsked) return;
+    final reservations = LiveDriverServices.instance?.reservations;
+    if (reservations == null) return;
+    _bookedAsked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        reservations.load().then<void>(
+          (_) {},
+          onError: (Object _) {
+            _bookedAsked = false;
+          },
+        ),
+      );
+    });
+  }
+
   void _openSos() {
     final navigator = widget.navigatorKey.currentState;
     if (navigator == null) return;
@@ -85,12 +152,42 @@ class _DriverContentGateState extends State<DriverContentGate> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([_store, widget.session, _legal]),
+      listenable: Listenable.merge([
+        _store,
+        widget.session,
+        _legal,
+        MinAppVersion.rule,
+        MinAppVersion.serverSaid,
+        MinAppVersion.tripChecked,
+        MinAppVersion.bookedHeld,
+      ]),
       builder: (context, _) {
         final view = _store.updateView(onTrip: _onTrip);
         final terms = _store.termsDue;
+        // v0.18.154 P16c: below the zone's minimum version of this
+        // platform; never while a trip is active.
+        final required = MinAppVersion.required;
+        if (required && MinAppVersion.bookedHeld.value == null) _askBooked();
+        // Review S-D1 / S-D3 / O-2: the full block only when "no trip" is
+        // confirmed and no booked ride is held (unknown = held); else only
+        // the small line.
+        final mayBlock =
+            !_tripActive &&
+            MinAppVersion.tripChecked.value &&
+            MinAppVersion.bookedHeld.value == false;
+        final belowMin = required && mayBlock;
+        final smallLine = required && !mayBlock;
+        _afterBlock(belowMin && !_sosOpen);
         Widget? cover;
-        if (!_sosOpen && view == UpdateView.blocked) {
+        if (belowMin) {
+          cover = _sosOpen
+              ? null
+              : MinVersionScreen(
+                  onSos: _openSos,
+                  fallbackStore: driverStoreUri().toString(),
+                  openStore: widget.openStore,
+                );
+        } else if (!_sosOpen && view == UpdateView.blocked) {
           cover = UpdateRequiredScreen(
             onSos: _openSos,
             openStore: widget.openStore,
@@ -116,7 +213,7 @@ class _DriverContentGateState extends State<DriverContentGate> {
                 onClose: _store.closeRecommended,
                 onTap: () => unawaited(_launchStore(widget.openStore)),
               ),
-            if (view == UpdateView.tripMessage)
+            if (view == UpdateView.tripMessage || smallLine)
               _Banner(
                 key: const ValueKey<String>('content-update-trip'),
                 text: tr.contentUpdateAfterTrip,

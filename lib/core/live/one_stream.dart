@@ -21,11 +21,15 @@ void linkOneStream({
     deliver: config.deliver,
     attached: config.useOneStream,
     opened: config.oneStreamOpened,
+    // v0.18.150: the zone's backup rule (realtime.oneStreamFallback).
+    fallback: () => config.oneStreamFallback,
   );
   config
     ..onStreamZoneChanged = dispatch.reopen
     ..addListener(() {
       if (dispatch.oneStreamRefused) return;
+      // v0.18.150: on backup the two old streams stay until its time is up.
+      if (dispatch.oneStreamBackup) return;
       if (dispatch.usesOneStream != config.oneStream) dispatch.reopen();
     });
 }

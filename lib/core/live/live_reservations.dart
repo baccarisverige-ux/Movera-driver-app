@@ -1,4 +1,5 @@
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -33,6 +34,8 @@ class LiveReservations {
     final accepted = ServerReservations.parsePage(
       await _api.get('$path?scope=accepted'),
     );
+    // v0.18.154 P16c review O-2: a held booked ride keeps the block away.
+    MinAppVersion.bookedHeld.value = accepted.isNotEmpty;
     return ServerReservations(open: open, accepted: accepted);
   }
 

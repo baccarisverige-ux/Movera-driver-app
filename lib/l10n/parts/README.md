@@ -12,6 +12,6 @@ commit the result. CI (`python3 tool/l10n_parts.py --check`) and
 
 Areas: account, airport_queue (fix job 9), app (`@@locale` only), auth, cancel, fleet, general_a_k,
 blocked_pairs (fix job 10), stop_wait (C9b, v0.18.108 middle-stop waiting), general_l_z (texts shared by many screens, by first letter), navigation,
-reservations, safety, support, trip, vehicle, chat (G9 part 2, §78). A file over ~800 lines gets a
+reservations, safety, support, trip, vehicle, chat (G9 part 2, §78), pay_movera (v0.18.139 Pay Movera screen), live_location (v0.18.144). A file over ~800 lines gets a
 new area. A new area is a new `<area>.en.arb`, `<area>.fr.arb` and
 `<area>.sv.arb` with the same keys.

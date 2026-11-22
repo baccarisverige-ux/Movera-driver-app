@@ -300,10 +300,11 @@ void main() {
       addTearDown(() => DriverAppTexts.reset());
       final semantics = tester.ensureSemantics();
       await openCashSheet(tester);
-      // Live G8 a11y: the cash sheet lines are read as "label value".
+      // Owner 2026-11-21 14:55: the collect screen has only the final
+      // price and the button; Din andel is on the finished screen.
       expect(
         find.bySemanticsLabel(RegExp('^${RegExp.escape(tr.g8YourShare)} ')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.byKey(const ValueKey<String>('cash-collect-sheet')),

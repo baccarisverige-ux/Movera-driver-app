@@ -145,8 +145,12 @@ void main() {
         .split('\n')
         .where((line) => line.contains('flutter build web'))
         .toList();
-    expect(builds, hasLength(1));
-    expect(builds.single, contains('--base-href "/Movera-driver-app/live/"'));
+    // #634 (owner 2026-11-19, real-app address): the same deploy also builds
+    // the real app under /app/ against MOVERA_PROD_API_URL. Exactly these two
+    // builds, in this order, and neither passes the free-arrival define.
+    expect(builds, hasLength(2));
+    expect(builds[0], contains('--base-href "/Movera-driver-app/live/"'));
+    expect(builds[1], contains('--base-href "/Movera-driver-app/app/"'));
     expect(pages, isNot(contains('MOVERA_DEMO_ARRIVAL')));
     final ci = File('.github/workflows/drider-ci.yml').readAsStringSync();
     expect(ci, isNot(contains('MOVERA_DEMO_ARRIVAL=true')));

@@ -90,8 +90,10 @@ void main() {
         async.elapse(const Duration(minutes: 5));
         expect(reads, 0, reason: 'away from any airport: no reads');
         relevant = true;
-        async.elapse(const Duration(minutes: 1));
-        expect(reads, 3, reason: 'every 20 s near an airport');
+        async.elapse(const Duration(minutes: 3));
+        // v0.18.145 (`loadCut.airportQueueFallbackSeconds`): the poll is a
+        // 60 s fallback (was 20 s); the stream hint reads in between.
+        expect(reads, 3, reason: 'every 60 s near an airport');
         relevant = false;
         async.elapse(const Duration(minutes: 2));
         expect(reads, 3);

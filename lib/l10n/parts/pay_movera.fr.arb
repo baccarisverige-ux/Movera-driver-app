@@ -1,0 +1,16 @@
+{
+  "payMoveraTitle": "Payer Movera",
+  "payMoveraReference": "Référence",
+  "payMoveraHowTo": "La page de paiement s’ouvre dans votre navigateur. Saisissez-y le montant et la référence.",
+  "payMoveraConfirmNote": "Le montant baisse lorsque Movera a confirmé votre paiement.",
+  "payMoveraCopy": "Copier",
+  "payMoveraCopied": "Copié",
+  "payMoveraAmountToPay": "Montant à payer",
+  "payMoveraLinkFailed": "Impossible d’ouvrir la page de paiement. Veuillez réessayer.",
+  "payMoveraUnavailable": "Impossible de charger ce que vous devez à Movera. Réessayez plus tard.",
+  "payMoveraPayByCard": "Payer {amount} par carte",
+  "payMoveraCardPaid": "Payé. Merci.",
+  "payMoveraCardChecking": "Paiement reçu. Nous le vérifions.",
+  "payMoveraCardFailed": "Le paiement n'a pas abouti. Réessayez.",
+  "payMoveraAmountChanged": "Le montant a changé. Vérifiez-le et réessayez."
+}

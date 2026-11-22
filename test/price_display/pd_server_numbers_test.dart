@@ -136,6 +136,7 @@ void main() {
           fare: '150,00 kr',
           cash: '250,00 kr',
           riderName: 'Anna',
+          showEarnings: true,
         ),
       );
       expect(find.text('You owe Movera'), findsNothing);
@@ -155,6 +156,7 @@ void main() {
           cash: '250,00 kr',
           riderName: 'Anna',
           owedToMovera: Money(minorUnits: 9000, currency: 'SEK'),
+          showEarnings: true,
         ),
       );
       expect(find.text('You owe Movera'), findsOneWidget);
@@ -234,6 +236,7 @@ void main() {
           cash: money.cash.formatted,
           riderName: 'Anna',
           owedToMovera: money.owedToMovera,
+          showEarnings: true,
         ),
       );
       expect(find.text('Movera owes you'), findsOneWidget);

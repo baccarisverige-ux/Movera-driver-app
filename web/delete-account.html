@@ -1,0 +1,126 @@
+<!doctype html>
+<!-- Do not submit this URL to a store before ALL of: (1) the owner switches Erase on (Admin › Riders › Account deletion requests); (2) the support e-mail is set in Admin › Content › Legal (the "without the app" path needs it — Google Play requires a way to ask without the app); (3) the lawyer has confirmed the retention texts marked for the lawyer. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your Movera account</title>
+<!-- contract v0.18.134 (contract.json#accountDeletion.publicPage; owner button 2026-11-20 "Accept, keep debt (Rec.)";
+     owner answers 2026-11-21: one page for riders and drivers, e-mail support without the app, "7 years, lawyer to confirm").
+     How a Movera rider or driver asks to delete the account. Static, no sign-in. The rider store listing links this same URL.
+     No address, phone number or e-mail is written here: the support e-mail is read at page load from the public
+     GET /api/v1/legal/{country} (company.supportEmail, set by the owner in Admin › Content › Legal). The API base comes from
+     delete-account-config.js, written next to this page by the Pages workflow from MOVERA_LIVE_API_URL. -->
+<style>
+  :root { --bg: #ffffff; --ink: #1d252c; --muted: #5b6670; --line: #e3e7ea; --link: #0b5cad; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #11161a; --ink: #eef2f4; --muted: #a9b4bb; --line: #2a333a; --link: #7db7ff; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; overflow-wrap: anywhere; }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  h2 { font-size: 19px; margin: 28px 0 6px; }
+  section + section { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 8px; }
+  p, li { color: var(--ink); }
+  a { color: var(--link); }
+  .muted { color: var(--muted); font-size: 14px; }
+  nav a { margin-right: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="#en" lang="en">English</a><a href="#sv" lang="sv">Svenska</a><a href="#fr" lang="fr">Français</a></nav>
+
+  <section id="en" lang="en">
+    <h1>Delete my account</h1>
+    <p>For Movera riders and drivers: this page is for both apps.</p>
+    <h2>In the app</h2>
+    <ul>
+      <li><b>Rider app:</b> Account › Delete account.</li>
+      <li><b>Driver app:</b> Profile › Delete my account.</li>
+    </ul>
+    <h2>Without the app</h2>
+    <p data-support="en" data-fallback="Write to Movera support from the app's Help page, or contact us via the company details on our website." data-before="E-mail Movera support and ask for deletion; give the phone number of your account:">Write to Movera support from the app's Help page, or contact us via the company details on our website.</p>
+    <h2>What happens</h2>
+    <ul>
+      <li>Your account closes at once: you are signed out and cannot use it again.</li>
+      <li>Deleted: your account, phone number, profile, saved places, documents and photos, push notification devices, and trip chats (chats are already erased 90 days after a trip).</li>
+      <!-- LAWYER TO CONFIRM (owner 2026-11-21: "7 years, lawyer to confirm") -->
+      <li>Kept: trip receipts and payment records are kept for 7 years because Swedish bookkeeping law requires it (your name and the amounts only). For a driver this means the driver's name stays on the trip, payment and payout records. Any money you still owe Movera is kept until it is paid. Everything else is erased 30 days after your request.</li>
+      <li>A request is refused only while you have an open ride: finish or cancel it first.</li>
+    </ul>
+  </section>
+
+  <section id="sv" lang="sv">
+    <h1>Radera mitt konto</h1>
+    <p>För Moveras resenärer och förare: sidan gäller båda apparna.</p>
+    <h2>I appen</h2>
+    <ul>
+      <li><b>Resenärsappen:</b> Konto › Radera konto.</li>
+      <li><b>Förarappen:</b> Profil › Radera mitt konto.</li>
+    </ul>
+    <h2>Utan appen</h2>
+    <p data-support="sv" data-fallback="Skriv till Moveras support via appens hjälpsida, eller kontakta oss via företagsuppgifterna på vår webbplats." data-before="Mejla Moveras support och be om radering; ange ditt kontos telefonnummer:">Skriv till Moveras support via appens hjälpsida, eller kontakta oss via företagsuppgifterna på vår webbplats.</p>
+    <h2>Vad som händer</h2>
+    <ul>
+      <li>Kontot stängs direkt: du loggas ut och kan inte använda det igen.</li>
+      <li>Raderas: ditt konto, telefonnummer, profil, sparade platser, dokument och foton, enheter för pushnotiser och reschattar (chattar raderas redan 90 dagar efter en resa).</li>
+      <!-- LAWYER TO CONFIRM (owner 2026-11-21: "7 years, lawyer to confirm") -->
+      <li>Sparas: kvitton för resor och betalningsuppgifter sparas i 7 år eftersom svensk bokföringslag kräver det (bara ditt namn och beloppen). För en förare betyder det att förarens namn finns kvar på resor, betalningar och utbetalningar. Pengar som du fortfarande är skyldig Movera sparas tills de är betalda. Allt annat raderas 30 dagar efter din begäran.</li>
+      <li>En begäran nekas bara under en pågående resa: avsluta eller avbryt den först.</li>
+    </ul>
+  </section>
+
+  <section id="fr" lang="fr">
+    <h1>Supprimer mon compte</h1>
+    <p>Pour les passagers et les chauffeurs Movera : cette page concerne les deux applications.</p>
+    <h2>Dans l’application</h2>
+    <ul>
+      <li><b>Application passager :</b> Compte › Supprimer le compte.</li>
+      <li><b>Application chauffeur :</b> Profil › Supprimer mon compte.</li>
+    </ul>
+    <h2>Sans l’application</h2>
+    <p data-support="fr" data-fallback="Écrivez au support Movera depuis la page d’aide de l’application, ou contactez-nous via les coordonnées de l’entreprise sur notre site web." data-before="Écrivez un e-mail au support Movera et demandez la suppression ; indiquez le numéro de téléphone de votre compte :">Écrivez au support Movera depuis la page d’aide de l’application, ou contactez-nous via les coordonnées de l’entreprise sur notre site web.</p>
+    <h2>Ce qui se passe</h2>
+    <ul>
+      <li>Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus l’utiliser.</li>
+      <li>Supprimés : votre compte, numéro de téléphone, profil, lieux enregistrés, documents et photos, appareils de notifications push et discussions de course (les discussions sont déjà effacées 90 jours après une course).</li>
+      <!-- LAWYER TO CONFIRM (owner 2026-11-21: "7 years, lawyer to confirm") -->
+      <li>Conservés : les reçus de course et les données de paiement sont conservés 7 ans, car la loi comptable suédoise l’exige (seulement votre nom et les montants). Pour un chauffeur, son nom reste donc sur les courses, paiements et virements. Une somme que vous devez encore à Movera est conservée jusqu’à son paiement. Tout le reste est effacé 30 jours après votre demande.</li>
+      <li>Une demande n’est refusée que pendant une course en cours : terminez-la ou annulez-la d’abord.</li>
+    </ul>
+  </section>
+  <p class="muted">This page explains how to ask. The privacy policy is published separately.</p>
+</main>
+<script src="delete-account-config.js"></script>
+<script>
+(function () {
+  // The support e-mail is never written in this file: it is read from the public legal endpoint
+  // (company.supportEmail, Admin › Content › Legal). Without it the fallback text stays (no broken link).
+  var base = (window.MOVERA_API_BASE_URL || '').replace(/\/+$/, '');
+  if (!/^https:\/\//.test(base) || !window.fetch) return;
+  var looksLikeEmail = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+  function read(country) {
+    return fetch(base + '/api/v1/legal/' + country, { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (body) {
+        var value = body && body.company && body.company.supportEmail;
+        value = typeof value === 'string' ? value.trim() : '';
+        return looksLikeEmail.test(value) ? value : '';
+      })
+      .catch(function () { return ''; });
+  }
+  read('SE').then(function (found) { return found || read('FR'); }).then(function (address) {
+    if (!address) return;
+    var nodes = document.querySelectorAll('[data-support]');
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var link = document.createElement('a');
+      link.href = 'mailto:' + encodeURIComponent(address).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Movera: delete my account');
+      link.textContent = address;
+      node.textContent = node.getAttribute('data-before') + ' ';
+      node.appendChild(link);
+    }
+  });
+})();
+</script>
+</body>
+</html>

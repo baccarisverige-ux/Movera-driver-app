@@ -323,6 +323,12 @@ void main() {
                 },
             ],
           }),
+          // An older server: no GET /driver/home-badges (v0.18.145), the
+          // four badge reads as before.
+          ('GET', '/api/v1/driver/home-badges') => json(404, {
+            'code': 'not_found',
+            'message': 'Not found.',
+          }),
           _ => http.Response('', 503),
         },
         account: (client) => DriverAccountSession(
@@ -485,6 +491,12 @@ void main() {
             'version': profile['version'] = 4,
           }),
           ('GET', '/api/v1/notifications') => json(200, {'items': []}),
+          // An older server: no GET /driver/home-badges (v0.18.145), the
+          // four badge reads as before.
+          ('GET', '/api/v1/driver/home-badges') => json(404, {
+            'code': 'not_found',
+            'message': 'Not found.',
+          }),
           _ => http.Response('', 503),
         },
         account: (client) => DriverAccountSession(

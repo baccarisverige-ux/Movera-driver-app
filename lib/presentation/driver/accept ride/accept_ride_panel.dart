@@ -545,6 +545,7 @@ extension _AcceptRidePanel on _AcceptRideState {
               else
                 _buildRiderRow(),
               _AcceptRideTripChat(this)._chatCard(),
+              _AcceptRideLiveLocation(this)._liveLocationCard(),
               TripSheetFadeIn(
                 child: Padding(
                   key: _middleActionKey,

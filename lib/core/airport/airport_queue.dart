@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/live/reservations_refresh.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/zones/driver_zone.dart';
 
@@ -57,17 +58,27 @@ class AirportQueueStatus {
 }
 
 /// The latest answer for Home (card + island). Read every [every] while a
-/// screen polls it; a failed read keeps the last answer.
+/// screen polls it; a failed read keeps the last answer. Contract v0.18.145
+/// (`contract.json#loadCut.airportQueueLive`): read again on every
+/// `airport_queue_changed` hint of the driver settings stream and on every
+/// stream (re)connect ([hint]), at most once per [hintGap]; the timer is a
+/// fallback.
 class AirportQueue extends ChangeNotifier {
   AirportQueue();
 
   static final AirportQueue instance = AirportQueue();
   static const path = '/api/v1/driver/airport-queue';
-  static const every = Duration(seconds: 20);
+
+  /// v0.18.145 `loadCut.airportQueueFallbackSeconds` (was 20 s).
+  static const every = Duration(seconds: 60);
+
+  /// v0.18.145: hints read at most this often.
+  static const hintGap = Duration(seconds: 5);
 
   AirportQueueStatus? _status;
   bool _leftNotice = false;
   Timer? _timer;
+  ReservationsRefresh? _hinted;
   int _pollers = 0;
   bool Function()? _relevant;
 
@@ -141,7 +152,13 @@ class AirportQueue extends ChangeNotifier {
     if (_timer != null) return;
     _tick(api);
     _timer = Timer.periodic(every, (_) => _tick(api));
+    _hinted = ReservationsRefresh(gap: hintGap, read: () async => _tick(api));
   }
+
+  /// v0.18.145: the server says his place changed (or the settings stream
+  /// opened again): read now, at most once per [hintGap] (a hint inside the
+  /// gap reads once at its end). Nothing while no screen polls the queue.
+  void hint() => _hinted?.request();
 
   void _tick(ApiClient api) {
     final relevant = _relevant;
@@ -157,6 +174,8 @@ class AirportQueue extends ChangeNotifier {
     if (_pollers == 0) {
       _timer?.cancel();
       _timer = null;
+      _hinted?.dispose();
+      _hinted = null;
       _relevant = null;
     }
   }

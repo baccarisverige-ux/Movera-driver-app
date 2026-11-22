@@ -175,6 +175,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
         DriverSosOutcome.noTrip => tr.safetySosNoTrip,
         DriverSosOutcome.failed => tr.safetySosNotSent,
       };
+      // The persistent "SOS not sent" notice is already on screen.
+      if (result.toldByNotice) return;
       final smsLine = outcome == DriverSosOutcome.sent
           ? _contactsSmsLine(result.contactsSms)
           : null;
