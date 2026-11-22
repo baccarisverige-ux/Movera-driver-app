@@ -66,6 +66,9 @@ jobs:
           TESTLAB_DEVICE: ${{ inputs.testlab_device }}
         run: |
           set -euo pipefail
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          PROD_API="$(printf '%s' "$PROD_API" | tr -d '[:space:][:cntrl:]')"
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           if [ "$SERVER" = real ]; then
             case "$PROD_API" in https://*) ;; *) echo "::error::server=real needs the repository variable MOVERA_PROD_API_URL (https://...)."; exit 1 ;; esac
             if [ "${PROD_API%/}" = "https://movera-server.onrender.com" ]; then echo "::error::MOVERA_PROD_API_URL is the test server."; exit 1; fi
@@ -105,6 +108,8 @@ jobs:
           NEW_REF: ${{ inputs.new_ref }}
         run: |
           set -euo pipefail
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           if [ -z "${GOOGLE_MAPS_API_KEY:-}" ]; then
             # Test-only build: the owner checks sign-in, not the map.
             echo '::warning::No Google Maps key secret: test build uses a placeholder, the map will be grey.'
@@ -148,6 +153,8 @@ jobs:
         if: ${{ inputs.app_bundle }}
         run: |
           set -euo pipefail
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"; app_version="${app_version%%+*}+${GITHUB_RUN_NUMBER}"
           flutter build appbundle --release \
             -t lib/main.dart \

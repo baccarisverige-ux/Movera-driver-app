@@ -98,6 +98,8 @@ jobs:
         env:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
         run: |
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           case "$LIVE_API" in https://*) ;; *) echo "::error::MOVERA_LIVE_API_URL must start with https://"; exit 1 ;; esac
           # Contract v0.16.0: crash reports name the pubspec version.
           app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
@@ -137,6 +139,9 @@ jobs:
           PROD_API: ${{ vars.MOVERA_PROD_API_URL }}
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
         run: |
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          PROD_API="$(printf '%s' "$PROD_API" | tr -d '[:space:][:cntrl:]')"
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           case "$PROD_API" in https://*) ;; *) echo "::error::MOVERA_PROD_API_URL must start with https://"; exit 1 ;; esac
           # Never a "real" app that talks to the test server.
           if [ "${PROD_API%/}" = "${LIVE_API%/}" ]; then
