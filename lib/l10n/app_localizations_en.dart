@@ -5434,6 +5434,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveTripNotAtStop => 'You are not at the stop yet.';
 
   @override
+  String tripNewPrice(String amount) {
+    return 'New price: $amount';
+  }
+
+  @override
   String get call112 => 'Call 112';
 
   @override

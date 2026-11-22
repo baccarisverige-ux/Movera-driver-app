@@ -1531,6 +1531,7 @@
   "waitingPausedAtStop": "Väntetiden är pausad: du är mer än {leave} m från stoppet. Kör tillbaka inom {arrive} m för att fortsätta.",
   "waitingBackAtStop": "Jag är tillbaka vid stoppet",
   "liveTripNotAtStop": "Du är inte vid stoppet än.",
+  "tripNewPrice": "Nytt pris: {amount}",
   "call112": "Ring 112",
   "call112OnYourPhone": "Ring 112 från din telefon",
   "call112IfYouNeedHelp": "\nRing 112 om du behöver hjälp nu.",

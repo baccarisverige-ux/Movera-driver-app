@@ -9298,6 +9298,12 @@ abstract class AppLocalizations {
   /// **'You are not at the stop yet.'**
   String get liveTripNotAtStop;
 
+  /// Owner 2026-11-21 14:40: short notice (5 s, goes by itself, no tap) when the server's trip price (TripProjection.fare) changes after the accept: before pickup, during the trip, or by waiting. Shows ONLY the new price; amount = the server's new fare, formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'New price: {amount}'**
+  String tripNewPrice(String amount);
+
   /// No description provided for @call112.
   ///
   /// In en, this message translates to:
