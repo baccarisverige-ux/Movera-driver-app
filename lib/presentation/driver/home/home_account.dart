@@ -536,20 +536,22 @@ extension _HomeAccount on _DriverHomeState {
       return;
     }
     _badgesReadAt[this] = badgesClock();
+    // Contract v0.18.145 (`loadCut.homeBadges`): the profile, the unread
+    // count, the reminders and the country's settings (names of the admin's
+    // own document types) in one request; the four reads on an older server.
     unawaited(
-      session.refreshBadges().then((_) {
-        if (mounted) {
-          _rebuild(() {});
-          // G3-R1: the server set the driver offline (no position).
-          _HomeOnlineGate(this)._checkServerSetOffline(session);
-          _HomeOnlineGate(this)._serverOfflineOnOpen(session);
-        }
-      }),
+      refreshHomeBadges(
+        session,
+        afterProfile: () {
+          if (mounted) {
+            _rebuild(() {});
+            // G3-R1: the server set the driver offline (no position).
+            _HomeOnlineGate(this)._checkServerSetOffline(session);
+            _HomeOnlineGate(this)._serverOfflineOnOpen(session);
+          }
+        },
+      ),
     );
-    // Contract v0.17.0: the reminders and the country's settings (names of
-    // the admin's own document types).
-    unawaited(refreshReminders(session));
-    unawaited(refreshOnboardingSettings(session).then((_) {}, onError: (_) {}));
   }
 
   void _openDocuments() {

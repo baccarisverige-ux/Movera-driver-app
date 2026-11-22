@@ -1,5 +1,7 @@
 import 'package:movera/core/safety/emergency_numbers.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/safety/sos_contacts_sms.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -8,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
+import 'package:movera/core/dispatch/one_stream_fallback.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -110,6 +113,7 @@ class LiveDriverConfig extends ChangeNotifier {
     this.onZonesPublished,
     this.onEventsPublished,
     this.onReservationsChanged,
+    this.onAirportQueueChanged,
     this.onZoneChanged,
     String? Function()? zoneId,
     DriverConfigCache? cache,
@@ -192,6 +196,11 @@ class LiveDriverConfig extends ChangeNotifier {
   /// `driver_reservations_changed` (a hint only) and each time the stream
   /// opens, so a reconnect catches what was missed while it was down.
   final void Function()? onReservationsChanged;
+
+  /// Contract v0.18.145 (`contract.json#loadCut.airportQueueLive`): the
+  /// driver's place in an airport line must be read again. Called on each
+  /// `airport_queue_changed` (a hint only) and each time the stream opens.
+  final void Function()? onAirportQueueChanged;
   final Duration retryAfter;
 
   /// Owner 2026-11-10: a refused stream waits [retryAfter] (5 s), then
@@ -353,11 +362,20 @@ class LiveDriverConfig extends ChangeNotifier {
     // realtime.oneStream; missing (an older server) = off.
     final realtime = document['realtime'];
     final one = realtime is Map && realtime['oneStream'] == true;
-    return _use(
+    final used = _use(
       DriverAppConfig.fromJson(document),
       zone: _zoneOf(document),
       oneStream: one,
+      // v0.18.150 (contract.json#driverOneStreamFallback): the backup
+      // numbers; missing or out of range = 3 / 10.
+      fallback: OneStreamFallback.fromJson(
+        realtime is Map ? realtime['oneStreamFallback'] : null,
+      ),
     );
+    // v0.18.154 P16c (contract.json#appUpdate): the zone's minimum app
+    // version and store links of the document now in use.
+    if (used) MinAppVersion.accept(document['appUpdate']);
+    return used;
   }
 
   /// L20 stream: whether the zone's document in use says to open ONE live
@@ -365,6 +383,12 @@ class LiveDriverConfig extends ChangeNotifier {
   /// stream (`DriverAppConfig.realtime.oneStream`, default off).
   bool get oneStream => _oneStream;
   bool _oneStream = false;
+
+  /// L20 stream backup (v0.18.150): after how many failed tries of the one
+  /// stream the offer feed opens the two old streams, and for how long
+  /// (`DriverAppConfig.realtime.oneStreamFallback`, default 3 / 10 min).
+  OneStreamFallback get oneStreamFallback => _oneStreamFallback;
+  OneStreamFallback _oneStreamFallback = const OneStreamFallback();
 
   /// L20 stream: while true the offer feed's one stream carries this
   /// stream's events ([deliver]) and this class opens no stream of its own.
@@ -408,7 +432,10 @@ class LiveDriverConfig extends ChangeNotifier {
 
   /// L20 stream: the one stream (re)opened: as on every (re)connect of the
   /// settings stream, the booked rides are read again (§68).
-  void oneStreamOpened() => onReservationsChanged?.call();
+  void oneStreamOpened() {
+    onReservationsChanged?.call();
+    onAirportQueueChanged?.call();
+  }
 
   /// L20 stream: one settings event from the one stream.
   void deliver(Map<String, dynamic> event) {
@@ -468,7 +495,12 @@ class LiveDriverConfig extends ChangeNotifier {
 
   /// Puts [next] in use unless the app has the same or a newer version of
   /// the same zone (G17: another zone's document always replaces it).
-  bool _use(DriverAppConfig next, {String? zone, bool oneStream = false}) {
+  bool _use(
+    DriverAppConfig next, {
+    String? zone,
+    bool oneStream = false,
+    OneStreamFallback fallback = const OneStreamFallback(),
+  }) {
     final known = _current;
     final sameZone = known == null || zone == null || zone == _currentZone;
     if (known != null && sameZone && known.version >= next.version) {
@@ -476,6 +508,7 @@ class LiveDriverConfig extends ChangeNotifier {
     }
     final moved = known != null && !sameZone;
     _oneStream = oneStream;
+    _oneStreamFallback = fallback;
     _current = next;
     _currentZone = zone ?? _currentZone;
     next.apply();
@@ -545,8 +578,10 @@ class LiveDriverConfig extends ChangeNotifier {
       // A stream a resume or a zone change replaced counts its own uptime.
       _endUptime();
       _openedAt = _now();
-      // §68: every (re)connect reads the booked rides again.
+      // §68: every (re)connect reads the booked rides again; v0.18.145 the
+      // airport queue too.
       onReservationsChanged?.call();
+      onAirportQueueChanged?.call();
       // D12-5: only a received line shows the stream is alive.
       _lastLine = null;
       // L20 fix: never two open: one kept before is closed first.
@@ -592,6 +627,10 @@ class LiveDriverConfig extends ChangeNotifier {
   void _event(Map<dynamic, dynamic> event) {
     if (event['kind'] == 'driver_reservations_changed') {
       onReservationsChanged?.call();
+      return;
+    }
+    if (event['kind'] == 'airport_queue_changed') {
+      onAirportQueueChanged?.call();
       return;
     }
     if (event['kind'] != 'config_published') return;

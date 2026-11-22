@@ -598,6 +598,38 @@ class AppLocalizationsSv extends AppLocalizations {
   String get menuNewDriver => 'Ny förare';
 
   @override
+  String get acctDeleteTitle => 'Radera mitt konto';
+
+  @override
+  String get acctDeleteBody =>
+      'Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter.';
+
+  @override
+  String get acctDeleteKept =>
+      'Sparas: dina resor, intäkter och utbetalningar enligt bokföringslagen, och om du är skyldig Movera ditt namn, nummer och beloppet tills det är betalt.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Radera ditt konto?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'Det går inte att ångra. Ditt konto stängs nu.';
+
+  @override
+  String get acctDeleteConfirm => 'Radera konto';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Avsluta eller avbryt din resa först och radera sedan kontot.';
+
+  @override
+  String get acctDeleteFailed => 'Kontot kunde inte raderas. Försök igen.';
+
+  @override
+  String get acctClosedSignIn =>
+      'Kontot är stängt och håller på att raderas. Det går inte att logga in med det.';
+
+  @override
   String get airportQueueTitle => 'Flygplatskö';
 
   @override
@@ -621,6 +653,16 @@ class AppLocalizationsSv extends AppLocalizations {
   String tipAirportQueuePlace(Object place) {
     return 'Flygplatskö: du är nummer $place';
   }
+
+  @override
+  String get minVersionTitle => 'Uppdatera Movera för att fortsätta';
+
+  @override
+  String get minVersionBody =>
+      'Den här versionen av appen är för gammal. Installera den senaste versionen från butiken för att fortsätta använda Movera.';
+
+  @override
+  String get minVersionUpdate => 'Uppdatera';
 
   @override
   String get phoneVibratesWhenRequestArrives =>
@@ -669,7 +711,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authEnterPhone => 'Ange ditt telefonnummer';
 
   @override
-  String get authTextFourDigitCode => 'Vi skickar en fyrsiffrig kod via sms.';
+  String get authTextFourDigitCode => 'Vi skickar en sexsiffrig kod via sms.';
 
   @override
   String get authInvalidMobileNumber => 'Ange ett giltigt mobilnummer.';
@@ -797,6 +839,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authErrSendCode => 'Kunde inte skicka koden. Försök igen.';
 
   @override
+  String get authErrSmsNotSent =>
+      'Vi kunde inte skicka sms:et. Kontrollera numret och försök igen.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'Vi kan inte skicka fler sms-koder just nu. Försök igen senare.';
+
+  @override
   String get authErrCheckCode => 'Kunde inte kontrollera koden. Försök igen.';
 
   @override
@@ -825,7 +875,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String authProviderPhoneOnce(String provider) {
-    return 'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med $provider. Vi skickar en fyrsiffrig kod via sms.';
+    return 'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med $provider. Vi skickar en sexsiffrig kod via sms.';
   }
 
   @override
@@ -897,7 +947,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authCodeFieldLabel => 'Fyrsiffrig kod från sms:et';
 
   @override
+  String get authCodeFieldLabelSix => 'Sexsiffrig kod från sms:et';
+
+  @override
   String get authSignedOutElsewhere => 'Inloggad på en annan telefon';
+
+  @override
+  String get authSignedOutByMovera => 'Du loggades ut av Movera';
 
   @override
   String get authErrLockedToday =>
@@ -4082,6 +4138,28 @@ class AppLocalizationsSv extends AppLocalizations {
       'Nästa resor kunde inte ändras. Försök igen.';
 
   @override
+  String get liveShareSwitch => 'Dela min plats';
+
+  @override
+  String liveDriverShareBody(String rider) {
+    return '$rider ser dig på kartan.';
+  }
+
+  @override
+  String get liveDriverPrivacyNote =>
+      'Din plats skickas bara till din kund fram till upphämtningen och sparas inte.';
+
+  @override
+  String liveRiderSharing(String rider, String meters) {
+    return '$rider delar sin plats ($meters m från upphämtningen)';
+  }
+
+  @override
+  String liveRiderLive(String rider) {
+    return '$rider · live';
+  }
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -4709,6 +4787,57 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get destSearchStartBody =>
       'Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här.';
+
+  @override
+  String get payMoveraTitle => 'Betala Movera';
+
+  @override
+  String get payMoveraReference => 'Referens';
+
+  @override
+  String get payMoveraHowTo =>
+      'Betalningssidan öppnas i din webbläsare. Ange beloppet och referensen där.';
+
+  @override
+  String get payMoveraConfirmNote =>
+      'Beloppet minskar när Movera har bekräftat din betalning.';
+
+  @override
+  String get payMoveraCopy => 'Kopiera';
+
+  @override
+  String get payMoveraCopied => 'Kopierat';
+
+  @override
+  String get payMoveraAmountToPay => 'Belopp att betala';
+
+  @override
+  String get payMoveraLinkFailed =>
+      'Det gick inte att öppna betalningssidan. Försök igen.';
+
+  @override
+  String get payMoveraUnavailable =>
+      'Det gick inte att läsa in vad du är skyldig Movera. Försök igen senare.';
+
+  @override
+  String payMoveraPayByCard(String amount) {
+    return 'Betala $amount med kort';
+  }
+
+  @override
+  String get payMoveraCardPaid => 'Betalt. Tack.';
+
+  @override
+  String get payMoveraCardChecking =>
+      'Betalningen är mottagen. Vi kontrollerar den.';
+
+  @override
+  String get payMoveraCardFailed =>
+      'Betalningen gick inte igenom. Försök igen.';
+
+  @override
+  String get payMoveraAmountChanged =>
+      'Beloppet har ändrats. Kontrollera det och försök igen.';
 
   @override
   String get reservation => 'Bokning';
@@ -5357,6 +5486,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get liveTripNotAtStop => 'Du är inte vid stoppet än.';
+
+  @override
+  String tripNewPrice(String amount) {
+    return 'Nytt pris: $amount';
+  }
 
   @override
   String get call112 => 'Ring 112';
@@ -6187,6 +6321,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cashFromRider => 'Kontant från resenären';
+
+  @override
+  String get collectRideLine => 'Resa';
+
+  @override
+  String get collectEarlierFeeLine => 'Tidigare avgift (till Movera)';
 
   @override
   String get riderPaidMoreThanYourFare =>
@@ -7570,4 +7710,65 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera väljer resetyperna när bilen godkänns.';
+
+  @override
+  String get yearStatementTitle => 'Årsbesked';
+
+  @override
+  String yearStatementReported(int year) {
+    return 'Det Movera rapporterar till Skatteverket för $year';
+  }
+
+  @override
+  String get yearStatementEmpty => 'Inga intäkter detta år.';
+
+  @override
+  String get yearStatementTooBig =>
+      'För många resor att visa på en gång. Välj en månad.';
+
+  @override
+  String get yearStatementUnavailable => 'Årsbeskedet kunde inte laddas.';
+
+  @override
+  String yearStatementRides(int count) {
+    return '$count resor';
+  }
+
+  @override
+  String get yearStatementEarnings => 'Intäkter';
+
+  @override
+  String get yearStatementFares => 'Resepriser';
+
+  @override
+  String get yearStatementCommission => 'Moveras provision';
+
+  @override
+  String get yearStatementTips => 'Dricks';
+
+  @override
+  String get yearStatementBonuses => 'Bonusar';
+
+  @override
+  String get yearStatementCash => 'Kontant i bilen';
+
+  @override
+  String get yearStatementPaidOut => 'Movera har betalat ut';
+
+  @override
+  String yearStatementOwnPart(String company) {
+    return 'Din egen del av $company';
+  }
+
+  @override
+  String get yearStatementBonusLine => 'Bonuskampanj';
+
+  @override
+  String get yearStatementShare => 'Dela';
+
+  @override
+  String get yearStatementYear => 'År';
+
+  @override
+  String get yearStatementOpen => 'Årsbesked för Skatteverket';
 }

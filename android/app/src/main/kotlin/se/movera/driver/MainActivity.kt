@@ -9,11 +9,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+// Stripe PaymentSheet (Pay Movera, DRAFT) needs a FragmentActivity and an AppCompat theme.
+class MainActivity : FlutterFragmentActivity() {
     private var pending: MethodChannel.Result? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

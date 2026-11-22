@@ -29,10 +29,18 @@ enum DriverSosOutcome {
 /// driver's emergency contacts (v0.18.101 §92 `SosReceipt.contactsSms`;
 /// null when the answer has none).
 class DriverSosResult {
-  const DriverSosResult(this.outcome, {this.contactsSms});
+  const DriverSosResult(
+    this.outcome, {
+    this.contactsSms,
+    this.toldByNotice = false,
+  });
 
   final DriverSosOutcome outcome;
   final SosContactsSms? contactsSms;
+
+  /// Review 2026-11-21: a refusal already raised the persistent "SOS not
+  /// sent" notice, so the screen shows no second message for it.
+  final bool toldByNotice;
 }
 
 /// Contract v0.7.0 §15 (owner safety part 1, 2026-10-27): the driver's SOS
@@ -63,13 +71,14 @@ class DriverSos {
     Duration(seconds: 60),
   ];
 
-  /// The wait after the server refused the kept SOS because the trip is no
-  /// longer live (409): it is kept and tried again at this pace.
+  /// The wait before a kept SOS without a known trip looks up the driver's
+  /// trip again.
   static const refusedDelay = Duration(minutes: 5);
 
   /// A kept SOS older than this (from its `at`) is not sent any more: a
-  /// trip-less or refused SOS must never attach to a later trip. It is
-  /// logged and dropped.
+  /// trip-less SOS must never attach to a later trip. It is logged, dropped
+  /// and told to the driver. Contract v0.18.148 `sosPressTime.maxAgeSeconds`
+  /// (1800): the server refuses it after this too.
   static const maxAge = Duration(minutes: 30);
 
   /// Set by the app root: a kept SOS was given up on (too old, refused,
@@ -223,13 +232,21 @@ class DriverSos {
           return noTrip;
         }
         if (error.statusCode == 409) {
-          // The trip is no longer live (it ended before the SOS got
-          // through): never dropped; kept, shown "not sent", tried again.
-          // Today's server takes an SOS only during a live trip; it waits
-          // for a server that takes it by press time (`at`).
-          DriverLog.warn('sos refused: trip not live, kept', name: 'safety');
-          _retryLater();
-          return failed;
+          // Contract v0.18.148 (sosPressTime): the server judges an SOS
+          // of an ended trip by its press time `at`, so a 409 (pressed
+          // outside the trip, too old, not live) is a
+          // final refusal: dropped, and the driver is told "SOS not sent,
+          // call 112" (owner 2026-11-20 "after 30 min or any refusal").
+          DriverLog.warn(
+            'sos refused: ${error.reason ?? error.code}',
+            name: 'safety',
+          );
+          _store(() => _pending.clear(key));
+          onExpired?.call();
+          return const DriverSosResult(
+            DriverSosOutcome.failed,
+            toldByNotice: true,
+          );
         }
         if (!_keepTrying(error)) {
           _store(() => _pending.clear(key));
@@ -261,9 +278,11 @@ class DriverSos {
     }),
   );
 
-  /// Sends the kept SOS again, with growing waits, until Movera confirms it
-  /// (a 409 trip not live keeps it: never dropped). Called after a failed press and on app
-  /// start; a second call while one runs joins it.
+  /// Sends the kept SOS again, with the same key and body (its press time
+  /// `at` unchanged), with growing waits, until Movera confirms it, refuses
+  /// it, or it is [maxAge] old (contract v0.18.148 sosPressTime). Called
+  /// after a failed press and on app start; a second call while one runs
+  /// joins it.
   Future<void> retryPending() =>
       _retrying ??= _retryLoop().whenComplete(() => _retrying = null);
 
@@ -330,12 +349,11 @@ class DriverSos {
         DriverLog.info('pending sos sent', name: 'safety');
         return;
       } on ApiError catch (error) {
-        if (error.statusCode == 409) {
-          // Trip not live: kept, tried again slowly until [maxAge].
-          await _sleep(refusedDelay);
-          continue;
-        }
-        if (error.statusCode == 404 || !_keepTrying(error)) {
+        // Contract v0.18.148 (sosPressTime): any refusal (409 any reason,
+        // 404, 403, 400) is final: dropped and told to the driver.
+        if (error.statusCode == 409 ||
+            error.statusCode == 404 ||
+            !_keepTrying(error)) {
           await _giveUp(sos, 'kept sos refused: ${error.code}');
           return;
         }
@@ -396,7 +414,10 @@ class DriverSos {
     return id is String && id.trim().isNotEmpty ? id : null;
   }
 
+  /// Review 2026-11-21: any 408, 429 or 5xx (also a bare 429 from a proxy
+  /// with no JSON code) is retried, never taken as a refusal.
   static bool _retryable(ApiError error) =>
+      error.isRetryable ||
       error.code == ApiError.network ||
       error.code == ApiError.timeout ||
       error.code == 'rate_limited' ||

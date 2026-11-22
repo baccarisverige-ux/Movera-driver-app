@@ -11,6 +11,7 @@ import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/presentation/driver/profile/delete_account.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/presentation/driver/account/contact_change_screen.dart';
@@ -322,6 +323,19 @@ class _DriverProfileState extends State<DriverProfile> {
                 LegalDocumentScreen.terms,
               ),
               _item(Icons.help_outline_rounded, tr.helpCenter, supportScreen()),
+              // v0.18.134 (contract.json#accountDeletion.driver): a confirm
+              // step, then the request; 202 signs out and wipes the phone.
+              if (_liveSession != null)
+                _item(
+                  Icons.delete_outline_rounded,
+                  tr.acctDeleteTitle,
+                  DeleteAccountScreen(
+                    account: _liveSession!,
+                    onDeleted: (context) async {
+                      await signOutDriver(context);
+                    },
+                  ),
+                ),
             ]),
             const SizedBox(height: 12),
             Material(

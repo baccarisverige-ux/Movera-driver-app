@@ -1,0 +1,20 @@
+{
+  "yearStatementTitle": "Relevé annuel",
+  "yearStatementReported": "Ce que Movera déclare à l'administration fiscale pour {year}",
+  "yearStatementEmpty": "Aucun revenu cette année.",
+  "yearStatementTooBig": "Trop de courses à afficher en une fois. Choisissez un mois.",
+  "yearStatementUnavailable": "Le relevé annuel n'a pas pu être chargé.",
+  "yearStatementRides": "{count} courses",
+  "yearStatementEarnings": "Gains",
+  "yearStatementFares": "Prix des courses",
+  "yearStatementCommission": "Commission Movera",
+  "yearStatementTips": "Pourboires",
+  "yearStatementBonuses": "Bonus",
+  "yearStatementCash": "Espèces à bord",
+  "yearStatementPaidOut": "Versé par Movera",
+  "yearStatementOwnPart": "Votre part de {company}",
+  "yearStatementBonusLine": "Campagne de bonus",
+  "yearStatementShare": "Partager",
+  "yearStatementYear": "Année",
+  "yearStatementOpen": "Relevé annuel pour l'administration fiscale"
+}

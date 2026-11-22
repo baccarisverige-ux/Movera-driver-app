@@ -32,20 +32,42 @@ class LiveActiveTrip {
   /// profile twice; without it the profile is read here.
   Future<({PersistedActiveRide ride, Map<String, dynamic> projection})?> fetch({
     Future<String?> Function()? activeTripId,
-  }) async {
+  }) async => (await fetchChecked(activeTripId: activeTripId)).found;
+
+  /// [fetch] with this read's own result: [failed] true when the server
+  /// could not be asked (review: a shared flag could be hidden by an
+  /// overlapping read).
+  Future<
+    ({
+      ({PersistedActiveRide ride, Map<String, dynamic> projection})? found,
+      bool failed,
+    })
+  >
+  fetchChecked({Future<String?> Function()? activeTripId}) async {
+    lastReadFailed = false;
     try {
       final Object? id = activeTripId != null
           ? await activeTripId()
           : (await _api.get(profilePath))['activeTripId'];
-      if (id is! String || id.trim().isEmpty) return null;
+      if (id is! String || id.trim().isEmpty) {
+        return (found: null, failed: false);
+      }
       final trip = await _api.get('$tripsPath/${Uri.encodeComponent(id)}');
       final ride = snapshotOf(trip);
-      return ride == null ? null : (ride: ride, projection: trip);
+      return (
+        found: ride == null ? null : (ride: ride, projection: trip),
+        failed: false,
+      );
     } catch (error) {
       DriverLog.warn('active trip not read: $error', name: 'live');
-      return null;
+      lastReadFailed = true;
+      return (found: null, failed: true);
     }
   }
+
+  /// v0.18.154 P16c review S-D1: the last [fetch] could not ask the server
+  /// (null then means "not known", not "no trip").
+  bool lastReadFailed = false;
 
   /// The trip screen's stage for a server `TripStatus`; null when the
   /// screen has no such stage (searching, over…).

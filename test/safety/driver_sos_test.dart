@@ -102,7 +102,7 @@ void main() {
     activeTrip = null;
     expect(await DriverSos(api: api()).send(), DriverSosOutcome.noTrip);
     expect(posts(), isEmpty);
-    // Audit 2026-11-20: a trip no longer live keeps the SOS (not sent).
+    // Contract v0.18.148: a refusal (409) is final: not sent.
     answers = [409];
     expect(
       await DriverSos(api: api()).send(tripId: 'trp_1'),

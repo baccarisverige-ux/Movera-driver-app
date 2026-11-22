@@ -1,6 +1,7 @@
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/payments/stripe_keys.dart';
 
 /// `GET /driver/earnings?period=day` (contract `EarningsReport`): today's
 /// earnings as the server counts them, in the zone's currency. A live
@@ -78,12 +79,25 @@ class LiveEarnings {
         await _api.get('/api/v1/driver/payouts?limit=$limit'),
       );
 
-  /// The period holding [now] (else the newest one) of an
-  /// `EarningsReport`; its `net`. Null when there is none.
-  static Money? todayOf(Map<String, dynamic> report, DateTime now) {
+  /// `GET /driver/pay-movera` (contract v0.18.139 `driverPayRequest.read`):
+  /// what he owes Movera now, the reference and, while his country's
+  /// monthly pay request is on, the payment link. Throws when the server
+  /// could not answer or the answer cannot be read.
+  Future<PayMovera> payMovera() async =>
+      PayMovera.of(await _api.get('/api/v1/driver/pay-movera'));
+
+  /// DRAFT (contract driverPayRequest.stripe): a Stripe PaymentIntent for
+  /// what he owes now; the app sends no amount (the server's only).
+  Future<StripeDriverPayment> startStripePayment() async =>
+      StripeDriverPayment.of(
+        await _api.post('/api/v1/driver/pay-movera/pay', body: const {}),
+      );
+
+  /// The period holding [now] (else the newest one) of an `EarningsReport`;
+  /// null when there is none.
+  static Map? periodOf(Map<String, dynamic> report, DateTime now) {
     final periods = report['periods'];
     if (periods is! List || periods.isEmpty) return null;
-    Map? chosen;
     for (final period in periods) {
       if (period is! Map) continue;
       final start = DateTime.tryParse('${period['periodStart']}');
@@ -92,11 +106,16 @@ class LiveEarnings {
           end != null &&
           !now.isBefore(start) &&
           now.isBefore(end)) {
-        chosen = period;
-        break;
+        return period;
       }
     }
-    chosen ??= periods.last is Map ? periods.last as Map : null;
+    return periods.last is Map ? periods.last as Map : null;
+  }
+
+  /// The period holding [now] (else the newest one) of an
+  /// `EarningsReport`; its `net`. Null when there is none.
+  static Money? todayOf(Map<String, dynamic> report, DateTime now) {
+    final chosen = periodOf(report, now);
     final net = chosen?['net'];
     if (net is! Map) return null;
     try {
@@ -215,15 +234,29 @@ class PayoutSummary {
 /// One currency of an `EarningsReport` (contract v0.18.14): its `net` for
 /// the period holding now, the report's `currency` and `currencies`.
 class EarningsWeek {
-  const EarningsWeek({this.net, this.currency, this.currencies = const []});
+  const EarningsWeek({
+    this.net,
+    this.currency,
+    this.currencies = const [],
+    this.cashCollected,
+    this.moveraBalance,
+  });
 
   factory EarningsWeek.of(Map<String, dynamic> report, DateTime now) {
     final listed = report['currencies'];
+    final currency = report['currency'] is String
+        ? report['currency'] as String
+        : null;
     return EarningsWeek(
       net: LiveEarnings.todayOf(report, now),
-      currency: report['currency'] is String
-          ? report['currency'] as String
-          : null,
+      cashCollected: _cashOf(report, now, currency),
+      // Only a balance in the report's own currency is shown next to it
+      // (never "kr" under the € tab).
+      moveraBalance: MoveraBalance.tryParse(
+        report['moveraBalance'],
+        currency: currency,
+      ),
+      currency: currency,
       currencies: [
         if (listed is List)
           for (final c in listed)
@@ -235,8 +268,161 @@ class EarningsWeek {
   final Money? net;
   final String? currency;
 
+  /// Contract v0.18.139 `driverWalletBalance.cash`: the server's
+  /// `cashCollected` of the same period as [net]; 0 in the report's
+  /// currency when the week has no entry (the server sends no period then);
+  /// null when the period carries none (the field is optional) or the
+  /// report cannot be read.
+  final Money? cashCollected;
+
+  /// Contract v0.18.139 `EarningsReport.moveraBalance`: what he owes Movera
+  /// now, or Movera owes him, as the server counts it; null from an older
+  /// server. Never worked out here (never net − cash, never a sum of trips).
+  final MoveraBalance? moveraBalance;
+
   /// Every currency earned in during the range; two or more → the switch.
   final List<String> currencies;
+
+  static Money? _cashOf(
+    Map<String, dynamic> report,
+    DateTime now,
+    String? currency,
+  ) {
+    final periods = report['periods'];
+    if (periods is! List) return null;
+    final period = LiveEarnings.periodOf(report, now);
+    if (period == null) {
+      return periods.isEmpty && currency != null
+          ? Money(minorUnits: 0, currency: currency)
+          : null;
+    }
+    final cash = period['cashCollected'];
+    if (cash is! Map) return null;
+    try {
+      return Money.fromJson(Map<String, dynamic>.from(cash));
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// `EarningsReport.moveraBalance { owedToMovera, moveraOwesYou }` (contract
+/// v0.18.139, owner 2026-11-20 "Yes, server + app (Rec.)"): the two sides
+/// of the server's one sum, shown as they come.
+class MoveraBalance {
+  const MoveraBalance({
+    required this.owedToMovera,
+    required this.moveraOwesYou,
+  });
+
+  final Money owedToMovera;
+  final Money moveraOwesYou;
+
+  bool get driverOwes => owedToMovera.minorUnits > 0;
+  bool get moveraOwes => !driverOwes && moveraOwesYou.minorUnits > 0;
+
+  /// Null when absent or not what the contract promises: two valid amounts
+  /// of one currency ([currency] when given: the report's), both 0 or
+  /// above and at least one of them 0. A broken answer shows no line at
+  /// all, never half a balance or a number that contradicts itself.
+  static MoveraBalance? tryParse(Object? json, {String? currency}) {
+    if (json is! Map) return null;
+    final owed = json['owedToMovera'];
+    final owes = json['moveraOwesYou'];
+    if (owed is! Map || owes is! Map) return null;
+    try {
+      final balance = MoveraBalance(
+        owedToMovera: Money.fromJson(Map<String, dynamic>.from(owed)),
+        moveraOwesYou: Money.fromJson(Map<String, dynamic>.from(owes)),
+      );
+      final a = balance.owedToMovera, b = balance.moveraOwesYou;
+      if (a.minorUnits < 0 || b.minorUnits < 0) return null;
+      if (a.minorUnits > 0 && b.minorUnits > 0) return null;
+      if (a.currency != b.currency) return null;
+      if (currency != null && a.currency != currency) return null;
+      return balance;
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// `DriverPayMovera` of `GET /driver/pay-movera` (contract v0.18.139
+/// `driverPayRequest`, owner 2026-11-20: the TEMPORARY monthly pay request).
+class PayMovera {
+  const PayMovera({
+    required this.enabled,
+    required this.owedToMovera,
+    required this.reference,
+    this.payLink,
+    this.stripe = false,
+  });
+
+  /// Throws [FormatException] when the amount or the reference is missing
+  /// (never a screen with a made-up amount).
+  factory PayMovera.of(Map<String, dynamic> json) {
+    final owed = json['owedToMovera'];
+    final reference = json['reference'];
+    if (owed is! Map || reference is! String || reference.isEmpty) {
+      throw FormatException('pay-movera answer', json);
+    }
+    final amount = Money.fromJson(Map<String, dynamic>.from(owed));
+    // The contract promises 0 or above: a negative amount is a broken
+    // answer (the error screen, never "Settled" over a minus number).
+    if (amount.minorUnits < 0) {
+      throw FormatException('pay-movera amount below 0', json);
+    }
+    return PayMovera(
+      enabled: json['enabled'] == true,
+      owedToMovera: amount,
+      reference: reference,
+      payLink: json['enabled'] == true ? linkOf(json['payLink']) : null,
+      stripe: json['enabled'] == true && json['stripe'] == true,
+    );
+  }
+
+  /// The country's monthly pay request is on.
+  final bool enabled;
+
+  /// What he owes Movera now (the server's number).
+  final Money owedToMovera;
+
+  /// What he writes on the payment so Movera finds him and the month.
+  final String reference;
+
+  /// The admin's payment link, opened as it is; null while off or when it
+  /// is not a plain https link (nothing else is ever opened).
+  final Uri? payLink;
+
+  /// DRAFT (driverPayRequest.stripe): the Pay button pays by Stripe (card,
+  /// Apple Pay) instead of opening the link.
+  final bool stripe;
+
+  /// The Stripe Pay button shows only when the server says so and he owes.
+  bool get canPayByCard => stripe && owedToMovera.minorUnits > 0;
+
+  /// The Pay button shows only with a link and something to pay.
+  bool get canPay => payLink != null && owedToMovera.minorUnits > 0;
+
+  /// A plain https link, as the server's own rule (movera-server
+  /// src/drivers/payRequestSetting.ts): "https://" then printable ASCII
+  /// only (no white space, control, invisible or look-alike character) and
+  /// no backslash (a browser reads it as "/", hiding the real host), at
+  /// most 500 characters, a host, and no "user:password@" part: the
+  /// address he reads is where it goes.
+  static Uri? linkOf(Object? value) {
+    if (value is! String || value.length > 500) return null;
+    if (!_linkShape.hasMatch(value)) return null;
+    final uri = Uri.tryParse(value);
+    return uri != null &&
+            uri.scheme == 'https' &&
+            uri.host.isNotEmpty &&
+            uri.userInfo.isEmpty
+        ? uri
+        : null;
+  }
+
+  static final RegExp _linkShape = RegExp(r'^https://[\x21-\x5B\x5D-\x7E]+$');
 }
 
 /// G28 step 1: an `EarningsReport` summed over all its periods: `net`,
@@ -249,6 +435,7 @@ class EarningsTotals {
     required this.cashCollected,
     this.tipsAndFees,
     this.bonus,
+    this.rideCount,
     this.currencies = const [],
   });
 
@@ -272,6 +459,9 @@ class EarningsTotals {
     Money? tipsAndFees = Money(minorUnits: 0, currency: currency);
     Money? bonus;
     var trips = 0;
+    // v0.18.146 `EarningsPeriod.rideCounts` (optional): every ride kind of
+    // the period. Known only when every period sends it (and one does).
+    int? rides = periods.isEmpty ? null : 0;
     for (final period in periods) {
       if (period is! Map) throw FormatException('period', period);
       net = sum(net, period['net']);
@@ -290,6 +480,8 @@ class EarningsTotals {
           ? null
           : sum(sum(tipsAndFees, period['tips']), period['fees']);
       trips += (period['tripCount'] as num?)?.toInt() ?? 0;
+      final kinds = _rideCountOf(period['rideCounts']);
+      rides = rides == null || kinds == null ? null : rides + kinds;
     }
     final listed = report['currencies'];
     return EarningsTotals(
@@ -298,6 +490,7 @@ class EarningsTotals {
       cashCollected: cash,
       tipsAndFees: tipsAndFees,
       bonus: bonus,
+      rideCount: rides,
       currencies: [
         if (listed is List)
           for (final c in listed)
@@ -306,8 +499,27 @@ class EarningsTotals {
     );
   }
 
+  /// One period's `rideCounts` summed (completed + cancelled + noShow);
+  /// null when absent or not readable (never a guessed part).
+  static int? _rideCountOf(Object? counts) {
+    if (counts is! Map) return null;
+    var sum = 0;
+    for (final kind in const ['completed', 'cancelled', 'noShow']) {
+      final n = counts[kind];
+      if (n is! num || n < 0 || n != n.truncate()) return null;
+      sum += n.toInt();
+    }
+    return sum;
+  }
+
   final Money net;
   final int tripCount;
+
+  /// Contract v0.18.146 `driverRideCounts` (owner 2026-11-20 "Must see all
+  /// kind"): completed + cancelled + no-show rides over the range, counted
+  /// by the server from trips; null from a server before v0.18.146 (the
+  /// app then shows [tripCount]).
+  final int? rideCount;
   final Money cashCollected;
 
   /// The driver's tips and his shares of cancel / no-show fees over the
@@ -321,4 +533,37 @@ class EarningsTotals {
 
   /// Every currency earned in during the range.
   final List<String> currencies;
+}
+
+/// DRAFT (contract driverPayRequest.stripe, `StripeDriverPayment`): the
+/// PaymentIntent the server made for what he owes now. The server's test or
+/// live publishable key (live mode, owner 2026-11-21); any other = refused.
+class StripeDriverPayment {
+  const StripeDriverPayment({
+    required this.amount,
+    required this.clientSecret,
+    required this.publishableKey,
+  });
+
+  factory StripeDriverPayment.of(Map<String, dynamic> json) {
+    final amount = json['amount'];
+    final secret = json['clientSecret'];
+    final key = json['publishableKey'];
+    if (amount is! Map ||
+        secret is! String ||
+        secret.isEmpty ||
+        key is! String ||
+        !isStripePublishableKey(key)) {
+      throw FormatException('pay-movera/pay answer', json);
+    }
+    return StripeDriverPayment(
+      amount: Money.fromJson(Map<String, dynamic>.from(amount)),
+      clientSecret: secret,
+      publishableKey: key,
+    );
+  }
+
+  final Money amount;
+  final String clientSecret;
+  final String publishableKey;
 }

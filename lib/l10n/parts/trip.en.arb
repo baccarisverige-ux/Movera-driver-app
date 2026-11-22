@@ -237,6 +237,8 @@
   "tripUpdate": "TRIP UPDATE",
   "waitingInProgress": "Waiting in progress",
   "cashFromRider": "Cash from rider",
+  "collectRideLine": "Ride",
+  "collectEarlierFeeLine": "Earlier fee (to Movera)",
   "riderPaidMoreThanYourFare": "The rider paid more than your fare (promotion). It is settled in your next payout.",
   "riderPaidLessThanYourFare": "The rider paid less than your fare (promotion). Movera adds it to your next payout.",
   "pickupArrived": "Pickup · arrived",
