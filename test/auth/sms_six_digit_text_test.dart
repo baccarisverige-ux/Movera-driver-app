@@ -12,9 +12,12 @@ void main() {
     'fr': 'Nous vous enverrons un code à 6 chiffres par SMS.',
   };
   const providerLine = {
-    'en': 'Confirm your phone number once to finish signing in with Apple. We’ll text you a 6-digit code.',
-    'sv': 'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med Apple. Vi skickar en sexsiffrig kod via sms.',
-    'fr': 'Confirmez votre numéro une seule fois pour terminer la connexion avec Apple. Nous vous envoyons un code à 6 chiffres par SMS.',
+    'en':
+        'Confirm your phone number once to finish signing in with Apple. We’ll text you a 6-digit code.',
+    'sv':
+        'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med Apple. Vi skickar en sexsiffrig kod via sms.',
+    'fr':
+        'Confirmez votre numéro une seule fois pour terminer la connexion avec Apple. Nous vous envoyons un code à 6 chiffres par SMS.',
   };
 
   for (final lang in phoneLine.keys) {
