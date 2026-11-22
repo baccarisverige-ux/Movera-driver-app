@@ -39,6 +39,21 @@ class RecordedCall {
 
   bool get failed => error != null || (status != null && status! >= 400);
 
+  /// The live-location card's designed probe (driver_live_location_card.dart
+  /// `_probe`): `PUT /api/v1/trips/<id>/live-location` answered 409 means
+  /// the zone's sharing switch is off and the card hides. That one route
+  /// with that one status is an answer the app asked for, not an error
+  /// (Firebase run 51, TRANSITION:arrived:ERRORS). Nothing broader.
+  bool get designedAnswer =>
+      method == 'PUT' && status == 409 && _liveLocation.hasMatch(path);
+
+  static final RegExp _liveLocation = RegExp(
+    r'^/api/v1/trips/[^/]+/live-location$',
+  );
+
+  /// [failed] without the [designedAnswer]: what TRANSITION:*:ERRORS counts.
+  bool get countsAsError => failed && !designedAnswer;
+
   /// Location sends and long-lived event streams are not "page reads".
   bool get isBackground =>
       path.endsWith('/stream') ||

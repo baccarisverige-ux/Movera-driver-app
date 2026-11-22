@@ -12,6 +12,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import 'check_log.dart';
 import 'driver_steps.dart';
+import 'type_text.dart';
 
 /// UI steps of the trip lifecycle run, on the real trip screens, by the
 /// app's keys (accept_ride_panel.dart, cash_collect_sheet.dart,
@@ -231,7 +232,7 @@ Future<void> answerStepSheets(WidgetTester tester, {String? pin}) async {
   );
   if (pin != null && shows(pinField)) {
     CheckLog.say('STEP pickup PIN asked: typed from the rider view');
-    await tester.enterText(pinField.first, pin);
+    await typeText(tester, pinField.first, pin);
     await tester.pump(const Duration(milliseconds: 400));
     if (shows(byKey('pickup-pin-confirm'))) {
       await tester.tap(byKey('pickup-pin-confirm'), warnIfMissed: false);

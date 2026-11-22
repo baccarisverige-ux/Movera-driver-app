@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
@@ -11,8 +13,10 @@ import 'package:http/http.dart' as http;
 /// can copy this file and check_log.dart as they are (owner 2026-11-12,
 /// "the same suite must also run with the RIDER app on the phone").
 ///
-/// Never logs anything. Bodies, tokens, phone numbers and codes stay in
-/// memory; callers print only statuses, reasons and ids.
+/// Logs one thing only: a line per retried call (see [MoveraApi._send]),
+/// with the method, the path and the exception type. Bodies, tokens, phone
+/// numbers and codes stay in memory; callers print only statuses, reasons
+/// and ids.
 
 /// One answer: status (0 = no answer / timeout) and the decoded body.
 class ApiAnswer {
@@ -49,8 +53,19 @@ class MoveraApi {
     this.apiVersion = '0.5',
     this.contractVersion,
     String? Function()? authorization,
+    this.retryDelays = const <Duration>[
+      Duration(milliseconds: 500),
+      Duration(milliseconds: 1500),
+    ],
+    void Function(String line)? onRetry,
   }) : _client = client ?? http.Client(),
-       _authorization = authorization;
+       _authorization = authorization,
+       _onRetry = onRetry ?? print;
+
+  /// The waits before the 2nd and 3rd try of a call that got no answer
+  /// (see [_send]); its length is the number of extra tries. Empty: none.
+  final List<Duration> retryDelays;
+  final void Function(String line) _onRetry;
 
   /// Server root, e.g. https://host (paths below start with /api/v1).
   final Uri base;
@@ -91,40 +106,92 @@ class MoveraApi {
     String path, {
     Map<String, String>? query,
     Duration timeout = const Duration(seconds: 30),
-  }) => _send(
-    () => _client.get(
-      base.replace(path: path, queryParameters: query),
-      headers: _headers(),
-    ),
-    timeout,
-  );
+  }) {
+    final headers = _headers();
+    return _send(
+      'GET',
+      path,
+      () => _client.get(
+        base.replace(path: path, queryParameters: query),
+        headers: headers,
+      ),
+      timeout,
+    );
+  }
 
   Future<ApiAnswer> post(
     String path, [
     Object? body,
     Duration timeout = const Duration(seconds: 30),
-  ]) => _send(
-    () => _client.post(
-      base.replace(path: path),
-      headers: _headers(write: true),
-      body: jsonEncode(body ?? const <String, Object>{}),
-    ),
-    timeout,
-  );
+  ]) {
+    // Built once: every try of this call carries the SAME Idempotency-Key
+    // (and X-Request-Id), so the server answers a repeated write once.
+    final headers = _headers(write: true);
+    return _send(
+      'POST',
+      path,
+      () => _client.post(
+        base.replace(path: path),
+        headers: headers,
+        body: jsonEncode(body ?? const <String, Object>{}),
+      ),
+      timeout,
+    );
+  }
 
+  /// A connection error: the call threw before any HTTP answer came back
+  /// (socket, DNS, TLS, connection closed). A timeout is NOT one: the
+  /// server may still be working on the request.
+  static bool _noAnswer(Object error) =>
+      error is! TimeoutException &&
+      (error is http.ClientException || error is IOException);
+
+  /// One call, tried again up to [retryDelays].length more times (2 by
+  /// default, after 0.5 s and 1.5 s) when it got NO answer at all (run 47:
+  /// one `_ClientSocketException` on the first call failed a whole device
+  /// run).
+  ///
+  /// What is and is not tried again, per call:
+  ///  * any real HTTP answer (2xx, 4xx, 429, 5xx): never; it is returned
+  ///    and still fails the step;
+  ///  * a timeout: never (GET or POST): the call already waited its whole
+  ///    limit and the server may still be working on it;
+  ///  * every GET (trip, messages, call, config, receipt, history, active
+  ///    and scheduled trips): a read, safe to repeat;
+  ///  * every POST (quote, book, cancel, sendMessage, answerCall, endCall,
+  ///    otp/request, otp/verify): repeated with the SAME Idempotency-Key as
+  ///    the first try, and only after a connection error, so a write the
+  ///    server did get is not done twice. The two sign-in calls are safe to
+  ///    repeat in any case: a second code request only opens a new session
+  ///    (its id is read from the answer), and a second verify of a used
+  ///    session gets a 4xx, which fails the step as before.
+  ///
+  /// Each retry prints one line: method, path, try number, exception type.
   Future<ApiAnswer> _send(
+    String method,
+    String path,
     Future<http.Response> Function() call,
     Duration timeout,
   ) async {
-    try {
-      final response = await call().timeout(timeout);
-      Object? body;
+    for (var attempt = 0; ; attempt++) {
       try {
-        body = response.body.isEmpty ? null : jsonDecode(response.body);
-      } catch (_) {}
-      return ApiAnswer(response.statusCode, body);
-    } catch (error) {
-      return ApiAnswer(0, null, error: error.runtimeType.toString());
+        final response = await call().timeout(timeout);
+        Object? body;
+        try {
+          body = response.body.isEmpty ? null : jsonDecode(response.body);
+        } catch (_) {}
+        return ApiAnswer(response.statusCode, body);
+      } catch (error) {
+        final type = error.runtimeType.toString();
+        if (attempt >= retryDelays.length || !_noAnswer(error)) {
+          return ApiAnswer(0, null, error: type);
+        }
+        _onRetry(
+          'API-RETRY $method $path: no answer ($type), '
+          'try ${attempt + 2} of ${retryDelays.length + 1}',
+        );
+        await Future<void>.delayed(retryDelays[attempt]);
+      }
     }
   }
 

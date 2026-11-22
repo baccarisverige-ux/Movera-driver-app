@@ -190,11 +190,9 @@ extension _TripMoney on TripRun {
         ? tester.widget<Text>(amount.first).data
         : null;
     final wantCash = TripRun.short(p.cashDue);
+    // The share is no longer on the collect screen (owner 2026-11-21
+    // 14:55, showEarnings: false): PayVerdict checks it on Ride completed.
     final share = p.yourShare;
-    final balance = textsUnder(byKey('cash-collect-balance'));
-    final shareShown = share == null
-        ? null
-        : balance.contains(TripRun.short(share));
     await log.screenshot(tester, 'cash-collect');
     var status = serverStatus;
     await watch.run('end', () async {
@@ -212,14 +210,20 @@ extension _TripMoney on TripRun {
     completedView = lastRiderView;
     final fare = moneyOf(completedView?['fare']);
     final total = (p.total.minorUnits, p.total.currency);
-    final good =
-        shownCash == wantCash &&
-        shareShown != false &&
-        completed &&
-        fare == total &&
-        rideCompletedShown();
+    final shareShown = PayVerdict.shareShown(
+      share,
+      textsUnder(byKey('ride-completed-fare')),
+    );
+    final good = PayVerdict.good(
+      shownCash: shownCash,
+      wantCash: wantCash,
+      shareShown: shareShown,
+      completed: completed,
+      fareMatches: fare == total,
+      finishedShown: rideCompletedShown(),
+    );
     final detail =
-        'to collect shown=$shownCash server=$wantCash; you get '
+        'to collect shown=$shownCash server=$wantCash; you get (Ride completed) '
         '${share == null ? 'not sent by the server' : '${TripRun.short(share)} shown=$shareShown'}; '
         'server status=$status fare=$fare preview total=$total '
         'earlyEnd=${p.earlyEnd}; finished screen=${rideCompletedShown()}';
@@ -394,11 +398,13 @@ extension _TripMoney on TripRun {
       // Run 8b HISTORY: after Rate → Done, Home's island shows a message
       // and tucks its menu button (IgnorePointer, opacity 0,
       // home_map_top_island.dart:140-160): in the tree, not tappable. Wait
-      // for a menu button that takes the tap.
+      // for a menu button that takes the tap. Run 44951732597: online
+      // again, the island says "Finding trips" and keeps the menu tucked
+      // until it is touched (R13-1): homeMenuTappable touches it once.
       final menu = find.byTooltip(tr.menu).hitTestable();
-      if (!await pumpUntil(
+      if (!await homeMenuTappable(
         tester,
-        () => shows(menu),
+        menu,
         timeout: const Duration(seconds: 15),
       )) {
         CheckLog.say('MISSED menu button not tappable in 15 s (Home)');
