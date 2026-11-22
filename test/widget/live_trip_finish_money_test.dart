@@ -18,6 +18,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
@@ -321,6 +322,81 @@ void main() {
     expect(bodies[0]['cashCollected'], money(5400));
     expect(bodies[1]['previewId'], 'cpv_fresh');
     expect(bodies[1]['cashCollected'], money(5900));
+    await close(tester);
+  });
+
+  testWidgets('M3 (v0.18.140) + owner 2026-11-21: the collect sheet shows '
+      'only the one total; the split goes on the waybill, a 409 fresh '
+      'preview brings its own', (tester) async {
+    preview = () => json(200, {
+      'previewId': 'cpv_first',
+      'tripId': 'live-trip',
+      'total': money(25000),
+      'cashDue': money(25000),
+      'cashDueRide': money(21500),
+      'cashDueOutstandingFee': money(3500),
+      'driverEarnings': money(3920),
+      'earlyEnd': false,
+      'fareLines': const [],
+    });
+    completeAnswers.add(
+      () => json(409, {
+        'code': 'conflict',
+        'message': 'The price changed.',
+        'requestId': 'r',
+        'retryable': false,
+        'reason': 'price_changed',
+        'preview': {
+          'previewId': 'cpv_fresh',
+          'tripId': 'live-trip',
+          'total': money(25500),
+          'cashDue': money(25500),
+          'cashDueRide': money(22000),
+          'cashDueOutstandingFee': money(3500),
+          'driverEarnings': money(4300),
+          'earlyEnd': false,
+          'fareLines': const [],
+        },
+      }),
+    );
+    final caseBox = find.byKey(const ValueKey<String>('cash-collect-case'));
+    void onlyTotal(String total, String ride) {
+      expect(
+        find.descendant(of: caseBox, matching: find.text(total)),
+        findsOneWidget,
+      );
+      expect(find.text(ride), findsNothing);
+      expect(find.text('35,00 kr'), findsNothing);
+    }
+
+    final sent = await openCashSheet(tester);
+    onlyTotal('250,00 kr', '215,00 kr');
+    var waybill = InMemoryWaybillRepository.instance.current;
+    expect(waybill?.cashRide, const Money(minorUnits: 21500, currency: 'SEK'));
+    expect(
+      waybill?.cashEarlierFee,
+      const Money(minorUnits: 3500, currency: 'SEK'),
+    );
+    await finish(tester);
+    onlyTotal('255,00 kr', '220,00 kr');
+    waybill = InMemoryWaybillRepository.instance.current;
+    expect(waybill?.cashRide, const Money(minorUnits: 22000, currency: 'SEK'));
+    await finish(tester);
+    final done =
+        InMemoryWaybillRepository.instance.last ??
+        InMemoryWaybillRepository.instance.current;
+    expect(done?.cashRide, const Money(minorUnits: 22000, currency: 'SEK'));
+    expect(
+      done?.cashEarlierFee,
+      const Money(minorUnits: 3500, currency: 'SEK'),
+    );
+    final bodies = [
+      for (final r in sent.where((r) => r.url.path.endsWith('/complete')))
+        jsonDecode(r.body) as Map,
+    ];
+    // The cash sent is still cashDue, never the rows.
+    expect(bodies[0]['cashCollected'], money(25000));
+    expect(bodies[1]['cashCollected'], money(25500));
     await close(tester);
   });
 

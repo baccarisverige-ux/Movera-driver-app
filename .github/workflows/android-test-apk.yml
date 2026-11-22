@@ -7,6 +7,13 @@ name: Android test APK (staging)
 on:
   workflow_dispatch:
     inputs:
+      server:
+        description: 'Server the APKs talk to: test (movera-server, as before) or real (the new real server in the repository variable MOVERA_PROD_API_URL; no Test Lab run then)'
+        type: choice
+        options:
+          - test
+          - real
+        default: test
       old_ref:
         description: Branch/commit for APK 1 (installed first)
         default: main
@@ -41,7 +48,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      LIVE_API: https://movera-server.onrender.com
+      # Owner 2026-11-19 (Rules plan/NEW-SERVER-PLAN.md 1.4): input server=real builds against MOVERA_PROD_API_URL;
+      # the default (test) is exactly the old address. The check step below stops a real build without the variable.
+      LIVE_API: ${{ inputs.server == 'real' && vars.MOVERA_PROD_API_URL || 'https://movera-server.onrender.com' }}
       # android/app/build.gradle.kts reads GOOGLE_MAPS_API_KEY.
       GOOGLE_MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY || secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY }}
       # The owner's styled Movera map (Google Cloud Map ID), the same variable
@@ -50,6 +59,22 @@ jobs:
       # default style.
       DRIVER_MAP_ID: ${{ vars.DRIVER_MAP_ID }}
     steps:
+      - name: Check the server choice
+        env:
+          SERVER: ${{ inputs.server || 'test' }}
+          PROD_API: ${{ vars.MOVERA_PROD_API_URL }}
+          TESTLAB_DEVICE: ${{ inputs.testlab_device }}
+        run: |
+          set -euo pipefail
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          PROD_API="$(printf '%s' "$PROD_API" | tr -d '[:space:][:cntrl:]')"
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
+          if [ "$SERVER" = real ]; then
+            case "$PROD_API" in https://*) ;; *) echo "::error::server=real needs the repository variable MOVERA_PROD_API_URL (https://...)."; exit 1 ;; esac
+            if [ "${PROD_API%/}" = "https://movera-server.onrender.com" ]; then echo "::error::MOVERA_PROD_API_URL is the test server."; exit 1; fi
+            if [ -n "$TESTLAB_DEVICE" ]; then echo "::error::No Test Lab run with server=real (Test Lab uses the test server's test accounts)."; exit 1; fi
+          fi
+          echo "APKs talk to: $SERVER server ($LIVE_API)"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -83,6 +108,8 @@ jobs:
           NEW_REF: ${{ inputs.new_ref }}
         run: |
           set -euo pipefail
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           if [ -z "${GOOGLE_MAPS_API_KEY:-}" ]; then
             # Test-only build: the owner checks sign-in, not the map.
             echo '::warning::No Google Maps key secret: test build uses a placeholder, the map will be grey.'
@@ -126,6 +153,8 @@ jobs:
         if: ${{ inputs.app_bundle }}
         run: |
           set -euo pipefail
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"; app_version="${app_version%%+*}+${GITHUB_RUN_NUMBER}"
           flutter build appbundle --release \
             -t lib/main.dart \
@@ -146,7 +175,7 @@ jobs:
         run: rm -rf "$RUNNER_TEMP/test-signing"
       - uses: actions/upload-artifact@v4
         with:
-          name: driver-test-apks
+          name: ${{ inputs.server == 'real' && 'driver-test-apks-REAL-SERVER' || 'driver-test-apks' }}
           path: out/*.apk
           retention-days: 7
           if-no-files-found: error

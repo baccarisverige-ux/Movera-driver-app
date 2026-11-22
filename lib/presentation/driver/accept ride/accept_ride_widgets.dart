@@ -59,6 +59,12 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
   @override
   void initState() {
     super.initState();
+    // v0.18.144: the rider's live dot (when the rider shares) redraws the pins.
+    LiveLocationHub.riderDot.addListener(_riderDotChanged);
+    // A rider dot older than staleAfter leaves the map even with no new frame.
+    _riderDotExpiry = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (LiveLocationHub.riderDot.value != null) _riderDotChanged();
+    });
     _pose = widget.vehicle.current;
     _car = ValueNotifier<Marker?>(_carMarker);
     if (!DriverRuntimeConfig.current.liveMapTicker) {
@@ -94,6 +100,8 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
 
   @override
   void dispose() {
+    LiveLocationHub.riderDot.removeListener(_riderDotChanged);
+    _riderDotExpiry?.cancel();
     _ticker?.cancel();
     _car.dispose();
     super.dispose();
@@ -114,6 +122,12 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     infoWindow: InfoWindow(title: MoveraVehicleMarker.ownTitle),
   );
 
+  Timer? _riderDotExpiry;
+
+  void _riderDotChanged() {
+    if (mounted) setState(() {});
+  }
+
   /// The pins; they change only with the trip's step.
   Set<Marker> get _pins {
     final markers = <Marker>{};
@@ -130,6 +144,25 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     // black drop-off.
     if (widget.stage != ActiveRideStage.onTrip) {
       markers.add(pin('pickup', widget.pickupPosition, RouteMarkKind.pickup));
+      // Contract v0.18.144 (approved mockup screen 8): the rider's precise
+      // live dot while the rider shares, until pickup.
+      final dot = LiveLocationHub.riderDot.value;
+      if (dot != null &&
+          DateTime.now().difference(dot.at) <= LiveLocationHub.staleAfter) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('rider-live'),
+            position: LatLng(dot.point.latitude, dot.point.longitude),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueAzure,
+            ),
+            zIndexInt: 10,
+            infoWindow: InfoWindow(
+              title: tr.liveRiderLive(LiveLocationHub.riderLabel),
+            ),
+          ),
+        );
+      }
     } else {
       for (var i = widget.stopCursor; i < widget.stopPositions.length; i++) {
         markers.add(

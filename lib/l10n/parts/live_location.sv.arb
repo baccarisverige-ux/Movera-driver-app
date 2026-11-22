@@ -1,0 +1,7 @@
+{
+  "liveShareSwitch": "Dela min plats",
+  "liveDriverShareBody": "{rider} ser dig på kartan.",
+  "liveDriverPrivacyNote": "Din plats skickas bara till din kund fram till upphämtningen och sparas inte.",
+  "liveRiderSharing": "{rider} delar sin plats ({meters} m från upphämtningen)",
+  "liveRiderLive": "{rider} · live"
+}

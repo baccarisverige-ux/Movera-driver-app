@@ -13,24 +13,18 @@ import 'request_budget_harness.dart';
 /// and says why (GLOBAL-SAFE-PLAN T3).
 const Map<DriverState, Map<String, double>> budgets = {
   DriverState.offline: {
-    'GET /api/v1/driver/profile': 1.0,
-    'GET /api/v1/notifications': 1.0,
-    'GET /api/v1/driver/reminders': 1.0,
-    'GET /api/v1/driver/onboarding/settings': 1.0,
+    // v0.18.145 (`loadCut.homeBadges`): the four badge reads in one.
+    'GET /api/v1/driver/home-badges': 1.0,
   },
   DriverState.onlineIdle: {
-    'GET /api/v1/driver/profile': 1.0,
-    'GET /api/v1/notifications': 1.0,
-    'GET /api/v1/driver/reminders': 1.0,
-    'GET /api/v1/driver/onboarding/settings': 1.0,
+    // v0.18.145 (`loadCut.homeBadges`): the four badge reads in one.
+    'GET /api/v1/driver/home-badges': 1.0,
     'POST /api/v1/driver/location': 6.0,
     'GET /api/v1/driver/surge-map': 1.0,
   },
   DriverState.offerShown: {
-    'GET /api/v1/driver/profile': 1.0,
-    'GET /api/v1/notifications': 1.0,
-    'GET /api/v1/driver/reminders': 1.0,
-    'GET /api/v1/driver/onboarding/settings': 1.0,
+    // v0.18.145 (`loadCut.homeBadges`): the four badge reads in one.
+    'GET /api/v1/driver/home-badges': 1.0,
     'POST /api/v1/driver/location': 6.0,
     'GET /api/v1/driver/surge-map': 1.0,
   },
@@ -46,18 +40,14 @@ const Map<DriverState, Map<String, double>> budgets = {
   DriverState.tripFinished: {'POST /api/v1/driver/location': 6.0},
   DriverState.background: {'POST /api/v1/driver/location': 6.0},
   DriverState.offlineConfigStreamDown: {
-    'GET /api/v1/driver/profile': 1.0,
-    'GET /api/v1/notifications': 1.0,
-    'GET /api/v1/driver/reminders': 1.0,
-    'GET /api/v1/driver/onboarding/settings': 1.0,
+    // v0.18.145 (`loadCut.homeBadges`): the four badge reads in one.
+    'GET /api/v1/driver/home-badges': 1.0,
     'GET /api/v1/driver/config': 1.1,
     'GET /api/v1/driver/config/stream (SSE open)': 1.1,
   },
   DriverState.onlineOffersStreamDown: {
-    'GET /api/v1/driver/profile': 1.0,
-    'GET /api/v1/notifications': 1.0,
-    'GET /api/v1/driver/reminders': 1.0,
-    'GET /api/v1/driver/onboarding/settings': 1.0,
+    // v0.18.145 (`loadCut.homeBadges`): the four badge reads in one.
+    'GET /api/v1/driver/home-badges': 1.0,
     'POST /api/v1/driver/location': 6.0,
     'GET /api/v1/driver/surge-map': 1.0,
     'GET /api/v1/driver/offers/stream (SSE open)': 2.0,

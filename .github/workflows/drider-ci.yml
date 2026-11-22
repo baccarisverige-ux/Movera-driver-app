@@ -195,6 +195,8 @@ jobs:
         env:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL || 'https://movera-server.onrender.com' }}
         run: |
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           # Contract v0.16.0: crash reports name the pubspec version.
           app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
           flutter build web --release --wasm --base-href "/Movera-driver-app/live/" \
@@ -280,8 +282,10 @@ jobs:
             echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."
             exit 1
           fi
+          # v0.18.154 P16c: the build knows its version (minimum app version check).
           MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true flutter build apk --release \
-            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}" \
+            --dart-define=MOVERA_APP_VERSION="$(sh tool/app_version.sh "${GITHUB_RUN_NUMBER:-}")"
 
   # The iOS release compile preflight (macOS, billed 10x) moved to
   # drider-ios.yml with the same job name (CI cost cut, owner 2026-11-06).

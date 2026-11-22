@@ -195,15 +195,25 @@ class _RouteChangeSheetState extends State<RouteChangeSheet> {
 /// still waits for the driver.
 String? routeChangeIslandLine(TripRouteChange change) =>
     switch (change.status) {
-      'accepted' =>
+      // Supervisor 2026-11-20 (owner Q4 "driver updates meter to app price"):
+      // an accepted change also says the trip's new price, so the driver
+      // sets the meter to it (existing words + the server's amount only).
+      'accepted' => _withNewPrice(
         change.answeredBy == 'system'
             ? tr.g7RouteChanged
             : tr.g7RouteAcceptedIsland,
+        change,
+      ),
       'refused' => tr.g7RouteRefusedIsland,
       'expired' => tr.g7RouteExpiredIsland,
       'withdrawn' => tr.g7RouteWithdrawnIsland,
       _ => null,
     };
+
+String _withNewPrice(String line, TripRouteChange change) {
+  final total = change.total;
+  return total == null ? line : '$line · ${total.formatted}';
+}
 
 /// The waybill's "To" after a route change: the stops on the way, then the
 /// drop-off ("Fridhemsplan → Brommaplan").
