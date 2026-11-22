@@ -632,8 +632,7 @@ class _DriverHomeState extends State<DriverHome>
     if (repo == null) {
       if (mounted) {
         setState(() => _recoveryResolved = true);
-        // v0.18.154 P16c: the active-trip check answered: no trip.
-        MinAppVersion.tripChecked.value = true;
+        MinAppVersion.tripChecked.value = true; // v0.18.154 P16c: no repo
       }
       return;
     }
@@ -690,14 +689,7 @@ class _DriverHomeState extends State<DriverHome>
     }
     if (snapshot == null) {
       setState(() => _recoveryResolved = true);
-      // v0.18.154 P16c: the active-trip check answered: no trip (review
-      // S-D1: only when the server read worked).
-      final live = LiveDriverServices.instance;
-      MinAppVersion.answerTripCheck(
-        askedServer: askServer,
-        serverReadFailed: live?.activeTrip.lastReadFailed ?? false,
-        liveServer: live != null,
-      );
+      _HomeLive(this)._tripCheckAnswered(askServer); // v0.18.154 P16c
       return;
     }
 

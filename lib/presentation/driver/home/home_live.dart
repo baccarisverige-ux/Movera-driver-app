@@ -4,6 +4,17 @@ part of 'home.dart';
 /// availability (`POST /driver/availability`). The demo has no
 /// [LiveDriverServices]; nothing here runs there.
 extension _HomeLive on _DriverHomeState {
+  /// v0.18.154 P16c (review S-D1): the active-trip check found no trip;
+  /// only a server read that worked confirms it.
+  void _tripCheckAnswered(bool askServer) {
+    final live = LiveDriverServices.instance;
+    MinAppVersion.answerTripCheck(
+      askedServer: askServer,
+      serverReadFailed: live?.activeTrip.lastReadFailed ?? false,
+      liveServer: live != null,
+    );
+  }
+
   /// D11 on the server too: a driver the server still holds online from
   /// before this start is set offline, as Home shows (once per start).
   void _settleServerAfterStart() {
