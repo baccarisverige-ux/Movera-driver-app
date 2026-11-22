@@ -435,6 +435,7 @@ class EarningsTotals {
     required this.cashCollected,
     this.tipsAndFees,
     this.bonus,
+    this.rideCount,
     this.currencies = const [],
   });
 
@@ -458,6 +459,9 @@ class EarningsTotals {
     Money? tipsAndFees = Money(minorUnits: 0, currency: currency);
     Money? bonus;
     var trips = 0;
+    // v0.18.146 `EarningsPeriod.rideCounts` (optional): every ride kind of
+    // the period. Known only when every period sends it (and one does).
+    int? rides = periods.isEmpty ? null : 0;
     for (final period in periods) {
       if (period is! Map) throw FormatException('period', period);
       net = sum(net, period['net']);
@@ -476,6 +480,8 @@ class EarningsTotals {
           ? null
           : sum(sum(tipsAndFees, period['tips']), period['fees']);
       trips += (period['tripCount'] as num?)?.toInt() ?? 0;
+      final kinds = _rideCountOf(period['rideCounts']);
+      rides = rides == null || kinds == null ? null : rides + kinds;
     }
     final listed = report['currencies'];
     return EarningsTotals(
@@ -484,6 +490,7 @@ class EarningsTotals {
       cashCollected: cash,
       tipsAndFees: tipsAndFees,
       bonus: bonus,
+      rideCount: rides,
       currencies: [
         if (listed is List)
           for (final c in listed)
@@ -492,8 +499,27 @@ class EarningsTotals {
     );
   }
 
+  /// One period's `rideCounts` summed (completed + cancelled + noShow);
+  /// null when absent or not readable (never a guessed part).
+  static int? _rideCountOf(Object? counts) {
+    if (counts is! Map) return null;
+    var sum = 0;
+    for (final kind in const ['completed', 'cancelled', 'noShow']) {
+      final n = counts[kind];
+      if (n is! num || n < 0 || n != n.truncate()) return null;
+      sum += n.toInt();
+    }
+    return sum;
+  }
+
   final Money net;
   final int tripCount;
+
+  /// Contract v0.18.146 `driverRideCounts` (owner 2026-11-20 "Must see all
+  /// kind"): completed + cancelled + no-show rides over the range, counted
+  /// by the server from trips; null from a server before v0.18.146 (the
+  /// app then shows [tripCount]).
+  final int? rideCount;
   final Money cashCollected;
 
   /// The driver's tips and his shares of cancel / no-show fees over the

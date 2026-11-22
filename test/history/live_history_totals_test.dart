@@ -127,7 +127,9 @@ void main() {
       );
       expect(query.containsKey('to'), isFalse);
       expect(find.text('6,00 kr'), findsWidgets);
+      // A server before v0.18.146 (no rideCounts): its tripCount.
       expect(metric(tester, 'Rides'), '6');
+      expect(find.text('View all 6 rides', skipOffstage: false), findsOne);
       expect(tester.takeException(), isNull);
     },
   );
@@ -329,6 +331,69 @@ void main() {
     expect(find.text('Tips and fees'), findsNothing);
     expect(find.text('Not available'), findsNothing);
   });
+
+  testWidgets(
+    'v0.18.146 rideCounts: Rides and View all N count every kind from the server',
+    (tester) async {
+      Map<String, Object?> counted(
+        Map<String, Object?> period,
+        int completed,
+        int cancelled,
+        int noShow,
+      ) => {
+        ...period,
+        'rideCounts': {
+          'completed': completed,
+          'cancelled': cancelled,
+          'noShow': noShow,
+        },
+      };
+      final report = {
+        ...threeDays,
+        'periods': [
+          counted(
+            day('2026-11-09T23:00:00Z', '2026-11-10T23:00:00Z', 100, 1),
+            1,
+            2,
+            0,
+          ),
+          counted(
+            day('2026-11-10T23:00:00Z', '2026-11-11T23:00:00Z', 200, 2),
+            2,
+            0,
+            1,
+          ),
+          // Rides that earned nothing: zero money, still counted.
+          counted(
+            day('2026-11-11T23:00:00Z', '2026-11-12T23:00:00Z', 0, 0),
+            0,
+            1,
+            1,
+          ),
+        ],
+      };
+      await open(
+        tester,
+        (_) async => http.Response(
+          jsonEncode(report),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      );
+      // 3 completed + 3 cancelled + 2 no-show, not tripCount 3.
+      expect(metric(tester, 'Rides'), '8');
+      expect(find.text('View all 8 rides', skipOffstage: false), findsOne);
+    },
+  );
+
+  testWidgets(
+    'server read failed: Rides and View all N fall back to the listed rides',
+    (tester) async {
+      await open(tester, (_) async => http.Response('{}', 503));
+      expect(metric(tester, 'Rides'), '0');
+      expect(find.text('View all 0 rides', skipOffstage: false), findsOne);
+    },
+  );
 
   testWidgets('G28: server down → total unavailable, never the local sum', (
     tester,
