@@ -718,6 +718,13 @@ class ServerNotification {
   /// them with a money icon.
   bool get isRefundTaken => kind == 'driver_refund_taken';
 
+  /// Contract v0.18.139 `driverPayRequest.notice` (owner 2026-11-20): the
+  /// monthly "Pay Movera" request (`driver_pay_movera`, deep link
+  /// `movera-driver://pay-movera`). A tap on the bell row, or on its push
+  /// (which opens the bell list on the notice), opens the Pay Movera screen.
+  bool get opensPayMovera =>
+      kind == 'driver_pay_movera' || deepLink == 'movera-driver://pay-movera';
+
   /// Contract v0.18.3 `reviewNotices` (R6): the document of a
   /// `document_approved` / `document_rejected` notice, from its deep link
   /// `movera-driver://documents/{type}[?vehicleId=]`; null otherwise.

@@ -11,6 +11,7 @@ import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
+import 'package:movera/presentation/driver/pay_movera/pay_movera.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
@@ -174,6 +175,11 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
               : rideHistoryScreen(loadHistory: widget.loadHistory),
         ),
       );
+      if (mounted) await _load();
+    } else if (notice.opensPayMovera) {
+      // Contract v0.18.139 (owner 2026-11-20): the monthly pay request
+      // opens Pay Movera (the amount is read again from the server there).
+      await pushSingle(context, RightToLeftTransition(const PayMoveraScreen()));
       if (mounted) await _load();
     } else if (notice.opensDocuments) {
       await pushSingle(

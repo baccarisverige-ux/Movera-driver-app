@@ -78,12 +78,18 @@ class LiveEarnings {
         await _api.get('/api/v1/driver/payouts?limit=$limit'),
       );
 
-  /// The period holding [now] (else the newest one) of an
-  /// `EarningsReport`; its `net`. Null when there is none.
-  static Money? todayOf(Map<String, dynamic> report, DateTime now) {
+  /// `GET /driver/pay-movera` (contract v0.18.139 `driverPayRequest.read`):
+  /// what he owes Movera now, the reference and, while his country's
+  /// monthly pay request is on, the payment link. Throws when the server
+  /// could not answer or the answer cannot be read.
+  Future<PayMovera> payMovera() async =>
+      PayMovera.of(await _api.get('/api/v1/driver/pay-movera'));
+
+  /// The period holding [now] (else the newest one) of an `EarningsReport`;
+  /// null when there is none.
+  static Map? periodOf(Map<String, dynamic> report, DateTime now) {
     final periods = report['periods'];
     if (periods is! List || periods.isEmpty) return null;
-    Map? chosen;
     for (final period in periods) {
       if (period is! Map) continue;
       final start = DateTime.tryParse('${period['periodStart']}');
@@ -92,11 +98,16 @@ class LiveEarnings {
           end != null &&
           !now.isBefore(start) &&
           now.isBefore(end)) {
-        chosen = period;
-        break;
+        return period;
       }
     }
-    chosen ??= periods.last is Map ? periods.last as Map : null;
+    return periods.last is Map ? periods.last as Map : null;
+  }
+
+  /// The period holding [now] (else the newest one) of an
+  /// `EarningsReport`; its `net`. Null when there is none.
+  static Money? todayOf(Map<String, dynamic> report, DateTime now) {
+    final chosen = periodOf(report, now);
     final net = chosen?['net'];
     if (net is! Map) return null;
     try {
@@ -215,15 +226,24 @@ class PayoutSummary {
 /// One currency of an `EarningsReport` (contract v0.18.14): its `net` for
 /// the period holding now, the report's `currency` and `currencies`.
 class EarningsWeek {
-  const EarningsWeek({this.net, this.currency, this.currencies = const []});
+  const EarningsWeek({
+    this.net,
+    this.currency,
+    this.currencies = const [],
+    this.cashCollected,
+    this.moveraBalance,
+  });
 
   factory EarningsWeek.of(Map<String, dynamic> report, DateTime now) {
     final listed = report['currencies'];
+    final currency = report['currency'] is String
+        ? report['currency'] as String
+        : null;
     return EarningsWeek(
       net: LiveEarnings.todayOf(report, now),
-      currency: report['currency'] is String
-          ? report['currency'] as String
-          : null,
+      cashCollected: _cashOf(report, now, currency),
+      moveraBalance: MoveraBalance.tryParse(report['moveraBalance']),
+      currency: currency,
       currencies: [
         if (listed is List)
           for (final c in listed)
@@ -235,8 +255,126 @@ class EarningsWeek {
   final Money? net;
   final String? currency;
 
+  /// Contract v0.18.139 `driverWalletBalance.cash`: the server's
+  /// `cashCollected` of the same period as [net]; 0 in the report's
+  /// currency when the week has no entry (the server sends no period then);
+  /// null when the period carries none (the field is optional) or the
+  /// report cannot be read.
+  final Money? cashCollected;
+
+  /// Contract v0.18.139 `EarningsReport.moveraBalance`: what he owes Movera
+  /// now, or Movera owes him, as the server counts it; null from an older
+  /// server. Never worked out here (never net − cash, never a sum of trips).
+  final MoveraBalance? moveraBalance;
+
   /// Every currency earned in during the range; two or more → the switch.
   final List<String> currencies;
+
+  static Money? _cashOf(
+    Map<String, dynamic> report,
+    DateTime now,
+    String? currency,
+  ) {
+    final periods = report['periods'];
+    if (periods is! List) return null;
+    final period = LiveEarnings.periodOf(report, now);
+    if (period == null) {
+      return periods.isEmpty && currency != null
+          ? Money(minorUnits: 0, currency: currency)
+          : null;
+    }
+    final cash = period['cashCollected'];
+    if (cash is! Map) return null;
+    try {
+      return Money.fromJson(Map<String, dynamic>.from(cash));
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// `EarningsReport.moveraBalance { owedToMovera, moveraOwesYou }` (contract
+/// v0.18.139, owner 2026-11-20 "Yes, server + app (Rec.)"): the two sides
+/// of the server's one sum, shown as they come.
+class MoveraBalance {
+  const MoveraBalance({
+    required this.owedToMovera,
+    required this.moveraOwesYou,
+  });
+
+  final Money owedToMovera;
+  final Money moveraOwesYou;
+
+  bool get driverOwes => owedToMovera.minorUnits > 0;
+  bool get moveraOwes => !driverOwes && moveraOwesYou.minorUnits > 0;
+
+  /// Null when absent or not two valid amounts (never half a balance).
+  static MoveraBalance? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final owed = json['owedToMovera'];
+    final owes = json['moveraOwesYou'];
+    if (owed is! Map || owes is! Map) return null;
+    try {
+      return MoveraBalance(
+        owedToMovera: Money.fromJson(Map<String, dynamic>.from(owed)),
+        moveraOwesYou: Money.fromJson(Map<String, dynamic>.from(owes)),
+      );
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// `DriverPayMovera` of `GET /driver/pay-movera` (contract v0.18.139
+/// `driverPayRequest`, owner 2026-11-20: the TEMPORARY monthly pay request).
+class PayMovera {
+  const PayMovera({
+    required this.enabled,
+    required this.owedToMovera,
+    required this.reference,
+    this.payLink,
+  });
+
+  /// Throws [FormatException] when the amount or the reference is missing
+  /// (never a screen with a made-up amount).
+  factory PayMovera.of(Map<String, dynamic> json) {
+    final owed = json['owedToMovera'];
+    final reference = json['reference'];
+    if (owed is! Map || reference is! String || reference.isEmpty) {
+      throw FormatException('pay-movera answer', json);
+    }
+    return PayMovera(
+      enabled: json['enabled'] == true,
+      owedToMovera: Money.fromJson(Map<String, dynamic>.from(owed)),
+      reference: reference,
+      payLink: json['enabled'] == true ? linkOf(json['payLink']) : null,
+    );
+  }
+
+  /// The country's monthly pay request is on.
+  final bool enabled;
+
+  /// What he owes Movera now (the server's number).
+  final Money owedToMovera;
+
+  /// What he writes on the payment so Movera finds him and the month.
+  final String reference;
+
+  /// The admin's payment link, opened as it is; null while off or when it
+  /// is not a plain https link (nothing else is ever opened).
+  final Uri? payLink;
+
+  /// The Pay button shows only with a link and something to pay.
+  bool get canPay => payLink != null && owedToMovera.minorUnits > 0;
+
+  static Uri? linkOf(Object? value) {
+    if (value is! String || value.length > 500) return null;
+    if (value.contains(RegExp(r'\s'))) return null;
+    final uri = Uri.tryParse(value);
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty
+        ? uri
+        : null;
+  }
 }
 
 /// G28 step 1: an `EarningsReport` summed over all its periods: `net`,

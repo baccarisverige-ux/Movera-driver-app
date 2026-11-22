@@ -4833,6 +4833,37 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici.';
 
   @override
+  String get payMoveraTitle => 'Payer Movera';
+
+  @override
+  String get payMoveraReference => 'Référence';
+
+  @override
+  String get payMoveraHowTo =>
+      'La page de paiement s’ouvre dans votre navigateur. Saisissez-y le montant et la référence.';
+
+  @override
+  String get payMoveraConfirmNote =>
+      'Le montant baisse lorsque Movera a confirmé votre paiement.';
+
+  @override
+  String get payMoveraCopy => 'Copier';
+
+  @override
+  String get payMoveraCopied => 'Copié';
+
+  @override
+  String get payMoveraAmountToPay => 'Montant à payer';
+
+  @override
+  String get payMoveraLinkFailed =>
+      'Impossible d’ouvrir la page de paiement. Veuillez réessayer.';
+
+  @override
+  String get payMoveraUnavailable =>
+      'Impossible de charger ce que vous devez à Movera. Réessayez plus tard.';
+
+  @override
   String get reservation => 'Réservation';
 
   @override

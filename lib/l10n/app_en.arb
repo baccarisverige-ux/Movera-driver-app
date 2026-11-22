@@ -3738,6 +3738,42 @@
   "destSearchTryAgain": "Check your connection and try again.",
   "destSearchStart": "Search for an address",
   "destSearchStartBody": "Type a street, a place or a city. Your last 5 destinations show here.",
+  "payMoveraTitle": "Pay Movera",
+  "@payMoveraTitle": {
+    "description": "Pay Movera screen title and its pay button (contract v0.18.139 driverPayRequest; owner 2026-11-20 temporary monthly pay request)."
+  },
+  "payMoveraReference": "Reference",
+  "@payMoveraReference": {
+    "description": "Pay Movera: label of the reference (driver id + month) the driver writes on the payment."
+  },
+  "payMoveraHowTo": "The payment page opens in your browser. Enter the amount and the reference there.",
+  "@payMoveraHowTo": {
+    "description": "Pay Movera: shown above the pay button; the link is opened as it is, the app adds no amount."
+  },
+  "payMoveraConfirmNote": "The amount goes down when Movera has confirmed your payment.",
+  "@payMoveraConfirmNote": {
+    "description": "Pay Movera: the payment is confirmed by hand by Movera (admin Driver paid Movera)."
+  },
+  "payMoveraCopy": "Copy",
+  "@payMoveraCopy": {
+    "description": "Pay Movera: copy button of the amount / the reference."
+  },
+  "payMoveraCopied": "Copied",
+  "@payMoveraCopied": {
+    "description": "Pay Movera: snackbar after a copy."
+  },
+  "payMoveraAmountToPay": "Amount to pay",
+  "@payMoveraAmountToPay": {
+    "description": "Pay Movera: label of the amount row with its copy button."
+  },
+  "payMoveraLinkFailed": "Could not open the payment page. Please try again.",
+  "@payMoveraLinkFailed": {
+    "description": "Pay Movera: the browser could not open the admin's payment link."
+  },
+  "payMoveraUnavailable": "Could not load what you owe Movera. Try again later.",
+  "@payMoveraUnavailable": {
+    "description": "Pay Movera: GET /driver/pay-movera failed; never a made-up amount."
+  },
   "reservation": "Reservation",
   "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
   "@leaveNowForPickupTimePickup": {

@@ -8242,6 +8242,60 @@ abstract class AppLocalizations {
   /// **'Type a street, a place or a city. Your last 5 destinations show here.'**
   String get destSearchStartBody;
 
+  /// Pay Movera screen title and its pay button (contract v0.18.139 driverPayRequest; owner 2026-11-20 temporary monthly pay request).
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Movera'**
+  String get payMoveraTitle;
+
+  /// Pay Movera: label of the reference (driver id + month) the driver writes on the payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get payMoveraReference;
+
+  /// Pay Movera: shown above the pay button; the link is opened as it is, the app adds no amount.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment page opens in your browser. Enter the amount and the reference there.'**
+  String get payMoveraHowTo;
+
+  /// Pay Movera: the payment is confirmed by hand by Movera (admin Driver paid Movera).
+  ///
+  /// In en, this message translates to:
+  /// **'The amount goes down when Movera has confirmed your payment.'**
+  String get payMoveraConfirmNote;
+
+  /// Pay Movera: copy button of the amount / the reference.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get payMoveraCopy;
+
+  /// Pay Movera: snackbar after a copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get payMoveraCopied;
+
+  /// Pay Movera: label of the amount row with its copy button.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount to pay'**
+  String get payMoveraAmountToPay;
+
+  /// Pay Movera: the browser could not open the admin's payment link.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the payment page. Please try again.'**
+  String get payMoveraLinkFailed;
+
+  /// Pay Movera: GET /driver/pay-movera failed; never a made-up amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load what you owe Movera. Try again later.'**
+  String get payMoveraUnavailable;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:
