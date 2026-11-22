@@ -92,6 +92,7 @@ public class MainActivityTest {
     Log.i(TAG, "run-time values handed to the test: " + handed);
 
     Context app = instrumentation.getTargetContext();
+    appContext = app;
     File out = app.getExternalFilesDir("tl");
     if (out != null) {
       try {
@@ -132,6 +133,10 @@ public class MainActivityTest {
         Log.w(TAG, "no control file: " + e.getClass().getSimpleName());
       }
       startMockLocation(instrumentation, app);
+    }
+    // Device proof M1: offer notices may show (granted once, before the app starts).
+    if (Build.VERSION.SDK_INT >= 33) {
+      shell(instrumentation, "pm grant se.movera.driver android.permission.POST_NOTIFICATIONS");
     }
   }
 
@@ -197,22 +202,42 @@ public class MainActivityTest {
     }
     if (n <= 0) return;
     String word = new String(buffer, 0, n, java.nio.charset.StandardCharsets.US_ASCII).trim();
+    int hash = word.indexOf('#');
+    if (hash >= 0) word = word.substring(0, hash);
     switch (word) {
       case "location-off": location(instrumentation, false); break;
       case "location-on": location(instrumentation, true); break;
       case "net-off": net(instrumentation, false); break;
       case "net-on": net(instrumentation, true); break;
+      // Device proof 2026-11-20 (M1, M4): the app really to the background
+      // and back, the offer notices in the phone's list, the top screen.
+      case "home":
+        shell(instrumentation, "input keyevent KEYCODE_HOME");
+        break;
+      case "front":
+        shell(instrumentation, "am start -n se.movera.driver/.MainActivity");
+        break;
+      case "notif":
+      case "clear-offers":
+      case "top":
+        break;
       default: return;
     }
-    SystemClock.sleep(1500);
-    String state =
-        word
-            + " location_mode="
-            + shellOut(instrumentation, "settings get secure location_mode")
-            + " location="
-            + shellOut(instrumentation, "cmd location is-location-enabled")
-            + " airplane="
-            + shellOut(instrumentation, "settings get global airplane_mode_on");
+    String state;
+    if (word.equals("notif")) {
+      state = word + " " + offerNotices(false);
+    } else if (word.equals("clear-offers")) {
+      offerNotices(true);
+      state = word + " " + offerNotices(false);
+    } else if (word.equals("home") || word.equals("front") || word.equals("top")) {
+      SystemClock.sleep(1500);
+      String[] top = topAndTel(instrumentation);
+      state = word + " top=" + top[0] + " telact=" + top[1];
+      if (word.equals("top")) state += " dialer=" + dialHandler(instrumentation);
+    } else {
+      SystemClock.sleep(1500);
+      state = locationState(instrumentation, word);
+    }
     Log.i(TAG, "control " + state);
     File ack = new File(file.getAbsolutePath() + ".ack");
     try (java.io.FileOutputStream outStream = new java.io.FileOutputStream(ack)) {
@@ -220,6 +245,111 @@ public class MainActivityTest {
     } catch (IOException e) {
       Log.w(TAG, "control ack: " + e.getClass().getSimpleName());
     }
+  }
+
+  /** The whole output of a shell command (at most [max] bytes), for dumpsys. */
+  private static String shellAll(Instrumentation instrumentation, String command, int max) {
+    ParcelFileDescriptor pfd = instrumentation.getUiAutomation().executeShellCommand(command);
+    java.io.ByteArrayOutputStream text = new java.io.ByteArrayOutputStream();
+    try (InputStream in = new FileInputStream(pfd.getFileDescriptor())) {
+      byte[] buffer = new byte[8192];
+      int n;
+      while ((n = in.read(buffer)) != -1) {
+        if (text.size() < max) text.write(buffer, 0, Math.min(n, max - text.size()));
+      }
+    } catch (IOException e) {
+      return "";
+    } finally {
+      try {
+        pfd.close();
+      } catch (IOException ignored) {
+        // Closed already.
+      }
+    }
+    return new String(text.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+  }
+
+  /** The app's context (the test runs in the app's process), for its notices. */
+  private static Context appContext;
+
+  /**
+   * Active notices of this app on the offer channels (movera_offers*):
+   * "offers=N keys=key@postTime,..." (StatusBarNotification keys, which
+   * carry id and tag, and post times only). [clear]: they are cancelled.
+   */
+  private static String offerNotices(boolean clear) {
+    Context app = appContext;
+    if (app == null || Build.VERSION.SDK_INT < 26) return "offers=-1 keys=-";
+    android.app.NotificationManager manager =
+        app.getSystemService(android.app.NotificationManager.class);
+    if (manager == null) return "offers=-1 keys=-";
+    int count = 0;
+    StringBuilder keys = new StringBuilder();
+    for (android.service.notification.StatusBarNotification sbn :
+        manager.getActiveNotifications()) {
+      String channel = sbn.getNotification().getChannelId();
+      if (channel == null || !channel.startsWith("movera_offers")) continue;
+      if (clear) {
+        manager.cancel(sbn.getTag(), sbn.getId());
+        continue;
+      }
+      count++;
+      if (keys.length() > 0) keys.append(',');
+      keys.append(sbn.getKey().replace(' ', '_')).append('@').append(sbn.getPostTime());
+    }
+    return "offers=" + count + " keys=" + (keys.length() == 0 ? "-" : keys.toString());
+  }
+
+  /** The package that handles ACTION_DIAL tel: on this phone ("none": no dialer). */
+  private static String dialHandler(Instrumentation instrumentation) {
+    String out =
+        shellAll(
+            instrumentation,
+            "cmd package resolve-activity --brief -a android.intent.action.DIAL -d tel:112",
+            4096);
+    java.util.regex.Pattern comp = java.util.regex.Pattern.compile("^([A-Za-z0-9_.]+)/");
+    String pkg = "none";
+    for (String line : out.split("\n")) {
+      java.util.regex.Matcher m = comp.matcher(line.trim());
+      if (m.find()) pkg = m.group(1);
+    }
+    return pkg;
+  }
+
+  /**
+   * The resumed activity (component) and the action of the newest activity
+   * intent with a tel: uri ("none" when none). Names only: no number.
+   */
+  private static String[] topAndTel(Instrumentation instrumentation) {
+    String dump = shellAll(instrumentation, "dumpsys activity activities", 4 << 20);
+    String top = "?";
+    String tel = "none";
+    java.util.regex.Pattern component =
+        java.util.regex.Pattern.compile("([A-Za-z0-9_.]+/[A-Za-z0-9_.$]+)");
+    java.util.regex.Pattern act =
+        java.util.regex.Pattern.compile("act=([A-Za-z0-9_.]+)[^}]*dat=tel:");
+    for (String line : dump.split("\n")) {
+      if (top.equals("?")
+          && (line.contains("topResumedActivity") || line.contains("mResumedActivity"))) {
+        java.util.regex.Matcher m = component.matcher(line);
+        if (m.find()) top = m.group(1);
+      }
+      if (tel.equals("none")) {
+        java.util.regex.Matcher m = act.matcher(line);
+        if (m.find()) tel = m.group(1);
+      }
+    }
+    return new String[] {top, tel};
+  }
+
+  private static String locationState(Instrumentation instrumentation, String word) {
+    return word
+            + " location_mode="
+            + shellOut(instrumentation, "settings get secure location_mode")
+            + " location="
+            + shellOut(instrumentation, "cmd location is-location-enabled")
+            + " airplane="
+            + shellOut(instrumentation, "settings get global airplane_mode_on");
   }
 
   private static double parse(String value, double fallback) {
