@@ -1,3 +1,4 @@
+import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/core/live/live_reservations.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -137,6 +138,8 @@ class LiveDriverServices {
       onZonesPublished: () => unawaited(zones.refresh()),
       onEventsPublished: () => unawaited(events.refresh()),
       onReservationsChanged: () => onReservationsStale?.call(),
+      // v0.18.145 (`loadCut.airportQueueLive`): the queue card's read.
+      onAirportQueueChanged: AirportQueue.instance.hint,
       // G17: the settings follow the zone the driver is in.
       zoneId: zoneNow,
       onZoneChanged: () => unawaited(content.refresh()),
