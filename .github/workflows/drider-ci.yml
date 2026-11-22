@@ -280,8 +280,10 @@ jobs:
             echo "::error::Invalid DRIVER_MAP_ID (letters and digits only)."
             exit 1
           fi
+          # v0.18.154 P16c: the build knows its version (minimum app version check).
           MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true flutter build apk --release \
-            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}"
+            --dart-define=MOVERA_GOOGLE_MAP_ID="${DRIVER_MAP_ID:-}" \
+            --dart-define=MOVERA_APP_VERSION="$(sh tool/app_version.sh "${GITHUB_RUN_NUMBER:-}")"
 
   # The iOS release compile preflight (macOS, billed 10x) moved to
   # drider-ios.yml with the same job name (CI cost cut, owner 2026-11-06).

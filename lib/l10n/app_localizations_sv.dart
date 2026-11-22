@@ -623,6 +623,16 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get minVersionTitle => 'Uppdatera Movera för att fortsätta';
+
+  @override
+  String get minVersionBody =>
+      'Den här versionen av appen är för gammal. Installera den senaste versionen från butiken för att fortsätta använda Movera.';
+
+  @override
+  String get minVersionUpdate => 'Uppdatera';
+
+  @override
   String get phoneVibratesWhenRequestArrives =>
       'Telefonen vibrerar när en förfrågan kommer.';
 

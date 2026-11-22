@@ -1162,6 +1162,24 @@ abstract class AppLocalizations {
   /// **'Airport queue: you are number {place}'**
   String tipAirportQueuePlace(Object place);
 
+  /// v0.18.154 P16c (contract.json#appUpdate.texts.title): full screen when this app is below the zone's minimum version.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Movera to continue'**
+  String get minVersionTitle;
+
+  /// v0.18.154 P16c (contract.json#appUpdate.texts.body): the one-line body under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of the app is too old. Install the latest version from the store to keep using Movera.'**
+  String get minVersionBody;
+
+  /// v0.18.154 P16c (contract.json#appUpdate.texts.button): opens the store.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get minVersionUpdate;
+
   /// No description provided for @phoneVibratesWhenRequestArrives.
   ///
   /// In en, this message translates to:

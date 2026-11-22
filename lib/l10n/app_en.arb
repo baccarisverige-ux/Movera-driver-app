@@ -403,6 +403,18 @@
     }
   },
   "@@locale": "en",
+  "minVersionTitle": "Update Movera to continue",
+  "@minVersionTitle": {
+    "description": "v0.18.154 P16c (contract.json#appUpdate.texts.title): full screen when this app is below the zone's minimum version."
+  },
+  "minVersionBody": "This version of the app is too old. Install the latest version from the store to keep using Movera.",
+  "@minVersionBody": {
+    "description": "v0.18.154 P16c (contract.json#appUpdate.texts.body): the one-line body under the title."
+  },
+  "minVersionUpdate": "Update",
+  "@minVersionUpdate": {
+    "description": "v0.18.154 P16c (contract.json#appUpdate.texts.button): opens the store."
+  },
   "phoneVibratesWhenRequestArrives": "The phone vibrates when a request arrives.",
   "phone": "Phone",
   "phoneVerification": "Phone verification",

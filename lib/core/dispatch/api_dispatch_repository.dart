@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:movera/core/zones/zone_clock.dart';
@@ -450,6 +451,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'X-Api-Version': '0.5',
+      // v0.18.154 P16c: X-App-Version + X-App-Platform (Android / iOS).
+      ...MinAppVersion.headers,
       if (token != null) 'Authorization': 'Bearer $token',
       if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
     };
@@ -981,6 +984,11 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
               : ClaimResult.unavailable(afterCheck: afterCheck);
         case 404:
           _withdraw(offerId, OfferGoneReason.withdrawn, emit: true);
+          return ClaimResult.unavailable(afterCheck: afterCheck);
+        case 426:
+          // v0.18.154 P16c: below the zone's minimum version; the offer
+          // stays the server's, the app shows "Update Movera to continue".
+          MinAppVersion.markServerSaid(body);
           return ClaimResult.unavailable(afterCheck: afterCheck);
         default:
           return const ClaimResult.networkError();
