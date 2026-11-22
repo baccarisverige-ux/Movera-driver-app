@@ -609,6 +609,39 @@ class AppLocalizationsFr extends AppLocalizations {
   String get menuNewDriver => 'Nouveau chauffeur';
 
   @override
+  String get acctDeleteTitle => 'Supprimer mon compte';
+
+  @override
+  String get acctDeleteBody =>
+      'Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées.';
+
+  @override
+  String get acctDeleteKept =>
+      'Conservés : vos courses, gains et virements pour la loi comptable et, si vous devez de l’argent à Movera, votre nom, numéro et le montant jusqu’au paiement.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Supprimer votre compte ?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'Action irréversible. Votre compte est fermé maintenant.';
+
+  @override
+  String get acctDeleteConfirm => 'Supprimer le compte';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Terminez ou annulez d’abord votre course, puis supprimez votre compte.';
+
+  @override
+  String get acctDeleteFailed =>
+      'Impossible de supprimer le compte. Réessayez.';
+
+  @override
+  String get acctClosedSignIn =>
+      'Ce compte est fermé et en cours de suppression. Il ne permet plus de se connecter.';
+
+  @override
   String get airportQueueTitle => 'File de l\'aéroport';
 
   @override
@@ -632,6 +665,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String tipAirportQueuePlace(Object place) {
     return 'File de l\'aéroport : vous êtes numéro $place';
   }
+
+  @override
+  String get minVersionTitle => 'Mettez à jour Movera pour continuer';
+
+  @override
+  String get minVersionBody =>
+      'Cette version de l\'application est trop ancienne. Installez la dernière version depuis le store pour continuer à utiliser Movera.';
+
+  @override
+  String get minVersionUpdate => 'Mettre à jour';
 
   @override
   String get phoneVibratesWhenRequestArrives =>
@@ -680,7 +723,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authTextFourDigitCode =>
-      'Nous vous enverrons un code à 4 chiffres par SMS.';
+      'Nous vous enverrons un code à 6 chiffres par SMS.';
 
   @override
   String get authInvalidMobileNumber => 'Saisissez un numéro de mobile valide.';
@@ -811,6 +854,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authErrSendCode => 'Impossible d’envoyer le code. Réessayez.';
 
   @override
+  String get authErrSmsNotSent =>
+      'Nous n’avons pas pu envoyer le SMS. Vérifiez le numéro et réessayez.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'Nous ne pouvons plus envoyer de codes par SMS pour le moment. Réessayez plus tard.';
+
+  @override
   String get authErrCheckCode => 'Impossible de vérifier le code. Réessayez.';
 
   @override
@@ -839,7 +890,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String authProviderPhoneOnce(String provider) {
-    return 'Confirmez votre numéro une seule fois pour terminer la connexion avec $provider. Nous vous envoyons un code à 4 chiffres par SMS.';
+    return 'Confirmez votre numéro une seule fois pour terminer la connexion avec $provider. Nous vous envoyons un code à 6 chiffres par SMS.';
   }
 
   @override
@@ -913,7 +964,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authCodeFieldLabel => 'Code à 4 chiffres reçu par SMS';
 
   @override
+  String get authCodeFieldLabelSix => 'Code à 6 chiffres reçu par SMS';
+
+  @override
   String get authSignedOutElsewhere => 'Connecté sur un autre téléphone';
+
+  @override
+  String get authSignedOutByMovera => 'Vous avez été déconnecté par Movera';
 
   @override
   String get authErrLockedToday =>
@@ -4161,6 +4218,28 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de modifier les courses suivantes. Réessayez.';
 
   @override
+  String get liveShareSwitch => 'Partager ma position';
+
+  @override
+  String liveDriverShareBody(String rider) {
+    return '$rider vous voit sur la carte.';
+  }
+
+  @override
+  String get liveDriverPrivacyNote =>
+      'Votre position est envoyée uniquement à votre passager jusqu\'à la prise en charge et n\'est pas enregistrée.';
+
+  @override
+  String liveRiderSharing(String rider, String meters) {
+    return '$rider partage sa position (à $meters m de la prise en charge)';
+  }
+
+  @override
+  String liveRiderLive(String rider) {
+    return '$rider · en direct';
+  }
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -4787,6 +4866,55 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get destSearchStartBody =>
       'Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici.';
+
+  @override
+  String get payMoveraTitle => 'Payer Movera';
+
+  @override
+  String get payMoveraReference => 'Référence';
+
+  @override
+  String get payMoveraHowTo =>
+      'La page de paiement s’ouvre dans votre navigateur. Saisissez-y le montant et la référence.';
+
+  @override
+  String get payMoveraConfirmNote =>
+      'Le montant baisse lorsque Movera a confirmé votre paiement.';
+
+  @override
+  String get payMoveraCopy => 'Copier';
+
+  @override
+  String get payMoveraCopied => 'Copié';
+
+  @override
+  String get payMoveraAmountToPay => 'Montant à payer';
+
+  @override
+  String get payMoveraLinkFailed =>
+      'Impossible d’ouvrir la page de paiement. Veuillez réessayer.';
+
+  @override
+  String get payMoveraUnavailable =>
+      'Impossible de charger ce que vous devez à Movera. Réessayez plus tard.';
+
+  @override
+  String payMoveraPayByCard(String amount) {
+    return 'Payer $amount par carte';
+  }
+
+  @override
+  String get payMoveraCardPaid => 'Payé. Merci.';
+
+  @override
+  String get payMoveraCardChecking => 'Paiement reçu. Nous le vérifions.';
+
+  @override
+  String get payMoveraCardFailed => 'Le paiement n\'a pas abouti. Réessayez.';
+
+  @override
+  String get payMoveraAmountChanged =>
+      'Le montant a changé. Vérifiez-le et réessayez.';
 
   @override
   String get reservation => 'Réservation';
@@ -5449,6 +5577,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get liveTripNotAtStop => 'Vous n’êtes pas encore à l’arrêt.';
+
+  @override
+  String tripNewPrice(String amount) {
+    return 'Nouveau prix : $amount';
+  }
 
   @override
   String get call112 => 'Appeler le 112';
@@ -6297,6 +6430,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cashFromRider => 'Montant à encaisser en espèces';
+
+  @override
+  String get collectRideLine => 'Course';
+
+  @override
+  String get collectEarlierFeeLine => 'Frais antérieurs (à Movera)';
 
   @override
   String get riderPaidMoreThanYourFare =>
@@ -7705,4 +7844,67 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera choisit les types de course quand la voiture est validée.';
+
+  @override
+  String get yearStatementTitle => 'Relevé annuel';
+
+  @override
+  String yearStatementReported(int year) {
+    return 'Ce que Movera déclare à l\'administration fiscale pour $year';
+  }
+
+  @override
+  String get yearStatementEmpty => 'Aucun revenu cette année.';
+
+  @override
+  String get yearStatementTooBig =>
+      'Trop de courses à afficher en une fois. Choisissez un mois.';
+
+  @override
+  String get yearStatementUnavailable =>
+      'Le relevé annuel n\'a pas pu être chargé.';
+
+  @override
+  String yearStatementRides(int count) {
+    return '$count courses';
+  }
+
+  @override
+  String get yearStatementEarnings => 'Gains';
+
+  @override
+  String get yearStatementFares => 'Prix des courses';
+
+  @override
+  String get yearStatementCommission => 'Commission Movera';
+
+  @override
+  String get yearStatementTips => 'Pourboires';
+
+  @override
+  String get yearStatementBonuses => 'Bonus';
+
+  @override
+  String get yearStatementCash => 'Espèces à bord';
+
+  @override
+  String get yearStatementPaidOut => 'Versé par Movera';
+
+  @override
+  String yearStatementOwnPart(String company) {
+    return 'Votre part de $company';
+  }
+
+  @override
+  String get yearStatementBonusLine => 'Campagne de bonus';
+
+  @override
+  String get yearStatementShare => 'Partager';
+
+  @override
+  String get yearStatementYear => 'Année';
+
+  @override
+  String get yearStatementOpen =>
+      'Relevé annuel pour l\'administration fiscale';
 }

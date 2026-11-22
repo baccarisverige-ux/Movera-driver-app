@@ -165,6 +165,7 @@ void main() {
             riderName: 'Anna',
             category: 'Movera',
             earlyEndNote: 'The booked price applies.',
+            showEarnings: true,
           ),
         ),
       );

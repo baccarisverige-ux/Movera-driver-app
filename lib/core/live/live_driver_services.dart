@@ -1,4 +1,6 @@
+import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/core/live/live_reservations.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/zones/position_zone_hold.dart';
@@ -24,6 +26,7 @@ import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_bonuses.dart';
 import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/core/live/live_income_statement.dart';
 import 'package:movera/core/live/live_trip_history.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
@@ -101,6 +104,7 @@ class LiveDriverServices {
     earnings = LiveEarnings(api: api);
     // D18 (contract v0.18.124 C10): the ride history from the server.
     tripHistory = LiveTripHistory(api: api);
+    incomeStatement = LiveIncomeStatement(api: api);
     bonuses = LiveBonuses(api: api);
     surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
@@ -137,6 +141,8 @@ class LiveDriverServices {
       onZonesPublished: () => unawaited(zones.refresh()),
       onEventsPublished: () => unawaited(events.refresh()),
       onReservationsChanged: () => onReservationsStale?.call(),
+      // v0.18.145 (`loadCut.airportQueueLive`): the queue card's read.
+      onAirportQueueChanged: AirportQueue.instance.hint,
       // G17: the settings follow the zone the driver is in.
       zoneId: zoneNow,
       onZoneChanged: () => unawaited(content.refresh()),
@@ -228,6 +234,10 @@ class LiveDriverServices {
   /// D18: `GET /driver/trips`, the driver's ride history from the server
   /// (the phone copy only for offline).
   late final LiveTripHistory tripHistory;
+
+  /// v0.18.153 P29: `GET /driver/income-statement`, the Year statement
+  /// (what Movera reports to the tax office, DAC7).
+  late final LiveIncomeStatement incomeStatement;
 
   /// BQ-V44: the driver's bonus campaigns (Campaigns screen, NEW badge).
   late final LiveBonuses bonuses;
@@ -328,6 +338,8 @@ class LiveDriverServices {
   /// The session ended (sign-out, or refused by the server): the settings
   /// stream stops until the next [signedIn].
   void signedOut() {
+    // v0.18.154 P16c review S-D2: the next account starts unknown.
+    MinAppVersion.signedOut();
     _signedInStarted = false;
     config.stop();
     events.events.clear();

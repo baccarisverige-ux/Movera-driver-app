@@ -28,6 +28,7 @@ class DriverAccountRepository {
   static const onboardingSettingsPath = '/api/v1/driver/onboarding/settings';
   static const remindersPath = '/api/v1/driver/reminders';
   static const notificationsPath = '/api/v1/notifications';
+  static const homeBadgesPath = '/api/v1/driver/home-badges';
   static const vehiclesPath = '/api/v1/driver/vehicles';
   static const documentsPath = '/api/v1/driver/documents';
 
@@ -40,6 +41,15 @@ class DriverAccountRepository {
 
   static String notificationReadPath(String notificationId) =>
       '$notificationsPath/${Uri.encodeComponent(notificationId)}/read';
+
+  static const accountDeletionPath = '/api/v1/driver/account/deletion';
+
+  /// Contract v0.18.134 (`contract.json#accountDeletion.driver`): Profile >
+  /// Delete my account. 202 = the account is closed now (sessions ended,
+  /// offline) and erased 30 days later; a debt never blocks it. 409
+  /// `deletion_open_trip` is thrown as [ApiError] (finish or cancel first).
+  Future<AccountDeletionAnswer> requestAccountDeletion() async =>
+      AccountDeletionAnswer.fromJson(await _api.post(accountDeletionPath));
 
   /// Contract v0.18.14 `deepFix1.accountChange` (decision driver-g1 "One
   /// phone at a time"): the new number gets a code; `409 phone_taken`.
@@ -101,8 +111,32 @@ class DriverAccountRepository {
 
   /// `GET /driver/profile`.
   /// Driver group 3 (G3-R2): its `outsideArea` reaches [DriverAreaWatch].
-  Future<DriverAccount> profile() async {
-    final json = await _api.get(profilePath);
+  Future<DriverAccount> profile() async =>
+      _profileFrom(await _api.get(profilePath));
+
+  /// Contract v0.18.145 (`contract.json#loadCut.homeBadges`): Home's four
+  /// badge reads in one request, each part read as its own read is.
+  /// Throws the [ApiError] of the request (404 on an older server).
+  Future<DriverHomeBadges> homeBadges() async {
+    final json = await _api.get(homeBadgesPath);
+    Map<String, dynamic> part(String key) {
+      final value = json[key];
+      if (value is Map) return Map<String, dynamic>.from(value);
+      throw FormatException('home-badges: $key missing');
+    }
+
+    final settings = json['onboardingSettings'];
+    return DriverHomeBadges(
+      profile: _profileFrom(part('profile')),
+      unread: _notificationsFrom(part('notifications')),
+      reminders: DriverReminderList.fromJson(part('reminders')),
+      onboardingSettings: settings is Map
+          ? OnboardingSettings.fromJson(Map<String, dynamic>.from(settings))
+          : null,
+    );
+  }
+
+  DriverAccount _profileFrom(Map<String, dynamic> json) {
     // iPhone check 2026-10-30: the popup is about going online; an offline
     // driver's profile (every app start, every reload) never shows it.
     final status = json['onlineStatus'];
@@ -221,6 +255,10 @@ class DriverAccountRepository {
     final page = await _api.get(
       '$notificationsPath?limit=$limit${unreadOnly ? '&unreadOnly=true' : ''}',
     );
+    return _notificationsFrom(page);
+  }
+
+  List<ServerNotification> _notificationsFrom(Map<String, dynamic> page) {
     final items = page['items'];
     return [
       if (items is List)
@@ -352,4 +390,41 @@ class DriverAccountRepository {
       timeout: DocumentUploadPolicy.timeout,
     ),
   );
+}
+
+/// `AccountDeletion` (contract v0.18.134): `status` (`requested`) and, from
+/// a v0.18.134 server, when it was asked and when the erase may run.
+class AccountDeletionAnswer {
+  const AccountDeletionAnswer({
+    required this.status,
+    this.requestedAt,
+    this.eraseDueAt,
+  });
+
+  factory AccountDeletionAnswer.fromJson(Map<String, dynamic> json) =>
+      AccountDeletionAnswer(
+        status: '${json['status'] ?? 'requested'}',
+        requestedAt: DateTime.tryParse('${json['requestedAt'] ?? ''}'),
+        eraseDueAt: DateTime.tryParse('${json['eraseDueAt'] ?? ''}'),
+      );
+
+  final String status;
+  final DateTime? requestedAt;
+  final DateTime? eraseDueAt;
+}
+
+/// Contract v0.18.145 `DriverHomeBadges`: what `GET /driver/home-badges`
+/// answers. [onboardingSettings] is null while the account has no country.
+class DriverHomeBadges {
+  const DriverHomeBadges({
+    required this.profile,
+    required this.unread,
+    required this.reminders,
+    required this.onboardingSettings,
+  });
+
+  final DriverAccount profile;
+  final List<ServerNotification> unread;
+  final DriverReminderList reminders;
+  final OnboardingSettings? onboardingSettings;
 }

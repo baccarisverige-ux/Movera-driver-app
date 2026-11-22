@@ -14,6 +14,7 @@ abstract final class SignedOutNotice {
     'refresh_token_reused': revoked,
     'refresh_token_unknown': revoked,
     'signed_in_elsewhere': revoked,
+    'signed_out_by_movera': revoked,
   };
 
   static const String expired = 'expired';
@@ -24,6 +25,11 @@ abstract final class SignedOutNotice {
   /// in on another phone" as the detail line).
   static const String elsewhere = 'elsewhere';
 
+  /// Contract v0.18.149 `auth.signedOut.byMoveraTexts` (owner G12 Q6): an
+  /// admin signed this phone out ("You were signed out by Movera" as the
+  /// detail line), shown once, until the next sign-in.
+  static const String byMovera = 'by_movera';
+
   /// The kind to show on Sign in ([expired], [revoked], or '' when the
   /// server gave no known reason: the message without a detail line);
   /// null shows nothing.
@@ -31,9 +37,11 @@ abstract final class SignedOutNotice {
 
   /// The refresh was refused with this 401 [reason].
   static void sessionRefused(String? reason) {
-    kind.value = reason == 'signed_in_elsewhere'
-        ? elsewhere
-        : reasons[reason] ?? '';
+    kind.value = switch (reason) {
+      'signed_in_elsewhere' => elsewhere,
+      'signed_out_by_movera' => byMovera,
+      _ => reasons[reason] ?? '',
+    };
   }
 
   /// The driver's own Sign out, or a new sign-in: nothing to say.

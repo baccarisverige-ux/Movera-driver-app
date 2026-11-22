@@ -6,8 +6,10 @@ import 'package:movera/core/money/money.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
+import 'package:movera/presentation/driver/my%20wallet/year_statement.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_earnings.dart';
+import 'package:movera/presentation/driver/pay_movera/pay_movera.dart';
 
 Widget _solarIcon(
   String asset, {
@@ -64,6 +66,11 @@ class WalletScreen extends StatelessWidget {
                     ],
                     const SizedBox(height: 22),
                     _bankCard(),
+                    // v0.18.153 P29: Earnings › Year statement (DAC7).
+                    if (LiveDriverServices.active) ...[
+                      const SizedBox(height: 12),
+                      _yearStatementTile(),
+                    ],
                   ],
                 ),
               ),
@@ -342,6 +349,30 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
+  Widget _yearStatementTile() {
+    return Builder(
+      builder: (context) => Material(
+        color: _tile,
+        borderRadius: BorderRadius.circular(22),
+        child: ListTile(
+          key: const ValueKey<String>('wallet-year-statement'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          leading: const Icon(Icons.receipt_long_outlined, color: _text),
+          title: Text(tr.yearStatementOpen),
+          trailing: const Icon(Icons.chevron_right, color: _muted),
+          onTap: () => pushSingle(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const YearStatementScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _bankCard() {
     return Builder(
       builder: (context) {
@@ -520,6 +551,9 @@ class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            // Bug D5 (contract v0.18.139 driverWalletBalance; owner
+            // 2026-11-20): the cash he collected and what he owes Movera.
+            if (done && !failed && report != null) _WalletCashBalance(report),
             // Owner 2026-11-10: couldn't load → "—" and Retry, never a
             // made-up number.
             if (failed)
@@ -536,6 +570,143 @@ class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
       },
     );
   }
+}
+
+/// Bug D5 (Rules audits/impact/driver-wallet-cash.md; contract v0.18.139
+/// `driverWalletBalance`; owner 2026-11-20 "Yes, server + app (Rec.)"):
+/// under the week's earnings, the cash collected in the car, then what the
+/// driver owes Movera (or Movera owes him) and how it settles. Every amount
+/// is the server's: nothing is added or subtracted here. A report without
+/// `moveraBalance` (an older server) shows the cash line only.
+class _WalletCashBalance extends StatelessWidget {
+  const _WalletCashBalance(this.report);
+
+  final EarningsWeek report;
+
+  static const Color _owe = Color(0xFFB4232C);
+  static const Color _due = Color(0xFF1E7A46);
+
+  @override
+  Widget build(BuildContext context) {
+    final cash = report.cashCollected;
+    final balance = report.moveraBalance;
+    if (cash == null && balance == null) return const SizedBox.shrink();
+    final Widget? owes = balance == null
+        ? null
+        : _line(
+            'wallet-movera-balance',
+            balance.driverOwes
+                ? tr.cashYouOweMovera
+                : balance.moveraOwes
+                ? tr.cashMoveraOwesYou
+                : tr.cashSettled,
+            balance.driverOwes
+                ? balance.owedToMovera.formatted
+                : balance.moveraOwes
+                ? balance.moveraOwesYou.formatted
+                : null,
+            color: balance.driverOwes
+                ? _owe
+                : balance.moveraOwes
+                ? _due
+                : WalletScreen._text,
+            chevron: balance.driverOwes,
+          );
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Container(
+        key: const ValueKey<String>('wallet-cash-balance'),
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          color: WalletScreen._tile,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (cash != null)
+              _line('wallet-cash-collected', tr.cashCollected, cash.formatted),
+            if (cash != null && owes != null) const SizedBox(height: 8),
+            if (owes != null && balance!.driverOwes)
+              // What he owes opens Pay Movera (the amount, the reference
+              // and, when his country asks monthly, the payment link).
+              InkWell(
+                key: const ValueKey<String>('wallet-pay-movera'),
+                onTap: () => pushSingle(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PayMoveraScreen(),
+                  ),
+                ),
+                child: owes,
+              )
+            else
+              ?owes,
+            // Only when something is owed either way ("Settled" needs no
+            // "settled in your next payout").
+            if (balance != null &&
+                (balance.driverOwes || balance.moveraOwes)) ...[
+              const SizedBox(height: 8),
+              Text(
+                tr.settledInYourNextPayout2,
+                key: const ValueKey<String>('wallet-balance-settles'),
+                style: const TextStyle(
+                  color: WalletScreen._muted,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// "Label ……… amount": the label wraps, the amount never breaks.
+  static Widget _line(
+    String key,
+    String label,
+    String? amount, {
+    Color color = WalletScreen._text,
+    bool chevron = false,
+  }) => Row(
+    key: ValueKey<String>(key),
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: WalletScreen._text,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      if (amount != null) ...[
+        const SizedBox(width: 10),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerEnd,
+            child: Text(
+              amount,
+              maxLines: 1,
+              style: TextStyle(
+                color: color,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
+      if (chevron)
+        const Icon(Icons.chevron_right, size: 18, color: WalletScreen._muted),
+    ],
+  );
 }
 
 /// Audit 2026-11-01: the driver's own payouts from `GET /driver/payouts`;

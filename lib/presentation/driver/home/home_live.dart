@@ -4,6 +4,25 @@ part of 'home.dart';
 /// availability (`POST /driver/availability`). The demo has no
 /// [LiveDriverServices]; nothing here runs there.
 extension _HomeLive on _DriverHomeState {
+  /// v0.18.154 P16c (review S-D1): the active-trip check found no trip;
+  /// only a server read that worked confirms it.
+  void _tripCheckAnswered(bool askServer) {
+    final live = LiveDriverServices.instance;
+    MinAppVersion.answerTripCheck(
+      askedServer: askServer,
+      // Review: this check's own read, not a shared field.
+      serverReadFailed: _tripReadFailed[this] ?? false,
+      liveServer: live != null,
+      askedAt: _tripAskedAt[this],
+    );
+  }
+
+  /// Review S-D6: the trip generation this check was asked at.
+  void _tripCheckAsked() {
+    _tripAskedAt[this] = MinAppVersion.tripGeneration;
+    _tripReadFailed[this] = false;
+  }
+
   /// D11 on the server too: a driver the server still holds online from
   /// before this start is set offline, as Home shows (once per start).
   void _settleServerAfterStart() {
@@ -20,11 +39,13 @@ extension _HomeLive on _DriverHomeState {
     // G27: through the account's shared profile read (the badges' read of
     // the same back press is shared, not sent twice).
     final account = mounted ? accountSessionOf(context) : null;
-    final found = await live.activeTrip.fetch(
+    final read = await live.activeTrip.fetchChecked(
       activeTripId: account == null
           ? null
           : () async => (await account.refresh()).activeTripId,
     );
+    _tripReadFailed[this] = read.failed;
+    final found = read.found;
     if (found == null) return null;
     live.trips.observe(found.projection);
     // Audit 2026-11-07 B2: a server slower than this phone still names a
@@ -127,3 +148,8 @@ extension _HomeLive on _DriverHomeState {
     );
   }
 }
+
+/// v0.18.154 P16c review S-D6: per Home, the generation its trip check was
+/// asked at and whether that check's own server read failed.
+final Expando<int> _tripAskedAt = Expando<int>();
+final Expando<bool> _tripReadFailed = Expando<bool>();

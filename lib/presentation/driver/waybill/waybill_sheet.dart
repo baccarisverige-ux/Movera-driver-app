@@ -90,6 +90,23 @@ List<Widget> _rows(WaybillRecord record) {
     const SizedBox(height: 14),
     _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
     if (record.riderFare case final paid?) _Row(tr.riderPays, paid),
+    // Owner 2026-11-21 14:40 (3): the split of the cash (the server's
+    // v0.18.140 rows) only here, never on the collect sheet.
+    if ((record.cashRide, record.cashEarlierFee) case (
+      final ride?,
+      final fee?,
+    )) ...[
+      _Row(
+        tr.collectRideLine,
+        ride.formatted,
+        key: const ValueKey<String>('waybill-cash-ride'),
+      ),
+      _Row(
+        tr.collectEarlierFeeLine,
+        fee.formatted,
+        key: const ValueKey<String>('waybill-cash-earlier-fee'),
+      ),
+    ],
     // G32 (owner 2026-11-12, "all details in waybill"): Movera's share.
     if (record.commissionText case final share?)
       _Row(tr.waybillMoveraCommission, share),
@@ -109,7 +126,7 @@ String formatWaybillTime(DateTime value) {
 }
 
 class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
+  const _Row(this.label, this.value, {super.key});
 
   final String label;
   final String value;
@@ -118,23 +135,33 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(color: _muted, fontSize: 14)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: _ink,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+      child: LayoutBuilder(
+        builder: (context, box) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // A long label ("Tidigare avgift (till Movera)") wraps, never
+            // runs off the sheet; a short one keeps its own width.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: box.maxWidth * 0.6),
+              child: Text(
+                label,
+                style: const TextStyle(color: _muted, fontSize: 14),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: _ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

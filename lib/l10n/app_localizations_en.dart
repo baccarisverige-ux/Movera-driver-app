@@ -598,6 +598,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuNewDriver => 'New driver';
 
   @override
+  String get acctDeleteTitle => 'Delete my account';
+
+  @override
+  String get acctDeleteBody =>
+      'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.';
+
+  @override
+  String get acctDeleteKept =>
+      'Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Delete your account?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'This cannot be undone. Your account closes now.';
+
+  @override
+  String get acctDeleteConfirm => 'Delete account';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Finish or cancel your ride first, then delete your account.';
+
+  @override
+  String get acctDeleteFailed => 'Could not delete the account. Try again.';
+
+  @override
+  String get acctClosedSignIn =>
+      'This account is closed and is being deleted. It can\'t be used to sign in.';
+
+  @override
   String get airportQueueTitle => 'Airport queue';
 
   @override
@@ -621,6 +653,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String tipAirportQueuePlace(Object place) {
     return 'Airport queue: you are number $place';
   }
+
+  @override
+  String get minVersionTitle => 'Update Movera to continue';
+
+  @override
+  String get minVersionBody =>
+      'This version of the app is too old. Install the latest version from the store to keep using Movera.';
+
+  @override
+  String get minVersionUpdate => 'Update';
 
   @override
   String get phoneVibratesWhenRequestArrives =>
@@ -668,7 +710,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authEnterPhone => 'Enter your phone number';
 
   @override
-  String get authTextFourDigitCode => 'We\'ll text you a 4-digit code.';
+  String get authTextFourDigitCode => 'We\'ll text you a 6-digit code.';
 
   @override
   String get authInvalidMobileNumber => 'Enter a valid mobile number.';
@@ -794,6 +836,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrSendCode => 'Couldn\'t send the code. Try again.';
 
   @override
+  String get authErrSmsNotSent =>
+      'We could not send the SMS. Check the number and try again.';
+
+  @override
+  String get authErrSmsDailyLimit =>
+      'We cannot send more SMS codes right now. Try again later.';
+
+  @override
   String get authErrCheckCode => 'Couldn\'t check the code. Try again.';
 
   @override
@@ -822,7 +872,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String authProviderPhoneOnce(String provider) {
-    return 'Confirm your phone number once to finish signing in with $provider. We’ll text you a 4-digit code.';
+    return 'Confirm your phone number once to finish signing in with $provider. We’ll text you a 6-digit code.';
   }
 
   @override
@@ -896,7 +946,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCodeFieldLabel => '4-digit code from the SMS';
 
   @override
+  String get authCodeFieldLabelSix => '6-digit code from the SMS';
+
+  @override
   String get authSignedOutElsewhere => 'Signed in on another phone';
+
+  @override
+  String get authSignedOutByMovera => 'You were signed out by Movera';
 
   @override
   String get authErrLockedToday =>
@@ -4082,6 +4138,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Next trips could not be changed. Try again.';
 
   @override
+  String get liveShareSwitch => 'Share my location';
+
+  @override
+  String liveDriverShareBody(String rider) {
+    return '$rider sees you on the map.';
+  }
+
+  @override
+  String get liveDriverPrivacyNote =>
+      'Your live location is sent only to your rider until pickup and is not saved.';
+
+  @override
+  String liveRiderSharing(String rider, String meters) {
+    return '$rider is sharing their location ($meters m from pickup)';
+  }
+
+  @override
+  String liveRiderLive(String rider) {
+    return '$rider · live';
+  }
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -4705,6 +4783,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get destSearchStartBody =>
       'Type a street, a place or a city. Your last 5 destinations show here.';
+
+  @override
+  String get payMoveraTitle => 'Pay Movera';
+
+  @override
+  String get payMoveraReference => 'Reference';
+
+  @override
+  String get payMoveraHowTo =>
+      'The payment page opens in your browser. Enter the amount and the reference there.';
+
+  @override
+  String get payMoveraConfirmNote =>
+      'The amount goes down when Movera has confirmed your payment.';
+
+  @override
+  String get payMoveraCopy => 'Copy';
+
+  @override
+  String get payMoveraCopied => 'Copied';
+
+  @override
+  String get payMoveraAmountToPay => 'Amount to pay';
+
+  @override
+  String get payMoveraLinkFailed =>
+      'Could not open the payment page. Please try again.';
+
+  @override
+  String get payMoveraUnavailable =>
+      'Could not load what you owe Movera. Try again later.';
+
+  @override
+  String payMoveraPayByCard(String amount) {
+    return 'Pay $amount by card';
+  }
+
+  @override
+  String get payMoveraCardPaid => 'Paid. Thank you.';
+
+  @override
+  String get payMoveraCardChecking => 'Payment received. We are checking it.';
+
+  @override
+  String get payMoveraCardFailed =>
+      'The payment did not go through. Try again.';
+
+  @override
+  String get payMoveraAmountChanged =>
+      'The amount changed. Check it and try again.';
 
   @override
   String get reservation => 'Reservation';
@@ -5358,6 +5486,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveTripNotAtStop => 'You are not at the stop yet.';
+
+  @override
+  String tripNewPrice(String amount) {
+    return 'New price: $amount';
+  }
 
   @override
   String get call112 => 'Call 112';
@@ -6182,6 +6315,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashFromRider => 'Cash from rider';
+
+  @override
+  String get collectRideLine => 'Ride';
+
+  @override
+  String get collectEarlierFeeLine => 'Earlier fee (to Movera)';
 
   @override
   String get riderPaidMoreThanYourFare =>
@@ -7558,4 +7697,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera chooses the ride types when it approves the car.';
+
+  @override
+  String get yearStatementTitle => 'Year statement';
+
+  @override
+  String yearStatementReported(int year) {
+    return 'What Movera reports to the tax office for $year';
+  }
+
+  @override
+  String get yearStatementEmpty => 'No earnings in this year.';
+
+  @override
+  String get yearStatementTooBig =>
+      'Too many trips to show at once. Pick a month.';
+
+  @override
+  String get yearStatementUnavailable =>
+      'The year statement could not be loaded.';
+
+  @override
+  String yearStatementRides(int count) {
+    return '$count rides';
+  }
+
+  @override
+  String get yearStatementEarnings => 'Earnings';
+
+  @override
+  String get yearStatementFares => 'Fares';
+
+  @override
+  String get yearStatementCommission => 'Movera commission';
+
+  @override
+  String get yearStatementTips => 'Tips';
+
+  @override
+  String get yearStatementBonuses => 'Bonuses';
+
+  @override
+  String get yearStatementCash => 'Cash in the car';
+
+  @override
+  String get yearStatementPaidOut => 'Paid out by Movera';
+
+  @override
+  String yearStatementOwnPart(String company) {
+    return 'Your own part of $company';
+  }
+
+  @override
+  String get yearStatementBonusLine => 'Bonus campaign';
+
+  @override
+  String get yearStatementShare => 'Share';
+
+  @override
+  String get yearStatementYear => 'Year';
+
+  @override
+  String get yearStatementOpen => 'Year statement for the tax office';
 }
