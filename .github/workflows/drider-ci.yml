@@ -195,6 +195,8 @@ jobs:
         env:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL || 'https://movera-server.onrender.com' }}
         run: |
+          # A pasted line break or space in the repository variable must never reach the build or a check.
+          LIVE_API="$(printf '%s' "$LIVE_API" | tr -d '[:space:][:cntrl:]')"
           # Contract v0.16.0: crash reports name the pubspec version.
           app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
           flutter build web --release --wasm --base-href "/Movera-driver-app/live/" \
