@@ -3126,6 +3126,44 @@
   "@nextTripsSwitchFailed": {
     "description": "v0.18.65 §86: the trip radar's stop / start of next trips did not reach the server; the radar goes back."
   },
+  "liveShareSwitch": "Share my location",
+  "@liveShareSwitch": {
+    "description": "Share my location switch on the trip sheet (v0.18.144, owner OK pending)."
+  },
+  "liveDriverShareBody": "{rider} sees you on the map.",
+  "@liveDriverShareBody": {
+    "description": "Under the switch: the rider sees the driver (v0.18.144).",
+    "placeholders": {
+      "rider": {
+        "type": "String"
+      }
+    }
+  },
+  "liveDriverPrivacyNote": "Your live location is sent only to your rider until pickup and is not saved.",
+  "@liveDriverPrivacyNote": {
+    "description": "Consent / privacy line under the switch (v0.18.144, owner + legal OK pending)."
+  },
+  "liveRiderSharing": "{rider} is sharing their location ({meters} m from pickup)",
+  "@liveRiderSharing": {
+    "description": "The rider shares; metres from the pickup (v0.18.144).",
+    "placeholders": {
+      "rider": {
+        "type": "String"
+      },
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "liveRiderLive": "{rider} · live",
+  "@liveRiderLive": {
+    "description": "Map label of the rider live dot (v0.18.144).",
+    "placeholders": {
+      "rider": {
+        "type": "String"
+      }
+    }
+  },
   "islandRadarOffers": "{count, plural, =1{1 offer · radar} other{{count} offers · radar}}",
   "@islandRadarOffers": {
     "placeholders": {

@@ -4125,6 +4125,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Next trips could not be changed. Try again.';
 
   @override
+  String get liveShareSwitch => 'Share my location';
+
+  @override
+  String liveDriverShareBody(String rider) {
+    return '$rider sees you on the map.';
+  }
+
+  @override
+  String get liveDriverPrivacyNote =>
+      'Your live location is sent only to your rider until pickup and is not saved.';
+
+  @override
+  String liveRiderSharing(String rider, String meters) {
+    return '$rider is sharing their location ($meters m from pickup)';
+  }
+
+  @override
+  String liveRiderLive(String rider) {
+    return '$rider · live';
+  }
+
+  @override
   String islandRadarOffers(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
