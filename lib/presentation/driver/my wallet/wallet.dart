@@ -6,6 +6,7 @@ import 'package:movera/core/money/money.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
+import 'package:movera/presentation/driver/my%20wallet/year_statement.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/presentation/driver/pay_movera/pay_movera.dart';
@@ -65,6 +66,11 @@ class WalletScreen extends StatelessWidget {
                     ],
                     const SizedBox(height: 22),
                     _bankCard(),
+                    // v0.18.153 P29: Earnings › Year statement (DAC7).
+                    if (LiveDriverServices.active) ...[
+                      const SizedBox(height: 12),
+                      _yearStatementTile(),
+                    ],
                   ],
                 ),
               ),
@@ -337,6 +343,30 @@ class WalletScreen extends StatelessWidget {
             color: _muted,
             fontSize: 13,
             fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _yearStatementTile() {
+    return Builder(
+      builder: (context) => Material(
+        color: _tile,
+        borderRadius: BorderRadius.circular(22),
+        child: ListTile(
+          key: const ValueKey<String>('wallet-year-statement'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          leading: const Icon(Icons.receipt_long_outlined, color: _text),
+          title: Text(tr.yearStatementOpen),
+          trailing: const Icon(Icons.chevron_right, color: _muted),
+          onTap: () => pushSingle(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const YearStatementScreen(),
+            ),
           ),
         ),
       ),

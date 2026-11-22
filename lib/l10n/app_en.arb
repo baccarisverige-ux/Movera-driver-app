@@ -5872,5 +5872,92 @@
   "carTypesByMovera": "Movera chooses the ride types when it approves the car.",
   "@carTypesByMovera": {
     "description": "Contract v0.18.5 vehicleRules.categoriesByAdmin (G2-D5.3)."
+  },
+  "yearStatementTitle": "Year statement",
+  "@yearStatementTitle": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement."
+  },
+  "yearStatementReported": "What Movera reports to the tax office for {year}",
+  "@yearStatementReported": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. contract driverIncomeYear.texts.reported.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "yearStatementEmpty": "No earnings in this year.",
+  "@yearStatementEmpty": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. texts.empty."
+  },
+  "yearStatementTooBig": "Too many trips to show at once. Pick a month.",
+  "@yearStatementTooBig": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. texts.tooBig."
+  },
+  "yearStatementUnavailable": "The year statement could not be loaded.",
+  "@yearStatementUnavailable": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement."
+  },
+  "yearStatementRides": "{count} rides",
+  "@yearStatementRides": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yearStatementEarnings": "Earnings",
+  "@yearStatementEarnings": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. netEarnings (the DAC7 amount)."
+  },
+  "yearStatementFares": "Fares",
+  "@yearStatementFares": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. grossFares."
+  },
+  "yearStatementCommission": "Movera commission",
+  "@yearStatementCommission": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. moveraCommission."
+  },
+  "yearStatementTips": "Tips",
+  "@yearStatementTips": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement."
+  },
+  "yearStatementBonuses": "Bonuses",
+  "@yearStatementBonuses": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement."
+  },
+  "yearStatementCash": "Cash in the car",
+  "@yearStatementCash": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. cashCollectedByDriver."
+  },
+  "yearStatementPaidOut": "Paid out by Movera",
+  "@yearStatementPaidOut": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. paidOutByMovera."
+  },
+  "yearStatementOwnPart": "Your own part of {company}",
+  "@yearStatementOwnPart": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. ownPartOnly: a fleet driver who does not own the fleet sees only his own money.",
+    "placeholders": {
+      "company": {
+        "type": "String"
+      }
+    }
+  },
+  "yearStatementBonusLine": "Bonus campaign",
+  "@yearStatementBonusLine": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. a line with no trip."
+  },
+  "yearStatementShare": "Share",
+  "@yearStatementShare": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the share button."
+  },
+  "yearStatementYear": "Year",
+  "@yearStatementYear": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the year picker."
+  },
+  "yearStatementOpen": "Year statement for the tax office",
+  "@yearStatementOpen": {
+    "description": "v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the Wallet tile that opens the screen."
   }
 }

@@ -7700,4 +7700,65 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera väljer resetyperna när bilen godkänns.';
+
+  @override
+  String get yearStatementTitle => 'Årsbesked';
+
+  @override
+  String yearStatementReported(int year) {
+    return 'Det Movera rapporterar till Skatteverket för $year';
+  }
+
+  @override
+  String get yearStatementEmpty => 'Inga intäkter detta år.';
+
+  @override
+  String get yearStatementTooBig =>
+      'För många resor att visa på en gång. Välj en månad.';
+
+  @override
+  String get yearStatementUnavailable => 'Årsbeskedet kunde inte laddas.';
+
+  @override
+  String yearStatementRides(int count) {
+    return '$count resor';
+  }
+
+  @override
+  String get yearStatementEarnings => 'Intäkter';
+
+  @override
+  String get yearStatementFares => 'Resepriser';
+
+  @override
+  String get yearStatementCommission => 'Moveras provision';
+
+  @override
+  String get yearStatementTips => 'Dricks';
+
+  @override
+  String get yearStatementBonuses => 'Bonusar';
+
+  @override
+  String get yearStatementCash => 'Kontant i bilen';
+
+  @override
+  String get yearStatementPaidOut => 'Movera har betalat ut';
+
+  @override
+  String yearStatementOwnPart(String company) {
+    return 'Din egen del av $company';
+  }
+
+  @override
+  String get yearStatementBonusLine => 'Bonuskampanj';
+
+  @override
+  String get yearStatementShare => 'Dela';
+
+  @override
+  String get yearStatementYear => 'År';
+
+  @override
+  String get yearStatementOpen => 'Årsbesked för Skatteverket';
 }

@@ -7834,4 +7834,67 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera choisit les types de course quand la voiture est validée.';
+
+  @override
+  String get yearStatementTitle => 'Relevé annuel';
+
+  @override
+  String yearStatementReported(int year) {
+    return 'Ce que Movera déclare à l\'administration fiscale pour $year';
+  }
+
+  @override
+  String get yearStatementEmpty => 'Aucun revenu cette année.';
+
+  @override
+  String get yearStatementTooBig =>
+      'Trop de courses à afficher en une fois. Choisissez un mois.';
+
+  @override
+  String get yearStatementUnavailable =>
+      'Le relevé annuel n\'a pas pu être chargé.';
+
+  @override
+  String yearStatementRides(int count) {
+    return '$count courses';
+  }
+
+  @override
+  String get yearStatementEarnings => 'Gains';
+
+  @override
+  String get yearStatementFares => 'Prix des courses';
+
+  @override
+  String get yearStatementCommission => 'Commission Movera';
+
+  @override
+  String get yearStatementTips => 'Pourboires';
+
+  @override
+  String get yearStatementBonuses => 'Bonus';
+
+  @override
+  String get yearStatementCash => 'Espèces à bord';
+
+  @override
+  String get yearStatementPaidOut => 'Versé par Movera';
+
+  @override
+  String yearStatementOwnPart(String company) {
+    return 'Votre part de $company';
+  }
+
+  @override
+  String get yearStatementBonusLine => 'Campagne de bonus';
+
+  @override
+  String get yearStatementShare => 'Partager';
+
+  @override
+  String get yearStatementYear => 'Année';
+
+  @override
+  String get yearStatementOpen =>
+      'Relevé annuel pour l\'administration fiscale';
 }
