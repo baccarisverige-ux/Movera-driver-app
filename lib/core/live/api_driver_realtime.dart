@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:movera/core/live/live_location_share.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -147,7 +148,9 @@ class ApiDriverRealtime implements DriverRealtime {
   Uri _uri(String tripId) => _base.replace(
     path:
         '${_base.path.replaceFirst(RegExp(r'/$'), '')}/trips/${Uri.encodeComponent(tripId)}/events',
-    queryParameters: {if (_last > 0) 'after': '$_last'},
+    // v0.18.144 (contract.json#liveLocation.relay): ?live=true also carries
+    // the rider's live point (`event: live_location`, no id).
+    queryParameters: {'live': 'true', if (_last > 0) 'after': '$_last'},
   );
 
   Future<void> _connect() async {
@@ -253,7 +256,9 @@ class ApiDriverRealtime implements DriverRealtime {
                 if (json is Map) {
                   // A real event: the stream is connected (owner R3).
                   if (generation == _generation) _attempts = 0;
-                  ingest(Map<String, dynamic>.from(json));
+                  final event = Map<String, dynamic>.from(json);
+                  // A live point is not a trip event: map only, never kept.
+                  if (!LiveLocationHub.offer(event)) ingest(event);
                 }
               } on FormatException {
                 // A broken event is skipped; the next one carries the state.

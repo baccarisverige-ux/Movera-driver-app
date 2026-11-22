@@ -95,7 +95,13 @@ void main() {
       final lines = File(path).readAsLinesSync();
       final at = lines.indexWhere((line) => line.trim() == command);
       expect(at, isNot(-1), reason: '$path builds the native app');
-      expect(lines[at + 1].trim(), define, reason: path);
+      // v0.18.154 P16c: MOVERA_APP_VERSION may follow on the next line.
+      final next = lines[at + 1].trim();
+      expect(
+        next.endsWith(r' \') ? next.substring(0, next.length - 2) : next,
+        define,
+        reason: path,
+      );
     }
   });
 }

@@ -229,6 +229,8 @@ void main() {
       'phone': '+46701740608',
       'app': 'driver',
       'linkToken': 'lt_abc',
+      // v0.18.133 smsSignIn.language: the app language rides along.
+      'locale': 'en',
     });
     await tester.enterText(find.byKey(const ValueKey('auth-code')), '1234');
     await tester.pump();
@@ -354,9 +356,11 @@ void main() {
     await _toCodeScreen(tester);
     final request = server.requests.single;
     expect(request.url.path, AuthRepository.requestPath);
+    // v0.18.133 smsSignIn.language: the app language rides along (en here).
     expect(jsonDecode(request.body), {
       'phone': '+46701234567',
       'app': 'driver',
+      'locale': 'en',
     });
     expect(request.headers['X-Api-Version'], '0.5');
     expect(request.headers['Idempotency-Key'], isNotNull);

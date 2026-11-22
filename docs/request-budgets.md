@@ -22,7 +22,7 @@ What runs in each state (the code the harness drives):
 
 | State | Request owners |
 |---|---|
-| offline | settings stream (`lib/core/live/live_driver_config.dart`), airport queue (`lib/core/airport/airport_queue.dart`, 20 s, only while online and in a queue or within ~2 km of an airport zone, `AirportQueueCard.wantedFor`; owner 2026-11-10: not read in any state measured here, the phone is far from any airport), Home badges (`home_account.dart:83`, 60 s, profile + unread notifications + reminders + onboarding settings, `:512-534`) |
+| offline | settings stream (`lib/core/live/live_driver_config.dart`), airport queue (`lib/core/airport/airport_queue.dart`, v0.18.145: on the `airport_queue_changed` hint and each stream (re)connect, at most every 5 s, with a 60 s fallback poll (was 20 s), only while online and in a queue or within ~2 km of an airport zone, `AirportQueueCard.wantedFor`; owner 2026-11-10: not read in any state measured here, the phone is far from any airport), Home badges (`home_account.dart:83`, 60 s, v0.18.145: one `GET /driver/home-badges` = profile + unread notifications + reminders + onboarding settings; the four reads only on an older server's 404) |
 | onlineIdle | offline + location sender (`live_driver_services.dart:667/747`, 10 s) + offer feed (`api_dispatch_repository.dart`, SSE + one offer list) + surge zones (`surge_map.dart:284`, 60 s, online and Home in front) |
 | offerShown | onlineIdle + the offer's road on the map, once (`home_offer_route.dart:103`) |
 | toPickup / onTrip | Home under the trip: airport queue only near an airport (badges and surge stop, Home not visible); location sender; offer feed stays open; trip screen (`accept_ride.dart:697-716`): trip read + trip stream (`api_driver_realtime.dart`), follow poll only while the stream is down (`accept_ride_pickup.dart:76`, `accept_ride_live.dart:20`), road route refresh on GPS fixes (`navigation_controller.dart:194`, 90 s) |
@@ -41,36 +41,29 @@ What runs in each state (the code the harness drives):
 | offline | `GET /api/v1/driver/config/stream (SSE open)` | 0 | 0.00 | 1 |
 | offline | `GET /api/v1/driver/content` | 0 | 0.00 | 1 |
 | offline | `GET /api/v1/driver/events` | 0 | 0.00 | 1 |
-| offline | `GET /api/v1/driver/onboarding/settings` | 1.0 | 1.00 | 1 |
-| offline | `GET /api/v1/driver/profile` | 1.0 | 1.00 | 1 |
-| offline | `GET /api/v1/driver/reminders` | 1.0 | 1.00 | 1 |
+| offline | `GET /api/v1/driver/home-badges` | 1.0 | 1.00 | 1 |
 | offline | `GET /api/v1/driver/zones` | 0 | 0.00 | 1 |
-| offline | `GET /api/v1/notifications` | 1.0 | 1.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/config` | 0 | 0.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/config/stream (SSE open)` | 0 | 0.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/content` | 0 | 0.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/events` | 0 | 0.00 | 1 |
+| onlineIdle | `GET /api/v1/driver/home-badges` | 1.0 | 1.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/offers` | 0 | 0.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/offers/stream (SSE open)` | 0 | 0.00 | 1 |
-| onlineIdle | `GET /api/v1/driver/onboarding/settings` | 1.0 | 1.00 | 1 |
-| onlineIdle | `GET /api/v1/driver/profile` | 1.0 | 1.00 | 2 |
-| onlineIdle | `GET /api/v1/driver/reminders` | 1.0 | 1.00 | 1 |
+| onlineIdle | `GET /api/v1/driver/profile` | 0 | 0.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/surge-map` | 1.0 | 1.00 | 1 |
 | onlineIdle | `GET /api/v1/driver/zones` | 0 | 0.00 | 1 |
-| onlineIdle | `GET /api/v1/notifications` | 1.0 | 1.00 | 1 |
 | onlineIdle | `POST /api/v1/driver/location` | 6.0 | 6.00 | 1 |
 | offerShown | `GET /api/v1/driver/config` | 0 | 0.00 | 1 |
 | offerShown | `GET /api/v1/driver/config/stream (SSE open)` | 0 | 0.00 | 1 |
 | offerShown | `GET /api/v1/driver/content` | 0 | 0.00 | 1 |
 | offerShown | `GET /api/v1/driver/events` | 0 | 0.00 | 1 |
+| offerShown | `GET /api/v1/driver/home-badges` | 1.0 | 1.00 | 1 |
 | offerShown | `GET /api/v1/driver/offers` | 0 | 0.00 | 1 |
 | offerShown | `GET /api/v1/driver/offers/stream (SSE open)` | 0 | 0.00 | 1 |
-| offerShown | `GET /api/v1/driver/onboarding/settings` | 1.0 | 1.00 | 1 |
-| offerShown | `GET /api/v1/driver/profile` | 1.0 | 1.00 | 2 |
-| offerShown | `GET /api/v1/driver/reminders` | 1.0 | 1.00 | 1 |
+| offerShown | `GET /api/v1/driver/profile` | 0 | 0.00 | 1 |
 | offerShown | `GET /api/v1/driver/surge-map` | 1.0 | 1.00 | 1 |
 | offerShown | `GET /api/v1/driver/zones` | 0 | 0.00 | 1 |
-| offerShown | `GET /api/v1/notifications` | 1.0 | 1.00 | 1 |
 | offerShown | `GET /api/v1/routes/driving/{coords}` | 0 | 0.00 | 1 |
 | offerShown | `POST /api/v1/driver/location` | 6.0 | 6.00 | 1 |
 | toPickup | `GET /api/v1/driver/config` | 0 | 0.00 | 1 |
@@ -130,23 +123,18 @@ What runs in each state (the code the harness drives):
 | offlineConfigStreamDown | `GET /api/v1/driver/config/stream (SSE open)` | 1.1 | 1.10 | 1 |
 | offlineConfigStreamDown | `GET /api/v1/driver/content` | 0 | 0.00 | 1 |
 | offlineConfigStreamDown | `GET /api/v1/driver/events` | 0 | 0.00 | 1 |
-| offlineConfigStreamDown | `GET /api/v1/driver/onboarding/settings` | 1.0 | 1.00 | 1 |
-| offlineConfigStreamDown | `GET /api/v1/driver/profile` | 1.0 | 1.00 | 1 |
-| offlineConfigStreamDown | `GET /api/v1/driver/reminders` | 1.0 | 1.00 | 1 |
+| offlineConfigStreamDown | `GET /api/v1/driver/home-badges` | 1.0 | 1.00 | 1 |
 | offlineConfigStreamDown | `GET /api/v1/driver/zones` | 0 | 0.00 | 1 |
-| offlineConfigStreamDown | `GET /api/v1/notifications` | 1.0 | 1.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/config` | 0 | 0.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/config/stream (SSE open)` | 0 | 0.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/content` | 0 | 0.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/events` | 0 | 0.00 | 1 |
+| onlineOffersStreamDown | `GET /api/v1/driver/home-badges` | 1.0 | 1.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/offers` | 0 | 0.00 | 1 |
-| onlineOffersStreamDown | `GET /api/v1/driver/offers/stream (SSE open)` | 2.0 | 2.00 | 1 |
-| onlineOffersStreamDown | `GET /api/v1/driver/onboarding/settings` | 1.0 | 1.00 | 1 |
-| onlineOffersStreamDown | `GET /api/v1/driver/profile` | 1.0 | 1.00 | 2 |
-| onlineOffersStreamDown | `GET /api/v1/driver/reminders` | 1.0 | 1.00 | 1 |
+| onlineOffersStreamDown | `GET /api/v1/driver/offers/stream (SSE open)` | 2.0 | 2.00 | 2 |
+| onlineOffersStreamDown | `GET /api/v1/driver/profile` | 0 | 0.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/surge-map` | 1.0 | 1.00 | 1 |
 | onlineOffersStreamDown | `GET /api/v1/driver/zones` | 0 | 0.00 | 1 |
-| onlineOffersStreamDown | `GET /api/v1/notifications` | 1.0 | 1.00 | 1 |
 | onlineOffersStreamDown | `POST /api/v1/driver/location` | 6.0 | 6.00 | 1 |
 | toPickupTripStreamDown | `GET /api/v1/driver/config` | 0 | 0.00 | 1 |
 | toPickupTripStreamDown | `GET /api/v1/driver/config/stream (SSE open)` | 0 | 0.00 | 1 |
@@ -165,24 +153,24 @@ What runs in each state (the code the harness drives):
 
 | State | Requests /min |
 |---|---|
-| offline | 4.00 |
-| onlineIdle | 11.00 |
-| offerShown | 11.00 |
+| offline | 1.00 |
+| onlineIdle | 8.00 |
+| offerShown | 8.00 |
 | toPickup | 6.70 |
 | atPickup | 6.00 |
 | onTrip | 6.70 |
 | tripFinished | 6.00 |
 | background | 6.00 |
-| offlineConfigStreamDown | 6.20 |
-| onlineOffersStreamDown | 13.00 |
+| offlineConfigStreamDown | 3.20 |
+| onlineOffersStreamDown | 10.00 |
 | toPickupTripStreamDown | 14.70 |
 
 ## Compared with step 60 (server load tool, `tools/loadtest/cadences.mjs`)
 
 | State | Step 60 | Measured | Why |
 |---|---|---|---|
-| offline | 7 | 4.00 | 4 badges; the airport queue (3) is read only near an airport (owner 2026-11-10) |
-| online idle | 14 | 11.00 | GPS 6 + badges 4 + surge 1; airport 3 only near an airport (owner 2026-11-10) |
+| offline | 7 | 1.00 | 1 badges read (v0.18.145, was 4); the airport queue is read only near an airport (owner 2026-11-10) |
+| online idle | 14 | 8.00 | GPS 6 + badges 1 (v0.18.145, was 4) + surge 1; airport only near an airport (owner 2026-11-10) |
 | to pickup | 9.67 | 9.70 | same; the route refresh is 0.70 here: GPS fixes every 1 s, so the 90 s refresh goes out on the first fix after 90 s (~91 s) |
 | at pickup | 9.67 | 9.00 | the app asks no route while waiting for the rider (`navigation_controller.dart:374`); step 60 keeps the to-pickup route timer (0.67 too high) |
 | on trip | 9.67 | 9.70 | same as to pickup |
@@ -190,10 +178,12 @@ What runs in each state (the code the harness drives):
 
 ## Notes
 
-- **Airport queue** (owner 2026-11-10): read every 20 s only while the driver
+- **Airport queue** (owner 2026-11-10; v0.18.145 `loadCut.airportQueueLive`:
+  the server's `airport_queue_changed` hint reads it at once, at most every
+  5 s, and the timer is a 60 s fallback instead of 20 s): read only while the driver
   is online (the location sender runs) and in a queue or within ~2 km of an
   airport zone (`AirportQueue.wanted`); elsewhere it costs nothing (it was
-  3/min in every state before). Near an airport add 3/min.
+  3/min in every state before). Near an airport add 1/min plus one read per change of his place.
 - `/driver/config/stream` refused (owner 2026-11-10): reconnect after 5, 10,
   20, 40 s, then every 60 s (±10 % jitter), back to 5 s after a successful
   connect; each retry also reads `/driver/config`. Steady: about 2 requests a

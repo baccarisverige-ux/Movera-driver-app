@@ -76,6 +76,7 @@ dependencies:
   firebase_messaging: ^16.7.0
   flutter_webrtc: ^1.6.3
   flutter_tts: ^4.2.5
+  flutter_stripe: 11.5.0
 
 dev_dependencies:
   integration_test:

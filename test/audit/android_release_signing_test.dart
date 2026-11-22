@@ -32,4 +32,61 @@ void main() {
       contains('org.jetbrains.kotlin.android") version "2.2.20"'),
     );
   });
+
+  // flutter_stripe 11.5.0 README "Requirements > Android" (Pay Movera by
+  // card, #644). The release build (R8) failed on "Missing classes" without
+  // step 7; each step that can be read from the files is held here.
+  test('the Android build meets the Stripe SDK requirements', () {
+    final rules = File('android/app/proguard-rules.pro').readAsLinesSync();
+    for (final name in const [
+      r'PushProvisioningActivity$g',
+      r'PushProvisioningActivityStarter$Args',
+      r'PushProvisioningActivityStarter$Error',
+      'PushProvisioningActivityStarter',
+      'PushProvisioningEphemeralKeyProvider',
+    ]) {
+      expect(
+        rules,
+        contains('-dontwarn com.stripe.android.pushProvisioning.$name'),
+        reason: name,
+      );
+    }
+    final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+    final release = gradle.substring(
+      gradle.indexOf('buildTypes {'),
+      gradle.indexOf('gradle.taskGraph.whenReady'),
+    );
+    expect(release, contains('proguardFiles("proguard-rules.pro")'));
+    // Minify / R8 is never switched off to get around a missing rule.
+    expect(gradle, isNot(contains('isMinifyEnabled = false')));
+    expect(gradle, isNot(contains('isShrinkResources = false')));
+    final properties = File('android/gradle.properties').readAsLinesSync();
+    expect(properties, contains('android.enableR8.fullMode=false'));
+    // Step 6: the Payment Sheet needs a FragmentActivity.
+    final activity = File(
+      'android/app/src/main/kotlin/se/movera/driver/MainActivity.kt',
+    ).readAsStringSync();
+    expect(
+      activity,
+      contains('class MainActivity : FlutterFragmentActivity()'),
+    );
+    // Step 4: the activity's theme (NormalTheme, set by the manifest) is a
+    // descendant of Theme.AppCompat, in the light and the night styles.
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    expect(manifest, contains('android:resource="@style/NormalTheme"'));
+    for (final folder in const ['values', 'values-night']) {
+      final styles = File(
+        'android/app/src/main/res/$folder/styles.xml',
+      ).readAsStringSync();
+      expect(
+        RegExp(
+          r'<style name="NormalTheme" parent="Theme\.(AppCompat|MaterialComponents)[.\w]*">',
+        ).hasMatch(styles),
+        isTrue,
+        reason: folder,
+      );
+    }
+  });
 }

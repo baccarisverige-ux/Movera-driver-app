@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/realtime/reconnect_backoff.dart';
 import 'package:movera/core/zones/zone_clock.dart';
@@ -11,9 +12,13 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/one_stream_fallback.dart';
 import 'package:movera/core/dispatch/owes_movera_refusal.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
+
+part 'one_stream_backup.dart';
 
 /// Contract v0.4.0 `Offer` → [RideOffer] (`openapi.yaml#Offer`).
 abstract final class OfferWire {
@@ -178,7 +183,9 @@ class OfferFeedEvent {
 /// `DriverAppConfig.realtime.oneStream`; [deliver] gets the settings events
 /// (`config_published`, `driver_reservations_changed`); [attached] tells the
 /// settings to close (true) or keep (false) their own stream; [opened]
-/// runs on every open of the one stream.
+/// runs on every open of the one stream. [fallback] (v0.18.150) is the
+/// zone's `realtime.oneStreamFallback`: when to use the two old streams as
+/// a backup, and for how long.
 class OneStreamLink {
   const OneStreamLink({
     required this.wanted,
@@ -187,7 +194,10 @@ class OneStreamLink {
     required this.deliver,
     required this.attached,
     required this.opened,
+    this.fallback = _defaultFallback,
   });
+
+  static OneStreamFallback _defaultFallback() => const OneStreamFallback();
 
   final bool Function() wanted;
   final String? Function() zoneId;
@@ -195,6 +205,7 @@ class OneStreamLink {
   final void Function(Map<String, dynamic> event) deliver;
   final void Function(bool on) attached;
   final void Function() opened;
+  final OneStreamFallback Function() fallback;
 }
 
 class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
@@ -212,7 +223,9 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     this.acceptCheckEvery = const Duration(seconds: 2),
     this.acceptCheckFor = const Duration(seconds: 20),
     @visibleForTesting Stopwatch Function()? stopwatch,
-  }) : _client = client,
+    @visibleForTesting Timer Function(Duration, void Function())? backupTimer,
+  }) : _backupTimer = backupTimer ?? Timer.new,
+       _client = client,
        _stopwatch = stopwatch ?? Stopwatch.new,
        _base = baseUri,
        _token = accessToken,
@@ -319,6 +332,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   void forget() {
     _lastSequence = 0;
     _hasCursor = false;
+    // v0.18.150: another driver starts without this one's backup.
+    _clearBackup();
     _clear();
   }
 
@@ -342,7 +357,12 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// older snapshot does not drop them (the feed's copy is kept).
   final Set<String> _cameDuringLoad = <String>{};
   StreamSubscription<String>? _feed;
-  Timer? _feedIdle;
+
+  /// The main feed's idle timer (owned by [_main], v0.18.150).
+  void _stopIdle() {
+    _main?.idle?.cancel();
+    _main?.idle = null;
+  }
 
   /// D12-5: when the open feed last sent a line (a heartbeat counts).
   DateTime? _lastLine;
@@ -384,6 +404,32 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   /// MF-2: a 404 `zone_not_found` (stale zoneId) opens the two old streams
   /// for the next try only; the one stream is asked again after that.
   bool _oldStreamsOnce = false;
+
+  /// L20 stream backup (contract v0.18.150, contract.json#driverOneStreamFallback;
+  /// owner 2026-11-21 "Switch to old two (Rec.)"): failed tries of the one
+  /// stream in a row (D2: a 200 alone is not connected; a renewed 401 and a
+  /// 404 do not count). At `fallback.failuresInARow` the two old streams are
+  /// used until [_backupUntil]; a connected try resets the count. Kept in
+  /// memory only: an app restart asks the one stream first again.
+  int _oneFailures = 0;
+  bool _oneConnected = false;
+  DateTime? _backupUntil;
+  Timer? _backupEnd;
+
+  /// The return try while on backup (one_stream_backup.dart): the one stream
+  /// opened next to the working old streams, adopted once connected.
+  _FeedOwner? _probe;
+
+  /// The main feed's owner (its idle timer); null before the first open.
+  _FeedOwner? _main;
+  final Timer Function(Duration, void Function()) _backupTimer;
+
+  /// Whether the two old streams are used as the one stream's backup now.
+  bool get oneStreamBackup => _backupUntil != null;
+
+  /// Failed tries of the one stream in a row (for tests and logs).
+  @visibleForTesting
+  int get oneStreamFailures => _oneFailures;
 
   /// Whether the feed now open (or being opened) is the one stream.
   bool get usesOneStream => _oneMode;
@@ -450,6 +496,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'X-Api-Version': '0.5',
+      // v0.18.154 P16c: X-App-Version + X-App-Platform (Android / iOS).
+      ...MinAppVersion.headers,
       if (token != null) 'Authorization': 'Bearer $token',
       if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
     };
@@ -580,10 +628,31 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     // A feed opened again (a resume) keeps the credit of its time up.
     _endUptime();
     _reconnect?.cancel();
-    _feedIdle?.cancel();
-    await _feed?.cancel();
-    _feed = null;
+    _stopIdle();
+    final old = _feed;
+    await old?.cancel();
+    // v0.18.150 review: a return try adopted during that await is the feed
+    // now (and bumped the generation): never drop it here.
+    if (identical(_feed, old)) _feed = null;
     if (_disposed || generation != _generation) return;
+    // L20 stream: the one connection while the zone's switch is on and the
+    // server has it; the settings then close their own stream. Decided
+    // before anything that can throw, so a failed try counts against the
+    // stream it was for (v0.18.150).
+    final link = oneStream;
+    final skipOne = _oldStreamsOnce;
+    _oldStreamsOnce = false;
+    // v0.18.150: on backup after failed tries, the two old streams.
+    final backup = _stillOnBackup();
+    _oneConnected = false;
+    final one =
+        link != null &&
+        !_oneStreamRefused &&
+        !skipOne &&
+        !backup &&
+        link.wanted();
+    _oneMode = one;
+    link?.attached(one);
     final http.StreamedResponse response;
     try {
       // Owner 2026-11-15: the cursor is one driver's (the token's `sub`),
@@ -595,15 +664,6 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
         _driver = driver;
       }
       final headers = await _headers();
-      // L20 stream: the one connection while the zone's switch is on and the
-      // server has it; the settings then close their own stream.
-      final link = oneStream;
-      final skipOne = _oldStreamsOnce;
-      _oldStreamsOnce = false;
-      final one =
-          link != null && !_oneStreamRefused && !skipOne && link.wanted();
-      _oneMode = one;
-      link?.attached(one);
       if (generation != _generation) return;
       final zone = one ? link.zoneId() : null;
       final cursor = one
@@ -679,6 +739,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       // not ask sooner.
       _feedLost(
         atLeast: streamRetryAfter(response.statusCode, response.headers),
+        // v0.18.150: a 401 the app renews is not a failed try.
+        oneTry: !(response.statusCode == 401 && renewSession != null),
       );
       return;
     }
@@ -699,28 +761,48 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
       _reloadOnOpen = false;
       unawaited(_load());
     }
+    final owner = _FeedOwner(() => generation == _generation, _feedLost);
+    _main = owner;
+    _feed = owner.sub = _listenFeed(response, owner, linked);
+  }
+
+  /// Reads one feed's lines for [owner] (the main feed, or the return try of
+  /// one_stream_backup.dart): offers to [ingest], settings events to
+  /// [linked], and the loss to `owner.lost` while the owner is current.
+  StreamSubscription<String> _listenFeed(
+    http.StreamedResponse response,
+    _FeedOwner owner,
+    OneStreamLink? linked,
+  ) {
     final data = StringBuffer();
+    final main = identical(owner, _main);
     void quiet() {
-      if (generation != _generation) return;
-      unawaited(_feed?.cancel());
-      _feed = null;
-      _feedLost();
+      if (!owner.isCurrent()) return;
+      unawaited(owner.sub?.cancel());
+      if (identical(_feed, owner.sub)) _feed = null;
+      owner.lost();
     }
 
-    _feedIdle?.cancel();
-    _feedIdle = Timer(feedIdleTimeout, quiet);
+    owner.idle?.cancel();
+    owner.idle = Timer(feedIdleTimeout, quiet);
     // D12-5: only a received line shows the feed is alive.
-    _lastLine = null;
+    if (main) _lastLine = null;
     int? blockId;
-    _feed = response.stream
+    return response.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(
           (line) {
             // Any line, the heartbeat comment too, shows the feed is alive.
-            _lastLine = _now();
-            _feedIdle?.cancel();
-            _feedIdle = Timer(feedIdleTimeout, quiet);
+            if (identical(owner, _main)) _lastLine = _now();
+            owner.lines++;
+            if (owner.upLongEnough) {
+              final adopt = owner.connected;
+              owner.connected = null;
+              adopt?.call();
+            }
+            owner.idle?.cancel();
+            owner.idle = Timer(feedIdleTimeout, quiet);
             if (line.startsWith('data:')) {
               data.write(line.substring(5).trim());
             } else if (line.startsWith('id:')) {
@@ -745,14 +827,25 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
               try {
                 final event = jsonDecode(raw);
                 if (event is Map) {
-                  // A real event: the feed is connected (owner R3).
-                  if (generation == _generation) _reconnects = 0;
+                  // A real event: the feed is connected (owner R3); a
+                  // return try is adopted as the feed (v0.18.150).
+                  final adopt = owner.connected;
+                  owner.connected = null;
+                  adopt?.call();
+                  if (owner.isCurrent()) {
+                    _reconnects = 0;
+                    if (linked != null) {
+                      _oneConnected = true;
+                      _oneFailures = 0;
+                    }
+                  }
                   final kind = event['kind'];
                   if (linked != null &&
                       (kind == 'config_published' ||
-                          kind == 'driver_reservations_changed')) {
+                          kind == 'driver_reservations_changed' ||
+                          kind == 'airport_queue_changed')) {
                     // L20 stream: a settings event, to the settings.
-                    if (generation == _generation) {
+                    if (owner.isCurrent()) {
                       linked.deliver(Map<String, dynamic>.from(event));
                     }
                   } else {
@@ -764,8 +857,12 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
               }
             }
           },
-          onError: (_) => _feedLost(),
-          onDone: _feedLost,
+          onError: (_) {
+            if (owner.isCurrent()) owner.lost();
+          },
+          onDone: () {
+            if (owner.isCurrent()) owner.lost();
+          },
           cancelOnError: true,
         );
   }
@@ -780,19 +877,29 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _openedAt = null;
     if (opened != null && _now().difference(opened) >= streamConnectedAfter) {
       _reconnects = 0;
+      // v0.18.150 review: the one stream counts as connected on time only
+      // when it delivered at least one line (a heartbeat counts).
+      if (_oneMode && (_main?.lines ?? 0) > 0) _oneFailures = 0;
     }
   }
 
   /// The feed is gone: not live, and it tries again after a while, never
   /// sooner than [atLeast] (the server's Retry-After).
-  void _feedLost({Duration? atLeast}) {
-    _feedIdle?.cancel();
-    _feedIdle = null;
+  void _feedLost({Duration? atLeast, bool oneTry = true}) {
+    // v0.18.150: a failed try of the one stream counts; at the limit the
+    // two old streams open at once (a Retry-After of GET /driver/stream is
+    // not theirs).
+    final backup = _oneMode && _countOneTry(counts: oneTry);
+    _stopIdle();
     _endUptime();
     _setLive(false);
     if (_disposed || !_wanted) return;
     _reloadOnOpen = true;
     _reconnect?.cancel();
+    if (backup) {
+      _reconnect = Timer(Duration.zero, () => unawaited(connect()));
+      return;
+    }
     final backoff = _reconnectDelay(_reconnects++);
     _reconnect = Timer(
       atLeast != null && atLeast > backoff ? atLeast : backoff,
@@ -810,9 +917,12 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     _reconnect = null;
     // The next Go online starts again from the shortest wait.
     _reconnects = 0;
+    _oneFailures = 0;
+    // v0.18.150: no backup timer or return try while offline; the backup
+    // time left is checked on the next connect.
+    _pauseBackup();
     _openedAt = null;
-    _feedIdle?.cancel();
-    _feedIdle = null;
+    _stopIdle();
     final feed = _feed;
     _feed = null;
     _setLive(false);
@@ -981,6 +1091,11 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
               : ClaimResult.unavailable(afterCheck: afterCheck);
         case 404:
           _withdraw(offerId, OfferGoneReason.withdrawn, emit: true);
+          return ClaimResult.unavailable(afterCheck: afterCheck);
+        case 426:
+          // v0.18.154 P16c: below the zone's minimum version; the offer
+          // stays the server's, the app shows "Update Movera to continue".
+          MinAppVersion.markServerSaid(body);
           return ClaimResult.unavailable(afterCheck: afterCheck);
         default:
           return const ClaimResult.networkError();
@@ -1187,7 +1302,8 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
   Future<void> dispose() async {
     _disposed = true;
     _reconnect?.cancel();
-    _feedIdle?.cancel();
+    _pauseBackup();
+    _stopIdle();
     await _feed?.cancel();
     await _live.close();
     await _nearby.close();

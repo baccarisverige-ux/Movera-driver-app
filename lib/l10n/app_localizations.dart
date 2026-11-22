@@ -1126,6 +1126,60 @@ abstract class AppLocalizations {
   /// **'New driver'**
   String get menuNewDriver;
 
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. row and screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get acctDeleteTitle;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what happens.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.'**
+  String get acctDeleteBody;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what is kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.'**
+  String get acctDeleteKept;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get acctDeleteConfirmQ;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Your account closes now.'**
+  String get acctDeleteConfirmBody;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get acctDeleteConfirm;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. 409 deletion_open_trip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish or cancel your ride first, then delete your account.'**
+  String get acctDeleteOpenTrip;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. other error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Try again.'**
+  String get acctDeleteFailed;
+
+  /// v0.18.134 (contract.json#accountDeletion.closeAtOnce): sign-in answered 403 account_closed.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is closed and is being deleted. It can\'t be used to sign in.'**
+  String get acctClosedSignIn;
+
   /// No description provided for @airportQueueTitle.
   ///
   /// In en, this message translates to:
@@ -1161,6 +1215,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Airport queue: you are number {place}'**
   String tipAirportQueuePlace(Object place);
+
+  /// v0.18.154 P16c (contract.json#appUpdate.texts.title): full screen when this app is below the zone's minimum version.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Movera to continue'**
+  String get minVersionTitle;
+
+  /// v0.18.154 P16c (contract.json#appUpdate.texts.body): the one-line body under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of the app is too old. Install the latest version from the store to keep using Movera.'**
+  String get minVersionBody;
+
+  /// v0.18.154 P16c (contract.json#appUpdate.texts.button): opens the store.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get minVersionUpdate;
 
   /// No description provided for @phoneVibratesWhenRequestArrives.
   ///
@@ -1249,7 +1321,7 @@ abstract class AppLocalizations {
   /// No description provided for @authTextFourDigitCode.
   ///
   /// In en, this message translates to:
-  /// **'We\'ll text you a 4-digit code.'**
+  /// **'We\'ll text you a 6-digit code.'**
   String get authTextFourDigitCode;
 
   /// No description provided for @authInvalidMobileNumber.
@@ -1456,6 +1528,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t send the code. Try again.'**
   String get authErrSendCode;
 
+  /// Contract v0.18.133 smsSignIn.texts.smsNotSent (503 unavailable, reason sms_not_sent).
+  ///
+  /// In en, this message translates to:
+  /// **'We could not send the SMS. Check the number and try again.'**
+  String get authErrSmsNotSent;
+
+  /// Contract v0.18.133 smsSignIn.texts.smsDailyLimit (503 unavailable, reason sms_daily_limit).
+  ///
+  /// In en, this message translates to:
+  /// **'We cannot send more SMS codes right now. Try again later.'**
+  String get authErrSmsDailyLimit;
+
   /// No description provided for @authErrCheckCode.
   ///
   /// In en, this message translates to:
@@ -1501,7 +1585,7 @@ abstract class AppLocalizations {
   /// No description provided for @authProviderPhoneOnce.
   ///
   /// In en, this message translates to:
-  /// **'Confirm your phone number once to finish signing in with {provider}. We’ll text you a 4-digit code.'**
+  /// **'Confirm your phone number once to finish signing in with {provider}. We’ll text you a 6-digit code.'**
   String authProviderPhoneOnce(String provider);
 
   /// No description provided for @authUsePhoneInstead.
@@ -1612,11 +1696,23 @@ abstract class AppLocalizations {
   /// **'4-digit code from the SMS'**
   String get authCodeFieldLabel;
 
+  /// Screen-reader label of the code boxes when the code has 6 digits (a code sent by SMS, contract v0.18.133 smsSignIn.codeLength).
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code from the SMS'**
+  String get authCodeFieldLabelSix;
+
   /// Contract v0.18.14 sign-in (authSignedOutElsewhere).
   ///
   /// In en, this message translates to:
   /// **'Signed in on another phone'**
   String get authSignedOutElsewhere;
+
+  /// Contract v0.18.149 auth.signedOut.byMoveraTexts (owner G12 Q6): an admin signed this phone out. Owner to confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'You were signed out by Movera'**
+  String get authSignedOutByMovera;
 
   /// Contract v0.18.14 sign-in (authErrLockedToday).
   ///
@@ -7150,6 +7246,36 @@ abstract class AppLocalizations {
   /// **'Next trips could not be changed. Try again.'**
   String get nextTripsSwitchFailed;
 
+  /// Share my location switch on the trip sheet (v0.18.144, owner OK pending).
+  ///
+  /// In en, this message translates to:
+  /// **'Share my location'**
+  String get liveShareSwitch;
+
+  /// Under the switch: the rider sees the driver (v0.18.144).
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} sees you on the map.'**
+  String liveDriverShareBody(String rider);
+
+  /// Consent / privacy line under the switch (v0.18.144, owner + legal OK pending).
+  ///
+  /// In en, this message translates to:
+  /// **'Your live location is sent only to your rider until pickup and is not saved.'**
+  String get liveDriverPrivacyNote;
+
+  /// The rider shares; metres from the pickup (v0.18.144).
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is sharing their location ({meters} m from pickup)'**
+  String liveRiderSharing(String rider, String meters);
+
+  /// Map label of the rider live dot (v0.18.144).
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} · live'**
+  String liveRiderLive(String rider);
+
   /// No description provided for @islandRadarOffers.
   ///
   /// In en, this message translates to:
@@ -8170,6 +8296,90 @@ abstract class AppLocalizations {
   /// **'Type a street, a place or a city. Your last 5 destinations show here.'**
   String get destSearchStartBody;
 
+  /// Pay Movera screen title and its pay button (contract v0.18.139 driverPayRequest; owner 2026-11-20 temporary monthly pay request).
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Movera'**
+  String get payMoveraTitle;
+
+  /// Pay Movera: label of the reference (driver id + month) the driver writes on the payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get payMoveraReference;
+
+  /// Pay Movera: shown above the pay button; the link is opened as it is, the app adds no amount.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment page opens in your browser. Enter the amount and the reference there.'**
+  String get payMoveraHowTo;
+
+  /// Pay Movera: the payment is confirmed by hand by Movera (admin Driver paid Movera).
+  ///
+  /// In en, this message translates to:
+  /// **'The amount goes down when Movera has confirmed your payment.'**
+  String get payMoveraConfirmNote;
+
+  /// Pay Movera: copy button of the amount / the reference.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get payMoveraCopy;
+
+  /// Pay Movera: snackbar after a copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get payMoveraCopied;
+
+  /// Pay Movera: label of the amount row with its copy button.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount to pay'**
+  String get payMoveraAmountToPay;
+
+  /// Pay Movera: the browser could not open the admin's payment link.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the payment page. Please try again.'**
+  String get payMoveraLinkFailed;
+
+  /// Pay Movera: GET /driver/pay-movera failed; never a made-up amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load what you owe Movera. Try again later.'**
+  String get payMoveraUnavailable;
+
+  /// Pay Movera (DRAFT, Stripe): the button that pays what he owes now by card or Apple Pay; the amount is the server's.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount} by card'**
+  String payMoveraPayByCard(String amount);
+
+  /// Pay Movera (DRAFT, Stripe): the server's owed went down after the payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid. Thank you.'**
+  String get payMoveraCardPaid;
+
+  /// Pay Movera (DRAFT, Stripe): the sheet said paid, the server has not confirmed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received. We are checking it.'**
+  String get payMoveraCardChecking;
+
+  /// Pay Movera (DRAFT, Stripe): the payment failed or could not start.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment did not go through. Try again.'**
+  String get payMoveraCardFailed;
+
+  /// Pay Movera (DRAFT, Stripe): what he owes changed before the sheet opened; the screen reloads.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount changed. Check it and try again.'**
+  String get payMoveraAmountChanged;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:
@@ -9171,6 +9381,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are not at the stop yet.'**
   String get liveTripNotAtStop;
+
+  /// Owner 2026-11-21 14:40: short notice (5 s, goes by itself, no tap) when the server's trip price (TripProjection.fare) changes after the accept: before pickup, during the trip, or by waiting. Shows ONLY the new price; amount = the server's new fare, formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'New price: {amount}'**
+  String tripNewPrice(String amount);
 
   /// No description provided for @call112.
   ///
@@ -10572,6 +10788,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash from rider'**
   String get cashFromRider;
+
+  /// No description provided for @collectRideLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride'**
+  String get collectRideLine;
+
+  /// No description provided for @collectEarlierFeeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier fee (to Movera)'**
+  String get collectEarlierFeeLine;
 
   /// No description provided for @riderPaidMoreThanYourFare.
   ///
@@ -12972,6 +13200,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera chooses the ride types when it approves the car.'**
   String get carTypesByMovera;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Year statement'**
+  String get yearStatementTitle;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. contract driverIncomeYear.texts.reported.
+  ///
+  /// In en, this message translates to:
+  /// **'What Movera reports to the tax office for {year}'**
+  String yearStatementReported(int year);
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. texts.empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No earnings in this year.'**
+  String get yearStatementEmpty;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. texts.tooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many trips to show at once. Pick a month.'**
+  String get yearStatementTooBig;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'The year statement could not be loaded.'**
+  String get yearStatementUnavailable;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rides'**
+  String yearStatementRides(int count);
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. netEarnings (the DAC7 amount).
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings'**
+  String get yearStatementEarnings;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. grossFares.
+  ///
+  /// In en, this message translates to:
+  /// **'Fares'**
+  String get yearStatementFares;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. moveraCommission.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera commission'**
+  String get yearStatementCommission;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips'**
+  String get yearStatementTips;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonuses'**
+  String get yearStatementBonuses;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. cashCollectedByDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash in the car'**
+  String get yearStatementCash;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. paidOutByMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid out by Movera'**
+  String get yearStatementPaidOut;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. ownPartOnly: a fleet driver who does not own the fleet sees only his own money.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own part of {company}'**
+  String yearStatementOwnPart(String company);
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. a line with no trip.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus campaign'**
+  String get yearStatementBonusLine;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the share button.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get yearStatementShare;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the year picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get yearStatementYear;
+
+  /// v0.18.153 P29 contract.json#driverIncomeYear (DAC7): Earnings › Year statement. the Wallet tile that opens the screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Year statement for the tax office'**
+  String get yearStatementOpen;
 }
 
 class _AppLocalizationsDelegate

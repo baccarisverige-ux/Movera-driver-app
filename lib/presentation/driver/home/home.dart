@@ -1,3 +1,4 @@
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
@@ -627,10 +628,12 @@ class _DriverHomeState extends State<DriverHome>
       return;
     }
     _didAttemptActiveRideRestore = true;
+    _HomeLive(this)._tripCheckAsked(); // v0.18.154 P16c S-D6
     final repo = widget.activeRideRepository;
     if (repo == null) {
       if (mounted) {
         setState(() => _recoveryResolved = true);
+        MinAppVersion.tripChecked.value = true; // v0.18.154 P16c: no repo
       }
       return;
     }
@@ -687,6 +690,7 @@ class _DriverHomeState extends State<DriverHome>
     }
     if (snapshot == null) {
       setState(() => _recoveryResolved = true);
+      _HomeLive(this)._tripCheckAnswered(askServer); // v0.18.154 P16c
       return;
     }
 
