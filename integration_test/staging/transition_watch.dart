@@ -27,9 +27,11 @@ import 'recording_client.dart';
 /// * `TRANSITION:<name>:ERRORS`  FAIL on any 4xx/5xx or failed call the
 ///   app made, or a Flutter exception, while it ran.
 ///
-/// The phone runs a DEBUG build (Flutter's JUnit runner tests the debug
-/// variant), so the frame numbers are indicative: debug frames are slower
-/// than release ones. Rows go to `transitions.json` and the job summary.
+/// Build (workflow input `testlab_build`): on a PROFILE build (release
+/// speed) SMOOTH counts. On a DEBUG build the frame numbers are only
+/// indicative (debug frames are slower than release ones): a slow frame is
+/// a WARN line, not a FAIL (smooth_verdict.dart). RELOAD and ERRORS are
+/// strict in both. Rows go to `transitions.json` and the job summary.
 class TransitionWatch {
   TransitionWatch(this.tester, this.log, this.rec);
 
@@ -205,7 +207,14 @@ class TransitionWatch {
       ok ? log.pass(id, title, detail) : log.fail(id, title, detail);
     }
 
-    check('SMOOTH', smooth, 'screen change has no freeze', smoothDetail);
+    // Frames count on a profile build; on a debug build a slow frame is
+    // a WARN, not a FAIL (owner 2026-11-22, [SmoothVerdict]).
+    log.smooth(
+      'TRANSITION:$name:SMOOTH',
+      smooth,
+      'screen change has no freeze',
+      smoothDetail,
+    );
     check('RELOAD', reloadOk, 'screen change does not reload', reloadDetail);
     check('ERRORS', errorsOk, 'screen change has no error', errorDetail);
     rows.add(<String, Object?>{
