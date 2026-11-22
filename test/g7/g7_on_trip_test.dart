@@ -316,11 +316,16 @@ void main() {
             'answeredBy': ?by,
           })!,
         )!;
-        expect(line('accepted', by: 'driver'), accepted);
+        // Supervisor 2026-11-20 (owner Q4): an accepted change also says the
+        // new price (the meter), after the same words.
+        expect(line('accepted', by: 'driver'), startsWith('$accepted · '));
         expect(line('refused', by: 'driver'), refused);
         expect(line('expired'), l10n.tr.g7RouteExpiredIsland);
         expect(line('withdrawn', by: 'rider'), l10n.tr.g7RouteWithdrawnIsland);
-        expect(line('accepted', by: 'system'), l10n.tr.g7RouteChanged);
+        expect(
+          line('accepted', by: 'system'),
+          startsWith('${l10n.tr.g7RouteChanged} · '),
+        );
         expect(
           routeChangeIslandLine(
             TripRouteChange.tryParse(change('pending', 'SEK'))!,
