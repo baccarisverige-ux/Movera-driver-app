@@ -844,6 +844,15 @@ class LiveTripCommands {
           // Refused: its echo will not come.
           own.removeAll(added);
         }
+        // A 409 whose projection is already where this step leads (the
+        // server arrived the trip by GPS, then this phone's arrive landed
+        // with the current version: `invalid_transition`): the step is
+        // done, whatever the refusal is called.
+        if (error.statusCode == 409 &&
+            projection != null &&
+            done.contains(projection['status'])) {
+          return const LiveTripOutcome.ok();
+        }
         if (error.code == 'version_mismatch' &&
             projection != null &&
             attempt == 0) {

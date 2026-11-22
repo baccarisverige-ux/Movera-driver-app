@@ -695,6 +695,56 @@ void main() {
       expect(await trips.previewComplete('t1'), isNull);
     });
 
+    test('409 invalid_transition whose projection is already the step\'s '
+        'target (the server arrived the trip by GPS): the step is done, '
+        'nothing is sent again', () async {
+      trips.observe(trip('driver_to_pickup', 4));
+      answers.add(
+        (_) => json(
+          409,
+          error('invalid_transition', projection: trip('arrived', 4)),
+        ),
+      );
+      final outcome = await trips.arrive('t1');
+      expect(outcome.ok, isTrue);
+      expect(requests, hasLength(1));
+      expect(requests.single.url.path, '/api/v1/trips/t1/arrive');
+      expect(trips.statusOf('t1'), 'arrived');
+      // The server did it, not this phone: its echo is not ours.
+      expect(trips.isOwnEcho('t1', 'arrived'), isFalse);
+    });
+
+    test('409 invalid_transition whose projection is not the step\'s '
+        'target still fails', () async {
+      trips.observe(trip('driver_to_pickup', 4));
+      answers.add(
+        (_) => json(
+          409,
+          error(
+            'invalid_transition',
+            projection: trip('cancelled_by_rider', 5),
+          ),
+        ),
+      );
+      final outcome = await trips.arrive('t1');
+      expect(outcome.ok, isFalse);
+      expect(outcome.error, isNotNull);
+      expect(requests, hasLength(1));
+    });
+
+    test('409 with a done projection ends the other steps ok too '
+        '(no-show)', () async {
+      trips.observe(trip('arrived', 5));
+      answers.add(
+        (_) => json(
+          409,
+          error('invalid_transition', projection: trip('no_show', 5)),
+        ),
+      );
+      expect((await trips.noShow('t1')).ok, isTrue);
+      expect(requests, hasLength(1));
+    });
+
     test('a stale version is retried once with the server\'s', () async {
       trips.observe(trip('arrived', 5));
       answers
