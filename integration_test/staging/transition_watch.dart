@@ -28,7 +28,9 @@ import 'smooth_verdict.dart';
 ///   (a spinner centred in >= 60 % of the screen, not inside a button) or
 ///   a blank frame (no Scaffold at all) is seen.
 /// * `TRANSITION:<name>:ERRORS`  FAIL on any 4xx/5xx or failed call the
-///   app made, or a Flutter exception, while it ran.
+///   app made, or a Flutter exception, while it ran. Only exception: the
+///   live-location card's probe `PUT /api/v1/trips/<id>/live-location`
+///   answered 409 (zone switch off, [RecordedCall.designedAnswer]).
 ///
 /// Build (workflow input `testlab_build`): on a PROFILE build (release
 /// speed) SMOOTH counts. On a DEBUG build the frame numbers are only
@@ -189,8 +191,9 @@ class TransitionWatch {
             'home (Home came back with a new map)',
     ];
     final failed = <String>[
+      // The live-location probe's 409 (zone switch off) is designed.
       for (final c in calls)
-        if (c.failed) '$c',
+        if (c.countsAsError) '$c',
     ];
 
     final smoothDetail =

@@ -19,6 +19,7 @@ import 'check_log.dart';
 import 'driver_steps.dart';
 import 'mock_position.dart';
 import 'movera_api.dart';
+import 'pay_verdict.dart';
 import 'session.dart';
 import 'transition_watch.dart';
 import 'trip_steps.dart';
