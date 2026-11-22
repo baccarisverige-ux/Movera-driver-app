@@ -65,9 +65,9 @@ void main() {
   });
 
   test(
-    'the split kept every message (2969 en entries, 2196 fr / sv; +P29 year statement; +0.18.149 signed out by Movera; +0.18.144 live location; +Stripe Pay Movera by card; +new price notice; +M3 collect rows; +0.18.139 Pay Movera screen; +0.18.134 delete my account + account_closed; +0.18.133 6-digit SMS code label; +0.18.133 SMS not sent + SMS daily limit; +D18b history month picker; +J11 owes-limit line; +BQ-V44 campaigns; +BQ-V15 menu new driver; +0.18.109 fleet other country; +0.18.108 C9b stop paused + back + not at stop; +0.18.101 SOS contacts SMS; +V42 arrive hint distance; +A5 next payout; +0.18.93 C9 waiting paused + no-show away; +A7 refund-taken notice; +SV break, +G30 e-mail verified, +G32 waybill commission, +0.18.66 call hint + version line, +0.18.65 next trips switch, +0.18.56 chat, +0.18.57 emergency numbers, +0.18.58 arrived distance; +job 9 airport_queue, +go_offline, +job 8 calls, +job 10 blocked_pairs, +L8 driver early end, +0.18.51 beforePickup, +M22 payout summary)',
+    'the split kept every message (2975 en entries, 2199 fr / sv; +P16c minimum app version; +P29 year statement; +0.18.149 signed out by Movera; +0.18.144 live location; +Stripe Pay Movera by card; +new price notice; +M3 collect rows; +0.18.139 Pay Movera screen; +0.18.134 delete my account + account_closed; +0.18.133 6-digit SMS code label; +0.18.133 SMS not sent + SMS daily limit; +D18b history month picker; +J11 owes-limit line; +BQ-V44 campaigns; +BQ-V15 menu new driver; +0.18.109 fleet other country; +0.18.108 C9b stop paused + back + not at stop; +0.18.101 SOS contacts SMS; +V42 arrive hint distance; +A5 next payout; +0.18.93 C9 waiting paused + no-show away; +A7 refund-taken notice; +SV break, +G30 e-mail verified, +G32 waybill commission, +0.18.66 call hint + version line, +0.18.65 next trips switch, +0.18.56 chat, +0.18.57 emergency numbers, +0.18.58 arrived distance; +job 9 airport_queue, +go_offline, +job 8 calls, +job 10 blocked_pairs, +L8 driver early end, +0.18.51 beforePickup, +M22 payout summary)',
     () {
-      const counts = {'en': 2969, 'fr': 2196, 'sv': 2196};
+      const counts = {'en': 2975, 'fr': 2199, 'sv': 2199};
       for (final lang in _langs) {
         final arb =
             jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())

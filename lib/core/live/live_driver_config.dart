@@ -1,4 +1,5 @@
 import 'package:movera/core/safety/emergency_numbers.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/safety/sos_contacts_sms.dart';
 
 import 'dart:async';
@@ -361,7 +362,7 @@ class LiveDriverConfig extends ChangeNotifier {
     // realtime.oneStream; missing (an older server) = off.
     final realtime = document['realtime'];
     final one = realtime is Map && realtime['oneStream'] == true;
-    return _use(
+    final used = _use(
       DriverAppConfig.fromJson(document),
       zone: _zoneOf(document),
       oneStream: one,
@@ -371,6 +372,10 @@ class LiveDriverConfig extends ChangeNotifier {
         realtime is Map ? realtime['oneStreamFallback'] : null,
       ),
     );
+    // v0.18.154 P16c (contract.json#appUpdate): the zone's minimum app
+    // version and store links of the document now in use.
+    if (used) MinAppVersion.accept(document['appUpdate']);
+    return used;
   }
 
   /// L20 stream: whether the zone's document in use says to open ONE live

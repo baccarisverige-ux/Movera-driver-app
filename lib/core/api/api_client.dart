@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/auth/token_store.dart';
@@ -47,7 +48,7 @@ class ApiClient {
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
   /// G30 (v0.18.76): `GET /driver/reminders` sends the line
   /// `email_not_verified` only to apps at 0.18.76 or later.
-  static const contractVersion = '0.18.153';
+  static const contractVersion = '0.18.154';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);
@@ -221,6 +222,8 @@ class ApiClient {
         'X-Request-Id': requestId,
         'X-Api-Version': apiVersion,
         'X-Contract-Version': contractVersion,
+        // v0.18.154 P16c: X-App-Version + X-App-Platform (Android / iOS).
+        ...MinAppVersion.headers,
         if (access != null && access.isNotEmpty)
           'Authorization': 'Bearer $access',
         if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
@@ -271,6 +274,11 @@ class ApiClient {
         name: 'api',
       );
       if (response.statusCode >= 400) {
+        // v0.18.154 P16c: 426 app_update_required shows "Update Movera to
+        // continue" (never while a trip is active).
+        if (response.statusCode == 426) {
+          MinAppVersion.markServerSaid(_bodyMap(response.body));
+        }
         throw _errorFromResponse(response, requestId);
       }
       if (response.body.trim().isEmpty) return {'requestId': requestId};
@@ -565,4 +573,14 @@ class _Refresh {
 
   /// The refresh endpoint could not answer; the tokens are kept.
   final bool unavailable;
+}
+
+/// The JSON object of [body], or null.
+Map<String, dynamic>? _bodyMap(String body) {
+  try {
+    final decoded = jsonDecode(body);
+    return decoded is Map<String, dynamic> ? decoded : null;
+  } catch (_) {
+    return null;
+  }
 }

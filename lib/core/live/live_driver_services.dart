@@ -1,5 +1,6 @@
 import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/core/live/live_reservations.dart';
+import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/zones/position_zone_hold.dart';
@@ -337,6 +338,8 @@ class LiveDriverServices {
   /// The session ended (sign-out, or refused by the server): the settings
   /// stream stops until the next [signedIn].
   void signedOut() {
+    // v0.18.154 P16c review S-D2: the next account starts unknown.
+    MinAppVersion.signedOut();
     _signedInStarted = false;
     config.stop();
     events.events.clear();
