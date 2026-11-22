@@ -60,9 +60,65 @@ class _DriverContentGateState extends State<DriverContentGate> {
   /// waits for its end.
   bool get _tripActive => _onTrip || widget.session.activeTripId != null;
 
-  /// v0.18.154 P16c: a trip was seen in this run, so the start check is
-  /// past (the block may come after it).
-  bool _sawTrip = false;
+  @override
+  void initState() {
+    super.initState();
+    widget.session.addListener(_onSession);
+    _onSession();
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_onSession);
+    super.dispose();
+  }
+
+  /// v0.18.154 P16c review S-D3: a trip makes "no trip" unknown again; the
+  /// block may come only after Home asked the server once more after it
+  /// (a queued next trip or a started booked ride then opens instead).
+  void _onSession() {
+    if (_tripActive) MinAppVersion.tripChecked.value = false;
+  }
+
+  /// Review O-2: the held booked rides are read once while below the
+  /// minimum and not known.
+  bool _bookedAsked = false;
+
+  /// Review S-D4: the full block sent go-offline once.
+  bool _offlineSent = false;
+
+  void _afterBlock(bool blocked) {
+    if (!blocked) {
+      _offlineSent = false;
+      return;
+    }
+    if (_offlineSent) return;
+    _offlineSent = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // The existing set-offline path (LiveDriverServices follows the
+      // session): no rider waits on offers this phone cannot show.
+      if (mounted && widget.session.status == DriverOnlineStatus.online) {
+        widget.session.setOnline(false);
+      }
+    });
+  }
+
+  void _askBooked() {
+    if (_bookedAsked) return;
+    final reservations = LiveDriverServices.instance?.reservations;
+    if (reservations == null) return;
+    _bookedAsked = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        reservations.load().then<void>(
+          (_) {},
+          onError: (Object _) {
+            _bookedAsked = false;
+          },
+        ),
+      );
+    });
+  }
 
   void _openSos() {
     final navigator = widget.navigatorKey.currentState;
@@ -103,17 +159,27 @@ class _DriverContentGateState extends State<DriverContentGate> {
         MinAppVersion.rule,
         MinAppVersion.serverSaid,
         MinAppVersion.tripChecked,
+        MinAppVersion.bookedHeld,
       ]),
       builder: (context, _) {
         final view = _store.updateView(onTrip: _onTrip);
         final terms = _store.termsDue;
         // v0.18.154 P16c: below the zone's minimum version of this
         // platform; never while a trip is active.
-        if (_tripActive) _sawTrip = true;
-        final known = MinAppVersion.tripChecked.value || _sawTrip;
-        final belowMin = MinAppVersion.required && (known || _tripActive);
+        final required = MinAppVersion.required;
+        if (required && MinAppVersion.bookedHeld.value == null) _askBooked();
+        // Review S-D1 / S-D3 / O-2: the full block only when "no trip" is
+        // confirmed and no booked ride is held (unknown = held); else only
+        // the small line.
+        final mayBlock =
+            !_tripActive &&
+            MinAppVersion.tripChecked.value &&
+            MinAppVersion.bookedHeld.value == false;
+        final belowMin = required && mayBlock;
+        final smallLine = required && !mayBlock;
+        _afterBlock(belowMin && !_sosOpen);
         Widget? cover;
-        if (belowMin && !_tripActive) {
+        if (belowMin) {
           cover = _sosOpen
               ? null
               : MinVersionScreen(
@@ -147,7 +213,7 @@ class _DriverContentGateState extends State<DriverContentGate> {
                 onClose: _store.closeRecommended,
                 onTap: () => unawaited(_launchStore(widget.openStore)),
               ),
-            if (view == UpdateView.tripMessage || (belowMin && _tripActive))
+            if (view == UpdateView.tripMessage || smallLine)
               _Banner(
                 key: const ValueKey<String>('content-update-trip'),
                 text: tr.contentUpdateAfterTrip,

@@ -92,6 +92,33 @@ abstract final class MinAppVersion {
   /// a cold start mid-trip never flashes the block before the trip screen.
   static final ValueNotifier<bool> tripChecked = ValueNotifier(false);
 
+  /// Review O-2: whether the driver holds a booked ride not started yet
+  /// (`GET /driver/reservations?scope=accepted`); null = not known. Held or
+  /// unknown: no block, only the small line (the server never refuses his
+  /// go-online then, contract.json#appUpdate.neverRefused).
+  static final ValueNotifier<bool?> bookedHeld = ValueNotifier(null);
+
+  /// The answer of the start's (or after-trip) active-trip check. Only a
+  /// server read that worked confirms "no trip"; a failed read (or the
+  /// saved trip alone) leaves it unknown (review S-D1). No live server
+  /// (the demo): the saved trip is the whole answer.
+  static void answerTripCheck({
+    required bool askedServer,
+    required bool serverReadFailed,
+    required bool liveServer,
+  }) {
+    if (!liveServer || (askedServer && !serverReadFailed)) {
+      tripChecked.value = true;
+    }
+  }
+
+  /// Review S-D2: a sign-out forgets what this account's checks said.
+  static void signedOut() {
+    tripChecked.value = false;
+    serverSaid.value = false;
+    bookedHeld.value = null;
+  }
+
   /// A new driver document: its rule replaces the one in use.
   static void accept(Object? appUpdate) {
     rule.value = MinAppVersionRule.fromJson(appUpdate);
@@ -111,6 +138,7 @@ abstract final class MinAppVersion {
     rule.value = MinAppVersionRule.off;
     serverSaid.value = false;
     tripChecked.value = false;
+    bookedHeld.value = null;
   }
 
   /// This build's version x.y.z (`MOVERA_APP_VERSION`); null for a local

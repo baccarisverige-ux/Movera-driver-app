@@ -11,6 +11,7 @@ import 'package:movera/core/logging/crash_reports.dart';
 import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:movera/presentation/driver/content/driver_content_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -203,6 +204,12 @@ class _MoveraAppState extends State<MoveraApp> {
   void initState() {
     super.initState();
     validateDriverComposition(production: driverProductionRequested);
+    // v0.18.154 P16c review S-D5: a live release build knows its version.
+    validateDriverAppVersion(
+      releaseBuild: kReleaseMode,
+      liveBuild: DriverRuntimeConfig.current.authRequired,
+      version: driverAppVersion,
+    );
     // Round 4 sign-in: the real API, with the session's tokens. With
     // MOVERA_AUTH_REQUIRED off (the demo) nothing here is called until a
     // logout, which then only clears a session that was never there.

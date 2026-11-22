@@ -4,6 +4,7 @@ import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/content/driver_content.dart';
 import 'package:movera/core/content/driver_content_store.dart';
+import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/content/driver_content_gate.dart';
@@ -25,6 +26,7 @@ void main() {
     MinAppVersion.running = const AppVersion(1, 4, 0);
     MinAppVersion.platform = 'android';
     MinAppVersion.tripChecked.value = true;
+    MinAppVersion.bookedHeld.value = false;
   });
   tearDown(MinAppVersion.reset);
 
@@ -173,6 +175,12 @@ void main() {
         findsOneWidget,
       );
       session.endTrip();
+      // S-D3: after a trip, Home asks the server again first.
+      MinAppVersion.answerTripCheck(
+        askedServer: true,
+        serverReadFailed: false,
+        liveServer: true,
+      );
       await tester.pump();
       expect(find.byKey(screen), findsOneWidget);
     });
@@ -200,7 +208,7 @@ void main() {
     });
 
     testWidgets(
-      'cold start mid-trip: the trip comes first, the block after it',
+      'cold start mid-trip: the trip first; after it only once Home asked again',
       (tester) async {
         MinAppVersion.tripChecked.value = false;
         MinAppVersion.accept(doc('1.5.0'));
@@ -211,10 +219,125 @@ void main() {
         expect(find.byKey(screen), findsNothing);
         session.endTrip();
         await tester.pump();
+        expect(
+          find.byKey(screen),
+          findsNothing,
+          reason: 'unknown after a trip',
+        );
+        MinAppVersion.answerTripCheck(
+          askedServer: true,
+          serverReadFailed: false,
+          liveServer: true,
+        );
+        await tester.pump();
         expect(find.byKey(screen), findsOneWidget);
       },
     );
+
+    testWidgets('S-D3: no flash between a trip and its queued next trip', (
+      tester,
+    ) async {
+      MinAppVersion.accept(doc('1.5.0'));
+      final session = await pumpGate(tester);
+      session.beginTrip('trip_1');
+      await tester.pump();
+      session.endTrip();
+      await tester.pump();
+      expect(find.byKey(screen), findsNothing);
+      session.beginTrip('trip_2_queued');
+      await tester.pump();
+      expect(find.byKey(screen), findsNothing);
+    });
+
+    testWidgets('O-2: a held booked ride, or not known: only the small line', (
+      tester,
+    ) async {
+      MinAppVersion.accept(doc('1.5.0'));
+      MinAppVersion.bookedHeld.value = null;
+      await pumpGate(tester);
+      await tester.pump();
+      expect(find.byKey(screen), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('content-update-trip')),
+        findsOneWidget,
+      );
+      MinAppVersion.bookedHeld.value = true;
+      await tester.pump();
+      expect(find.byKey(screen), findsNothing);
+      MinAppVersion.bookedHeld.value = false;
+      await tester.pump();
+      expect(find.byKey(screen), findsOneWidget);
+    });
+
+    testWidgets('S-D4: the full block sends an online driver offline once', (
+      tester,
+    ) async {
+      MinAppVersion.accept(doc('1.5.0'));
+      final session = await pumpGate(tester);
+      await tester.pump();
+      expect(find.byKey(screen), findsOneWidget);
+      expect(session.status, DriverOnlineStatus.offline);
+    });
   });
+
+  test('S-D1: a failed server read leaves "no trip" unknown', () {
+    MinAppVersion.tripChecked.value = false;
+    MinAppVersion.answerTripCheck(
+      askedServer: true,
+      serverReadFailed: true,
+      liveServer: true,
+    );
+    expect(MinAppVersion.tripChecked.value, isFalse);
+    MinAppVersion.answerTripCheck(
+      askedServer: false,
+      serverReadFailed: false,
+      liveServer: true,
+    );
+    expect(MinAppVersion.tripChecked.value, isFalse);
+    MinAppVersion.answerTripCheck(
+      askedServer: true,
+      serverReadFailed: false,
+      liveServer: true,
+    );
+    expect(MinAppVersion.tripChecked.value, isTrue);
+  });
+
+  test('S-D2: sign-out forgets the checks', () {
+    MinAppVersion.markServerSaid({'reason': 'app_update_required'});
+    MinAppVersion.signedOut();
+    expect(MinAppVersion.tripChecked.value, isFalse);
+    expect(MinAppVersion.bookedHeld.value, isNull);
+    expect(MinAppVersion.serverSaid.value, isFalse);
+  });
+
+  test(
+    'S-D5: a live release build without MOVERA_APP_VERSION stops at start',
+    () {
+      expect(
+        () => validateDriverAppVersion(
+          releaseBuild: true,
+          liveBuild: true,
+          version: 'dev',
+        ),
+        throwsStateError,
+      );
+      validateDriverAppVersion(
+        releaseBuild: true,
+        liveBuild: true,
+        version: '1.4.0+5',
+      );
+      validateDriverAppVersion(
+        releaseBuild: false,
+        liveBuild: true,
+        version: 'dev',
+      );
+      validateDriverAppVersion(
+        releaseBuild: true,
+        liveBuild: false,
+        version: 'dev',
+      );
+    },
+  );
 
   test('a 426 with an unreadable body or another reason does not block', () {
     MinAppVersion.markServerSaid(null);

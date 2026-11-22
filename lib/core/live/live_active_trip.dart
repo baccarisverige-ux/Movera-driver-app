@@ -33,6 +33,7 @@ class LiveActiveTrip {
   Future<({PersistedActiveRide ride, Map<String, dynamic> projection})?> fetch({
     Future<String?> Function()? activeTripId,
   }) async {
+    lastReadFailed = false;
     try {
       final Object? id = activeTripId != null
           ? await activeTripId()
@@ -43,9 +44,14 @@ class LiveActiveTrip {
       return ride == null ? null : (ride: ride, projection: trip);
     } catch (error) {
       DriverLog.warn('active trip not read: $error', name: 'live');
+      lastReadFailed = true;
       return null;
     }
   }
+
+  /// v0.18.154 P16c review S-D1: the last [fetch] could not ask the server
+  /// (null then means "not known", not "no trip").
+  bool lastReadFailed = false;
 
   /// The trip screen's stage for a server `TripStatus`; null when the
   /// screen has no such stage (searching, over…).

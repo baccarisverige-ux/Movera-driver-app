@@ -64,8 +64,13 @@ extension _HomeRecovery on _DriverHomeState {
       }
       if (mounted) {
         _rebuild(() => _recoveryResolved = true);
-        // v0.18.154 P16c: the saved trip is closed: no trip.
-        MinAppVersion.tripChecked.value = true;
+        // v0.18.154 P16c: the saved trip is closed; the server was not
+        // asked, so only the demo (no live server) counts it as "no trip".
+        MinAppVersion.answerTripCheck(
+          askedServer: false,
+          serverReadFailed: false,
+          liveServer: LiveDriverServices.instance != null,
+        );
       }
     } catch (_) {
       _didAttemptActiveRideRestore = false;
