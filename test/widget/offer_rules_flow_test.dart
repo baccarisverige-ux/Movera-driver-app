@@ -536,10 +536,14 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('250,00 kr'), findsWidgets);
-      expect(find.text('You owe Movera'), findsOneWidget);
-      // The driver's 200 kr earnings (owner decision 2026-10-26: no fee
-      // off again) − 250 cash.
-      expect(find.text('−50,00 kr'), findsOneWidget);
+      // #641 (owner 2026-11-21 14:55): the collect screen shows only the
+      // final price and the collect button; the earnings card (the driver's
+      // 200 kr earnings − 250 cash = "You owe Movera −50,00 kr") is not
+      // shown in the trip flow (CashCollectSheet.showEarnings, kept). Its
+      // content is still tested with the flag in test/g8 and
+      // test/price_display.
+      expect(find.text('You owe Movera'), findsNothing);
+      expect(find.text('−50,00 kr'), findsNothing);
       expect(find.text('Movera fee'), findsNothing);
       expect(find.text('Finish ride'), findsOneWidget);
       await tester.tap(
