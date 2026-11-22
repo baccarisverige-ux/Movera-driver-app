@@ -48,6 +48,8 @@ enum TripCommand {
   request('request'),
   startSearch('start_search'),
   raisePrice('raise_price'),
+  // v0.18.143 (contract.json#onTrip.routeChange.whileSearching).
+  changeRoute('change_route'),
   sendOffer('send_offer'),
   offerLapsed('offer_lapsed'),
   accept('accept'),
@@ -146,6 +148,16 @@ abstract final class TripTransitions {
       TripStatus.searching,
       TripStatus.offered,
     ], TripStatus.searching),
+    // v0.18.143: before a driver accepted, the rider's new route and price
+    // apply at once and a new search starts (rider and server only; the
+    // driver app sends no such command).
+    TripTransition(
+      TripCommand.changeRoute,
+      TripActor.rider,
+      [TripStatus.requested, TripStatus.searching, TripStatus.offered],
+      TripStatus.searching,
+      when: TripKind.live,
+    ),
     TripTransition(TripCommand.sendOffer, TripActor.system, [
       TripStatus.searching,
     ], TripStatus.offered),
