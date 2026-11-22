@@ -6374,6 +6374,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cashFromRider => 'Montant à encaisser en espèces';
 
   @override
+  String get collectRideLine => 'Course';
+
+  @override
+  String get collectEarlierFeeLine => 'Frais antérieurs (à Movera)';
+
+  @override
   String get riderPaidMoreThanYourFare =>
       'Le passager a payé davantage que le montant prévu pour vous (promotion). La différence sera régularisée lors de votre prochain versement.';
 

@@ -78,6 +78,8 @@
   "tripUpdate": "RESEUPPDATERING",
   "waitingInProgress": "Väntan pågår",
   "cashFromRider": "Kontant från resenären",
+  "collectRideLine": "Resa",
+  "collectEarlierFeeLine": "Tidigare avgift (till Movera)",
   "riderPaidMoreThanYourFare": "Resenären betalade mer än ditt pris (kampanj). Det regleras i din nästa utbetalning.",
   "riderPaidLessThanYourFare": "Resenären betalade mindre än ditt pris (kampanj). Movera lägger till mellanskillnaden i din nästa utbetalning.",
   "pickupArrived": "Upphämtning · framme",

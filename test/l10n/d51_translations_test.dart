@@ -255,6 +255,7 @@ void main() {
             fare: '248,40 kr',
             cash: '300,00 kr',
             riderName: 'Nils',
+            showEarnings: true,
           ),
         ),
       );

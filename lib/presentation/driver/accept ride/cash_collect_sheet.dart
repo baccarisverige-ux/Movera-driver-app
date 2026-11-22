@@ -63,6 +63,7 @@ class CashCollectSheet extends StatelessWidget {
     this.riderEnded = false,
     this.driverEnded = false,
     this.owedToMovera,
+    this.showEarnings = false,
     bool? live,
   }) : cash = cash ?? fare,
        _live = live;
@@ -107,6 +108,15 @@ class CashCollectSheet extends StatelessWidget {
   /// P89S), so it need not equal the sheet's share − cash rows.
   /// The "You owe Movera" / "Movera owes you" line shows only this.
   final Money? owedToMovera;
+
+  /// Owner 2026-11-21 14:55: the collect screen shows ONLY the final price
+  /// and the collect button. The earnings card (Din andel, Kontant från
+  /// resenären, what is owed to or by Movera) is not shown there (Rule 21:
+  /// kept, not deleted); the driver finds the same lines on the finished
+  /// trip in the ride history (history_detail.dart: Your earnings, Cash
+  /// collected, the balance with Movera) and Din andel on Ride completed.
+  /// The trip flow never sets this.
+  final bool showEarnings;
 
   /// Against a live server (default: [LiveDriverServices.active]) the
   /// balance line needs [owedToMovera]; the demo still works it out.
@@ -225,8 +235,9 @@ class CashCollectSheet extends StatelessWidget {
                         _cashCase(amount),
                         // Live: the share and the cash always; the line
                         // with Movera only with the server's number.
-                        if (balance != null ||
-                            (_live ?? LiveDriverServices.active)) ...[
+                        if (showEarnings &&
+                            (balance != null ||
+                                (_live ?? LiveDriverServices.active))) ...[
                           const SizedBox(height: 14),
                           _balanceCard(balance),
                         ],

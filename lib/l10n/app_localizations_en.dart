@@ -6258,6 +6258,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashFromRider => 'Cash from rider';
 
   @override
+  String get collectRideLine => 'Ride';
+
+  @override
+  String get collectEarlierFeeLine => 'Earlier fee (to Movera)';
+
+  @override
   String get riderPaidMoreThanYourFare =>
       'The rider paid more than your fare (promotion). It is settled in your next payout.';
 

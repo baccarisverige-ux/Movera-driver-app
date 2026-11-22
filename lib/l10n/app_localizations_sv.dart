@@ -6263,6 +6263,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get cashFromRider => 'Kontant från resenären';
 
   @override
+  String get collectRideLine => 'Resa';
+
+  @override
+  String get collectEarlierFeeLine => 'Tidigare avgift (till Movera)';
+
+  @override
   String get riderPaidMoreThanYourFare =>
       'Resenären betalade mer än ditt pris (kampanj). Det regleras i din nästa utbetalning.';
 
