@@ -238,8 +238,8 @@ void main() {
       'S-D6: a late "no trip" during trip B never blocks the B to C gap',
       (tester) async {
         // He is online on a trip-less start that was not confirmed yet.
-      MinAppVersion.tripChecked.value = false;
-      MinAppVersion.accept(doc('1.5.0'));
+        MinAppVersion.tripChecked.value = false;
+        MinAppVersion.accept(doc('1.5.0'));
         final session = await pumpGate(tester);
         session.beginTrip('trip_A');
         await tester.pump();
