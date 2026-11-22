@@ -628,6 +628,7 @@ class _DriverHomeState extends State<DriverHome>
       return;
     }
     _didAttemptActiveRideRestore = true;
+    _HomeLive(this)._tripCheckAsked(); // v0.18.154 P16c S-D6
     final repo = widget.activeRideRepository;
     if (repo == null) {
       if (mounted) {

@@ -234,6 +234,52 @@ void main() {
       },
     );
 
+    testWidgets(
+      'S-D6: a late "no trip" during trip B never blocks the B to C gap',
+      (tester) async {
+        // He is online on a trip-less start that was not confirmed yet.
+      MinAppVersion.tripChecked.value = false;
+      MinAppVersion.accept(doc('1.5.0'));
+        final session = await pumpGate(tester);
+        session.beginTrip('trip_A');
+        await tester.pump();
+        session.endTrip();
+        await tester.pump();
+        // 1. Home re-asks after A (generation captured now).
+        final askedAt = MinAppVersion.tripGeneration;
+        // 2. He accepts B before the answer arrives.
+        session.beginTrip('trip_B');
+        await tester.pump();
+        // 3. The late "no trip" lands during B: ignored.
+        MinAppVersion.answerTripCheck(
+          askedServer: true,
+          serverReadFailed: false,
+          liveServer: true,
+          askedAt: askedAt,
+        );
+        expect(MinAppVersion.tripChecked.value, isFalse);
+        // 4. B ends with a queued trip C: no block in the gap, not offline.
+        session.endTrip();
+        await tester.pump();
+        await tester.pump();
+        expect(find.byKey(screen), findsNothing);
+        expect(session.status, isNot(DriverOnlineStatus.offline));
+        // The same late answer after B (asked before B began) is still old.
+        MinAppVersion.answerTripCheck(
+          askedServer: true,
+          serverReadFailed: false,
+          liveServer: true,
+          askedAt: askedAt,
+        );
+        await tester.pump();
+        expect(find.byKey(screen), findsNothing);
+        session.beginTrip('trip_C');
+        await tester.pump();
+        expect(find.byKey(screen), findsNothing);
+        expect(session.status, DriverOnlineStatus.onTrip);
+      },
+    );
+
     testWidgets('S-D3: no flash between a trip and its queued next trip', (
       tester,
     ) async {

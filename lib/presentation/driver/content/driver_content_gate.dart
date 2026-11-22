@@ -77,7 +77,7 @@ class _DriverContentGateState extends State<DriverContentGate> {
   /// block may come only after Home asked the server once more after it
   /// (a queued next trip or a started booked ride then opens instead).
   void _onSession() {
-    if (_tripActive) MinAppVersion.tripChecked.value = false;
+    MinAppVersion.sessionTrip(active: _tripActive);
   }
 
   /// Review O-2: the held booked rides are read once while below the

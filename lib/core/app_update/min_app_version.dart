@@ -106,10 +106,27 @@ abstract final class MinAppVersion {
     required bool askedServer,
     required bool serverReadFailed,
     required bool liveServer,
+    int? askedAt,
   }) {
+    // Review S-D6: never while a trip is active, and never for a check
+    // asked before the latest trip began (a late "no trip").
+    if (tripActive) return;
+    if (askedAt != null && askedAt != tripGeneration) return;
     if (!liveServer || (askedServer && !serverReadFailed)) {
       tripChecked.value = true;
     }
+  }
+
+  /// Review S-D6: true while the session has an active trip (the gate
+  /// keeps it); [tripGeneration] counts the trips that began.
+  static bool tripActive = false;
+  static int tripGeneration = 0;
+
+  /// The gate saw the session's trip state.
+  static void sessionTrip({required bool active}) {
+    if (active && !tripActive) tripGeneration++;
+    tripActive = active;
+    if (active) tripChecked.value = false;
   }
 
   /// Review S-D2: a sign-out forgets what this account's checks said.
@@ -117,6 +134,7 @@ abstract final class MinAppVersion {
     tripChecked.value = false;
     serverSaid.value = false;
     bookedHeld.value = null;
+    tripActive = false;
   }
 
   /// A new driver document: its rule replaces the one in use.
@@ -139,6 +157,8 @@ abstract final class MinAppVersion {
     serverSaid.value = false;
     tripChecked.value = false;
     bookedHeld.value = null;
+    tripActive = false;
+    tripGeneration = 0;
   }
 
   /// This build's version x.y.z (`MOVERA_APP_VERSION`); null for a local
