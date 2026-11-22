@@ -200,6 +200,10 @@
   "@authSignedOutElsewhere": {
     "description": "Contract v0.18.14 sign-in (authSignedOutElsewhere)."
   },
+  "authSignedOutByMovera": "You were signed out by Movera",
+  "@authSignedOutByMovera": {
+    "description": "Contract v0.18.149 auth.signedOut.byMoveraTexts (owner G12 Q6): an admin signed this phone out. Owner to confirm."
+  },
   "authErrLockedToday": "Too many wrong codes today. Try again later.",
   "@authErrLockedToday": {
     "description": "Contract v0.18.14 sign-in (authErrLockedToday)."

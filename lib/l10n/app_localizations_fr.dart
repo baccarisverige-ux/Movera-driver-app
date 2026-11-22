@@ -960,6 +960,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authSignedOutElsewhere => 'Connecté sur un autre téléphone';
 
   @override
+  String get authSignedOutByMovera => 'Vous avez été déconnecté par Movera';
+
+  @override
   String get authErrLockedToday =>
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
 
