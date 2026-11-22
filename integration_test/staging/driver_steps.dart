@@ -8,6 +8,7 @@ import 'package:movera/presentation/driver/home/components/island_waiting.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 
 import 'check_log.dart';
+import 'type_text.dart';
 
 /// UI steps of the staging device run, on the real app, through its keys.
 ///
@@ -143,7 +144,7 @@ Future<String?> signIn(
 
   final field = byKey('auth-phone-field');
   if (!shows(field)) return 'sign-in screen has no phone field';
-  await tester.enterText(field, phone);
+  await typeText(tester, field, phone);
   await tester.pump(const Duration(milliseconds: 400));
   final box = byKey('auth-consent-box');
   await tester.ensureVisible(box);
@@ -168,7 +169,7 @@ Future<String?> signIn(
     matching: find.byType(EditableText),
   );
   if (!shows(pin)) return 'code screen has no code field';
-  await tester.enterText(pin.first, code);
+  await typeText(tester, pin.first, code);
   await tester.pump(const Duration(milliseconds: 600));
   // The last digit sends the code by itself; Verify is the fallback.
   final verify = byKey('auth-verify');

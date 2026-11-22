@@ -9,15 +9,18 @@ import 'package:movera/presentation/driver/home/home.dart';
 import 'check_log.dart';
 import 'driver_steps.dart';
 import 'recording_client.dart';
+import 'smooth_verdict.dart';
 
 /// Owner 2026-11-12 ("can you check if screens change smoothly without any
 /// bug and reload or any problem?"): every screen change of the trip is
 /// watched and gets three checks:
 ///
-/// * `TRANSITION:<name>:SMOOTH`  frame timings (engine FrameTiming) while
-///   it runs: FAIL when one frame takes > [freezeMs] ms (build or raster: a
-///   visible freeze) or, with at least [minFramesForRatio] frames, more
-///   than [missedLimit] of the frames miss the 16.7 ms budget.
+/// * `TRANSITION:<name>:SMOOTH`  engine FrameTiming while it runs (the
+///   longer of a frame's build and raster time). Profile build: FAIL when
+///   one frame takes > 200 ms or > 35% of >= 60 frames miss 16.7 ms; WARN
+///   (not a FAIL) when > 20% miss. Debug build: WARN only. The rule and
+///   its numbers are in smooth_verdict.dart; p90 and the jank budget are
+///   logged, not judged.
 /// * `TRANSITION:<name>:RELOAD`  the app's GET reads are counted (shown
 ///   only); FAIL when a map the screen keeps is created again (a new
 ///   GoogleMap State object for the same screen; Home's map is compared
@@ -25,18 +28,22 @@ import 'recording_client.dart';
 ///   (a spinner centred in >= 60 % of the screen, not inside a button) or
 ///   a blank frame (no Scaffold at all) is seen.
 /// * `TRANSITION:<name>:ERRORS`  FAIL on any 4xx/5xx or failed call the
-///   app made, or a Flutter exception, while it ran.
+///   app made, or a Flutter exception, while it ran. Only exception: the
+///   live-location card's probe `PUT /api/v1/trips/<id>/live-location`
+///   answered 409 (zone switch off, [RecordedCall.designedAnswer]).
 ///
-/// The phone runs a DEBUG build (Flutter's JUnit runner tests the debug
-/// variant), so the frame numbers are indicative: debug frames are slower
-/// than release ones. Rows go to `transitions.json` and the job summary.
+/// Build (workflow input `testlab_build`): on a PROFILE build (release
+/// speed) SMOOTH counts. On a DEBUG build the frame numbers are only
+/// indicative (debug frames are slower than release ones): a slow frame is
+/// a WARN line, not a FAIL (smooth_verdict.dart). RELOAD and ERRORS are
+/// strict in both. Rows go to `transitions.json` and the job summary.
 class TransitionWatch {
   TransitionWatch(this.tester, this.log, this.rec);
 
-  static const int freezeMs = 200;
-  static const double missedLimit = 0.20;
-  static const int minFramesForRatio = 10;
-  static const Duration _budget = Duration(microseconds: 16667);
+  // The frame rule lives in smooth_verdict.dart; these names are kept.
+  static const int freezeMs = SmoothVerdict.freezeMs;
+  static const double missedLimit = SmoothVerdict.warnMissed;
+  static const int minFramesForRatio = SmoothVerdict.debugMinFrames;
 
   final WidgetTester tester;
   final CheckLog log;
@@ -152,18 +159,20 @@ class TransitionWatch {
     List<String> exceptions,
   ) {
     double ms(Duration d) => d.inMicroseconds / 1000.0;
-    var missed = 0;
-    var worst = 0.0;
-    for (final f in frames) {
-      final build = f.buildDuration, raster = f.rasterDuration;
-      if (build > _budget || raster > _budget) missed++;
-      final w = ms(build) > ms(raster) ? ms(build) : ms(raster);
-      if (w > worst) worst = w;
-    }
-    final ratio = frames.isEmpty ? 0.0 : missed / frames.length;
-    final smooth =
-        worst <= freezeMs &&
-        (frames.length < minFramesForRatio || ratio <= missedLimit);
+    final stats = SmoothStats.of([
+      for (final f in frames)
+        ms(
+          f.buildDuration > f.rasterDuration
+              ? f.buildDuration
+              : f.rasterDuration,
+        ),
+    ]);
+    final missed = stats.missed;
+    final worst = stats.worstMs;
+    final ratio = stats.ratio;
+    // PASS / WARN / FAIL by build mode (smooth_verdict.dart has the rule).
+    final outcome = SmoothVerdict.judge(stats);
+    final smooth = outcome == SmoothOutcome.pass;
 
     final calls = rec.since(mark);
     final gets = calls.where((c) => c.method == 'GET' && !c.isBackground);
@@ -182,15 +191,17 @@ class TransitionWatch {
             'home (Home came back with a new map)',
     ];
     final failed = <String>[
+      // The live-location probe's 409 (zone switch off) is designed.
       for (final c in calls)
-        if (c.failed) '$c',
+        if (c.countsAsError) '$c',
     ];
 
     final smoothDetail =
         'frames=${frames.length} missed=$missed '
         '(${(ratio * 100).toStringAsFixed(0)}%) worst=${worst.toStringAsFixed(1)} ms '
-        '[FAIL above $freezeMs ms or ${(missedLimit * 100).round()}% missed '
-        'with >= $minFramesForRatio frames; $buildMode]';
+        'p90=${stats.p90Ms.toStringAsFixed(1)} ms '
+        'jank=${stats.jankMs.toStringAsFixed(1)} ms '
+        '[${SmoothVerdict.rule}; $buildMode]';
     final reloadDetail =
         'GET reads=${gets.length} $perPath; maps before=${_ids(before)} '
         'after=${_ids(after)} recreated=$recreated; full-screen loader '
@@ -205,7 +216,14 @@ class TransitionWatch {
       ok ? log.pass(id, title, detail) : log.fail(id, title, detail);
     }
 
-    check('SMOOTH', smooth, 'screen change has no freeze', smoothDetail);
+    // Frames count on a profile build; on a debug build a slow frame is
+    // a WARN, not a FAIL (owner 2026-11-22, [SmoothVerdict]).
+    log.smooth(
+      'TRANSITION:$name:SMOOTH',
+      outcome,
+      'screen change has no freeze',
+      smoothDetail,
+    );
     check('RELOAD', reloadOk, 'screen change does not reload', reloadDetail);
     check('ERRORS', errorsOk, 'screen change has no error', errorDetail);
     rows.add(<String, Object?>{
@@ -213,6 +231,8 @@ class TransitionWatch {
       'frames': frames.length,
       'missed': missed,
       'worstMs': double.parse(worst.toStringAsFixed(1)),
+      'p90Ms': double.parse(stats.p90Ms.toStringAsFixed(1)),
+      'jankMs': double.parse(stats.jankMs.toStringAsFixed(1)),
       'gets': gets.length,
       'recreatedMaps': recreated,
       'loaderSamples': loader,
@@ -220,6 +240,7 @@ class TransitionWatch {
       'failedCalls': failed,
       'exceptions': exceptions,
       'smooth': smooth,
+      'smoothOutcome': outcome.name,
       'reload': !reloadOk,
       'errors': !errorsOk,
       'build': buildMode,

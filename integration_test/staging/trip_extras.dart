@@ -73,9 +73,9 @@ extension _TripExtras on TripRun {
     final mark = rec.length;
     var typed = false;
     if (opened && shows(chatField())) {
-      await tester.enterText(chatField().first, replyText);
+      await typeText(tester, chatField().first, replyText);
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await sendTextAction(tester, chatField().first, TextInputAction.send);
       typed = true;
       await pumpUntil(
         tester,

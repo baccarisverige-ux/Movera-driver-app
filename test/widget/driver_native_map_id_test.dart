@@ -68,9 +68,14 @@ void main() {
     expect(apk, contains('::warning::No DRIVER_MAP_ID'));
     final apkBuilds = 'flutter build apk'.allMatches(apk).length;
     // One build() makes both upgrade APKs; the device-checks job builds the
-    // app under test once more (debug, for the on-phone tests). Every build
-    // passes the Map ID.
-    expect(apkBuilds, 2, reason: 'test APKs + device-checks app under test');
+    // app under test once more (debug, for the on-phone tests) or, with the
+    // input testlab_build=profile, as a profile build. Every build passes
+    // the Map ID.
+    expect(
+      apkBuilds,
+      3,
+      reason: 'test APKs + device-checks app under test (debug, profile)',
+    );
     // The optional App Bundle (input app_bundle, default off) is a native
     // build too and passes the Map ID as well.
     final bundleBuilds = 'flutter build appbundle'.allMatches(apk).length;
