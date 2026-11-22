@@ -22,6 +22,7 @@ import 'movera_api.dart';
 import 'session.dart';
 import 'transition_watch.dart';
 import 'trip_steps.dart';
+import 'type_text.dart';
 
 part 'trip_extras.dart';
 part 'trip_cleanup.dart';
