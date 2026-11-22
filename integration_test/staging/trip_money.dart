@@ -394,11 +394,13 @@ extension _TripMoney on TripRun {
       // Run 8b HISTORY: after Rate → Done, Home's island shows a message
       // and tucks its menu button (IgnorePointer, opacity 0,
       // home_map_top_island.dart:140-160): in the tree, not tappable. Wait
-      // for a menu button that takes the tap.
+      // for a menu button that takes the tap. Run 44951732597: online
+      // again, the island says "Finding trips" and keeps the menu tucked
+      // until it is touched (R13-1): homeMenuTappable touches it once.
       final menu = find.byTooltip(tr.menu).hitTestable();
-      if (!await pumpUntil(
+      if (!await homeMenuTappable(
         tester,
-        () => shows(menu),
+        menu,
         timeout: const Duration(seconds: 15),
       )) {
         CheckLog.say('MISSED menu button not tappable in 15 s (Home)');
