@@ -30,7 +30,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: '3.47.6'
-  APP_BUNDLE_ID: com.movera.driver
+  APP_BUNDLE_ID: se.movera.driver
   APP_NAME: Movera Driver
   APP_SKU: movera-driver
 

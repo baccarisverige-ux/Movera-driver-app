@@ -38,9 +38,9 @@ void main() {
     );
   });
 
-  // driver-u4 + owner 2026-11-23 (all ids use com): the iOS bundle id is com.movera.driver; not the
+  // driver-u4: the iOS bundle id matches Android and the README, not the
   // Flutter template com.example.movera.
-  test('iOS bundle identifier is com.movera.driver in every configuration', () {
+  test('iOS bundle identifier is se.movera.driver in every configuration', () {
     final project = File(
       'ios/Runner.xcodeproj/project.pbxproj',
     ).readAsStringSync();
@@ -48,12 +48,12 @@ void main() {
       r'PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);',
     ).allMatches(project).map((m) => m.group(1)).toList();
     expect(
-      ids.where((id) => id == 'com.movera.driver'),
+      ids.where((id) => id == 'se.movera.driver'),
       hasLength(3),
       reason: 'Runner Debug, Release, Profile',
     );
     expect(
-      ids.where((id) => id == 'com.movera.driver.RunnerTests'),
+      ids.where((id) => id == 'se.movera.driver.RunnerTests'),
       hasLength(3),
       reason: 'RunnerTests',
     );
