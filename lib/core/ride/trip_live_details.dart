@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
@@ -279,7 +280,7 @@ class TripTerms {
     this.cancelFreeMinutes,
     this.cancelDriverSharePercent = 100,
     this.cancelAfterArrivedIsNoShow = true,
-    this.maxPickupMoveMeters = 200,
+    this.maxPickupMoveMeters = ZoneDefaults.maxPickupMoveMeters,
     this.stopFreeWaitMinutes = 0,
     this.stopWaitPerMin,
     this.autoArriveMeters,
@@ -316,7 +317,9 @@ class TripTerms {
           : null,
       cancelDriverSharePercent: _percent(json['cancelDriverSharePct']) ?? 100,
       cancelAfterArrivedIsNoShow: json['cancelAfterArrivedIsNoShow'] != false,
-      maxPickupMoveMeters: move is num && move >= 0 ? move.toInt() : 200,
+      maxPickupMoveMeters: move is num && move >= 0
+          ? move.toInt()
+          : ZoneDefaults.maxPickupMoveMeters,
       stopFreeWaitMinutes: _minutes(json['stopFreeWaitMin']) ?? 0,
       stopWaitPerMin: _money(json['stopWaitPerMin'], currency),
       autoArriveMeters: _meters(json['autoArriveMeters']),

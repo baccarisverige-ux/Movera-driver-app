@@ -306,12 +306,24 @@ void main() {
       );
     });
 
-    test('the pickup move default is 200 m, as the contract says', () {
-      expect(ZoneDefaults.maxPickupMoveMeters, 200);
-      expect(_pickupWaiting['pickupMove']['default'], 200);
+    // v0.18.156 (owner 2026-11-23): the rider moves the pickup up to 300 m for
+    // free; the default was 200 m.
+    test('the pickup move default is 300 m, as the contract says', () {
+      expect(ZoneDefaults.maxPickupMoveMeters, 300);
+      expect(_pickupWaiting['pickupMove']['default'], 300);
       expect(
         DriverAppConfig.fromJson({'currency': 'SEK'}).maxPickupMoveMeters,
-        200,
+        300,
+      );
+      // A trip whose terms lack the field falls back to the same default.
+      expect(
+        TripTerms.tryParse({
+          'currency': 'SEK',
+          'waitPerMin': {'amountMinor': 500, 'currency': 'SEK'},
+          'noShowFee': {'amountMinor': 5000, 'currency': 'SEK'},
+          'freeWaitMin': 5,
+        })?.maxPickupMoveMeters,
+        300,
       );
     });
   });
