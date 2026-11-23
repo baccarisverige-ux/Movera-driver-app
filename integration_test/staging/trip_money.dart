@@ -212,7 +212,7 @@ extension _TripMoney on TripRun {
     final total = (p.total.minorUnits, p.total.currency);
     final shareShown = PayVerdict.shareShown(
       share,
-      textsUnder(byKey('ride-completed-fare')),
+      PayVerdict.shareTexts(byKey('ride-completed-fare')),
     );
     final good = PayVerdict.good(
       shownCash: shownCash,
