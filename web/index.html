@@ -163,10 +163,10 @@
   <script src="driver_map_camera.js"></script>
   <script>
     // Owner 2026-11-03 (LT-4 "load on open"): the google_sign_in web plugin
-    // adds Google's sign-in script (about 100 kB) at every start, but the
-    // web build never signs in with Google (the button says "Coming soon",
-    // lib/core/auth/provider_token_source.dart). Hold that script back until
-    // moveraLoadGoogleSignIn() asks for it.
+    // adds Google's sign-in script (about 100 kB) at every start, but only a
+    // tap on "Continue with Google" needs it (and only on a build with
+    // GOOGLE_CLIENT_ID_WEB, lib/core/auth/provider_token_source.dart). Hold
+    // that script back until moveraLoadGoogleSignIn() asks for it.
     (function() {
       var head = document.head;
       var append = head.appendChild;

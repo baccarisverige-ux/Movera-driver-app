@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+import 'google_web_script_stub.dart'
+    if (dart.library.js_interop) 'google_web_script_web.dart';
+import 'provider_sign_in_config.dart';
 
 /// What the provider's SDK gave the app: the identity token the server
 /// verifies, and the name Apple shows only the first time (sent as `name`).
@@ -16,8 +22,8 @@ class ProviderIdentityToken {
   final String? name;
 }
 
-/// The provider's SDK is not usable here: the web build, a desktop host,
-/// or Google without the native configuration. The button then shows
+/// The provider's SDK is not usable here: a desktop host, or a build
+/// without that provider's client id (ProviderSignInConfig). The button then shows
 /// "Coming soon", like a server without provider keys.
 class ProviderUnavailable implements Exception {
   const ProviderUnavailable(this.provider, [this.cause]);
@@ -34,23 +40,31 @@ abstract class ProviderTokenSource {
   Future<ProviderIdentityToken?> obtain(String provider);
 }
 
-/// The real SDKs: `sign_in_with_apple` on iOS and macOS, `google_sign_in`
-/// on Android and iOS. Everything else is [ProviderUnavailable]; nothing
+/// The real SDKs: `sign_in_with_apple` (native sheet on iOS and macOS, the
+/// Services ID web flow on the web and Android) and `google_sign_in`
+/// (Android, iOS, and Google One Tap on the web). A provider whose client id
+/// was not given at build time ([ProviderSignInConfig]) answers
+/// [ProviderUnavailable], so its button keeps saying "coming soon"; nothing
 /// here throws past the sign-in screen's error handling.
 class PlatformProviderTokenSource implements ProviderTokenSource {
-  PlatformProviderTokenSource();
+  PlatformProviderTokenSource({
+    ProviderSignInConfig config = ProviderSignInConfig.fromEnvironment,
+    bool? isWeb,
+    TargetPlatform? platform,
+    Duration webGoogleTimeout = const Duration(minutes: 2),
+  }) : _config = config,
+       _isWeb = isWeb,
+       _platform = platform,
+       _webGoogleTimeout = webGoogleTimeout;
 
+  final ProviderSignInConfig _config;
+  final bool? _isWeb;
+  final TargetPlatform? _platform;
+  final Duration _webGoogleTimeout;
   bool _googleReady = false;
 
-  static bool get _apple =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.macOS);
-
-  static bool get _google =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS);
+  bool get _web => _isWeb ?? kIsWeb;
+  TargetPlatform get _target => _platform ?? defaultTargetPlatform;
 
   @override
   Future<ProviderIdentityToken?> obtain(String provider) => switch (provider) {
@@ -60,10 +74,15 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
   };
 
   Future<ProviderIdentityToken?> _obtainApple() async {
-    if (!_apple) throw const ProviderUnavailable('apple');
+    if (!_config.appleAvailable(web: _web, platform: _target)) {
+      throw const ProviderUnavailable('apple');
+    }
+    final native =
+        !_web &&
+        (_target == TargetPlatform.iOS || _target == TargetPlatform.macOS);
     final AuthorizationCredentialAppleID credential;
     try {
-      if (!await SignInWithApple.isAvailable()) {
+      if (native && !await SignInWithApple.isAvailable()) {
         throw const ProviderUnavailable('apple');
       }
       credential = await SignInWithApple.getAppleIDCredential(
@@ -71,6 +90,12 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
+        webAuthenticationOptions: native
+            ? null
+            : WebAuthenticationOptions(
+                clientId: _config.appleServiceId,
+                redirectUri: _config.appleRedirectUri!,
+              ),
       );
     } on SignInWithAppleAuthorizationException catch (error) {
       if (error.code == AuthorizationErrorCode.canceled) return null;
@@ -96,17 +121,29 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
   }
 
   Future<ProviderIdentityToken?> _obtainGoogle() async {
-    if (!_google) throw const ProviderUnavailable('google');
+    if (!_config.googleAvailable(web: _web, platform: _target)) {
+      throw const ProviderUnavailable('google');
+    }
     final signIn = GoogleSignIn.instance;
     try {
       if (!_googleReady) {
-        await signIn.initialize();
+        if (_web) releaseGoogleSignInScript();
+        await signIn.initialize(
+          clientId: _config.googleClientIdFor(web: _web, platform: _target),
+          serverClientId: _config.googleServerClientIdFor(
+            web: _web,
+            platform: _target,
+          ),
+        );
         _googleReady = true;
       }
-      if (!signIn.supportsAuthenticate()) {
-        throw const ProviderUnavailable('google');
+      final GoogleSignInAccount? account;
+      if (signIn.supportsAuthenticate()) {
+        account = await signIn.authenticate();
+      } else {
+        account = await _googleWebOneTap(signIn);
+        if (account == null) return null;
       }
-      final account = await signIn.authenticate();
       final token = account.authentication.idToken;
       if (token == null || token.isEmpty) {
         throw const ProviderUnavailable('google', 'no identity token');
@@ -123,6 +160,24 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
       rethrow;
     } catch (error) {
       throw ProviderUnavailable('google', error);
+    }
+  }
+
+  /// The web has no `authenticate()`: Google's One Tap prompt answers on
+  /// the event stream. No answer in time (closed, or Google holds the
+  /// prompt back after earlier closes) is the same as a closed sheet.
+  Future<GoogleSignInAccount?> _googleWebOneTap(GoogleSignIn signIn) async {
+    final event = signIn.authenticationEvents
+        .where((e) => e is GoogleSignInAuthenticationEventSignIn)
+        .cast<GoogleSignInAuthenticationEventSignIn>()
+        .first
+        .timeout(_webGoogleTimeout);
+    final prompt = signIn.attemptLightweightAuthentication();
+    if (prompt != null) unawaited(prompt.then((_) {}, onError: (_) {}));
+    try {
+      return (await event).user;
+    } on TimeoutException {
+      return null;
     }
   }
 }
