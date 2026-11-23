@@ -69,5 +69,7 @@
 	<string>Movera Driver uses your location while you are online, also with the phone locked, so riders can be matched with you and see you arrive. When you go offline, location is no longer used.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Movera Driver may use Bluetooth only to connect audio headsets during in-app calls with your rider.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Movera Driver does not use Face ID to sign you in. A payment component it includes can ask for Face ID, and only when you choose to confirm a payment with it.</string>
 </dict>
 </plist>
