@@ -86,6 +86,7 @@ import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/platform/safe_area_insets.dart';
 import 'package:movera/core/web/web_splash.dart';
 import 'package:movera/core/preview/preview_mode.dart';
+import 'package:movera/core/movera_scroll_behavior.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -476,6 +477,8 @@ class _MoveraAppState extends State<MoveraApp> {
             navigatorObservers: [driverRouteObserver],
             title: 'Movera Driver',
             debugShowCheckedModeBanner: false,
+            // Owner 2026-11-24: nothing bounces past its edge on iOS.
+            scrollBehavior: const MoveraScrollBehavior(),
             locale: Locale(DriverLanguage.current.value),
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: const [

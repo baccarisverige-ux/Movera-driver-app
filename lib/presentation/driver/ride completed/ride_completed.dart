@@ -212,7 +212,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             Expanded(
               child: SingleChildScrollView(
                 key: const PageStorageKey<String>('ride-completed-scroll'),
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

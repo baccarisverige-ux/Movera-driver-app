@@ -44,7 +44,7 @@ class WalletScreen extends StatelessWidget {
             _topBar(context),
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(18, 8, 18, 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
