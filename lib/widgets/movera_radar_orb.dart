@@ -525,7 +525,7 @@ class MoveraRadarOrb extends StatelessWidget {
   static const Color exclusiveTrack = Color(0xFFE3E9F0);
 }
 
-/// The orb's status dot (owner 2026-11-24, P2 + S2): a 5 px dot in a 1 px
+/// The orb's status dot (owner 2026-11-24, P1 + S2): a 5 px dot in a 1 px
 /// white ring (7 px on the 104 px orb, scaled with it). Green with a soft
 /// 2.2 s pulse (to 1.06) while the radar is on; red and still, with a light
 /// glow, in every other state. No pulse with reduce motion.
