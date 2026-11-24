@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,7 +119,40 @@ Future<void> _host(WidgetTester tester, Widget page) async {
   await _settle(tester);
 }
 
+/// SHOULD 1: the app's words are the contract's (texts approved by the
+/// owner), in every language.
+void _parity() {
+  test('contract reminders.texts = the app texts (en / sv / fr)', () {
+    final c =
+        jsonDecode(File('contracts/contract.json').readAsStringSync())
+            as Map<String, dynamic>;
+    final texts =
+        ((c['driverOnboarding'] as Map)['reminders'] as Map)['texts'] as Map;
+    for (final lang in ['en', 'sv', 'fr']) {
+      final arb =
+          jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
+              as Map<String, dynamic>;
+      for (final (contractKey, arbKey) in [
+        ('fleet_no_car', 'remFleetNoCar'),
+        ('fleet_no_car_body', 'remFleetNoCarDetail'),
+        ('fleet_add_car', 'fleetAddCar'),
+        ('fleet_not_approved', 'remFleetNotApproved'),
+        ('fleet_not_approved_body', 'remFleetNotApprovedDetail'),
+        ('fleet_cars_empty', 'fleetNoCarYet'),
+        ('fleet_cars_empty_body', 'fleetNoCarYetBody'),
+      ]) {
+        expect(
+          arb[arbKey],
+          (texts[contractKey] as Map)[lang],
+          reason: '$lang $contractKey',
+        );
+      }
+    }
+  });
+}
+
 void main() {
+  _parity();
   test('v0.18.159: the app sends X-Contract-Version 0.18.159 or later', () {
     final parts = ApiClient.contractVersion.split('.').map(int.parse).toList();
     expect(parts[0] > 0 || parts[1] > 18 || parts[2] >= 159, isTrue);
@@ -140,9 +174,18 @@ void main() {
         expect(words.title, tr.remFleetNoCar);
         expect(words.detail, tr.remFleetNoCarDetail);
         expect(words.action, tr.fleetAddCar);
-        final grey = reminderWords(list.items[1], nameOf: (t) => t);
+        final grey = reminderWords(
+          list.items[1],
+          nameOf: (t) => t,
+          owner: true,
+          ownerOfPendingFleet: true,
+        );
         expect(grey.title, tr.remFleetNotApproved);
         expect(grey.detail, tr.remFleetNotApprovedDetail);
+        // Review M3: a member, a rejected or a blocked fleet: title only.
+        final plain = reminderWords(list.items[1], nameOf: (t) => t);
+        expect(plain.title, tr.remFleetNotApproved);
+        expect(plain.detail, isNull);
         expect(
           holdHeadline(
             DriverReminderList.fromJson({
@@ -173,6 +216,7 @@ void main() {
                 ImportantRemindersBox(
                   store: _store(),
                   owner: true,
+                  ownerOfPendingFleet: true,
                   active: false,
                   onFix: (r) => fixed.add(r.kind),
                 ),
@@ -199,6 +243,71 @@ void main() {
         await tester.tap(find.byKey(const ValueKey('home-reminder-0')));
         await tester.tap(find.byKey(const ValueKey('home-reminder-1')));
         expect(fixed, ['fleet_no_car']);
+      });
+
+      for (final who in ['member', 'rejected', 'blocked']) {
+        testWidgets('$who: the fleet line stays red, title only', (
+          tester,
+        ) async {
+          await _host(
+            tester,
+            Scaffold(
+              body: ListView(
+                children: [
+                  ImportantRemindersBox(
+                    store: _store(),
+                    owner: who != 'member',
+                    active: false,
+                    onFix: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          );
+          final dot = tester.widget<Container>(
+            find.byKey(const ValueKey('home-reminder-1-blocksOnline')),
+          );
+          expect(
+            (dot.decoration! as BoxDecoration).color,
+            ImportantRemindersBox.red,
+          );
+          expect(find.text(tr.remFleetNotApproved), findsOneWidget);
+          expect(find.text(tr.remFleetNotApprovedDetail), findsNothing);
+        });
+      }
+
+      testWidgets('Home line tap → My fleet → Add car (the path Home uses: '
+          'reminderFixPage pushed on tap)', (tester) async {
+        final session = _session();
+        await _host(
+          tester,
+          Builder(
+            builder: (context) => Scaffold(
+              body: ListView(
+                children: [
+                  ImportantRemindersBox(
+                    store: _store(),
+                    owner: true,
+                    ownerOfPendingFleet: true,
+                    onFix: (r) => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => reminderFixPage(session, r, r.fix!),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.byKey(const ValueKey('home-reminder-0')));
+        await _settle(tester);
+        expect(find.byType(AddCarScreen), findsOneWidget);
+        await tester.pageBack();
+        await _settle(tester);
+        expect(find.byType(MyFleetScreen), findsOneWidget);
+        expect(find.byKey(const ValueKey('fleet-no-car-card')), findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
       });
 
       testWidgets('the Add car fix opens My fleet with Add car on top', (

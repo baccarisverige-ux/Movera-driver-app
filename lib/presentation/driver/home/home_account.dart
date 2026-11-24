@@ -302,6 +302,10 @@ extension _HomeAccount on _DriverHomeState {
     return ImportantRemindersBox(
       store: DriverRemindersStore.instance,
       owner: session.account?.fleet?.isOwner ?? false,
+      // v0.18.159 (review M3): grey + "We review it after…" only here.
+      ownerOfPendingFleet:
+          (session.account?.fleet?.isOwner ?? false) &&
+          session.account?.fleet?.status == 'pending',
       active: isAccountActivated,
       onFix: (reminder) => unawaited(_fixReminder(reminder)),
       onAction: (reminder, action) => unawaited(_fixReminder(reminder, action)),

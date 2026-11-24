@@ -2997,13 +2997,13 @@ abstract class AppLocalizations {
   /// **'Add a car below or finish its documents. Drivers can go online once a car is approved.'**
   String get fleetNoApprovedCarOwnerHere;
 
-  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK.
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
   ///
   /// In en, this message translates to:
   /// **'No car yet'**
   String get fleetNoCarYet;
 
-  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK.
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
   ///
   /// In en, this message translates to:
   /// **'Add a car so your fleet can be approved and drive.'**
@@ -9028,19 +9028,19 @@ abstract class AppLocalizations {
   /// **'You owe Movera {owed} (limit {limit}). You get no cash trips until you pay Movera.'**
   String remOwesMoveraOverLimit(String owed, String limit);
 
-  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK.
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
   ///
   /// In en, this message translates to:
   /// **'Add your first car'**
   String get remFleetNoCar;
 
-  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK.
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
   ///
   /// In en, this message translates to:
   /// **'Your fleet needs at least one car before Movera can approve it.'**
   String get remFleetNoCarDetail;
 
-  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK.
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
   ///
   /// In en, this message translates to:
   /// **'We review it after your car and documents are in.'**

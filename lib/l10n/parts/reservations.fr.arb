@@ -66,7 +66,7 @@
   "remCantGoOnlineUntil": "Vous ne pouvez pas passer en ligne avant que Movera valide le nouveau.",
   "remAccountNotActive": "Movera vérifie votre compte",
   "remAccountNotActiveDetail": "Tout est envoyé. Vous pourrez passer en ligne quand Movera aura activé votre compte.",
-  "remFleetNotApproved": "Movera n’a pas encore validé votre flotte",
+  "remFleetNotApproved": "Movera n’a pas encore approuvé votre flotte",
   "remFleetNoApprovedCar": "Votre flotte n’a pas encore de voiture validée",
   "remFleetNoApprovedCarOwner": "Ajoutez une voiture ou terminez ses documents dans Ma flotte. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée.",
   "remFleetNoApprovedCarMember": "Vous pourrez passer en ligne quand le gérant de votre flotte aura une voiture validée à choisir.",

@@ -222,10 +222,10 @@
   },
   "fleetNoCarYet": "No car yet",
   "@fleetNoCarYet": {
-    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
   },
   "fleetNoCarYetBody": "Add a car so your fleet can be approved and drive.",
   "@fleetNoCarYetBody": {
-    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
   }
 }

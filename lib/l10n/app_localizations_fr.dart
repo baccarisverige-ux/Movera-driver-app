@@ -5214,7 +5214,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tout est envoyé. Vous pourrez passer en ligne quand Movera aura activé votre compte.';
 
   @override
-  String get remFleetNotApproved => 'Movera n’a pas encore validé votre flotte';
+  String get remFleetNotApproved =>
+      'Movera n’a pas encore approuvé votre flotte';
 
   @override
   String get remFleetNoApprovedCar =>
