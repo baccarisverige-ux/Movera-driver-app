@@ -582,17 +582,8 @@ extension _HomeMapSheet on _DriverHomeState {
                   ),
                 ),
               ],
-              TextButton(
-                onPressed: _openActivationSupport,
-                child: Text(
-                  tr.contactSupport,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+              // Owner 2026-11-24: no "Contact support" link here; support
+              // stays in the side menu (Support).
               if (!_liveHold)
                 TextButton(
                   onPressed: _skipActivationDemo,
