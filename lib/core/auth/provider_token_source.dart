@@ -1,11 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-import 'google_web_script_stub.dart'
-    if (dart.library.js_interop) 'google_web_script_web.dart';
+import 'provider_sdk.dart' deferred as sdk;
 import 'provider_sign_in_config.dart';
 
 /// What the provider's SDK gave the app: the identity token the server
@@ -42,7 +37,8 @@ abstract class ProviderTokenSource {
 
 /// The real SDKs: `sign_in_with_apple` (native sheet on iOS and macOS, the
 /// Services ID web flow on the web and Android) and `google_sign_in`
-/// (Android, iOS, and Google One Tap on the web). A provider whose client id
+/// (Android, iOS, and Google One Tap on the web), loaded on first use
+/// (provider_sdk.dart, deferred). A provider whose client id
 /// was not given at build time ([ProviderSignInConfig]) answers
 /// [ProviderUnavailable], so its button keeps saying "coming soon"; nothing
 /// here throws past the sign-in screen's error handling.
@@ -61,7 +57,6 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
   final bool? _isWeb;
   final TargetPlatform? _platform;
   final Duration _webGoogleTimeout;
-  bool _googleReady = false;
 
   bool get _web => _isWeb ?? kIsWeb;
   TargetPlatform get _target => _platform ?? defaultTargetPlatform;
@@ -73,111 +68,32 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
     _ => throw ArgumentError.value(provider, 'provider'),
   };
 
+  Future<void> _loadSdk(String provider) async {
+    try {
+      await sdk.loadLibrary();
+    } catch (error) {
+      throw ProviderUnavailable(provider, error);
+    }
+  }
+
   Future<ProviderIdentityToken?> _obtainApple() async {
     if (!_config.appleAvailable(web: _web, platform: _target)) {
       throw const ProviderUnavailable('apple');
     }
-    final native =
-        !_web &&
-        (_target == TargetPlatform.iOS || _target == TargetPlatform.macOS);
-    final AuthorizationCredentialAppleID credential;
-    try {
-      if (native && !await SignInWithApple.isAvailable()) {
-        throw const ProviderUnavailable('apple');
-      }
-      credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-        webAuthenticationOptions: native
-            ? null
-            : WebAuthenticationOptions(
-                clientId: _config.appleServiceId,
-                redirectUri: _config.appleRedirectUri!,
-              ),
-      );
-    } on SignInWithAppleAuthorizationException catch (error) {
-      if (error.code == AuthorizationErrorCode.canceled) return null;
-      throw ProviderUnavailable('apple', error);
-    } on ProviderUnavailable {
-      rethrow;
-    } catch (error) {
-      throw ProviderUnavailable('apple', error);
-    }
-    final token = credential.identityToken;
-    if (token == null || token.isEmpty) {
-      throw const ProviderUnavailable('apple', 'no identity token');
-    }
-    final name = [
-      credential.givenName,
-      credential.familyName,
-    ].whereType<String>().map((s) => s.trim()).where((s) => s.isNotEmpty);
-    return ProviderIdentityToken(
-      provider: 'apple',
-      idToken: token,
-      name: name.isEmpty ? null : name.join(' '),
-    );
+    await _loadSdk('apple');
+    return sdk.obtainApple(_config, web: _web, target: _target);
   }
 
   Future<ProviderIdentityToken?> _obtainGoogle() async {
     if (!_config.googleAvailable(web: _web, platform: _target)) {
       throw const ProviderUnavailable('google');
     }
-    final signIn = GoogleSignIn.instance;
-    try {
-      if (!_googleReady) {
-        if (_web) releaseGoogleSignInScript();
-        await signIn.initialize(
-          clientId: _config.googleClientIdFor(web: _web, platform: _target),
-          serverClientId: _config.googleServerClientIdFor(
-            web: _web,
-            platform: _target,
-          ),
-        );
-        _googleReady = true;
-      }
-      final GoogleSignInAccount? account;
-      if (signIn.supportsAuthenticate()) {
-        account = await signIn.authenticate();
-      } else {
-        account = await _googleWebOneTap(signIn);
-        if (account == null) return null;
-      }
-      final token = account.authentication.idToken;
-      if (token == null || token.isEmpty) {
-        throw const ProviderUnavailable('google', 'no identity token');
-      }
-      return ProviderIdentityToken(
-        provider: 'google',
-        idToken: token,
-        name: account.displayName,
-      );
-    } on GoogleSignInException catch (error) {
-      if (error.code == GoogleSignInExceptionCode.canceled) return null;
-      throw ProviderUnavailable('google', error);
-    } on ProviderUnavailable {
-      rethrow;
-    } catch (error) {
-      throw ProviderUnavailable('google', error);
-    }
-  }
-
-  /// The web has no `authenticate()`: Google's One Tap prompt answers on
-  /// the event stream. No answer in time (closed, or Google holds the
-  /// prompt back after earlier closes) is the same as a closed sheet.
-  Future<GoogleSignInAccount?> _googleWebOneTap(GoogleSignIn signIn) async {
-    final event = signIn.authenticationEvents
-        .where((e) => e is GoogleSignInAuthenticationEventSignIn)
-        .cast<GoogleSignInAuthenticationEventSignIn>()
-        .first
-        .timeout(_webGoogleTimeout);
-    final prompt = signIn.attemptLightweightAuthentication();
-    if (prompt != null) unawaited(prompt.then((_) {}, onError: (_) {}));
-    try {
-      return (await event).user;
-    } on TimeoutException {
-      return null;
-    }
+    await _loadSdk('google');
+    return sdk.obtainGoogle(
+      _config,
+      web: _web,
+      target: _target,
+      webGoogleTimeout: _webGoogleTimeout,
+    );
   }
 }
