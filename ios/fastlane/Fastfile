@@ -21,6 +21,9 @@ platform :ios do
   end
 
   # Step 1: the bundle id exists, with Sign in with Apple + Push Notifications.
+  # Time Sensitive Notifications (contract v0.18.156) cannot be set through the App Store Connect API
+  # (capabilityType USERNOTIFICATIONS_TIMESENSITIVE is refused, run 45462701326); Xcode's automatic signing
+  # (-allowProvisioningUpdates) adds it from Runner.entitlements at export.
   lane :ensure_bundle_id do
     movera_api_key
     id = ENV.fetch('APP_BUNDLE_ID')
