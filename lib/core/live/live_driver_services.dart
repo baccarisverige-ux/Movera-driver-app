@@ -27,7 +27,6 @@ import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_bonuses.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_income_statement.dart';
-import 'package:movera/core/live/live_public_profile.dart';
 import 'package:movera/core/live/live_trip_history.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_calls.dart';
@@ -106,7 +105,6 @@ class LiveDriverServices {
     // D18 (contract v0.18.124 C10): the ride history from the server.
     tripHistory = LiveTripHistory(api: api);
     incomeStatement = LiveIncomeStatement(api: api);
-    publicProfile = LivePublicProfile(api: api);
     bonuses = LiveBonuses(api: api);
     surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
@@ -240,9 +238,6 @@ class LiveDriverServices {
   /// v0.18.153 P29: `GET /driver/income-statement`, the Year statement
   /// (what Movera reports to the tax office, DAC7).
   late final LiveIncomeStatement incomeStatement;
-
-  /// v0.18.155 (contract.json#driverProfile): Profile › My profile.
-  late final LivePublicProfile publicProfile;
 
   /// BQ-V44: the driver's bonus campaigns (Campaigns screen, NEW badge).
   late final LiveBonuses bonuses;

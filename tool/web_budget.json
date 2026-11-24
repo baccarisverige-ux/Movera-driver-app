@@ -8,9 +8,10 @@
       "measured_raw": 6066307,
       "measured_gzip": 1725099,
       "budget_raw": 6188032,
-      "budget_gzip": 1760256,
+      "budget_gzip": 1761280,
       "hard_raw": 6200000,
-      "hard_gzip": 1760000
+      "hard_gzip": 1761280,
+      "note": "Raised on purpose 2026-11-24 by 1,280 bytes of gzip only (hard_gzip and budget_gzip 1,760,000 / 1,760,256 -> 1,761,280, the next KiB above the measurement). Reason: driver profile v0.18.155 (My profile screen texts sv/en/fr in the always-loaded localizations; the screen and its server reader load with Profile, on first open). Measured 2026-11-24 demo: gzip 1,760,454. Raw budget and hard_raw unchanged."
     },
     "live": {
       "description": "flutter build web --release --wasm --dart-define=MOVERA_AUTH_REQUIRED=true ... (live-web job and the deploy workflow). About 94 KB raw / 25 KB gzip bigger than the demo: the define keeps the live-only code (session gate, live home, live accept-ride, live services in main.dart) that dart2js tree-shakes out of the demo; --wasm and the other defines do not change main.dart.js.",

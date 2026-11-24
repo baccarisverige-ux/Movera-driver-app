@@ -25,6 +25,7 @@ import 'package:movera/presentation/driver/profile/app_version_line.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
 import 'package:movera/presentation/driver/profile/my_public_profile.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/live_public_profile.dart';
 import 'package:movera/presentation/driver/vehicles/vehicles.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -310,7 +311,9 @@ class _DriverProfileState extends State<DriverProfile> {
                 _item(
                   Icons.person_pin_outlined,
                   tr.mppTitle,
-                  MyPublicProfileScreen(api: live.publicProfile),
+                  // Built here (Profile loads on first open) so the first web
+                  // download stays under its gzip limit.
+                  MyPublicProfileScreen(api: LivePublicProfile(api: live.api)),
                 ),
               _item(Icons.insights_outlined, tr.analytics, const Analytics()),
               _item(Icons.account_balance_outlined, tr.myBank, const MyBank()),
