@@ -1396,7 +1396,7 @@ extension _HomeMapSheet on _DriverHomeState {
               builder: (context, _) => ListView(
                 key: const PageStorageKey<String>('driver-overview-list'),
                 controller: sc,
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   12,
                   20,

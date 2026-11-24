@@ -656,7 +656,7 @@ class _RideRequestsState extends State<RideRequests> {
                         ? _emptyState()
                         : ListView.separated(
                             padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-                            physics: const BouncingScrollPhysics(),
+                            physics: const ClampingScrollPhysics(),
                             itemCount: offers.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 8),

@@ -23,7 +23,7 @@ extension _AcceptRideTripOptions on _AcceptRideState {
           child: SafeArea(
             top: false,
             child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -237,7 +237,7 @@ extension _AcceptRideTripOptions on _AcceptRideState {
             child: ListView(
               shrinkWrap: true,
               padding: EdgeInsets.zero,
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               children: [
                 Text(
                   nextTrip
