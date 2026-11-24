@@ -5,14 +5,19 @@ import 'package:movera/core/push/push_config.dart';
 import 'package:movera/core/push/push_platform.dart';
 
 NativePushPlatform? _android;
+NativePushPlatform? _ios;
 
 /// Android (BQ-V43): one [NativePushPlatform] for the whole app (the
 /// registrar starts it; the phone checks read its permission). It does
-/// nothing until the server gives the Android settings. iOS and other
-/// systems: no push until the APNs key exists (docs/push.md).
+/// nothing until the server gives the Android settings. iOS (v0.18.160,
+/// the APNs key is in Firebase): the same with the server's iOS settings.
+/// Other systems: no push.
 PushPlatform createPlatformPush() {
   if (defaultTargetPlatform == TargetPlatform.android) {
     return _android ??= NativePushPlatform(FirebasePushGateway());
+  }
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    return _ios ??= NativePushPlatform(FirebasePushGateway(), platform: 'ios');
   }
   return const UnsupportedPushPlatform();
 }

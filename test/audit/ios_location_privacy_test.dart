@@ -33,7 +33,9 @@ void main() {
       plist,
       matches(
         RegExp(
-          r'<key>UIBackgroundModes</key>\s*<array>\s*<string>location</string>\s*</array>',
+          // v0.18.160: plus remote-notification (push), no other mode.
+          r'<key>UIBackgroundModes</key>\s*<array>\s*<string>location</string>'
+          r'\s*<string>remote-notification</string>\s*</array>',
         ),
       ),
     );

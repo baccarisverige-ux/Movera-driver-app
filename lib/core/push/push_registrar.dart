@@ -41,7 +41,8 @@ class PrefsPushStore implements PushStore {
 
 /// The calls the registrar makes (contract §8 and v0.18.3 R7).
 abstract class PushApi {
-  /// [platform] `android` asks for the Android settings (v0.18.105).
+  /// [platform] `android` asks for the Android settings (v0.18.105),
+  /// `ios` for the iOS ones (v0.18.160).
   Future<PushConfig> config({String platform = 'web'});
   Future<void> register(String token, String platform);
   Future<void> unregister(String token);
