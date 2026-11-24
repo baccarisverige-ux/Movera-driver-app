@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 
 /// Shared Radar orb used on Home (104px) and on an active trip (smaller).
 class MoveraRadarOrb extends StatelessWidget {
@@ -156,12 +157,19 @@ class MoveraRadarOrb extends StatelessWidget {
         ? 0.90 + ((1 - pulse) * 0.10)
         : 0.86 + ((1 - pulse) * 0.16);
     final s = size / 104;
+    // The status dot: green only while the radar is on and not on hold.
+    final online = active && !blocked;
+    // The core's rim; its content (and the dot) sits inside it.
+    final rim = hot ? 1.9 : 1.6;
     final hit = touchSize ?? size;
 
     // Only a radar that does something on a tap reads as a button.
     return Semantics(
       button: onTap != null,
-      label: "$title, $status. $subtitle",
+      // The dot's colour, said too: online or offline.
+      label:
+          "$title, $status. $subtitle. "
+          "${online ? tr.fleetOnline : tr.fleetOffline}",
       child: GestureDetector(
         key: touchKey,
         behavior: HitTestBehavior.opaque,
@@ -334,7 +342,7 @@ class MoveraRadarOrb extends StatelessWidget {
                           color: hot
                               ? accent.withValues(alpha: 0.82)
                               : const Color(0xD9E7ECEE),
-                          width: hot ? 1.9 : 1.6,
+                          width: rim,
                         ),
                       ),
                       child: InkWell(
@@ -475,6 +483,14 @@ class MoveraRadarOrb extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            // Owner 2026-11-24 (P2 + S2): the status dot,
+                            // top-right inside the disc; the text keeps
+                            // its place.
+                            Positioned(
+                              top: 6.5 * s - rim,
+                              right: 15 * s - rim,
+                              child: RadarStatusDot(online: online, scale: s),
+                            ),
                             if (loading)
                               Positioned(
                                 bottom: 5 * s,
@@ -505,6 +521,92 @@ class MoveraRadarOrb extends StatelessWidget {
 
   static const Color exclusiveBlue = Color(0xFF1769E8);
   static const Color exclusiveTrack = Color(0xFFE3E9F0);
+}
+
+/// The orb's status dot (owner 2026-11-24, P2 + S2): a 5 px dot in a 1 px
+/// white ring (7 px on the 104 px orb, scaled with it). Green with a soft
+/// 2.2 s pulse (to 1.06) while the radar is on; red and still, with a light
+/// glow, in every other state. No pulse with reduce motion.
+class RadarStatusDot extends StatefulWidget {
+  const RadarStatusDot({super.key, required this.online, this.scale = 1});
+
+  final bool online;
+  final double scale;
+
+  static const Color green = Color(0xFF2FBF5B);
+  static const Color red = Color(0xFFE5341C);
+  static const double diameter = 7;
+  static const Duration period = Duration(milliseconds: 2200);
+  static const Key dotKey = ValueKey<String>('radar-status-dot');
+
+  @override
+  State<RadarStatusDot> createState() => _RadarStatusDotState();
+}
+
+class _RadarStatusDotState extends State<RadarStatusDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: RadarStatusDot.period ~/ 2,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(RadarStatusDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  void _sync() {
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (widget.online && !still) {
+      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+    } else {
+      _pulse
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.online ? RadarStatusDot.green : RadarStatusDot.red;
+    final d = RadarStatusDot.diameter * widget.scale;
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, _) => Transform.scale(
+        scale: 1 + 0.06 * Curves.easeInOut.transform(_pulse.value),
+        child: Container(
+          key: RadarStatusDot.dotKey,
+          width: d,
+          height: d,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            border: Border.all(color: Colors.white, width: 1 * widget.scale),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: widget.online ? 0.53 : 0.4),
+                blurRadius: (widget.online ? 4 : 3) * widget.scale,
+                spreadRadius: (widget.online ? 1 : 0.5) * widget.scale,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Home Radar's soft sweep: a light wedge that fades behind its leading
