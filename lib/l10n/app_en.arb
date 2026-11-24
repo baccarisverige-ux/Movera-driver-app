@@ -1328,6 +1328,14 @@
   "@fleetNoApprovedCarOwnerHere": {
     "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
   },
+  "fleetNoCarYet": "No car yet",
+  "@fleetNoCarYet": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
+  },
+  "fleetNoCarYetBody": "Add a car so your fleet can be approved and drive.",
+  "@fleetNoCarYetBody": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
+  },
   "appTitle": "Movera Driver",
   "hideReservationRequest": "Hide reservation request",
   "findingTrips": "Finding trips",
@@ -4281,6 +4289,18 @@
   "@remOwesMoveraOverLimit": {
     "description": "J11 (contract v0.18.84 debtModel.driverOwes.homeLine, owner Q-S5-1 + 2026-11-13 14:54): Home reminder owes_movera_over_limit, orange (due_soon), never blocks going online; also the Accept refusal driver_owes_movera; = contract reminders.texts.owes_movera_over_limit (debtModel.texts.owesMoveraLine).",
     "placeholders": {"owed": {"type": "String"}, "limit": {"type": "String"}}
+  },
+  "remFleetNoCar": "Add your first car",
+  "@remFleetNoCar": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
+  },
+  "remFleetNoCarDetail": "Your fleet needs at least one car before Movera can approve it.",
+  "@remFleetNoCarDetail": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
+  },
+  "remFleetNotApprovedDetail": "We review it after your car and documents are in.",
+  "@remFleetNotApprovedDetail": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); exact words for the owner to OK."
   },
   "safetyToolkit": "Safety toolkit",
   "safetyAlertKeptOnPhoneDemo": "Demo: alert kept on this phone only. No one at Movera was notified.",

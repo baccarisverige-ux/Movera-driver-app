@@ -51,6 +51,12 @@ class ImportantRemindersBox extends StatefulWidget {
     ReminderLevel.waiting => grey,
   };
 
+  /// A line's colour: its level's, except `fleet_not_approved`, which is
+  /// grey (contract v0.18.159 mockup A: Movera acts next; it still counts
+  /// as keeping the driver offline).
+  static Color lineColorOf(DriverReminder item) =>
+      item.kind == 'fleet_not_approved' ? grey : colorOf(item.level);
+
   @override
   State<ImportantRemindersBox> createState() => _ImportantRemindersBoxState();
 }
@@ -151,7 +157,7 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
       owner: widget.owner,
       active: widget.active,
     );
-    final color = ImportantRemindersBox.colorOf(item.level);
+    final color = ImportantRemindersBox.lineColorOf(item);
     final canFix = item.fix != null;
     return InkWell(
       key: ValueKey('home-reminder-$index'),
@@ -181,7 +187,11 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
                   Text(
                     words.title,
                     style: TextStyle(
-                      color: item.level == ReminderLevel.waiting ? _ink : color,
+                      color:
+                          item.level == ReminderLevel.waiting ||
+                              color == ImportantRemindersBox.grey
+                          ? _ink
+                          : color,
                       fontSize: 14.5,
                       height: 1.3,
                       fontWeight: FontWeight.w700,

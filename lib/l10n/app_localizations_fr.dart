@@ -1776,6 +1776,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ajoutez une voiture ci-dessous ou terminez ses documents. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée.';
 
   @override
+  String get fleetNoCarYet => 'Pas encore de voiture';
+
+  @override
+  String get fleetNoCarYetBody =>
+      'Ajoutez une voiture pour que votre flotte soit approuvée et puisse rouler.';
+
+  @override
   String get appTitle => 'Movera Chauffeur';
 
   @override
@@ -5355,6 +5362,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String remOwesMoveraOverLimit(String owed, String limit) {
     return 'Vous devez $owed à Movera (limite $limit). Vous ne recevez plus de courses payées à bord tant que vous n’avez pas payé Movera.';
   }
+
+  @override
+  String get remFleetNoCar => 'Ajoutez votre première voiture';
+
+  @override
+  String get remFleetNoCarDetail =>
+      'Votre flotte a besoin d’au moins une voiture avant que Movera puisse l’approuver.';
+
+  @override
+  String get remFleetNotApprovedDetail =>
+      'Nous l’examinons une fois votre voiture et vos documents envoyés.';
 
   @override
   String get safetyToolkit => 'Outils de sécurité';

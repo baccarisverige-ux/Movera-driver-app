@@ -437,7 +437,18 @@ ReminderWords reminderWords(
       tr.remAccountNotActive,
       detail: tr.remAccountNotActiveDetail,
     ),
-    'fleet_not_approved' => ReminderWords(tr.remFleetNotApproved),
+    // Contract v0.18.159 (fleetNeedsCar, owner 2026-11-24 mockup A): the
+    // fleet owner with no car yet: red, "Add car" opens My fleet › Add car.
+    'fleet_no_car' => ReminderWords(
+      tr.remFleetNoCar,
+      detail: tr.remFleetNoCarDetail,
+      action: reminder.fix == null ? null : tr.fleetAddCar,
+    ),
+    // v0.18.159 (mockup A, reworded): Movera reviews after car + documents.
+    'fleet_not_approved' => ReminderWords(
+      tr.remFleetNotApproved,
+      detail: tr.remFleetNotApprovedDetail,
+    ),
     'fleet_no_approved_car' => ReminderWords(
       tr.remFleetNoApprovedCar,
       detail: owner

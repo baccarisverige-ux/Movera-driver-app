@@ -1736,6 +1736,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a car below or finish its documents. Drivers can go online once a car is approved.';
 
   @override
+  String get fleetNoCarYet => 'No car yet';
+
+  @override
+  String get fleetNoCarYetBody =>
+      'Add a car so your fleet can be approved and drive.';
+
+  @override
   String get appTitle => 'Movera Driver';
 
   @override
@@ -5270,6 +5277,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String remOwesMoveraOverLimit(String owed, String limit) {
     return 'You owe Movera $owed (limit $limit). You get no cash trips until you pay Movera.';
   }
+
+  @override
+  String get remFleetNoCar => 'Add your first car';
+
+  @override
+  String get remFleetNoCarDetail =>
+      'Your fleet needs at least one car before Movera can approve it.';
+
+  @override
+  String get remFleetNotApprovedDetail =>
+      'We review it after your car and documents are in.';
 
   @override
   String get safetyToolkit => 'Safety toolkit';

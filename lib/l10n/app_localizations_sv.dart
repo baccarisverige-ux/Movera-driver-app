@@ -1734,6 +1734,13 @@ class AppLocalizationsSv extends AppLocalizations {
       'Lägg till en bil nedan eller slutför dess dokument. Förarna kan gå online när en bil är godkänd.';
 
   @override
+  String get fleetNoCarYet => 'Ingen bil än';
+
+  @override
+  String get fleetNoCarYetBody =>
+      'Lägg till en bil så att ditt åkeri kan godkännas och köra.';
+
+  @override
   String get appTitle => 'Movera Förare';
 
   @override
@@ -5270,6 +5277,17 @@ class AppLocalizationsSv extends AppLocalizations {
   String remOwesMoveraOverLimit(String owed, String limit) {
     return 'Du är skyldig Movera $owed (gräns $limit). Du får inga resor som betalas i bilen förrän du betalar Movera.';
   }
+
+  @override
+  String get remFleetNoCar => 'Lägg till din första bil';
+
+  @override
+  String get remFleetNoCarDetail =>
+      'Ditt åkeri behöver minst en bil innan Movera kan godkänna det.';
+
+  @override
+  String get remFleetNotApprovedDetail =>
+      'Vi granskar det när din bil och dina dokument är inne.';
 
   @override
   String get safetyToolkit => 'Säkerhetsverktyg';
