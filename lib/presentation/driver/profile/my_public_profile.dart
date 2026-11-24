@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/l10n/profile_l10n.dart';
 import 'package:movera/core/live/live_public_profile.dart';
 
 /// v0.18.155 driver profile (owner 2026-11-20 "Now build all";
@@ -23,12 +24,12 @@ const _blue = Color(0xFF1F6FEB);
 const _gold = Color(0xFFC9A227);
 
 String complimentLabel(String code) => switch (code) {
-  'great_service' => tr.complimentGreatService,
-  'knew_the_way' => tr.complimentKnewTheWay,
-  'friendly' => tr.complimentFriendly,
-  'clean_car' => tr.complimentCleanCar,
-  'safe_driving' => tr.complimentSafeDriving,
-  'good_music' => tr.complimentGoodMusic,
+  'great_service' => ptr.complimentGreatService,
+  'knew_the_way' => ptr.complimentKnewTheWay,
+  'friendly' => ptr.complimentFriendly,
+  'clean_car' => ptr.complimentCleanCar,
+  'safe_driving' => ptr.complimentSafeDriving,
+  'good_music' => ptr.complimentGoodMusic,
   _ => code,
 };
 
@@ -82,7 +83,7 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.maybeOf(
           context,
-        )?.showSnackBar(SnackBar(content: Text(tr.mppSaveError)));
+        )?.showSnackBar(SnackBar(content: Text(ptr.mppSaveError)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -107,7 +108,7 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FA),
       appBar: AppBar(
-        title: Text(tr.mppTitle),
+        title: Text(ptr.mppTitle),
         backgroundColor: Colors.white,
         foregroundColor: _ink,
         elevation: 0,
@@ -119,8 +120,8 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(tr.mppLoadError),
-                        TextButton(onPressed: _load, child: Text(tr.mppRetry)),
+                        Text(ptr.mppLoadError),
+                        TextButton(onPressed: _load, child: Text(ptr.mppRetry)),
                       ],
                     ),
             )
@@ -128,19 +129,19 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
                 Text(
-                  tr.mppIntro,
+                  ptr.mppIntro,
                   style: const TextStyle(color: _muted, fontSize: 13),
                 ),
                 if (!p.profileOn) ...[
                   const SizedBox(height: 8),
-                  _note(tr.mppProfileOff),
+                  _note(ptr.mppProfileOff),
                 ],
                 const SizedBox(height: 16),
                 _section(
-                  tr.mppLanguages,
+                  ptr.mppLanguages,
                   subtitle: p.languages.length >= maxProfileLanguages
-                      ? tr.mppLanguagesMax
-                      : tr.mppLanguagesHint,
+                      ? ptr.mppLanguagesMax
+                      : ptr.mppLanguagesHint,
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -171,14 +172,14 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
                       SwitchListTile(
                         key: const ValueKey('mpp-show-city'),
                         contentPadding: EdgeInsets.zero,
-                        title: Text(tr.mppShowCity),
+                        title: Text(ptr.mppShowCity),
                         value: p.showCity,
                         onChanged: _saving ? null : (v) => _save(showCity: v),
                       ),
                       SwitchListTile(
                         key: const ValueKey('mpp-show-years'),
                         contentPadding: EdgeInsets.zero,
-                        title: Text(tr.mppShowYears),
+                        title: Text(ptr.mppShowYears),
                         value: p.showYears,
                         onChanged: _saving ? null : (v) => _save(showYears: v),
                       ),
@@ -187,24 +188,24 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 _section(
-                  tr.mppCompliments,
+                  ptr.mppCompliments,
                   child: p.compliments.isEmpty
                       ? Text(
-                          tr.mppNoCompliments,
+                          ptr.mppNoCompliments,
                           style: const TextStyle(color: _muted),
                         )
                       : ComplimentGrid(compliments: p.compliments),
                 ),
                 const SizedBox(height: 12),
                 _section(
-                  tr.mppReviews,
+                  ptr.mppReviews,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (!p.reviewsOn) _note(tr.mppReviewsOff),
+                      if (!p.reviewsOn) _note(ptr.mppReviewsOff),
                       if (p.reviews.isEmpty)
                         Text(
-                          tr.mppNoReviews,
+                          ptr.mppNoReviews,
                           style: const TextStyle(color: _muted),
                         )
                       else
@@ -230,7 +231,7 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
                         DriverProfilePreviewSheet(preview: p.preview),
                   ),
                   icon: const Icon(Icons.visibility_outlined),
-                  label: Text(tr.mppViewAsRider),
+                  label: Text(ptr.mppViewAsRider),
                 ),
               ],
             ),
@@ -283,9 +284,9 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
 
   Widget _reviewTile(ProfileReview r) {
     final status = switch (r.status) {
-      'approved' => tr.mppReviewApproved,
-      'hidden' => tr.mppReviewHidden,
-      _ => tr.mppReviewPending,
+      'approved' => ptr.mppReviewApproved,
+      'hidden' => ptr.mppReviewHidden,
+      _ => ptr.mppReviewPending,
     };
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -301,7 +302,7 @@ class _MyPublicProfileScreenState extends State<MyPublicProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  '${r.name ?? tr.mppAnonymous} · ${r.month}',
+                  '${r.name ?? ptr.mppAnonymous} · ${r.month}',
                   style: const TextStyle(fontSize: 12, color: _muted),
                 ),
               ),
@@ -452,7 +453,7 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        tr.mppSince(profileMonthText(p.sinceMonth!)),
+                        ptr.mppSince(profileMonthText(p.sinceMonth!)),
                         style: const TextStyle(fontSize: 13, color: _muted),
                       ),
                     ),
@@ -472,22 +473,23 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        _kpi('${p.tripCount}', tr.mppTrips),
+                        _kpi('${p.tripCount}', ptr.mppTrips),
                         _kpi(
                           p.rating == null
                               ? '–'
                               : '${p.rating!.toStringAsFixed(1)} ★',
-                          tr.mppRating,
+                          ptr.mppRating,
                         ),
                         // Contract: years 0 shows only the since month.
-                        if ((p.years ?? 0) > 0) _kpi('${p.years}', tr.mppYears),
+                        if ((p.years ?? 0) > 0)
+                          _kpi('${p.years}', ptr.mppYears),
                       ],
                     ),
                   ),
                   if (p.compliments.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
-                      tr.mppCompliments,
+                      ptr.mppCompliments,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -499,7 +501,7 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                   if (p.milestones.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
-                      tr.mppMilestones,
+                      ptr.mppMilestones,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -515,8 +517,8 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                         ),
                         title: Text(
                           m == 'trips_1000'
-                              ? tr.mppMilestoneTrips1000
-                              : tr.mppMilestoneTopRating,
+                              ? ptr.mppMilestoneTrips1000
+                              : ptr.mppMilestoneTopRating,
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -524,7 +526,7 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                   if (p.latestReview != null) ...[
                     const SizedBox(height: 16),
                     Text(
-                      tr.mppLatestReview,
+                      ptr.mppLatestReview,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -533,7 +535,7 @@ class DriverProfilePreviewSheet extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        '“${p.latestReview!.text}”\n${p.latestReview!.name ?? tr.mppAnonymous} · ${profileMonthText(p.latestReview!.month)}',
+                        '“${p.latestReview!.text}”\n${p.latestReview!.name ?? ptr.mppAnonymous} · ${profileMonthText(p.latestReview!.month)}',
                         textAlign: TextAlign.center,
                       ),
                     ),
