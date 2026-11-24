@@ -160,7 +160,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-              physics: const BouncingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               children: [
                 Container(
                   width: double.infinity,

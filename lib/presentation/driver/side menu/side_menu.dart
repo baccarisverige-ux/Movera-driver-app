@@ -128,7 +128,7 @@ class DriverSideMenu extends StatelessWidget {
               child: ListView(
                 key: const PageStorageKey<String>('driver-menu-list'),
                 padding: const EdgeInsets.only(bottom: 14),
-                physics: const BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 children: [
                   _groupGap(),
                   _sectionLabel(tr.driver2),
