@@ -846,13 +846,6 @@ class _DriverHomeState extends State<DriverHome>
     }
   }
 
-  void _openActivationSupport() {
-    pushSingle(
-      context,
-      MaterialPageRoute<void>(builder: (_) => supportScreen()),
-    );
-  }
-
   bool hideMainPanel = false;
   Timer? _destinationOpenTimer;
 
