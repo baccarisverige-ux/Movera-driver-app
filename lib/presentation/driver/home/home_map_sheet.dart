@@ -490,17 +490,19 @@ extension _HomeMapSheet on _DriverHomeState {
       elevation: 8,
       shadowColor: const Color(0x3311181C),
       clipBehavior: Clip.antiAlias,
-      child: Align(
-        alignment: Alignment.topCenter,
+      child: Padding(
+        // Starts below the red dock, which stays on top of the sheet's
+        // first [collapsedHeight] and takes its taps (UI-02). Owner
+        // 2026-11-24: the scroll area itself starts here, so scrolled
+        // content is clipped at this line and never passes under the
+        // radar HOLD button riding the notch (its bottom edge is 50 px
+        // below the sheet top). Resting layout unchanged.
+        padding: const EdgeInsets.only(
+          top: MoveraSheetMetrics.collapsedHeight + 4,
+        ),
         child: SingleChildScrollView(
-          // Starts below the red dock, which stays on top of the sheet's
-          // first [collapsedHeight] and takes its taps (UI-02).
-          padding: const EdgeInsets.fromLTRB(
-            16,
-            MoveraSheetMetrics.collapsedHeight + 4,
-            16,
-            24,
-          ),
+          key: const ValueKey('hold-sheet-scroll'),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
