@@ -39,6 +39,12 @@ const _dataFiles = {
 };
 
 const _allowed = <String, Set<String>>{
+  'crash catcher, never shown: crash-report messages for the admin '
+      '(contract v0.18.157, lib/core/logging/crash_*.dart)': {
+    'Isolate error',
+    'App ended without a clean exit (last screen )',
+    'The screen froze for s (screen )',
+  },
   'log only, not shown: DriverLog lines of the kept SOS '
       '(lib/core/safety/driver_sos.dart)': {
     'kept sos too old, dropped',

@@ -7,6 +7,7 @@ import 'package:movera/core/session/driver_route_observer.dart';
 
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
+import 'package:movera/core/logging/crash_catcher_start.dart';
 import 'package:movera/core/logging/crash_reports.dart';
 import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -241,6 +242,10 @@ class _MoveraAppState extends State<MoveraApp> {
         next: DriverLog.sink,
       );
       DriverLog.sink = reports.call;
+      // v0.18.157 (owner 2026-11-24 "Add to admin all kind of crash"): the
+      // last run's unclean end, the running marker, the freeze watch, the
+      // main isolate's errors and the unsent reports.
+      unawaited(startDriverCrashCatcher(reports));
       // Owner 2026-11-07 ("5. Mouchard redémarrage"): proof of a page
       // that iOS restarts from zero (live web builds only).
       RestartWatch.instance = startRestartWatch(

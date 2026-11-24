@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/logging/crash_catcher.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 /// The running build's version (`pubspec` `version`, e.g. `1.0.0+1`), passed
@@ -41,6 +42,7 @@ class CrashReportSink {
     this.retryDelay = const Duration(seconds: 30),
     this.maxRetryDelay = const Duration(minutes: 10),
     this.maxAttempts = 6,
+    this.outbox,
     DateTime Function()? clock,
   }) : _client = client,
        _clock = clock ?? DateTime.now;
@@ -67,6 +69,11 @@ class CrashReportSink {
   final Duration maxRetryDelay;
   final int maxAttempts;
 
+  /// v0.18.157 (`contract.json#crashCatcher.outbox`): every report is kept in
+  /// a file until the server answered 2xx / 4xx; [resendOutbox] sends what
+  /// a previous run could not.
+  CrashOutbox? outbox;
+
   static const path = '/api/v1/telemetry/crashes';
 
   final List<_Report> _pending = [];
@@ -88,12 +95,14 @@ class CrashReportSink {
   void call(DriverLogRecord record) {
     try {
       next?.call(record);
-    } catch (_) {}
+    } catch (_) {
+      // Never shown and never fatal: a crash report must not crash the app.
+    }
     if (record.level != DriverLogLevel.error || record.error == null) return;
     report(
       record.error!,
       record.stack ?? StackTrace.empty,
-      kind: record.fatal ? CrashReports.kindCrash : CrashReports.kindError,
+      kind: record.fatal ? CrashReports.kindDartError : CrashReports.kindError,
       message: record.message,
     );
   }
@@ -109,16 +118,29 @@ class CrashReportSink {
     String kind = CrashReports.kindCrash,
     String? message,
     String? screen,
+    Map<String, String>? nativeReason,
+    int? freezeMs,
+    List<Map<String, Object?>>? breadcrumbs,
+    Map<String, String> extra = const {},
   }) {
     // Contract v0.18.2 `auth.beforeSignIn`: a refused session (401) is not
     // an app fault and is never sent as an error report.
     if (_disposed || isUnauthorized(error)) return;
+    // v0.18.157 crashReports.on: the zone's switch off sends nothing.
+    if (!CrashReports.reportingEnabled) return;
     try {
       final now = _clock();
+      Map<String, Object?> context = const {};
+      try {
+        context = CrashReports.context?.call() ?? const {};
+      } catch (_) {
+        // Never shown and never fatal: a crash report must not crash the app.
+      }
+      final crumbs = breadcrumbs ?? context['breadcrumbs'];
       final body = CrashReports.body(
         error: error,
         stackTrace: stack,
-        extra: {if (message != null) 'message': message},
+        extra: {...extra, 'message': ?message},
         app: app,
         platform: platform,
         appVersion: appVersion,
@@ -126,6 +148,22 @@ class CrashReportSink {
         screen: screen ?? CrashReports.currentScreen,
         kind: kind,
         occurredAt: now,
+        osVersion: context['osVersion'] is String
+            ? context['osVersion']! as String
+            : null,
+        deviceModel: context['deviceModel'] is String
+            ? context['deviceModel']! as String
+            : null,
+        tripId: CrashReports.currentTripId,
+        zoneId: CrashReports.currentZoneId,
+        breadcrumbs: crumbs is List
+            ? [
+                for (final c in crumbs)
+                  if (c is Map) Map<String, Object?>.from(c),
+              ]
+            : null,
+        nativeReason: nativeReason,
+        freezeMs: freezeMs,
       );
       final key = CrashReports.fingerprint(
         kind,
@@ -139,7 +177,13 @@ class CrashReportSink {
       }
       if (_recent.length >= 100) _recent.clear();
       _recent[key] = now;
-      _pending.add(_Report(body));
+      String? id;
+      try {
+        id = outbox?.add(body);
+      } catch (_) {
+        // Never shown and never fatal: a crash report must not crash the app.
+      }
+      _pending.add(_Report(body, outboxId: id));
       while (_pending.length > queueLimit) {
         _pending.removeAt(0);
         _dropped += 1;
@@ -161,6 +205,9 @@ class CrashReportSink {
           .then((response) {
             final code = response.statusCode;
             failed = code >= 500 || code == 429;
+            if (!failed && report.outboxId != null) {
+              outbox?.remove(report.outboxId!);
+            }
           })
           .catchError((_) {
             failed = true;
@@ -220,6 +267,20 @@ class CrashReportSink {
     });
   }
 
+  /// Sends the reports a previous run could not deliver, oldest first.
+  void resendOutbox() {
+    final box = outbox;
+    if (box == null || _disposed) return;
+    try {
+      for (final item in box.pending()) {
+        _pending.add(_Report(item.body, outboxId: item.id));
+      }
+      _drain();
+    } catch (_) {
+      // Never shown and never fatal: a crash report must not crash the app.
+    }
+  }
+
   void dispose() {
     _disposed = true;
     _retry?.cancel();
@@ -229,8 +290,9 @@ class CrashReportSink {
 }
 
 class _Report {
-  _Report(this.body);
+  _Report(this.body, {this.outboxId});
   final Map<String, Object?> body;
+  final String? outboxId;
   int attempts = 0;
 }
 
@@ -245,6 +307,31 @@ abstract final class CrashReports {
 
   static const kindCrash = 'crash';
   static const kindError = 'error';
+
+  /// v0.18.157 (`contract.json#crashCatcher.kinds`): an uncaught Dart error,
+  /// an unclean end found at the next launch, a frozen screen.
+  static const kindDartError = 'dart_error';
+  static const kindNativeCrash = 'native_crash';
+  static const kindFreeze = 'freeze';
+  static const kinds = {
+    kindCrash,
+    kindError,
+    kindDartError,
+    kindNativeCrash,
+    kindFreeze,
+  };
+
+  /// v0.18.157 `crashReports.on`: the zone's switch (last known value; true
+  /// until a document says otherwise). Off: no crash report leaves the phone.
+  static bool reportingEnabled = true;
+
+  /// v0.18.157: the fields every report carries (device, OS, breadcrumbs),
+  /// given by the crash catcher once it runs.
+  static Map<String, Object?> Function()? context;
+
+  /// v0.18.157: the trip on screen and the zone the driver is in, when known.
+  static String? currentTripId;
+  static String? currentZoneId;
 
   /// The route name on top, kept by the app's route observer.
   static String? currentScreen;
@@ -344,7 +431,40 @@ abstract final class CrashReports {
     String? screen,
     String kind = kindCrash,
     required DateTime occurredAt,
+    String? osVersion,
+    String? deviceModel,
+    String? tripId,
+    String? zoneId,
+    List<Map<String, Object?>>? breadcrumbs,
+    Map<String, String>? nativeReason,
+    int? freezeMs,
   }) {
+    String? short(String? value, int max) {
+      if (value == null) return null;
+      final text = scrubText(value).trim();
+      if (text.isEmpty) return null;
+      return text.length > max ? text.substring(0, max) : text;
+    }
+
+    final os = short(osVersion, 60);
+    final model = short(deviceModel, 80);
+    final id = RegExp(r'^[A-Za-z0-9_-]{1,64}$');
+    final trip = tripId != null && id.hasMatch(tripId) ? tripId : null;
+    final zone = zoneId != null && id.hasMatch(zoneId) ? zoneId : null;
+    var crumbs = [
+      for (final crumb in breadcrumbs ?? const <Map<String, Object?>>[])
+        if (crumb['at'] is String &&
+            crumb['type'] is String &&
+            crumb['message'] is String)
+          {
+            'at': crumb['at'],
+            'type': crumb['type'],
+            'message': short(crumb['message']! as String, 200) ?? '',
+          },
+    ];
+    if (crumbs.length > 30) crumbs = crumbs.sublist(crumbs.length - 30);
+    final reasonName = short(nativeReason?['name'], 200);
+    final reasonText = short(nativeReason?['reason'], 1000);
     final cleanExtra = <String, Object?>{
       for (final e in extra.entries)
         if (!_personalKey.hasMatch(e.key)) e.key: scrubText(_cut(e.value, 500)),
@@ -369,11 +489,25 @@ abstract final class CrashReports {
       if (version != null && version.isNotEmpty) 'appVersion': version,
       if (buildNo != null && buildNo.isNotEmpty) 'build': buildNo,
       if (cleanName != null) 'screen': cleanName,
-      'kind': kind == kindError ? kindError : kindCrash,
+      'kind': kinds.contains(kind) ? kind : kindCrash,
       'occurredAt': occurredAt.toUtc().toIso8601String(),
+      'osVersion': ?os,
+      'deviceModel': ?model,
+      'tripId': ?trip,
+      'zoneId': ?zone,
+      if (crumbs.isNotEmpty) 'breadcrumbs': crumbs,
+      if (reasonName != null)
+        'nativeReason': {'name': reasonName, 'reason': ?reasonText},
+      if (freezeMs != null && freezeMs >= 0) 'freezeMs': freezeMs,
     };
     var result = make();
     int size() => utf8.encode(jsonEncode(result)).length;
+    while (size() > maxBytes && crumbs.isNotEmpty) {
+      crumbs = crumbs.sublist(
+        crumbs.length ~/ 2 + (crumbs.length == 1 ? 1 : 0),
+      );
+      result = make();
+    }
     while (size() > maxBytes && stack.isNotEmpty) {
       stack = stack.substring(0, stack.length ~/ 2);
       result = make();

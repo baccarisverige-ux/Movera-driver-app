@@ -1,3 +1,4 @@
+import 'package:movera/core/logging/crash_catcher.dart';
 import 'package:movera/core/safety/emergency_numbers.dart';
 import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/safety/sos_contacts_sms.dart';
@@ -375,6 +376,16 @@ class LiveDriverConfig extends ChangeNotifier {
     // v0.18.154 P16c (contract.json#appUpdate): the zone's minimum app
     // version and store links of the document now in use.
     if (used) MinAppVersion.accept(document['appUpdate']);
+    // v0.18.157 (contract.json#crashCatcher.setting): the zone's crash
+    // reports switch of the document now in use (missing = on).
+    if (used) {
+      CrashCatcher.acceptSwitch(
+        document['crashReports'],
+        zoneId: document['zoneId'] is String
+            ? document['zoneId'] as String
+            : null,
+      );
+    }
     return used;
   }
 

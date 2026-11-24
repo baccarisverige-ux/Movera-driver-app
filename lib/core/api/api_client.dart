@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
 import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/logging/crash_breadcrumbs.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -48,7 +49,7 @@ class ApiClient {
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
   /// G30 (v0.18.76): `GET /driver/reminders` sends the line
   /// `email_not_verified` only to apps at 0.18.76 or later.
-  static const contractVersion = '0.18.154';
+  static const contractVersion = '0.18.157';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);
@@ -274,6 +275,8 @@ class ApiClient {
         name: 'api',
       );
       if (response.statusCode >= 400) {
+        // v0.18.157: a failed call is a network breadcrumb (no body).
+        CrashBreadcrumbs.instance.network(method, path, response.statusCode);
         // v0.18.154 P16c: 426 app_update_required shows "Update Movera to
         // continue" (never while a trip is active).
         if (response.statusCode == 426) {
@@ -287,6 +290,7 @@ class ApiClient {
       return {'data': decoded, 'requestId': requestId};
     } on TimeoutException {
       DriverLog.warn('$method $path timed out ($requestId)', name: 'api');
+      CrashBreadcrumbs.instance.network(method, path, null);
       throw ApiError(
         code: ApiError.timeout,
         message: 'Request timed out.',
@@ -297,6 +301,7 @@ class ApiClient {
         '$method $path failed: ${error.runtimeType} ($requestId)',
         name: 'api',
       );
+      CrashBreadcrumbs.instance.network(method, path, 'offline');
       throw ApiError(
         code: ApiError.network,
         message: 'Could not reach Movera.',
