@@ -483,13 +483,15 @@ class MoveraRadarOrb extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            // Owner 2026-11-24 (P2 + S2): the status dot,
-                            // top-right inside the disc; the text keeps
-                            // its place.
+                            // Owner 2026-11-24 (P1 position + S2 size): the
+                            // status dot, top-centre inside the disc.
                             Positioned(
                               top: 6.5 * s - rim,
-                              right: 15 * s - rim,
-                              child: RadarStatusDot(online: online, scale: s),
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: RadarStatusDot(online: online, scale: s),
+                              ),
                             ),
                             if (loading)
                               Positioned(

@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 
-// Owner 2026-11-24: the Radar status dot, P2 (top-right inside the disc,
+// Owner 2026-11-24: the Radar status dot, P1 (top-centre inside the disc,
 // text not moved) with S2 (5 px dot + 1 px white ring = 7 px).
 
 enum _State { on, off, hold, paused, starting, offer, exclusive, reserve }
@@ -142,7 +142,7 @@ void main() {
     for (final st in [_State.on, _State.off, _State.hold]) {
       testWidgets(
         '${st.name} at ${surface.width.toInt()}x${surface.height.toInt()}: '
-        'dot top-right inside the disc, 7 px, clear of the text',
+        'dot top-centre inside the disc, 7 px, clear of the text',
         (tester) async {
           await _pump(tester, _orb(st), surface: surface);
           final dot = tester.getRect(find.byKey(RadarStatusDot.dotKey));
@@ -150,8 +150,8 @@ void main() {
           final orb = tester.getRect(find.byType(MoveraRadarOrb));
           final c = orb.center;
           const r = 73 / 2;
-          // Top-right quarter of the disc.
-          expect(dot.center.dx, greaterThan(c.dx));
+          // Top-centre of the disc (owner: P1 position, S2 size).
+          expect(dot.center.dx, closeTo(c.dx, 0.01));
           expect(dot.center.dy, lessThan(c.dy));
           expect(dot.top - (c.dy - r), closeTo(6.5, 0.01));
           // Wholly inside the disc.
