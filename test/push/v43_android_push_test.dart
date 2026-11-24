@@ -279,16 +279,20 @@ void main() {
     },
   );
 
-  test('Android gets the native platform (one for the app); iOS stays off', () {
+  test('Android gets the native platform (one for the app); iOS its own one '
+      '(v0.18.156, before: off)', () {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     final a = createPlatformPush();
     expect(a, isA<NativePushPlatform>());
     expect(identical(a, createPlatformPush()), isTrue);
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     final ios = createPlatformPush();
-    expect(ios, isA<UnsupportedPushPlatform>());
-    expect(ios.supported, isFalse);
+    expect(ios, isA<NativePushPlatform>());
+    expect(ios.supported, isTrue);
     expect(ios.platformName, 'ios');
+    expect(identical(ios, a), isFalse);
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+    expect(createPlatformPush(), isA<UnsupportedPushPlatform>());
   });
 
   test(

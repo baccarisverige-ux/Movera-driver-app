@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/push/push_config.dart';
@@ -41,7 +44,8 @@ class PrefsPushStore implements PushStore {
 
 /// The calls the registrar makes (contract §8 and v0.18.3 R7).
 abstract class PushApi {
-  /// [platform] `android` asks for the Android settings (v0.18.105).
+  /// [platform] `android` asks for the Android settings (v0.18.105),
+  /// `ios` for the iOS ones (v0.18.156).
   Future<PushConfig> config({String platform = 'web'});
   Future<void> register(String token, String platform);
   Future<void> unregister(String token);
@@ -105,8 +109,39 @@ class PushRegistrar {
     required this.api,
     required this.store,
     required this.explain,
-  }) {
+    void Function(void Function() callback)? whenResumed,
+  }) : _whenResumed = whenResumed ?? _nextResume {
     platform.onTokenRefresh(_tokenChanged);
+  }
+
+  /// v0.18.156 (iOS): push was allowed but the phone had no token yet (the
+  /// APNs token was not there after 5 s): try once more the next time the
+  /// app comes to the foreground, while still signed in.
+  final void Function(void Function() callback) _whenResumed;
+  bool _active = false;
+  bool _retryPending = false;
+
+  static void _nextResume(void Function() callback) {
+    late final AppLifecycleListener listener;
+    listener = AppLifecycleListener(
+      onResume: () {
+        listener.dispose();
+        callback();
+      },
+    );
+  }
+
+  void _retryOnResume() {
+    if (_retryPending) return;
+    _retryPending = true;
+    try {
+      _whenResumed(() {
+        _retryPending = false;
+        if (_active) unawaited(signedIn());
+      });
+    } catch (_) {
+      _retryPending = false;
+    }
   }
 
   final PushPlatform platform;
@@ -121,6 +156,7 @@ class PushRegistrar {
   /// After every sign-in and app start with a session. Returns the token
   /// registered, or null.
   Future<String?> signedIn() async {
+    _active = true;
     final previous = _running;
     if (previous != null) await previous;
     final run = _signedIn();
@@ -161,7 +197,10 @@ class PushRegistrar {
         if (!await platform.requestPermission()) return null;
       }
       final token = await platform.token(web);
-      if (token == null) return null;
+      if (token == null) {
+        _retryOnResume();
+        return null;
+      }
       final old = await store.token();
       if (old != null && old != token) {
         try {
@@ -204,6 +243,7 @@ class PushRegistrar {
   /// [server] false: the sign-out already removed the session's devices
   /// on the server (`POST /auth/sign-out`), only this phone forgets it.
   Future<void> signingOut({bool server = true}) async {
+    _active = false;
     try {
       final token = await store.token();
       if (token == null) return;

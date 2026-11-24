@@ -20,7 +20,8 @@ platform :ios do
     File.open(out, 'a') { |f| f.puts("#{name}=#{value}") } if out
   end
 
-  # Step 1: the bundle id exists, with Sign in with Apple + Push Notifications.
+  # Step 1: the bundle id exists, with Sign in with Apple + Push Notifications
+  # + Time Sensitive Notifications (contract v0.18.156: loud offers are time-sensitive).
   lane :ensure_bundle_id do
     movera_api_key
     id = ENV.fetch('APP_BUNDLE_ID')
@@ -37,6 +38,7 @@ platform :ios do
       )
     end
     types = Spaceship::ConnectAPI::BundleIdCapability::Type
+    time_sensitive = types.const_defined?(:USERNOTIFICATIONS_TIMESENSITIVE) ? types::USERNOTIFICATIONS_TIMESENSITIVE : 'USERNOTIFICATIONS_TIMESENSITIVE'
     have = bundle.get_capabilities.map(&:capability_type)
     UI.message("Capabilities before: #{have.sort.join(', ')}")
     {
@@ -44,7 +46,8 @@ platform :ios do
         key: Spaceship::ConnectAPI::BundleIdCapability::Settings::APPLE_ID_AUTH_APP_CONSENT,
         options: [{ key: Spaceship::ConnectAPI::BundleIdCapability::Options::PRIMARY_APP_CONSENT }]
       }],
-      types::PUSH_NOTIFICATIONS => []
+      types::PUSH_NOTIFICATIONS => [],
+      time_sensitive => []
     }.each do |type, settings|
       next if have.include?(type)
       UI.message("Adding capability #{type}.")
@@ -52,7 +55,7 @@ platform :ios do
     end
     have = Spaceship::ConnectAPI::BundleId.find(id).get_capabilities.map(&:capability_type)
     UI.message("Capabilities now: #{have.sort.join(', ')}")
-    [types::APPLE_ID_AUTH, types::PUSH_NOTIFICATIONS].each do |type|
+    [types::APPLE_ID_AUTH, types::PUSH_NOTIFICATIONS, time_sensitive].each do |type|
       UI.user_error!("Capability #{type} is missing on #{id}.") unless have.include?(type)
     end
     # The team id is the bundle id's seed id; xcodebuild export needs it (not a secret).
