@@ -7,7 +7,7 @@ import 'package:movera/core/push/push_platform.dart';
 /// The Firebase side of [NativePushPlatform], a seam so tests need no
 /// Firebase (`firebase_push_gateway.dart` is the real one).
 abstract class NativePushGateway {
-  /// Starts Firebase with the server's public Android settings.
+  /// Starts Firebase with the server's public Android / iOS settings.
   Future<void> start(PushWebConfig settings);
 
   /// `granted`, `denied` or `default` (not asked yet).
@@ -35,14 +35,25 @@ abstract class NativePushGateway {
 /// is made, so a build or a server without the Android settings stays
 /// quiet (the registrar logs why).
 ///
+/// v0.18.156 (owner 2026-11-24 "Notifications doesn't work on iPhones?"):
+/// the same on the iPhone with [platform] `ios`: Firebase starts from
+/// `&platform=ios` (`iosConfig`, never a web or Android app id: native
+/// Firebase on iOS aborts the app for one), no GoogleService-Info.plist.
+/// iOS shows the notice from the server's `apns` block (alert, the offer
+/// sound, time-sensitive); a push while the app is open is not shown.
+///
 /// The notice itself is shown by Android from the server's message: the
 /// offer channels `movera_offers` (Movera offer sound, vibration) and
 /// `movera_offers_quiet` (Radar) are made in `MainActivity.kt`. A push that
 /// comes while the app is open is not shown (the offer stream shows it).
 class NativePushPlatform implements PushPlatform {
-  NativePushPlatform(this._gateway);
+  NativePushPlatform(this._gateway, {this.platform = 'android'});
 
   final NativePushGateway _gateway;
+
+  /// `android` or `ios` (v0.18.156): the server's settings and the
+  /// `platform` the token is registered with.
+  final String platform;
   bool _ready = false;
   Future<bool>? _starting;
   PushOpen? _launch;
@@ -57,10 +68,15 @@ class NativePushPlatform implements PushPlatform {
   bool get ready => _ready;
 
   @override
-  String get platformName => 'android';
+  String get platformName => platform;
 
   @override
-  PushWebConfig? settingsFrom(PushConfig config) => config.androidConfig;
+  PushWebConfig? settingsFrom(PushConfig config) {
+    if (platform != 'ios') return config.androidConfig;
+    final ios = config.iosConfig;
+    // Native Firebase on an iPhone aborts the app for another platform's id.
+    return ios != null && ios.appId.contains(':ios:') ? ios : null;
+  }
 
   @override
   Future<bool> prepare(PushWebConfig settings) {

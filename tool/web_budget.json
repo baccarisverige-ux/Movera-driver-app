@@ -5,14 +5,12 @@
   "variants": {
     "demo": {
       "description": "flutter build web --release (verify job; the GitHub Pages demo)",
-      "measured_raw": 6192678,
-      "measured_gzip": 1765157,
-      "budget_raw": 6317056,
-      "budget_gzip": 1801216,
-      "hard_raw": 6317056,
-      "hard_gzip": 1801216,
-      "note": "Raised on purpose 2026-11-24 (measured + 2 %, rounded up to the next KiB; hard limits raised with it). Reason: Google / Apple sign-in (owner OK 2026-11-24): the google_sign_in / sign_in_with_apple web plugins are registered at start-up; their Dart code is loaded on first tap (lib/core/auth/provider_sdk.dart, deferred). Old: measured_raw 6066307, measured_gzip 1725099, budget_raw 6188032, budget_gzip 1760256, hard_raw 6200000, hard_gzip 1760000.",
-      "measured_on": "2026-11-24"
+      "measured_raw": 6066307,
+      "measured_gzip": 1725099,
+      "budget_raw": 6188032,
+      "budget_gzip": 1760256,
+      "hard_raw": 6200000,
+      "hard_gzip": 1760000
     },
     "live": {
       "description": "flutter build web --release --wasm --dart-define=MOVERA_AUTH_REQUIRED=true ... (live-web job and the deploy workflow). About 94 KB raw / 25 KB gzip bigger than the demo: the define keeps the live-only code (session gate, live home, live accept-ride, live services in main.dart) that dart2js tree-shakes out of the demo; --wasm and the other defines do not change main.dart.js.",

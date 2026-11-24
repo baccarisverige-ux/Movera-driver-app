@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import 'provider_sdk.dart' deferred as sdk;
+import 'provider_sdk.dart'
+    if (dart.library.js_interop) 'provider_sdk_web.dart'
+    deferred as sdk;
 import 'provider_sign_in_config.dart';
 
 /// What the provider's SDK gave the app: the identity token the server
