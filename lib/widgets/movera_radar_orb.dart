@@ -583,25 +583,28 @@ class _RadarStatusDotState extends State<RadarStatusDot>
   Widget build(BuildContext context) {
     final color = widget.online ? RadarStatusDot.green : RadarStatusDot.red;
     final d = RadarStatusDot.diameter * widget.scale;
-    return AnimatedBuilder(
-      animation: _pulse,
-      builder: (context, _) => Transform.scale(
-        scale: 1 + 0.06 * Curves.easeInOut.transform(_pulse.value),
-        child: Container(
-          key: RadarStatusDot.dotKey,
-          width: d,
-          height: d,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-            border: Border.all(color: Colors.white, width: 1 * widget.scale),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: widget.online ? 0.53 : 0.4),
-                blurRadius: (widget.online ? 4 : 3) * widget.scale,
-                spreadRadius: (widget.online ? 1 : 0.5) * widget.scale,
-              ),
-            ],
+    // Its own layer: the pulse repaints the dot only, not the orb.
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (context, _) => Transform.scale(
+          scale: 1 + 0.06 * Curves.easeInOut.transform(_pulse.value),
+          child: Container(
+            key: RadarStatusDot.dotKey,
+            width: d,
+            height: d,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              border: Border.all(color: Colors.white, width: 1 * widget.scale),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: widget.online ? 0.53 : 0.4),
+                  blurRadius: (widget.online ? 4 : 3) * widget.scale,
+                  spreadRadius: (widget.online ? 1 : 0.5) * widget.scale,
+                ),
+              ],
+            ),
           ),
         ),
       ),
