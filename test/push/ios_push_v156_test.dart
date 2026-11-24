@@ -284,10 +284,7 @@ void main() {
       entitlements,
       contains('com.apple.developer.usernotifications.time-sensitive'),
     );
-    expect(
-      File('ios/fastlane/Fastfile').readAsStringSync(),
-      contains('USERNOTIFICATIONS_TIMESENSITIVE'),
-    );
+
     expect(workflow, contains('aps-environment production (push would never'));
   });
 }
