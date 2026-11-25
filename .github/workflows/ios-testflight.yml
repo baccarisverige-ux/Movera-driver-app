@@ -165,7 +165,8 @@ jobs:
           echo "Built: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist") $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist"))"
           test "$(/usr/libexec/PlistBuddy -c 'Print :ITSAppUsesNonExemptEncryption' "$plist")" = false
           if [ -n "${GOOGLE_REVERSED_CLIENT_ID:-}" ]; then
-            /usr/libexec/PlistBuddy -c 'Print :CFBundleURLTypes' "$plist" | grep -qF "$GOOGLE_REVERSED_CLIENT_ID" \
+            url_types="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleURLTypes' "$plist" 2>/dev/null || true)"
+            printf '%s' "$url_types" | grep -qF "$GOOGLE_REVERSED_CLIENT_ID" \
               || { echo "::error::Info.plist has no URL scheme with the reversed Google iOS client id."; exit 1; }
           fi
           test "$(/usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily:0' "$plist")" = 1
@@ -247,7 +248,8 @@ jobs:
           codesign -d --entitlements - --xml "$RUNNER_TEMP/ipa/Payload/Runner.app" 2>/dev/null | plutil -p - || true
           aps="$(codesign -d --entitlements - --xml "$RUNNER_TEMP/ipa/Payload/Runner.app" 2>/dev/null | plutil -extract aps-environment raw -o - - 2>/dev/null || true)"
           [ "$aps" = production ] || { echo "::error::The signed app has no aps-environment production (push would never reach this iPhone)."; exit 1; }
-          codesign -d --entitlements - --xml "$RUNNER_TEMP/ipa/Payload/Runner.app" 2>/dev/null | grep -q 'com.apple.developer.applesignin' \
+          signed_ent="$(codesign -d --entitlements - --xml "$RUNNER_TEMP/ipa/Payload/Runner.app" 2>/dev/null || true)"
+          printf '%s' "$signed_ent" | grep -q 'com.apple.developer.applesignin' \
             || { echo "::error::The signed app has no Sign in with Apple entitlement."; exit 1; }
           echo "IPA_PATH=$PWD/$ipa" >> "$GITHUB_ENV"
 
