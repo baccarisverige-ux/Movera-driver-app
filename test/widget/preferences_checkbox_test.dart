@@ -86,7 +86,6 @@ int _expectNoOverlap(WidgetTester tester, String reason) {
     expect(cardRect.contains(boxRect.topLeft), isTrue, reason: reason);
     expect(cardRect.contains(boxRect.bottomRight), isTrue, reason: reason);
     for (final finder in [
-      find.descendant(of: card, matching: find.byType(SvgPicture)),
       find.descendant(of: card, matching: find.byType(Text)),
     ]) {
       for (final e in finder.evaluate()) {
@@ -118,6 +117,43 @@ int _expectNoOverlap(WidgetTester tester, String reason) {
     }
   }
   return boxes.length;
+}
+
+/// The icon's drawn lines never touch the box: a 3 px ring around each
+/// box is plain white in the rendered screen.
+Future<void> _expectRingClear(WidgetTester tester, String reason) async {
+  final boundary = tester.renderObject<RenderRepaintBoundary>(
+    find.byKey(const ValueKey('cb-proof')),
+  );
+  final origin = tester.getTopLeft(find.byKey(const ValueKey('cb-proof')));
+  final rects = [
+    for (final e in _boxes.hitTestable().evaluate())
+      tester.getRect(find.byWidget(e.widget)).shift(-origin),
+  ];
+  final data = await tester.runAsync(() async {
+    final image = await boundary.toImage();
+    final bytes = await image.toByteData();
+    final w = image.width;
+    image.dispose();
+    return (bytes!, w);
+  });
+  final (bytes, w) = data!;
+  for (final r in rects) {
+    final ring = r.inflate(3);
+    for (var x = ring.left.floor(); x <= ring.right.ceil(); x++) {
+      for (var y = ring.top.floor(); y <= ring.bottom.ceil(); y++) {
+        if (r.inflate(0.5).contains(Offset(x.toDouble(), y.toDouble()))) {
+          continue;
+        }
+        final i = (y * w + x) * 4;
+        final dark = bytes.getUint8(i) < 160 && bytes.getUint8(i + 1) < 160;
+        if (dark && _shots.isNotEmpty) {
+          await _shot(tester, 'fail-${reason.replaceAll(' ', '_')}');
+        }
+        expect(dark, isFalse, reason: '$reason: icon touches box at $x,$y');
+      }
+    }
+  }
 }
 
 Future<void> _shot(WidgetTester tester, String name) async {
@@ -196,6 +232,20 @@ void main() {
     handle.dispose();
   });
 
+  for (final size in const [Size(390, 844), Size(375, 667)]) {
+    testWidgets('all cards, header and Save on one screen: $size', (
+      tester,
+    ) async {
+      DriverAppTexts.language = 'sv';
+      await _open(tester, size: size);
+      expect(find.byType(ListView), findsNothing);
+      expect(_boxes.hitTestable(), findsNWidgets(_boxes.evaluate().length));
+      final save = tester.getRect(find.text('Spara inställningar'));
+      expect(save.bottom, lessThanOrEqualTo(size.height));
+      expect(find.text('Välj dina reseval'), findsOneWidget);
+    });
+  }
+
   for (final lang in ['sv', 'fr', 'en']) {
     for (final size in const [Size(320, 640), Size(390, 844)]) {
       for (final scale in const [1.0, 1.3, 1.6]) {
@@ -210,6 +260,7 @@ void main() {
           var seen = 0;
           for (var step = 0; step < 8; step++) {
             seen += _expectNoOverlap(tester, '$lang $size x$scale on $step');
+            await _expectRingClear(tester, '$lang $size x$scale $step');
             final on = find.byKey(const ValueKey('ride-type-box-on'));
             if (on.hitTestable().evaluate().isNotEmpty) {
               await tester.tap(on.hitTestable().first);

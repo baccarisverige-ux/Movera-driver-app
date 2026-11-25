@@ -421,27 +421,15 @@ class _PreferencesState extends State<Preferences> {
               curve: Curves.easeOut,
               decoration: BoxDecoration(
                 borderRadius: radius,
-                border: Border.all(
-                  color: selected ? _border : _offBorder,
-                  width: 1.1,
-                ),
+                border: Border.all(color: _border, width: 1.1),
               ),
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Stack(
                 children: [
                   LayoutBuilder(
                     builder: (context, box) {
-                      // Keep the icon clear of the top-right box. Cards are
-                      // always wider than 2 boxes (2-column grid or list).
-                      assert(box.maxWidth > 4 * (_boxSize + _boxInset));
-                      final maxIconWidth = math.max(
-                        24.0,
-                        box.maxWidth - 2 * (_boxSize + _boxInset + 4),
-                      );
-                      final iconWidth = math.min(
-                        iconHeight * 124 / 68,
-                        maxIconWidth,
-                      );
+                      // Owner 2026-11-25: icon at its original size; the
+                      // box sits in the card's empty top-right corner.
                       return SizedBox(
                         width: box.maxWidth,
                         child: Column(
@@ -449,10 +437,10 @@ class _PreferencesState extends State<Preferences> {
                           children: [
                             SvgPicture.asset(
                               category.icon,
-                              width: iconWidth,
-                              height: iconWidth * 68 / 124,
+                              width: iconHeight * 124 / 68,
+                              height: iconHeight,
                               colorFilter: ColorFilter.mode(
-                                selected ? _ink : _offInk,
+                                _ink,
                                 BlendMode.srcIn,
                               ),
                             ),
@@ -467,7 +455,7 @@ class _PreferencesState extends State<Preferences> {
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: selected ? _heading : _offInk,
+                                  color: _heading,
                                   fontSize: compact ? 15 : 17,
                                   height: 1.25,
                                   fontWeight: FontWeight.w500,
@@ -486,7 +474,7 @@ class _PreferencesState extends State<Preferences> {
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: selected ? _text : _offInk,
+                                  color: _text,
                                   fontSize: compact ? 11 : 12,
                                   height: 1.25,
                                   fontWeight: FontWeight.w400,
