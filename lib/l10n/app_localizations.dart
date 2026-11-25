@@ -478,12 +478,6 @@ abstract class AppLocalizations {
   /// **'ACCOUNT'**
   String get bankAccountSection;
 
-  /// No description provided for @acctDetailsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your details'**
-  String get acctDetailsTitle;
-
   /// No description provided for @acctDetailsIntro.
   ///
   /// In en, this message translates to:
@@ -856,12 +850,6 @@ abstract class AppLocalizations {
   /// **'Save details'**
   String get acctSaveDetails;
 
-  /// No description provided for @acctDetailsSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Your details are saved. Movera checks them.'**
-  String get acctDetailsSaved;
-
   /// No description provided for @ratingTagOnTime.
   ///
   /// In en, this message translates to:
@@ -1078,24 +1066,6 @@ abstract class AppLocalizations {
   /// **'Version {version}'**
   String appVersionOnly(String version);
 
-  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, a verified address (texts.verified).
-  ///
-  /// In en, this message translates to:
-  /// **'{email} · Verified'**
-  String contactEmailVerified(String email);
-
-  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, an address without a code check (texts.notVerified).
-  ///
-  /// In en, this message translates to:
-  /// **'{email} · Not verified'**
-  String contactEmailNotVerified(String email);
-
-  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row without an address.
-  ///
-  /// In en, this message translates to:
-  /// **'No e-mail'**
-  String get contactEmailNone;
-
   /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): title and button of the check of the current address; the Home line's button.
   ///
   /// In en, this message translates to:
@@ -1125,54 +1095,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New driver'**
   String get menuNewDriver;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. row and screen title.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete my account'**
-  String get acctDeleteTitle;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what happens.
-  ///
-  /// In en, this message translates to:
-  /// **'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.'**
-  String get acctDeleteBody;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what is kept.
-  ///
-  /// In en, this message translates to:
-  /// **'Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.'**
-  String get acctDeleteKept;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog title.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete your account?'**
-  String get acctDeleteConfirmQ;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog text.
-  ///
-  /// In en, this message translates to:
-  /// **'This cannot be undone. Your account closes now.'**
-  String get acctDeleteConfirmBody;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm button.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete account'**
-  String get acctDeleteConfirm;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. 409 deletion_open_trip.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish or cancel your ride first, then delete your account.'**
-  String get acctDeleteOpenTrip;
-
-  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. other error.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not delete the account. Try again.'**
-  String get acctDeleteFailed;
 
   /// v0.18.134 (contract.json#accountDeletion.closeAtOnce): sign-in answered 403 account_closed.
   ///
@@ -2996,6 +2918,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a car below or finish its documents. Drivers can go online once a car is approved.'**
   String get fleetNoApprovedCarOwnerHere;
+
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
+  ///
+  /// In en, this message translates to:
+  /// **'No car yet'**
+  String get fleetNoCarYet;
+
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a car so your fleet can be approved and drive.'**
+  String get fleetNoCarYetBody;
 
   /// No description provided for @appTitle.
   ///
@@ -6454,18 +6388,6 @@ abstract class AppLocalizations {
   /// **'Terms of service'**
   String get termsOfService;
 
-  /// No description provided for @profSampleDriver.
-  ///
-  /// In en, this message translates to:
-  /// **'Sample driver profile'**
-  String get profSampleDriver;
-
-  /// No description provided for @profDemoNoVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Demo — no verified account'**
-  String get profDemoNoVerified;
-
   /// No description provided for @myBank.
   ///
   /// In en, this message translates to:
@@ -6478,29 +6400,11 @@ abstract class AppLocalizations {
   /// **'Log out'**
   String get logOut;
 
-  /// No description provided for @logOutQ.
-  ///
-  /// In en, this message translates to:
-  /// **'Log out?'**
-  String get logOutQ;
-
-  /// No description provided for @profLogOutClears.
-  ///
-  /// In en, this message translates to:
-  /// **'Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.'**
-  String get profLogOutClears;
-
   /// No description provided for @stay.
   ///
   /// In en, this message translates to:
   /// **'Stay'**
   String get stay;
-
-  /// No description provided for @profCouldNotClear.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not clear local data. You are still signed in. Please retry.'**
-  String get profCouldNotClear;
 
   /// No description provided for @minutesAgo.
   ///
@@ -6687,12 +6591,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No notifications yet. Fleet invitations and answers show here.'**
   String get notifNone;
-
-  /// Profile header (live): profLiveNoNameYet
-  ///
-  /// In en, this message translates to:
-  /// **'Your details are not sent yet'**
-  String get profLiveNoNameYet;
 
   /// No description provided for @message.
   ///
@@ -9016,6 +8914,24 @@ abstract class AppLocalizations {
   /// **'You owe Movera {owed} (limit {limit}). You get no cash trips until you pay Movera.'**
   String remOwesMoveraOverLimit(String owed, String limit);
 
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first car'**
+  String get remFleetNoCar;
+
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet needs at least one car before Movera can approve it.'**
+  String get remFleetNoCarDetail;
+
+  /// Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner.
+  ///
+  /// In en, this message translates to:
+  /// **'We review it after your car and documents are in.'**
+  String get remFleetNotApprovedDetail;
+
   /// No description provided for @safetyToolkit.
   ///
   /// In en, this message translates to:
@@ -9579,12 +9495,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save local reply'**
   String get supportSaveLocalReply;
-
-  /// No description provided for @helpCenter.
-  ///
-  /// In en, this message translates to:
-  /// **'Help center'**
-  String get helpCenter;
 
   /// No description provided for @chatClosedAfterTrip.
   ///

@@ -363,6 +363,7 @@ ReminderWords reminderWords(
   String? Function(String vehicleId)? carName,
   bool owner = false,
   bool active = true,
+  bool ownerOfPendingFleet = false,
 }) {
   final type = reminder.documentType;
   var document = type == null ? tr.documents : nameOf(type);
@@ -437,7 +438,20 @@ ReminderWords reminderWords(
       tr.remAccountNotActive,
       detail: tr.remAccountNotActiveDetail,
     ),
-    'fleet_not_approved' => ReminderWords(tr.remFleetNotApproved),
+    // Contract v0.18.159 (fleetNeedsCar, owner 2026-11-24 mockup A): the
+    // fleet owner with no car yet: red, "Add car" opens My fleet › Add car.
+    'fleet_no_car' => ReminderWords(
+      tr.remFleetNoCar,
+      detail: tr.remFleetNoCarDetail,
+      action: reminder.fix == null ? null : tr.fleetAddCar,
+    ),
+    // v0.18.159 (mockup A, review M3): only the owner of a PENDING fleet
+    // reads that Movera reviews after car + documents; members and
+    // rejected / blocked fleets keep the title-only line.
+    'fleet_not_approved' => ReminderWords(
+      tr.remFleetNotApproved,
+      detail: ownerOfPendingFleet ? tr.remFleetNotApprovedDetail : null,
+    ),
     'fleet_no_approved_car' => ReminderWords(
       tr.remFleetNoApprovedCar,
       detail: owner

@@ -29,9 +29,18 @@ import 'package:share_plus/share_plus.dart';
 /// invitations are read again when the screen opens or the app comes back
 /// (round 4b).
 class MyFleetScreen extends StatefulWidget {
-  const MyFleetScreen({super.key, required this.account, this.share});
+  const MyFleetScreen({
+    super.key,
+    required this.account,
+    this.share,
+    this.openAddCar = false,
+  });
 
   final DriverAccountSession account;
+
+  /// Contract v0.18.159 (fleetNeedsCar): opened from the Home line "Add
+  /// your first car": Add car opens on top at once.
+  final bool openAddCar;
 
   /// The share sheet; tests hand in a recorder.
   final Future<void> Function(String text)? share;
@@ -58,6 +67,11 @@ class _MyFleetScreenState extends State<MyFleetScreen>
     WidgetsBinding.instance.addObserver(this);
     widget.account.addListener(_accountChanged);
     _refreshAll();
+    if (widget.openAddCar) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _addCar();
+      });
+    }
   }
 
   @override
@@ -295,6 +309,47 @@ class _MyFleetScreenState extends State<MyFleetScreen>
     ),
   );
 
+  /// Contract v0.18.159 (fleetNeedsCar, owner 2026-11-24 mockup B): the
+  /// empty Cars card, "No car yet", with the one Add car button.
+  Widget _noCarCard() => Container(
+    key: const ValueKey('fleet-no-car-card'),
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF6F8F9),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: const Color(0xFFE7EBED)),
+    ),
+    child: Column(
+      children: [
+        const Icon(
+          Icons.directions_car_filled_rounded,
+          size: 44,
+          color: Color(0xFF7D898F),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          tr.fleetNoCarYet,
+          textAlign: TextAlign.center,
+          style: AuthText.urbanist(size: 17, weight: FontWeight.w800),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          tr.fleetNoCarYetBody,
+          textAlign: TextAlign.center,
+          style: AccountStyle.hint(),
+        ),
+        const SizedBox(height: 14),
+        AccountButton(
+          key: const ValueKey('fleet-add-car'),
+          label: tr.fleetAddCar,
+          onPressed: _addCar,
+        ),
+      ],
+    ),
+  );
+
   Future<void> _addCar() async {
     await pushSingle(
       context,
@@ -429,8 +484,8 @@ class _MyFleetScreenState extends State<MyFleetScreen>
           ],
           const SizedBox(height: 22),
           _section(tr.fleetCars, tr.fleetCarCount(view.vehicles.length)),
-          if (view.vehicles.isEmpty && owner)
-            Text(tr.fleetNoCars, style: AccountStyle.hint()),
+          // Contract v0.18.159 (fleetNeedsCar, mockup B): no car yet.
+          if (view.vehicles.isEmpty && owner) _noCarCard(),
           // Owner item 9: no car can be picked yet; nobody goes online.
           if (!view.vehicles.any((v) => v.canBeDriven) &&
               (!owner || view.vehicles.isNotEmpty))
@@ -475,14 +530,14 @@ class _MyFleetScreenState extends State<MyFleetScreen>
             ),
             const SizedBox(height: 10),
           ],
-          if (owner) ...[
+          if (owner && view.vehicles.isNotEmpty) ...[
             const SizedBox(height: 6),
             AccountButton(
               key: const ValueKey('fleet-add-car'),
               label: tr.fleetAddCar,
               onPressed: _addCar,
             ),
-          ] else ...[
+          ] else if (!owner) ...[
             const SizedBox(height: 18),
             AccountButton(
               key: const ValueKey('fleet-leave'),

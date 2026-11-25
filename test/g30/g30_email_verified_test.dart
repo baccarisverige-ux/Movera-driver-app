@@ -13,6 +13,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:movera/core/l10n/profile_l10n.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/account/driver_account_session.dart';
@@ -159,7 +160,7 @@ void main() {
       expect(
         find.descendant(
           of: row,
-          matching: find.text(tr.contactEmailNotVerified(_email)),
+          matching: find.text(ptr.contactEmailNotVerified(_email)),
         ),
         findsOneWidget,
       );
@@ -195,7 +196,7 @@ void main() {
       expect(
         find.descendant(
           of: row,
-          matching: find.text(tr.contactEmailVerified(_email)),
+          matching: find.text(ptr.contactEmailVerified(_email)),
         ),
         findsOneWidget,
       );
@@ -212,7 +213,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('profile-email')),
-          matching: find.text(tr.contactEmailNone),
+          matching: find.text(ptr.contactEmailNone),
         ),
         findsOneWidget,
       );
@@ -434,7 +435,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('profile-email')),
-          matching: find.text(tr.contactEmailVerified(_email)),
+          matching: find.text(ptr.contactEmailVerified(_email)),
         ),
         findsOneWidget,
       );

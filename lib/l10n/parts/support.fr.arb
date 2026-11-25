@@ -31,7 +31,6 @@
   "supportLocalDraftSubject": "Brouillon local : {subject}",
   "supportWriteLocalDraft": "Rédigez un brouillon local",
   "supportSaveLocalReply": "Enregistrer la réponse locale",
-  "helpCenter": "Centre d’aide",
   "chatClosedAfterTrip": "Le chat est fermé après la course",
   "chatLocalDemo": "Discussion de démo locale · les messages ne sont pas envoyés au passager.",
   "chatSendMessageHint": "Envoyer un message…",

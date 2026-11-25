@@ -16,6 +16,7 @@ class ImportantRemindersBox extends StatefulWidget {
     required this.onFix,
     this.onAction,
     this.owner = false,
+    this.ownerOfPendingFleet = false,
     this.active = true,
     this.carName,
     this.initiallyOpen = true,
@@ -37,6 +38,10 @@ class ImportantRemindersBox extends StatefulWidget {
   /// The fleet owner (the fleet_no_approved_car fix is his).
   final bool owner;
 
+  /// v0.18.159 (review M3): the owner of a fleet that is still pending:
+  /// the fleet_not_approved line is grey with "We review it after…".
+  final bool ownerOfPendingFleet;
+
   /// "ABC 123" for a vehicleId, when known.
   final String? Function(String vehicleId)? carName;
   final bool initiallyOpen;
@@ -50,6 +55,16 @@ class ImportantRemindersBox extends StatefulWidget {
     ReminderLevel.dueSoon => orange,
     ReminderLevel.waiting => grey,
   };
+
+  /// A line's colour: its level's, except `fleet_not_approved` for the
+  /// owner of a PENDING fleet, which is grey (contract v0.18.159 mockup A,
+  /// review M3: Movera acts next; it still keeps the driver offline).
+  static Color lineColorOf(
+    DriverReminder item, {
+    bool ownerOfPendingFleet = false,
+  }) => item.kind == 'fleet_not_approved' && ownerOfPendingFleet
+      ? grey
+      : colorOf(item.level);
 
   @override
   State<ImportantRemindersBox> createState() => _ImportantRemindersBoxState();
@@ -150,8 +165,12 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
       carName: widget.carName,
       owner: widget.owner,
       active: widget.active,
+      ownerOfPendingFleet: widget.ownerOfPendingFleet,
     );
-    final color = ImportantRemindersBox.colorOf(item.level);
+    final color = ImportantRemindersBox.lineColorOf(
+      item,
+      ownerOfPendingFleet: widget.ownerOfPendingFleet,
+    );
     final canFix = item.fix != null;
     return InkWell(
       key: ValueKey('home-reminder-$index'),
@@ -181,7 +200,11 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
                   Text(
                     words.title,
                     style: TextStyle(
-                      color: item.level == ReminderLevel.waiting ? _ink : color,
+                      color:
+                          item.level == ReminderLevel.waiting ||
+                              color == ImportantRemindersBox.grey
+                          ? _ink
+                          : color,
                       fontSize: 14.5,
                       height: 1.3,
                       fontWeight: FontWeight.w700,

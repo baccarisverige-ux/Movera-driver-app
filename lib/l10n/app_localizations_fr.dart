@@ -242,9 +242,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bankAccountSection => 'COMPTE BANCAIRE';
 
   @override
-  String get acctDetailsTitle => 'Vos informations';
-
-  @override
   String get acctDetailsIntro =>
       'Movera les vérifie avant que vous puissiez conduire. À remplir une seule fois.';
 
@@ -450,10 +447,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get acctSaveDetails => 'Enregistrer';
 
   @override
-  String get acctDetailsSaved =>
-      'Vos informations sont enregistrées. Movera les vérifie.';
-
-  @override
   String get ratingTagOnTime => 'À l\'heure';
 
   @override
@@ -578,19 +571,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String contactEmailVerified(String email) {
-    return '$email · Vérifié';
-  }
-
-  @override
-  String contactEmailNotVerified(String email) {
-    return '$email · Non vérifié';
-  }
-
-  @override
-  String get contactEmailNone => 'Aucun e-mail';
-
-  @override
   String get contactVerifyEmail => 'Vérifier l’e-mail';
 
   @override
@@ -607,35 +587,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get menuNewDriver => 'Nouveau chauffeur';
-
-  @override
-  String get acctDeleteTitle => 'Supprimer mon compte';
-
-  @override
-  String get acctDeleteBody =>
-      'Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées.';
-
-  @override
-  String get acctDeleteKept =>
-      'Conservés : vos courses, gains et virements pour la loi comptable et, si vous devez de l’argent à Movera, votre nom, numéro et le montant jusqu’au paiement.';
-
-  @override
-  String get acctDeleteConfirmQ => 'Supprimer votre compte ?';
-
-  @override
-  String get acctDeleteConfirmBody =>
-      'Action irréversible. Votre compte est fermé maintenant.';
-
-  @override
-  String get acctDeleteConfirm => 'Supprimer le compte';
-
-  @override
-  String get acctDeleteOpenTrip =>
-      'Terminez ou annulez d’abord votre course, puis supprimez votre compte.';
-
-  @override
-  String get acctDeleteFailed =>
-      'Impossible de supprimer le compte. Réessayez.';
 
   @override
   String get acctClosedSignIn =>
@@ -1774,6 +1725,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get fleetNoApprovedCarOwnerHere =>
       'Ajoutez une voiture ci-dessous ou terminez ses documents. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée.';
+
+  @override
+  String get fleetNoCarYet => 'Pas encore de voiture';
+
+  @override
+  String get fleetNoCarYetBody =>
+      'Ajoutez une voiture pour que votre flotte soit approuvée et puisse rouler.';
 
   @override
   String get appTitle => 'Movera Chauffeur';
@@ -3789,30 +3747,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get termsOfService => 'Conditions d’utilisation';
 
   @override
-  String get profSampleDriver => 'Profil de chauffeur d’exemple';
-
-  @override
-  String get profDemoNoVerified => 'Démo — aucun compte vérifié';
-
-  @override
   String get myBank => 'Ma banque';
 
   @override
   String get logOut => 'Se déconnecter';
 
   @override
-  String get logOutQ => 'Se déconnecter ?';
-
-  @override
-  String get profLogOutClears =>
-      'Les données d’aperçu de cet appareil seront effacées, y compris l’historique des courses, les contacts et les brouillons. Vous reviendrez à l’écran de connexion hors ligne.';
-
-  @override
   String get stay => 'Rester';
-
-  @override
-  String get profCouldNotClear =>
-      'Impossible d’effacer les données locales. Vous êtes toujours connecté. Réessayez.';
 
   @override
   String minutesAgo(int minutes) {
@@ -3922,10 +3863,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notifNone =>
       'Pas encore de notification. Les invitations de flotte et les réponses s’affichent ici.';
-
-  @override
-  String get profLiveNoNameYet =>
-      'Vos informations ne sont pas encore envoyées';
 
   @override
   String get message => 'Message';
@@ -5207,7 +5144,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tout est envoyé. Vous pourrez passer en ligne quand Movera aura activé votre compte.';
 
   @override
-  String get remFleetNotApproved => 'Movera n’a pas encore validé votre flotte';
+  String get remFleetNotApproved =>
+      'Movera n’a pas encore approuvé votre flotte';
 
   @override
   String get remFleetNoApprovedCar =>
@@ -5355,6 +5293,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String remOwesMoveraOverLimit(String owed, String limit) {
     return 'Vous devez $owed à Movera (limite $limit). Vous ne recevez plus de courses payées à bord tant que vous n’avez pas payé Movera.';
   }
+
+  @override
+  String get remFleetNoCar => 'Ajoutez votre première voiture';
+
+  @override
+  String get remFleetNoCarDetail =>
+      'Votre flotte a besoin d’au moins une voiture avant que Movera puisse l’approuver.';
+
+  @override
+  String get remFleetNotApprovedDetail =>
+      'Nous l’examinons une fois votre voiture et vos documents envoyés.';
 
   @override
   String get safetyToolkit => 'Outils de sécurité';
@@ -5692,9 +5641,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportSaveLocalReply => 'Enregistrer la réponse locale';
-
-  @override
-  String get helpCenter => 'Centre d’aide';
 
   @override
   String get chatClosedAfterTrip => 'Le chat est fermé après la course';

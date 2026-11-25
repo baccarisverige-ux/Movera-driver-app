@@ -271,4 +271,50 @@ void main() {
     expect(notice.toLowerCase(), isNot(contains('taxamet')));
     expect(notice.toLowerCase(), isNot(contains('taximet')));
   });
+
+  // Bug 2026-11-25: show() and close()/dispose() in the same frame left
+  // the banner stuck on the root overlay (the entry was not mounted yet,
+  // so it was never removed).
+  Future<BuildContext> host(WidgetTester tester) async {
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+    return ctx;
+  }
+
+  testWidgets('show then close in the same frame leaves nothing', (
+    tester,
+  ) async {
+    final context = await host(tester);
+    final notice = MeterChangeNotice();
+    notice.show(context, '240,00 kr');
+    notice.close();
+    expect(notice.isOpen, isFalse);
+    await tester.pump();
+    expect(_notice, findsNothing);
+    await tester.pump(MeterChangeNotice.visibleFor * 2);
+    expect(_notice, findsNothing);
+    notice.dispose();
+  });
+
+  testWidgets('show then dispose in the same frame leaves nothing', (
+    tester,
+  ) async {
+    final context = await host(tester);
+    final notice = MeterChangeNotice();
+    notice.show(context, '240,00 kr');
+    notice.dispose();
+    await tester.pump();
+    expect(_notice, findsNothing);
+    await tester.pump(MeterChangeNotice.visibleFor * 2);
+    expect(_notice, findsNothing);
+  });
 }

@@ -117,4 +117,75 @@ class ProfileLocalizationsSv extends ProfileLocalizations {
   @override
   String get mppLanguagesMax =>
       'Du har valt 6. Ta bort ett för att välja ett annat.';
+
+  @override
+  String get acctDeleteTitle => 'Radera mitt konto';
+
+  @override
+  String get acctDeleteBody =>
+      'Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter.';
+
+  @override
+  String get acctDeleteKept =>
+      'Sparas: dina resor, intäkter och utbetalningar enligt bokföringslagen, och om du är skyldig Movera ditt namn, nummer och beloppet tills det är betalt.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Radera ditt konto?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'Det går inte att ångra. Ditt konto stängs nu.';
+
+  @override
+  String get acctDeleteConfirm => 'Radera konto';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Avsluta eller avbryt din resa först och radera sedan kontot.';
+
+  @override
+  String get acctDeleteFailed => 'Kontot kunde inte raderas. Försök igen.';
+
+  @override
+  String get profLogOutClears =>
+      'Förhandsdata på enheten rensas, även resehistorik, kontakter och utkast. Du kommer tillbaka till inloggningen offline.';
+
+  @override
+  String get profCouldNotClear =>
+      'Det gick inte att rensa lokal data. Du är fortfarande inloggad. Försök igen.';
+
+  @override
+  String get profLiveNoNameYet => 'Dina uppgifter är inte skickade än';
+
+  @override
+  String get acctDetailsSaved =>
+      'Dina uppgifter är sparade. Movera kontrollerar dem.';
+
+  @override
+  String get acctDetailsTitle => 'Dina uppgifter';
+
+  @override
+  String get profSampleDriver => 'Exempelprofil för förare';
+
+  @override
+  String get logOutQ => 'Logga ut?';
+
+  @override
+  String get helpCenter => 'Hjälpcenter';
+
+  @override
+  String get profDemoNoVerified => 'Demo – inget verifierat konto';
+
+  @override
+  String contactEmailVerified(String email) {
+    return '$email · Verifierad';
+  }
+
+  @override
+  String contactEmailNotVerified(String email) {
+    return '$email · Inte verifierad';
+  }
+
+  @override
+  String get contactEmailNone => 'Ingen e-post';
 }

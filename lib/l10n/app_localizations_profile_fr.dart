@@ -118,4 +118,77 @@ class ProfileLocalizationsFr extends ProfileLocalizations {
   @override
   String get mppLanguagesMax =>
       'Vous en avez choisi 6. Retirez-en une pour en choisir une autre.';
+
+  @override
+  String get acctDeleteTitle => 'Supprimer mon compte';
+
+  @override
+  String get acctDeleteBody =>
+      'Votre compte est fermé tout de suite : vous êtes déconnecté et ne pouvez plus vous connecter ni conduire avec. Après 30 jours, vos données personnelles sont effacées.';
+
+  @override
+  String get acctDeleteKept =>
+      'Conservés : vos courses, gains et virements pour la loi comptable et, si vous devez de l’argent à Movera, votre nom, numéro et le montant jusqu’au paiement.';
+
+  @override
+  String get acctDeleteConfirmQ => 'Supprimer votre compte ?';
+
+  @override
+  String get acctDeleteConfirmBody =>
+      'Action irréversible. Votre compte est fermé maintenant.';
+
+  @override
+  String get acctDeleteConfirm => 'Supprimer le compte';
+
+  @override
+  String get acctDeleteOpenTrip =>
+      'Terminez ou annulez d’abord votre course, puis supprimez votre compte.';
+
+  @override
+  String get acctDeleteFailed =>
+      'Impossible de supprimer le compte. Réessayez.';
+
+  @override
+  String get profLogOutClears =>
+      'Les données d’aperçu de cet appareil seront effacées, y compris l’historique des courses, les contacts et les brouillons. Vous reviendrez à l’écran de connexion hors ligne.';
+
+  @override
+  String get profCouldNotClear =>
+      'Impossible d’effacer les données locales. Vous êtes toujours connecté. Réessayez.';
+
+  @override
+  String get profLiveNoNameYet =>
+      'Vos informations ne sont pas encore envoyées';
+
+  @override
+  String get acctDetailsSaved =>
+      'Vos informations sont enregistrées. Movera les vérifie.';
+
+  @override
+  String get acctDetailsTitle => 'Vos informations';
+
+  @override
+  String get profSampleDriver => 'Profil de chauffeur d’exemple';
+
+  @override
+  String get logOutQ => 'Se déconnecter ?';
+
+  @override
+  String get helpCenter => 'Centre d’aide';
+
+  @override
+  String get profDemoNoVerified => 'Démo — aucun compte vérifié';
+
+  @override
+  String contactEmailVerified(String email) {
+    return '$email · Vérifié';
+  }
+
+  @override
+  String contactEmailNotVerified(String email) {
+    return '$email · Non vérifié';
+  }
+
+  @override
+  String get contactEmailNone => 'Aucun e-mail';
 }

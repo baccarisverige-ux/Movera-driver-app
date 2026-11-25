@@ -45,7 +45,6 @@
   },
   "supportWriteLocalDraft": "Write a local draft",
   "supportSaveLocalReply": "Save local reply",
-  "helpCenter": "Help center",
   "chatClosedAfterTrip": "The chat is closed after the trip",
   "chatLocalDemo": "Local demo chat · messages are not sent to the rider.",
   "chatSendMessageHint": "Send message…",

@@ -219,5 +219,13 @@
   "fleetNoApprovedCarOwnerHere": "Add a car below or finish its documents. Drivers can go online once a car is approved.",
   "@fleetNoApprovedCarOwnerHere": {
     "description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."
+  },
+  "fleetNoCarYet": "No car yet",
+  "@fleetNoCarYet": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
+  },
+  "fleetNoCarYetBody": "Add a car so your fleet can be approved and drive.",
+  "@fleetNoCarYetBody": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
   }
 }

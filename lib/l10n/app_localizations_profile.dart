@@ -312,6 +312,126 @@ abstract class ProfileLocalizations {
   /// In en, this message translates to:
   /// **'You picked 6. Remove one to pick another.'**
   String get mppLanguagesMax;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. row and screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get acctDeleteTitle;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what happens.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.'**
+  String get acctDeleteBody;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. what is kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.'**
+  String get acctDeleteKept;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get acctDeleteConfirmQ;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm dialog text.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Your account closes now.'**
+  String get acctDeleteConfirmBody;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. confirm button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get acctDeleteConfirm;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. 409 deletion_open_trip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish or cancel your ride first, then delete your account.'**
+  String get acctDeleteOpenTrip;
+
+  /// v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 "Accept, keep debt (Rec.)"): Profile > Delete my account. other error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Try again.'**
+  String get acctDeleteFailed;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.'**
+  String get profLogOutClears;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear local data. You are still signed in. Please retry.'**
+  String get profCouldNotClear;
+
+  /// Profile header (live): profLiveNoNameYet
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are not sent yet'**
+  String get profLiveNoNameYet;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are saved. Movera checks them.'**
+  String get acctDetailsSaved;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details'**
+  String get acctDetailsTitle;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample driver profile'**
+  String get profSampleDriver;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out?'**
+  String get logOutQ;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Help center'**
+  String get helpCenter;
+
+  /// Moved from AppLocalizations (fleet #679 web budget, text unchanged): read only by the deferred Profile screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo — no verified account'**
+  String get profDemoNoVerified;
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, a verified address (texts.verified).
+  ///
+  /// In en, this message translates to:
+  /// **'{email} · Verified'**
+  String contactEmailVerified(String email);
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, an address without a code check (texts.notVerified).
+  ///
+  /// In en, this message translates to:
+  /// **'{email} · Not verified'**
+  String contactEmailNotVerified(String email);
+
+  /// G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row without an address.
+  ///
+  /// In en, this message translates to:
+  /// **'No e-mail'**
+  String get contactEmailNone;
 }
 
 class _ProfileLocalizationsDelegate
