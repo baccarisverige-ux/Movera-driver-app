@@ -16,16 +16,24 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
+import 'dart:async';
+import 'package:movera/core/session/driver_runtime_scope.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Round 4: the details screen after the first sign-in, against a fake
 /// server that answers like movera-server's onboarding.
 class _Server {
-  _Server({this.refuse});
+  _Server({this.refuse, this.hang = false});
+
+  /// Bug 2026-11-25: the send never answers (Back while busy).
+  final bool hang;
 
   /// A `400 invalid_request` reason to answer with, or null to accept.
   final String? refuse;
   final List<Map<String, dynamic>> bodies = [];
+  final List<String> countries = [];
 
   http.Client get client => MockClient((request) async {
     final body = jsonDecode(request.body) as Map<String, dynamic>;
@@ -35,9 +43,25 @@ class _Server {
       status,
       headers: {'content-type': 'application/json'},
     );
+    // v0.18.162: PUT /driver/country (the country step).
+    if (request.url.path == DriverAccountRepository.countryPath) {
+      countries.add(body['country'] as String);
+      return json(200, {
+        'driverId': 'drv_1',
+        'accountStatus': 'pending',
+        'onlineStatus': 'offline',
+        'firstName': '',
+        'country': body['country'],
+        'zoneIds': [],
+        'categoryIds': [],
+        'documents': [],
+        'version': 2,
+      });
+    }
     if (request.url.path != DriverAccountRepository.onboardingPath) {
       return json(404, {'code': 'not_found', 'message': 'x'});
     }
+    if (hang) return Completer<http.Response>().future;
     if (refuse != null) {
       return json(400, {
         'code': 'invalid_request',
@@ -154,6 +178,7 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
+  setUpAll(loadDeferredScreens);
   testWidgets('empty fields and an under-age date are said under the right '
       'field, nothing is sent', (tester) async {
     final server = _Server();
@@ -173,36 +198,107 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('the country picker shows the flags, Tunisia as coming soon '
-      'and not pickable; the city follows the country', (tester) async {
+  testWidgets('bug 2026-11-25 (TestFlight build 12, iPad): Back after '
+      'editing never freezes, even when the sign-out never answers', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = DriverSessionController();
+    addTearDown(controller.dispose);
+    final session = _session(_Server());
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverRuntimeScope(
+          session: controller,
+          homeBuilder: () => const Scaffold(body: Text('Step one')),
+          logout: () => Completer<void>().future,
+          account: session,
+          child: DriverDetailsScreen(
+            account: session,
+            onDone: (_) {},
+            clock: () => DateTime(2026, 10, 25),
+            draft: _memoryDraft(),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await _fillPerson(tester, dob: '1990-01-01');
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await tester.pump();
+    // Owner 2026-11-25: edited fields ask "Leave without saving?" first.
+    expect(find.text('Leave without saving?'), findsOneWidget);
+    expect(find.text('Your changes will be lost.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('leave-unsaved-stay')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('leave-unsaved')), findsNothing);
+    expect(find.byType(DriverDetailsScreen), findsOneWidget);
+    await nav.maybePop();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('leave-unsaved-leave')));
+    await tester.pump();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('details-leaving')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 9));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Step one'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('owner 2026-11-25: nothing edited, Back keeps the old '
+      'Leave sign-up question (no unsaved popup)', (tester) async {
     await _pump(tester, _Server());
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('leave-unsaved')), findsNothing);
+    expect(find.byKey(const ValueKey('details-sign-out')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('bug 2026-11-25: Back while the details are being sent says '
+      'please wait', (tester) async {
+    await _pump(tester, _Server(hang: true));
+    await _fillPerson(tester);
+    await _tap(tester, 'details-continue');
+    await tester.pump();
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await tester.pump();
+    expect(find.text(tr.pleaseWait), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(minutes: 2));
+  });
+
+  testWidgets('v0.18.162: the country is read-only here; tapping it opens '
+      'the country step (open countries only, saved by the server) and the '
+      'city follows the country', (tester) async {
+    final server = _Server();
+    await _pump(tester, server);
     await _tap(tester, 'details-country');
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-SE')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-FR')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-TN')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('country-FR')));
     await tester.pump();
-    expect(find.text(tr.acctChooseCountry), findsOneWidget);
-    expect(find.byKey(const ValueKey('country-flag-SE')), findsWidgets);
-    expect(find.byKey(const ValueKey('country-flag-FR')), findsOneWidget);
-    expect(find.byKey(const ValueKey('country-flag-TN')), findsOneWidget);
-    expect(find.text(tr.acctComingSoon.toUpperCase()), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('pick-country-TN')));
-    await tester.pump();
-    // The sheet stays open, Tunisia was not taken.
-    expect(find.text(tr.acctChooseCountry), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('pick-country-FR')));
-    await tester.pump();
-    await tester.pump();
-    expect(find.text(tr.acctChooseCountry), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('country-continue')));
+    await _settle(tester);
+    expect(server.countries, ['FR']);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsNothing);
     expect(find.text(tr.acctCountryFrance), findsOneWidget);
     expect(find.text('Paris'), findsOneWidget);
     expect(find.text('Stockholm län'), findsNothing);
-    // The city picker lists the country's cities without flags.
     await _tap(tester, 'details-city');
     await tester.pump();
     expect(find.byKey(const ValueKey('pick-city-paris')), findsOneWidget);
     expect(find.byKey(const ValueKey('pick-city-stockholm_lan')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('country-flag-FR')),
-      findsOneWidget,
-    ); // only the box, not the sheet
     await tester.tap(find.byKey(const ValueKey('pick-city-paris')));
     await tester.pump();
     await tester.pumpWidget(const SizedBox.shrink());

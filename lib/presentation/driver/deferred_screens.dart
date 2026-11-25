@@ -19,6 +19,9 @@ import 'package:movera/presentation/driver/settings/settings.dart'
     deferred as settings;
 import 'package:movera/presentation/driver/support/support_inbox.dart'
     deferred as support;
+import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/widgets/deferred_screen.dart';
 
 /// Owner 2026-11-03 (LT-4 "load on open"): Wallet, Ride history and Chat
@@ -114,3 +117,35 @@ Future<void> loadDeferredScreens() => Future.wait([
   promotions.loadLibrary(),
   support.loadLibrary(),
 ]);
+
+/// v0.18.162 (owner 2026-11-25): "Which country do you work in?", loaded on
+/// first open with the Profile part (web budget).
+Widget driverCountryScreen({
+  required DriverAccountSession account,
+  required void Function(BuildContext context, DriverAccount saved) onDone,
+  String? selected,
+}) => DeferredScreen(
+  load: profile.loadLibrary,
+  builder: (_) => profile.DriverCountryScreen(
+    account: account,
+    onDone: onDone,
+    selected: selected,
+  ),
+);
+
+/// Bug 2026-11-25 / web budget: the sign-up details screen (step 3) loads
+/// with the Profile part too, so the first download keeps room for the fixes.
+Widget driverDetailsScreen({
+  required DriverAccountSession account,
+  required void Function(BuildContext context) onDone,
+  String? phone,
+  ProviderLink? prefill,
+}) => DeferredScreen(
+  load: profile.loadLibrary,
+  builder: (_) => profile.DriverDetailsScreen(
+    account: account,
+    onDone: onDone,
+    phone: phone,
+    prefill: prefill,
+  ),
+);

@@ -3,6 +3,8 @@ import 'package:movera/widgets/country_flag.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
+import 'package:movera/presentation/driver/account/driver_country_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/details_draft.dart';
@@ -109,6 +111,9 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   /// (R10, owner 2026-10-30: the row stays after the app is reloaded).
   late String? _phone = widget.phone;
   bool _restored = false;
+
+  /// Owner 2026-11-25: a field was edited (Back asks before leaving).
+  bool _edited = false;
 
   static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
   static final _datePattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
@@ -226,6 +231,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
 
   /// A field changed: the errors go, the draft is saved.
   void _changed() {
+    if (_restored) _edited = true;
     if (_errors.isNotEmpty || _formError != null) {
       setState(() {
         _errors.clear();
@@ -257,8 +263,20 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     });
   }
 
+  /// v0.18.162 (`driverCountryFirst`): the country was picked at the step
+  /// before this form and is shown read-only; tapping it opens the same
+  /// step again (saved by the server) while the account is not approved.
   Future<void> _pickCountry() async {
-    final picked = await showDetailsCountryPicker(context, selected: _country);
+    if (!(widget.account.account?.canSendDetails ?? false)) return;
+    final picked = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => driverCountryScreen(
+          account: widget.account,
+          selected: _country,
+          onDone: (context, saved) => Navigator.of(context).pop(saved.country),
+        ),
+      ),
+    );
     if (picked == null || !mounted || !_open(picked)) return;
     setState(() {
       _country = picked;
@@ -442,39 +460,56 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   /// step 1 comes back (the draft stays on this phone until the sign-out
   /// clears local data).
   Future<void> _back() async {
-    if (_busy || _leaving) return;
+    // Bug 2026-11-25: Back while sending says so instead of doing nothing.
+    if (_busy) {
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text(tr.pleaseWait)));
+      return;
+    }
+    if (_leaving) return;
+    final edited = _edited;
+    if (edited && !await confirmLeaveWithoutSaving(context)) return;
+    if (!mounted) return;
     final onBack = widget.onBack;
     if (onBack != null) {
       onBack();
       return;
     }
-    final leave = await showDialog<bool>(
-      context: context,
-      builder: (dialog) => MoveraDialogTheme(
-        child: AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(tr.acctLeaveSignUpQ),
-          content: Text(tr.acctLeaveSignUpBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialog).pop(false),
-              child: Text(tr.stay),
+    final leave = edited
+        ? true
+        : await showDialog<bool>(
+            context: context,
+            builder: (dialog) => MoveraDialogTheme(
+              child: AlertDialog(
+                backgroundColor: Colors.white,
+                title: Text(tr.acctLeaveSignUpQ),
+                content: Text(tr.acctLeaveSignUpBody),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialog).pop(false),
+                    child: Text(tr.stay),
+                  ),
+                  FilledButton(
+                    key: const ValueKey('details-sign-out'),
+                    onPressed: () => Navigator.of(dialog).pop(true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AccountStyle.ink,
+                    ),
+                    child: Text(tr.logOut),
+                  ),
+                ],
+              ),
             ),
-            FilledButton(
-              key: const ValueKey('details-sign-out'),
-              onPressed: () => Navigator.of(dialog).pop(true),
-              style: FilledButton.styleFrom(backgroundColor: AccountStyle.ink),
-              child: Text(tr.logOut),
-            ),
-          ],
-        ),
-      ),
-    );
+          );
     if (leave != true || !mounted) return;
     setState(() => _leaving = true);
     final scope = DriverRuntimeScope.maybeOf(context);
     try {
-      await scope?.logout?.call();
+      // Bug 2026-11-25 (TestFlight build 12, iPad): Back froze the screen
+      // while a slow sign-out never answered; the tokens are cleared first,
+      // so after 8 s step 1 opens all the same.
+      await scope?.logout?.call().timeout(const Duration(seconds: 8));
     } on SignOutOnTrip {
       // v0.18.49 §71 (owner Q8): refused for a current trip; still signed in.
       if (mounted) {
@@ -490,6 +525,8 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     final signIn = driverRootAfterSignOut(scope);
     final navigator = Navigator.of(context, rootNavigator: true);
     if (signIn == null) {
+      // Nothing to go back to (the gate's own root): never stay stuck.
+      if (!navigator.canPop()) return setState(() => _leaving = false);
       navigator.popUntil((route) => route.isFirst);
     } else {
       showDriverSignIn(navigator, signIn);
@@ -506,6 +543,11 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       },
       child: Scaffold(
         backgroundColor: AuthColors.ground,
+        // Bug 2026-11-25: signing out shows a spinner (never a still screen).
+        floatingActionButton: _leaving
+            ? const CircularProgressIndicator(key: ValueKey('details-leaving'))
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         body: SafeArea(
           bottom: false,
           child: CustomScrollView(

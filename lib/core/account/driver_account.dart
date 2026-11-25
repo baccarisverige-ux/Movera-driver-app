@@ -325,6 +325,11 @@ class DriverAccount {
   /// Signed in, details not sent yet: the details screen comes next.
   bool get needsDetails => accountStatus == 'pending';
 
+  /// v0.18.162 (`driverCountryFirst`): no country yet, before approval: the
+  /// country step comes first (once).
+  bool get needsCountry =>
+      (country == null || country!.isEmpty) && canSendDetails;
+
   /// The details may be (re)sent.
   bool get canSendDetails =>
       accountStatus == 'pending' || accountStatus == 'on_hold';

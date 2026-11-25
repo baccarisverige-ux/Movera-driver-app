@@ -8,7 +8,6 @@ import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/privacy/start_clean_up.dart';
-import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 
 /// The app's first route when a session is required
@@ -51,7 +50,7 @@ class DriverSessionGate extends StatefulWidget {
   State<DriverSessionGate> createState() => _DriverSessionGateState();
 }
 
-enum _Root { signIn, details, home }
+enum _Root { signIn, country, details, home }
 
 class _DriverSessionGateState extends State<DriverSessionGate> {
   late Future<_Root> _root = _decide();
@@ -104,6 +103,8 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
     // The profile: a network failure here is shown with a retry (the
     // account's state decides the first screen, so no guess).
     final DriverAccount profile = await account.refresh();
+    // v0.18.162 (driverCountryFirst): the country step first, once.
+    if (profile.needsCountry) return _Root.country;
     return profile.needsDetails ? _Root.details : _Root.home;
   }
 
@@ -165,7 +166,15 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
         }
         return switch (snapshot.data) {
           _Root.home => widget.homeBuilder(),
-          _Root.details => DriverDetailsScreen(
+          _Root.country => driverCountryScreen(
+            account: widget.account!,
+            onDone: (_, saved) => setState(() {
+              _root = Future.value(
+                saved.needsDetails ? _Root.details : _Root.home,
+              );
+            }),
+          ),
+          _Root.details => driverDetailsScreen(
             account: widget.account!,
             phone: widget.auth.signedInPhone,
             prefill: widget.auth.providerLink,

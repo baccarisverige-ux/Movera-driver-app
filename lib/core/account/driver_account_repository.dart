@@ -19,6 +19,7 @@ class DriverAccountRepository {
 
   static const profilePath = '/api/v1/driver/profile';
   static const onboardingPath = '/api/v1/driver/onboarding';
+  static const countryPath = '/api/v1/driver/country';
   static const fleetPath = '/api/v1/driver/fleet';
   static const fleetJoinPath = '/api/v1/driver/fleet/join';
   static const fleetInvitePath = '/api/v1/driver/fleet/invite';
@@ -155,6 +156,13 @@ class DriverAccountRepository {
   Future<DriverAccount> submitDetails(DriverDetailsRequest request) async =>
       DriverAccount.fromJson(
         await _api.post(onboardingPath, body: request.toJson()),
+      );
+
+  /// v0.18.162 (`driverCountryFirst.step`): `PUT /driver/country`, the
+  /// first-sign-in country step (before approval only).
+  Future<DriverAccount> setCountry(String country) async =>
+      DriverAccount.fromJson(
+        await _api.put(countryPath, body: {'country': country}),
       );
 
   /// Contract v0.17.0: `GET /driver/onboarding/settings`, the admin's

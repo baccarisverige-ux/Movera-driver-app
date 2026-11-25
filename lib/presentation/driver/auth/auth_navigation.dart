@@ -3,7 +3,7 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
-import 'package:movera/presentation/driver/account/driver_details_screen.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 
 /// The sign-in flow's controller for [context]: the one the app root put
 /// in [DriverRuntimeScope], or null in a host without one.
@@ -43,26 +43,52 @@ Future<void> enterDriverApp(BuildContext context) async {
     }
     if (!context.mounted) return;
   }
-  final pending = account?.account?.needsDetails ?? false;
-  if (account != null && (isNew || pending)) {
-    final auth = scope?.auth;
+  // v0.18.162 (driverCountryFirst): a driver or fleet owner with no country
+  // yet picks it first (no default), then the details form or Home.
+  if (account != null && (account.account?.needsCountry ?? isNew)) {
     navigator.pushAndRemoveUntil(
       MaterialPageRoute<void>(
-        settings: const RouteSettings(name: 'driver-details'),
-        // Step 3 of the sign-in: the phone just confirmed, and what Apple /
-        // Google gave (round 4b).
-        builder: (_) => DriverDetailsScreen(
+        builder: (_) => driverCountryScreen(
           account: account,
-          phone: auth?.signedInPhone,
-          prefill: auth?.providerLink,
-          onDone: (context) => _openHome(context, home),
+          onDone: (context, saved) => saved.needsDetails
+              ? _openDetails(context, account, scope, home)
+              : _openHome(context, home),
         ),
       ),
       (_) => false,
     );
     return;
   }
+  final pending = account?.account?.needsDetails ?? false;
+  if (account != null && (isNew || pending)) {
+    _openDetails(context, account, scope, home);
+    return;
+  }
   _openHome(context, home);
+}
+
+void _openDetails(
+  BuildContext context,
+  DriverAccountSession account,
+  DriverRuntimeScope? scope,
+  Widget Function() home,
+) {
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final auth = scope?.auth;
+  navigator.pushAndRemoveUntil(
+    MaterialPageRoute<void>(
+      settings: const RouteSettings(name: 'driver-details'),
+      // Step 3 of the sign-in: the phone just confirmed, and what Apple /
+      // Google gave (round 4b).
+      builder: (_) => driverDetailsScreen(
+        account: account,
+        phone: auth?.signedInPhone,
+        prefill: auth?.providerLink,
+        onDone: (context) => _openHome(context, home),
+      ),
+    ),
+    (_) => false,
+  );
 }
 
 void _openHome(BuildContext context, Widget Function() home) {
