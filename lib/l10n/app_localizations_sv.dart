@@ -7189,8 +7189,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get waitingBeforePickup => 'Före upphämtningstiden';
 
   @override
-  String arrivedFarWarning(int m) {
-    return 'Du är $m m från destinationen – resan avslutas tidigt';
+  String arrivedFarWarning(String m) {
+    return 'Du är $m från destinationen – resan avslutas tidigt';
   }
 
   @override

@@ -7178,8 +7178,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitingBeforePickup => 'Before the pickup time';
 
   @override
-  String arrivedFarWarning(int m) {
-    return 'You are $m m from the destination – the trip ends early';
+  String arrivedFarWarning(String m) {
+    return 'You are $m from the destination – the trip ends early';
   }
 
   @override

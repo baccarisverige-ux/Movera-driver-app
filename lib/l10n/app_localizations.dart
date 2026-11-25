@@ -12295,11 +12295,11 @@ abstract class AppLocalizations {
   /// **'Before the pickup time'**
   String get waitingBeforePickup;
 
-  /// Contract v0.18.58 §80 (arrivedDistance.texts.driverFar): Collect cash sheet when the complete preview says earlyEnd; m = distanceToDropoffMeters.
+  /// Contract v0.18.58 §80 (arrivedDistance.texts.driverFar): Collect cash sheet when the complete preview says earlyEnd; m = distanceToDropoffMeters formatted by formatEarlyEndDistance (owner 2026-11-25: km with one decimal, metres only under 100 m).
   ///
   /// In en, this message translates to:
-  /// **'You are {m} m from the destination – the trip ends early'**
-  String arrivedFarWarning(int m);
+  /// **'You are {m} from the destination – the trip ends early'**
+  String arrivedFarWarning(String m);
 
   /// Contract v0.18.93 (contract.json#autoArrive.texts.driverPaused, job C9): wait bar while the server stopped the waiting clock (waiting.away); leave = terms.leaveMeters, arrive = terms.autoArriveMeters.
   ///
