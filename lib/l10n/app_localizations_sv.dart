@@ -236,9 +236,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get bankAccountSection => 'KONTO';
 
   @override
-  String get acctDetailsTitle => 'Dina uppgifter';
-
-  @override
   String get acctDetailsIntro =>
       'Movera kontrollerar dem innan du kan köra. Fyll i dem en gång.';
 
@@ -439,10 +436,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get acctSaveDetails => 'Spara uppgifter';
 
   @override
-  String get acctDetailsSaved =>
-      'Dina uppgifter är sparade. Movera kontrollerar dem.';
-
-  @override
   String get ratingTagOnTime => 'I tid';
 
   @override
@@ -567,19 +560,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String contactEmailVerified(String email) {
-    return '$email · Verifierad';
-  }
-
-  @override
-  String contactEmailNotVerified(String email) {
-    return '$email · Inte verifierad';
-  }
-
-  @override
-  String get contactEmailNone => 'Ingen e-post';
-
-  @override
   String get contactVerifyEmail => 'Verifiera e-post';
 
   @override
@@ -596,34 +576,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get menuNewDriver => 'Ny förare';
-
-  @override
-  String get acctDeleteTitle => 'Radera mitt konto';
-
-  @override
-  String get acctDeleteBody =>
-      'Ditt konto stängs direkt: du loggas ut och kan inte logga in eller köra med det igen. Efter 30 dagar raderas dina personuppgifter.';
-
-  @override
-  String get acctDeleteKept =>
-      'Sparas: dina resor, intäkter och utbetalningar enligt bokföringslagen, och om du är skyldig Movera ditt namn, nummer och beloppet tills det är betalt.';
-
-  @override
-  String get acctDeleteConfirmQ => 'Radera ditt konto?';
-
-  @override
-  String get acctDeleteConfirmBody =>
-      'Det går inte att ångra. Ditt konto stängs nu.';
-
-  @override
-  String get acctDeleteConfirm => 'Radera konto';
-
-  @override
-  String get acctDeleteOpenTrip =>
-      'Avsluta eller avbryt din resa först och radera sedan kontot.';
-
-  @override
-  String get acctDeleteFailed => 'Kontot kunde inte raderas. Försök igen.';
 
   @override
   String get acctClosedSignIn =>
@@ -1732,6 +1684,13 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get fleetNoApprovedCarOwnerHere =>
       'Lägg till en bil nedan eller slutför dess dokument. Förarna kan gå online när en bil är godkänd.';
+
+  @override
+  String get fleetNoCarYet => 'Ingen bil än';
+
+  @override
+  String get fleetNoCarYetBody =>
+      'Lägg till en bil så att ditt åkeri kan godkännas och köra.';
 
   @override
   String get appTitle => 'Movera Förare';
@@ -3718,30 +3677,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get termsOfService => 'Användarvillkor';
 
   @override
-  String get profSampleDriver => 'Exempelprofil för förare';
-
-  @override
-  String get profDemoNoVerified => 'Demo – inget verifierat konto';
-
-  @override
   String get myBank => 'Min bank';
 
   @override
   String get logOut => 'Logga ut';
 
   @override
-  String get logOutQ => 'Logga ut?';
-
-  @override
-  String get profLogOutClears =>
-      'Förhandsdata på enheten rensas, även resehistorik, kontakter och utkast. Du kommer tillbaka till inloggningen offline.';
-
-  @override
   String get stay => 'Stanna kvar';
-
-  @override
-  String get profCouldNotClear =>
-      'Det gick inte att rensa lokal data. Du är fortfarande inloggad. Försök igen.';
 
   @override
   String minutesAgo(int minutes) {
@@ -3850,9 +3792,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get notifNone =>
       'Inga aviseringar än. Inbjudningar från åkerier och svar visas här.';
-
-  @override
-  String get profLiveNoNameYet => 'Dina uppgifter är inte skickade än';
 
   @override
   String get message => 'Meddelande';
@@ -5272,6 +5211,17 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get remFleetNoCar => 'Lägg till din första bil';
+
+  @override
+  String get remFleetNoCarDetail =>
+      'Ditt åkeri behöver minst en bil innan Movera kan godkänna det.';
+
+  @override
+  String get remFleetNotApprovedDetail =>
+      'Vi granskar det när din bil och dina dokument är inne.';
+
+  @override
   String get safetyToolkit => 'Säkerhetsverktyg';
 
   @override
@@ -5600,9 +5550,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get supportSaveLocalReply => 'Spara lokalt svar';
-
-  @override
-  String get helpCenter => 'Hjälpcenter';
 
   @override
   String get chatClosedAfterTrip => 'Chatten är stängd efter resan';

@@ -427,5 +427,17 @@
   "@remOwesMoveraOverLimit": {
     "description": "J11 (contract v0.18.84 debtModel.driverOwes.homeLine, owner Q-S5-1 + 2026-11-13 14:54): Home reminder owes_movera_over_limit, orange (due_soon), never blocks going online; also the Accept refusal driver_owes_movera; = contract reminders.texts.owes_movera_over_limit (debtModel.texts.owesMoveraLine).",
     "placeholders": {"owed": {"type": "String"}, "limit": {"type": "String"}}
+  },
+  "remFleetNoCar": "Add your first car",
+  "@remFleetNoCar": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
+  },
+  "remFleetNoCarDetail": "Your fleet needs at least one car before Movera can approve it.",
+  "@remFleetNoCarDetail": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
+  },
+  "remFleetNotApprovedDetail": "We review it after your car and documents are in.",
+  "@remFleetNotApprovedDetail": {
+    "description": "Contract v0.18.159 fleet needs a car (owner 2026-11-24, mockup PROPOSAL-fleet-add-car-2026-11-24.html); texts approved by the owner."
   }
 }

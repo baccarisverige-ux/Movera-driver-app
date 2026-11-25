@@ -33,7 +33,12 @@ Widget reminderFixPage(
     ReminderFixTarget.infoSession => InfoSessionScreen(
       status: reminder.status ?? 'waiting_for_movera',
     ),
-    ReminderFixTarget.fleetVehicles => MyFleetScreen(account: session),
+    // Contract v0.18.159 (fleetNeedsCar): "Add your first car" opens My
+    // fleet with Add car on top (back = My fleet).
+    ReminderFixTarget.fleetVehicles => MyFleetScreen(
+      account: session,
+      openAddCar: reminder.kind == 'fleet_no_car',
+    ),
     ReminderFixTarget.pickVehicle => LiveVehiclesScreen(account: session),
     // Contract v0.18.3 (R4): the no_fleet line's two buttons.
     ReminderFixTarget.joinFleet => JoinFleetScreen(account: session),

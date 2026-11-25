@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/l10n/profile_l10n.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -159,7 +160,7 @@ void main() {
           () => const Preferences(),
           () => tr.prefChooseRideOptions,
         ),
-        'Profile': (() => const DriverProfile(), () => tr.profDemoNoVerified),
+        'Profile': (() => const DriverProfile(), () => ptr.profDemoNoVerified),
         'Notifications': (
           () => const DriverNotificationsScreen(),
           () => tr.noNotificationsYet,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/l10n/profile_l10n.dart';
 
 /// Contract v0.18.134 (`contract.json#accountDeletion.driver`; owner button
 /// 2026-11-20 "Accept, keep debt (Rec.)", Rules
@@ -32,8 +33,8 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(tr.acctDeleteConfirmQ),
-        content: Text(tr.acctDeleteConfirmBody),
+        title: Text(ptr.acctDeleteConfirmQ),
+        content: Text(ptr.acctDeleteConfirmBody),
         actions: [
           TextButton(
             key: const ValueKey('delete-account-cancel'),
@@ -46,7 +47,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
               backgroundColor: const Color(0xFFB3261E),
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(tr.acctDeleteConfirm),
+            child: Text(ptr.acctDeleteConfirm),
           ),
         ],
       ),
@@ -64,12 +65,12 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       if (!mounted) return;
       setState(
         () => _error = error.reason == 'deletion_open_trip'
-            ? tr.acctDeleteOpenTrip
-            : tr.acctDeleteFailed,
+            ? ptr.acctDeleteOpenTrip
+            : ptr.acctDeleteFailed,
       );
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = tr.acctDeleteFailed);
+      setState(() => _error = ptr.acctDeleteFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -78,18 +79,18 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr.acctDeleteTitle)),
+      appBar: AppBar(title: Text(ptr.acctDeleteTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             Text(
-              tr.acctDeleteBody,
+              ptr.acctDeleteBody,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             Text(
-              tr.acctDeleteKept,
+              ptr.acctDeleteKept,
               style: const TextStyle(fontSize: 14, color: Color(0xFF5B6670)),
             ),
             if (_error case final error?) ...[
@@ -111,7 +112,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 minimumSize: const Size.fromHeight(52),
               ),
               onPressed: _busy ? null : _start,
-              child: Text(tr.acctDeleteTitle),
+              child: Text(ptr.acctDeleteTitle),
             ),
           ],
         ),

@@ -92,5 +92,7 @@
   "fleetNoInvites": "Aucune invitation en cours. Invitez un chauffeur par numéro de téléphone ou partagez votre code.",
   "fleetYourRequest": "Votre demande",
   "fleetRequestSent": "Demande envoyée à {name}. Le responsable répond dans l’application.",
-  "fleetNoApprovedCarOwnerHere": "Ajoutez une voiture ci-dessous ou terminez ses documents. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée."
+  "fleetNoApprovedCarOwnerHere": "Ajoutez une voiture ci-dessous ou terminez ses documents. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée.",
+  "fleetNoCarYet": "Pas encore de voiture",
+  "fleetNoCarYetBody": "Ajoutez une voiture pour que votre flotte soit approuvée et puisse rouler."
 }

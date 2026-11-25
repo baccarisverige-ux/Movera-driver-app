@@ -10,7 +10,7 @@ import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
-import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/l10n/profile_l10n.dart';
 import 'package:movera/presentation/driver/profile/delete_account.dart';
 
 /// Contract v0.18.134 (`contract.json#accountDeletion.driver`; owner button
@@ -84,8 +84,8 @@ void main() {
     answer = (_) => json(202, {'status': 'requested'});
     var deleted = 0;
     await host(tester, session(), onDeleted: () => deleted++);
-    expect(find.text(tr.acctDeleteTitle), findsWidgets);
-    expect(find.text(tr.acctDeleteKept), findsOneWidget);
+    expect(find.text(ptr.acctDeleteTitle), findsWidgets);
+    expect(find.text(ptr.acctDeleteKept), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('delete-account-button')));
     await tester.pumpAndSettle();
     expect(seen, isEmpty);
@@ -125,7 +125,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('delete-account-confirm')));
       await tester.pumpAndSettle();
-      expect(find.text(tr.acctDeleteOpenTrip), findsOneWidget);
+      expect(find.text(ptr.acctDeleteOpenTrip), findsOneWidget);
       expect(deleted, 0);
     },
   );

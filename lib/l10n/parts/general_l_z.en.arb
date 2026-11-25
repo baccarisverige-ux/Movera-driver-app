@@ -526,14 +526,9 @@
   "legalTermsBody": "You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.\n\nCrash and error reports: when the app crashes or shows an error, it automatically sends a report to Movera so we can fix it: the error, where in the app it happened, the app version, the platform and the time. Names, phone numbers, e-mail addresses, addresses and locations are removed before the report leaves your device. Reports are kept for 30 days.",
   "privacyPolicyTitle": "Privacy policy",
   "termsOfService": "Terms of service",
-  "profSampleDriver": "Sample driver profile",
-  "profDemoNoVerified": "Demo — no verified account",
   "myBank": "My bank",
   "logOut": "Log out",
-  "logOutQ": "Log out?",
-  "profLogOutClears": "Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.",
   "stay": "Stay",
-  "profCouldNotClear": "Could not clear local data. You are still signed in. Please retry.",
   "minutesAgo": "{minutes} min ago",
   "@minutesAgo": {
     "placeholders": {
@@ -571,9 +566,23 @@
   "selectCountry": "Select Country",
   "searchCountry": "Search Country",
   "moveWithin100MOfPickup": "Move within {meters} m of the pickup to arrive.",
-  "@moveWithin100MOfPickup": {"description": "BQ-V42: the Arrive hint; meters = the trip's terms.autoArriveMeters (contract v0.18.93, admin setting per zone), 100 when the server sends none.", "placeholders": {"meters": {"type": "int"}}},
+  "@moveWithin100MOfPickup": {
+    "description": "BQ-V42: the Arrive hint; meters = the trip's terms.autoArriveMeters (contract v0.18.93, admin setting per zone), 100 when the server sends none.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
   "moveWithin100MOfStop": "Move within {meters} m of the stop to arrive.",
-  "@moveWithin100MOfStop": {"description": "BQ-V42: the Arrive hint at a middle stop; meters = the trip's terms.autoArriveMeters, 100 when the server sends none.", "placeholders": {"meters": {"type": "int"}}},
+  "@moveWithin100MOfStop": {
+    "description": "BQ-V42: the Arrive hint at a middle stop; meters = the trip's terms.autoArriveMeters, 100 when the server sends none.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
   "recordAudioStarting": "starting…",
   "photoTooLargeForDevice": "Photo is too large to keep on this device.",
   "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first.",
@@ -590,10 +599,6 @@
   "myFleet": "My fleet",
   "notifCouldNotLoad": "Couldn’t load your notifications.",
   "notifNone": "No notifications yet. Fleet invitations and answers show here.",
-  "profLiveNoNameYet": "Your details are not sent yet",
-  "@profLiveNoNameYet": {
-    "description": "Profile header (live): profLiveNoNameYet"
-  },
   "message": "Message",
   "swTripStatusDraft": "Draft",
   "@swTripStatusDraft": {

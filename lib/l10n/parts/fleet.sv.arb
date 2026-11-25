@@ -92,5 +92,7 @@
   "fleetNoInvites": "Ingen öppen inbjudan. Bjud in en förare via telefonnummer eller dela din kod.",
   "fleetYourRequest": "Din förfrågan",
   "fleetRequestSent": "Förfrågan skickad till {name}. Ägaren svarar i appen.",
-  "fleetNoApprovedCarOwnerHere": "Lägg till en bil nedan eller slutför dess dokument. Förarna kan gå online när en bil är godkänd."
+  "fleetNoApprovedCarOwnerHere": "Lägg till en bil nedan eller slutför dess dokument. Förarna kan gå online när en bil är godkänd.",
+  "fleetNoCarYet": "Ingen bil än",
+  "fleetNoCarYetBody": "Lägg till en bil så att ditt åkeri kan godkännas och köra."
 }

@@ -106,14 +106,14 @@ class _DriverProfileState extends State<DriverProfile> {
   /// of the demo's sample profile.
   String get _headerName {
     final account = _liveAccount;
-    if (account == null) return tr.profSampleDriver;
+    if (account == null) return ptr.profSampleDriver;
     final name = account.fullName.trim();
-    return name.isEmpty ? tr.profLiveNoNameYet : name;
+    return name.isEmpty ? ptr.profLiveNoNameYet : name;
   }
 
   String get _headerStatus {
     final account = _liveAccount;
-    if (account == null) return tr.profDemoNoVerified;
+    if (account == null) return ptr.profDemoNoVerified;
     // v0.10.4: the contract word (statusWords driverAccountStatus).
     return statusWord(tr, 'driverAccountStatus', account.accountStatus) ??
         tr.swDriverAccountStatusPending;
@@ -274,7 +274,7 @@ class _DriverProfileState extends State<DriverProfile> {
               if (_liveAccount?.canSendDetails == true)
                 _item(
                   Icons.badge_outlined,
-                  tr.acctDetailsTitle,
+                  ptr.acctDetailsTitle,
                   DriverDetailsScreen(
                     key: const ValueKey('profile-details'),
                     account: _liveSession!,
@@ -282,7 +282,7 @@ class _DriverProfileState extends State<DriverProfile> {
                     onBack: () => maybePopOwned(context),
                     onDone: (context) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(tr.acctDetailsSaved)),
+                        SnackBar(content: Text(ptr.acctDetailsSaved)),
                       );
                       maybePopOwned(context);
                     },
@@ -336,13 +336,17 @@ class _DriverProfileState extends State<DriverProfile> {
                 tr.termsOfService,
                 LegalDocumentScreen.terms,
               ),
-              _item(Icons.help_outline_rounded, tr.helpCenter, supportScreen()),
+              _item(
+                Icons.help_outline_rounded,
+                ptr.helpCenter,
+                supportScreen(),
+              ),
               // v0.18.134 (contract.json#accountDeletion.driver): a confirm
               // step, then the request; 202 signs out and wipes the phone.
               if (_liveSession != null)
                 _item(
                   Icons.delete_outline_rounded,
-                  tr.acctDeleteTitle,
+                  ptr.acctDeleteTitle,
                   DeleteAccountScreen(
                     account: _liveSession!,
                     onDeleted: (context) async {
@@ -544,10 +548,10 @@ class _DriverProfileState extends State<DriverProfile> {
       ),
       key: const ValueKey('profile-email'),
       detail: email == null
-          ? tr.contactEmailNone
+          ? ptr.contactEmailNone
           : verified
-          ? tr.contactEmailVerified(email)
-          : tr.contactEmailNotVerified(email),
+          ? ptr.contactEmailVerified(email)
+          : ptr.contactEmailNotVerified(email),
       detailColor: email != null && !verified ? _notVerified : null,
     );
   }
@@ -592,8 +596,8 @@ class _DriverProfileState extends State<DriverProfile> {
         return MoveraDialogTheme(
           child: AlertDialog(
             backgroundColor: Colors.white,
-            title: Text(tr.logOutQ),
-            content: Text(tr.profLogOutClears),
+            title: Text(ptr.logOutQ),
+            content: Text(ptr.profLogOutClears),
             actions: [
               TextButton(onPressed: () => close(false), child: Text(tr.stay)),
               FilledButton(
@@ -614,7 +618,7 @@ class _DriverProfileState extends State<DriverProfile> {
       if (!await signOutDriver(context) && context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(tr.profCouldNotClear)));
+        ).showSnackBar(SnackBar(content: Text(ptr.profCouldNotClear)));
       }
     }
   }
