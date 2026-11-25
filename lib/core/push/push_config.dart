@@ -5,12 +5,18 @@
 /// v0.18.105 (BQ-V43): `&platform=android` gives `androidConfig`, the
 /// Android Firebase app's public settings (the same four fields), so the
 /// Android store build starts Firebase without a google-services.json.
+///
+/// v0.18.156 (owner 2026-11-24 "Notifications doesn't work on iPhones?"):
+/// `&platform=ios` gives `iosConfig`, the iOS Firebase app's public
+/// settings (the same four fields plus `iosBundleId`), so the iPhone build
+/// starts Firebase without a GoogleService-Info.plist.
 class PushConfig {
   const PushConfig({
     required this.enabled,
     this.projectId,
     this.webConfig,
     this.androidConfig,
+    this.iosConfig,
   });
 
   factory PushConfig.fromJson(Map<String, dynamic> json) {
@@ -23,13 +29,17 @@ class PushConfig {
 
     final config = read('webConfig');
     final android = read('androidConfig');
+    final ios = read('iosConfig');
     return PushConfig(
-      enabled: json['enabled'] == true && (config != null || android != null),
+      enabled:
+          json['enabled'] == true &&
+          (config != null || android != null || ios != null),
       projectId: json['projectId'] is String
           ? json['projectId'] as String
           : null,
       webConfig: config,
       androidConfig: android,
+      iosConfig: ios,
     );
   }
 
@@ -41,6 +51,9 @@ class PushConfig {
 
   /// v0.18.105: the Android app's settings (only with `platform=android`).
   final PushWebConfig? androidConfig;
+
+  /// v0.18.156: the iOS app's settings (only with `platform=ios`).
+  final PushWebConfig? iosConfig;
 }
 
 class PushWebConfig {
@@ -50,6 +63,7 @@ class PushWebConfig {
     required this.messagingSenderId,
     required this.projectId,
     this.authDomain,
+    this.iosBundleId,
   });
 
   static PushWebConfig? fromJson(Map<String, dynamic> json) {
@@ -71,6 +85,7 @@ class PushWebConfig {
       messagingSenderId: sender,
       projectId: project,
       authDomain: text('authDomain'),
+      iosBundleId: text('iosBundleId'),
     );
   }
 
@@ -79,6 +94,9 @@ class PushWebConfig {
   final String messagingSenderId;
   final String projectId;
   final String? authDomain;
+
+  /// v0.18.156: the bundle id of an `iosConfig` (else null).
+  final String? iosBundleId;
 
   /// The options `firebase.initializeApp` takes on the web.
   Map<String, String> toJson() => {

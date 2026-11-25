@@ -578,7 +578,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     return ListView(
       key: const ValueKey<String>('history-overview'),
       padding: const EdgeInsets.fromLTRB(14, 7, 14, 28),
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       children: [
         _buildPeriodSelector(),
         const SizedBox(height: 14),
@@ -701,7 +701,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     return ListView(
       key: const ValueKey<String>('history-all-rides'),
       padding: const EdgeInsets.fromLTRB(14, 7, 14, 28),
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       children: [
         _buildPeriodSelector(),
         const SizedBox(height: 12),

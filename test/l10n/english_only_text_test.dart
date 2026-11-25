@@ -39,6 +39,18 @@ const _dataFiles = {
 };
 
 const _allowed = <String, Set<String>>{
+  // v0.18.155 My profile: each language in its own language (endonyms, the
+  // same in every app language; contract.json#driverProfile.languages).
+  'language endonyms (v0.18.155)': {
+    'Suomi',
+    'Español',
+    'Deutsch',
+    'Soomaali',
+    'Türkçe',
+    'Polski',
+    'Kurdî',
+    'Bosanski',
+  },
   'log only, not shown: DriverLog lines of the kept SOS '
       '(lib/core/safety/driver_sos.dart)': {
     'kept sos too old, dropped',

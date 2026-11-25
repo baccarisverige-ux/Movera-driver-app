@@ -13,16 +13,29 @@ void main() {
     expect(plist, contains('while the app is open'));
     expect(plist, contains('while you are online, also with the phone locked'));
     expect(plist, contains('NSCameraUsageDescription'));
-    expect(plist, isNot(contains('NSLocationAlwaysUsageDescription')));
-    expect(
-      plist,
-      isNot(contains('NSLocationAlwaysAndWhenInUseUsageDescription')),
-    );
+    // 2026-11-23 ITMS-90683: Apple refuses the upload without the Always
+    // keys because a bundled plugin references always-location. The app
+    // still asks only when-in-use; the Always texts say online only.
+    for (final key in [
+      'NSLocationAlwaysUsageDescription',
+      'NSLocationAlwaysAndWhenInUseUsageDescription',
+    ]) {
+      expect(
+        RegExp(
+          '<key>$key</key>\\s*<string>[^<]*while you are online[^<]*'
+          'When you go offline, location is no longer used',
+        ).hasMatch(plist),
+        isTrue,
+        reason: key,
+      );
+    }
     expect(
       plist,
       matches(
         RegExp(
-          r'<key>UIBackgroundModes</key>\s*<array>\s*<string>location</string>\s*</array>',
+          // v0.18.156: plus remote-notification (push), no other mode.
+          r'<key>UIBackgroundModes</key>\s*<array>\s*<string>location</string>'
+          r'\s*<string>remote-notification</string>\s*</array>',
         ),
       ),
     );
