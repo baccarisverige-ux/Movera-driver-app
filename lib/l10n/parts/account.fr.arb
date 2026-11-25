@@ -34,6 +34,7 @@
   "prefChooseRideOptions": "Choisissez vos options de course",
   "prefSelectRideTypes": "Sélectionnez les types de course que vous souhaitez recevoir",
   "prefMoveraSetsFromCar": "Movera les définit d’après votre véhicule. Désactivez ceux que vous ne voulez pas.",
+  "prefAutoSaveFailed": "Pas enregistré, réessayez",
   "prefSave": "Enregistrer les préférences",
   "anaPreview": "Aperçu des statistiques",
   "anaSample3Rides": "Exemple : 3 courses terminées",

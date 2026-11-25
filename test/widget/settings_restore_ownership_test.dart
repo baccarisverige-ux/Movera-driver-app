@@ -30,9 +30,8 @@ void _expectBlocked(WidgetTester tester) {
   for (final control in tester.widgetList<Slider>(find.byType(Slider))) {
     expect(control.onChanged, isNull);
   }
-  final save = find.widgetWithText(OutlinedButton, 'Save preferences');
-  if (save.evaluate().isNotEmpty) {
-    expect(tester.widget<OutlinedButton>(save).onPressed, isNull);
+  // Ride types: no Save button since 2026-11-25; the cards are blocked.
+  if (find.text('Movera Pet').evaluate().isNotEmpty) {
     final category = find.ancestor(
       of: find.text('Movera Pet'),
       matching: find.byType(InkWell),
@@ -94,6 +93,7 @@ void main() {
             matching: find.byType(InkWell),
           );
           tester.widget<InkWell>(category).onTap!();
+          await tester.pump(const Duration(milliseconds: 400));
           await tester.pumpAndSettle();
           expect(repo.writes.last['selected'], [
             false,

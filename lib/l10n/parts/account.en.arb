@@ -61,6 +61,10 @@
   "prefChooseRideOptions": "Choose your ride options",
   "prefSelectRideTypes": "Select the ride types you'd like available for your trips",
   "prefMoveraSetsFromCar": "Movera sets these from your car. Switch off any you don’t want.",
+  "prefAutoSaveFailed": "Not saved, try again",
+  "@prefAutoSaveFailed": {
+    "description": "Ride types screen: a tap on a box could not be saved; the box goes back (owner 2026-11-25)."
+  },
   "prefSave": "Save preferences",
   "anaPreview": "Analytics preview",
   "anaSample3Rides": "Sample: 3 rides completed",

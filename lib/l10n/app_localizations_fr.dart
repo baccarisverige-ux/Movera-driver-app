@@ -136,6 +136,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Movera les définit d’après votre véhicule. Désactivez ceux que vous ne voulez pas.';
 
   @override
+  String get prefAutoSaveFailed => 'Pas enregistré, réessayez';
+
+  @override
   String get prefSave => 'Enregistrer les préférences';
 
   @override
