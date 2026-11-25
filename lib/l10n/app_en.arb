@@ -116,7 +116,6 @@
   "@bankAccountSection": {
     "description": "Section header above the bank account fields."
   },
-  "acctDetailsTitle": "Your details",
   "acctDetailsIntro": "Movera checks these before you can drive. Fill them in once.",
   "acctFirstName": "First name",
   "acctLastName": "Last name",
@@ -193,7 +192,6 @@
   "acctLeaveSignUpQ": "Leave the sign-up?",
   "acctLeaveSignUpBody": "You will be signed out and back at the first step. What you typed stays on this phone until you sign in again.",
   "acctSaveDetails": "Save details",
-  "acctDetailsSaved": "Your details are saved. Movera checks them.",
   "ratingTagOnTime": "On time",
   "ratingTagPolite": "Polite",
   "ratingTagClearPickup": "Clear pickup",
@@ -325,28 +323,6 @@
       }
     }
   },
-  "contactEmailVerified": "{email} · Verified",
-  "@contactEmailVerified": {
-    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, a verified address (texts.verified).",
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
-  "contactEmailNotVerified": "{email} · Not verified",
-  "@contactEmailNotVerified": {
-    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row, an address without a code check (texts.notVerified).",
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
-  "contactEmailNone": "No e-mail",
-  "@contactEmailNone": {
-    "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): the Account e-mail row without an address."
-  },
   "contactVerifyEmail": "Verify e-mail",
   "@contactVerifyEmail": {
     "description": "G30 (contract v0.18.76 emailVerified, owner 2026-11-12): title and button of the check of the current address; the Home line's button."
@@ -371,38 +347,6 @@
   "menuNewDriver": "New driver",
   "@menuNewDriver": {
     "description": "BQ-V15 (owner driver-g12.md:4): side menu header instead of the rating until the driver's first rating."
-  },
-  "acctDeleteTitle": "Delete my account",
-  "@acctDeleteTitle": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. row and screen title."
-  },
-  "acctDeleteBody": "Your account closes at once: you are signed out and cannot sign in or drive with it again. After 30 days your personal data is erased.",
-  "@acctDeleteBody": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. what happens."
-  },
-  "acctDeleteKept": "Kept: your trips, earnings and payouts for the bookkeeping law, and, if you owe Movera, your name, number and the amount until it is paid.",
-  "@acctDeleteKept": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. what is kept."
-  },
-  "acctDeleteConfirmQ": "Delete your account?",
-  "@acctDeleteConfirmQ": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. confirm dialog title."
-  },
-  "acctDeleteConfirmBody": "This cannot be undone. Your account closes now.",
-  "@acctDeleteConfirmBody": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. confirm dialog text."
-  },
-  "acctDeleteConfirm": "Delete account",
-  "@acctDeleteConfirm": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. confirm button."
-  },
-  "acctDeleteOpenTrip": "Finish or cancel your ride first, then delete your account.",
-  "@acctDeleteOpenTrip": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. 409 deletion_open_trip."
-  },
-  "acctDeleteFailed": "Could not delete the account. Try again.",
-  "@acctDeleteFailed": {
-    "description": "v0.18.134 (contract.json#accountDeletion.driver, owner button 2026-11-20 \"Accept, keep debt (Rec.)\"): Profile > Delete my account. other error."
   },
   "acctClosedSignIn": "This account is closed and is being deleted. It can't be used to sign in.",
   "@acctClosedSignIn": {
@@ -2721,14 +2665,9 @@
   "legalTermsBody": "You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.\n\nCrash and error reports: when the app crashes or shows an error, it automatically sends a report to Movera so we can fix it: the error, where in the app it happened, the app version, the platform and the time. Names, phone numbers, e-mail addresses, addresses and locations are removed before the report leaves your device. Reports are kept for 30 days.",
   "privacyPolicyTitle": "Privacy policy",
   "termsOfService": "Terms of service",
-  "profSampleDriver": "Sample driver profile",
-  "profDemoNoVerified": "Demo — no verified account",
   "myBank": "My bank",
   "logOut": "Log out",
-  "logOutQ": "Log out?",
-  "profLogOutClears": "Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.",
   "stay": "Stay",
-  "profCouldNotClear": "Could not clear local data. You are still signed in. Please retry.",
   "minutesAgo": "{minutes} min ago",
   "@minutesAgo": {
     "placeholders": {
@@ -2766,9 +2705,23 @@
   "selectCountry": "Select Country",
   "searchCountry": "Search Country",
   "moveWithin100MOfPickup": "Move within {meters} m of the pickup to arrive.",
-  "@moveWithin100MOfPickup": {"description": "BQ-V42: the Arrive hint; meters = the trip's terms.autoArriveMeters (contract v0.18.93, admin setting per zone), 100 when the server sends none.", "placeholders": {"meters": {"type": "int"}}},
+  "@moveWithin100MOfPickup": {
+    "description": "BQ-V42: the Arrive hint; meters = the trip's terms.autoArriveMeters (contract v0.18.93, admin setting per zone), 100 when the server sends none.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
   "moveWithin100MOfStop": "Move within {meters} m of the stop to arrive.",
-  "@moveWithin100MOfStop": {"description": "BQ-V42: the Arrive hint at a middle stop; meters = the trip's terms.autoArriveMeters, 100 when the server sends none.", "placeholders": {"meters": {"type": "int"}}},
+  "@moveWithin100MOfStop": {
+    "description": "BQ-V42: the Arrive hint at a middle stop; meters = the trip's terms.autoArriveMeters, 100 when the server sends none.",
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
   "recordAudioStarting": "starting…",
   "photoTooLargeForDevice": "Photo is too large to keep on this device.",
   "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first.",
@@ -2785,10 +2738,6 @@
   "myFleet": "My fleet",
   "notifCouldNotLoad": "Couldn’t load your notifications.",
   "notifNone": "No notifications yet. Fleet invitations and answers show here.",
-  "profLiveNoNameYet": "Your details are not sent yet",
-  "@profLiveNoNameYet": {
-    "description": "Profile header (live): profLiveNoNameYet"
-  },
   "message": "Message",
   "swTripStatusDraft": "Draft",
   "@swTripStatusDraft": {
@@ -4467,7 +4416,6 @@
   },
   "supportWriteLocalDraft": "Write a local draft",
   "supportSaveLocalReply": "Save local reply",
-  "helpCenter": "Help center",
   "chatClosedAfterTrip": "The chat is closed after the trip",
   "chatLocalDemo": "Local demo chat · messages are not sent to the rider.",
   "chatSendMessageHint": "Send message…",

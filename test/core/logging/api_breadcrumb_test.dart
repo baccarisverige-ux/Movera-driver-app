@@ -10,6 +10,8 @@ import 'package:movera/core/logging/crash_breadcrumbs.dart';
 /// once dropped these calls from api_client.dart and no test noticed).
 void main() {
   test('a failed API call leaves a network breadcrumb, ids out', () async {
+    final saved = CrashBreadcrumbs.instance;
+    addTearDown(() => CrashBreadcrumbs.instance = saved);
     CrashBreadcrumbs.instance = CrashBreadcrumbs();
     final api = ApiClient(
       client: MockClient((request) async => http.Response('{}', 503)),
