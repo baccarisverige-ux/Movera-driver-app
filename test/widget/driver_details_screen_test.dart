@@ -17,7 +17,9 @@ import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
+
 import 'dart:async';
+
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -285,6 +287,25 @@ void main() {
     expect(find.byKey(const ValueKey('details-sign-out')), findsNothing);
     expect(find.byKey(const ValueKey('driver-country-screen')), findsOneWidget);
     expect(scoped.logouts, isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('review #686: Back, a new country on the step, Continue: the '
+      'form shows and sends the new country (not the draft\'s)', (
+    tester,
+  ) async {
+    await pumpScoped(tester);
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await _settle(tester);
+    await tester.tap(find.byKey(const ValueKey('country-FR')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('country-continue')));
+    await _settle(tester);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(DriverDetailsScreen), findsOneWidget);
+    expect(find.text(tr.acctCountryFrance), findsOneWidget);
+    expect(find.text('Paris'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

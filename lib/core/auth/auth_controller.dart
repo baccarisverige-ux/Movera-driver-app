@@ -115,11 +115,11 @@ class AuthController {
 
   /// Contract v0.15.0 (decision 6): the test numbers, test builds only.
 
-  /// Ends the session on the server and on this device.
   /// Sessions saved by a sign-in on this device (review #683: a late
   /// sign-out never touches a newer session).
   int get signInCount => _auth.signInCount;
 
+  /// Ends the session on the server and on this device.
   Future<void> signOut() async {
     final signIns = _auth.signInCount;
     // v0.18.49 §71 (owner Q8): the server first; a refusal (a current trip,

@@ -170,8 +170,9 @@ class AuthRepository {
         refresh.isEmpty) {
       throw StateError('Sign-in response did not contain valid tokens.');
     }
-    await _tokens.save(access: access, refresh: refresh);
+    // Counted before the save, so a late sign-out never clears it mid-save.
     _signIns++;
+    await _tokens.save(access: access, refresh: refresh);
     final actor = response['actor'];
     final expiresIn = response['expiresIn'];
     return DriverSignInResult(

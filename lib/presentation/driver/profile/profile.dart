@@ -5,7 +5,9 @@ export 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
+
 import 'dart:async';
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/widgets/owned_route_exit.dart';

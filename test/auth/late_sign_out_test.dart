@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/auth/token_store.dart';
 
@@ -68,4 +69,44 @@ void main() {
     await repository.signOut();
     expect(await tokens.readAccess(), isNull);
   });
+
+  test(
+    'the controller leaves a newer sign-in alone (no signed-out hook)',
+    () async {
+      final signOutAnswer = Completer<http.Response>();
+      final client = MockClient((request) async {
+        if (request.url.path == AuthRepository.signOutPath) {
+          return signOutAnswer.future;
+        }
+        return http.Response(
+          jsonEncode({'accessToken': 'n', 'refreshToken': 'nr'}),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+      final tokens = MemoryTokenStore()..save(access: 'o', refresh: 'or');
+      final repository = AuthRepository(
+        api: ApiClient(
+          client: client,
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: tokens,
+        ),
+        tokens: tokens,
+      );
+      var signedOut = 0;
+      final controller = AuthController(
+        repository: repository,
+        onSignedOut: () => signedOut++,
+      );
+      final late = controller.signOut();
+      await Future<void>.delayed(Duration.zero);
+      await repository.verify('+46701234567', 'otp-1', '1234');
+      controller.signedInPhone = '+46701234567';
+      signOutAnswer.complete(http.Response('{}', 200));
+      await late;
+      expect(signedOut, 0);
+      expect(controller.signedInPhone, '+46701234567');
+      expect(await tokens.readAccess(), 'n');
+    },
+  );
 }

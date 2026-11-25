@@ -1,5 +1,6 @@
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/widgets/country_flag.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -207,7 +208,14 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       fill(_joinOwner, 'joinOwner');
       fill(_joinEmail, 'joinEmail');
       final country = text('country');
-      if (country != null && _open(country)) {
+      // Review #686 (MUST): the country saved by the step (the account)
+      // wins over an older draft's.
+      final stepCountry = widget.account.account?.country;
+      if (country != null &&
+          _open(country) &&
+          (stepCountry == null ||
+              stepCountry.isEmpty ||
+              stepCountry == country)) {
         _country = country;
         _cityId = _onlyCity(country);
       }
@@ -478,6 +486,9 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     if (_countryStepReachable) {
       // The popup said the changes are lost: the draft goes with them.
       if (edited) await _draft.clear();
+      // The gate's (or the sign-in flow's) route is replaced; [onDone] is
+      // carried to the form the country step reopens, as
+      // auth_navigation's _openDetails removes routes too.
       if (!mounted) return;
       _openCountryStep();
       return;
@@ -582,7 +593,8 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       }
       return;
     } catch (_) {
-      // Timed out or failed: step 1 is right all the same.
+      // Timed out or failed: step 1. (A "on a trip" refusal that comes
+      // after the 8 s cap is not shown; known since #683.)
     }
     if (!mounted) return;
     final signIn = driverRootAfterSignOut(scope);
