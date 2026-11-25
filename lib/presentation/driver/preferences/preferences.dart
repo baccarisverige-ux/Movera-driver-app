@@ -431,7 +431,9 @@ class _PreferencesState extends State<Preferences> {
                 children: [
                   LayoutBuilder(
                     builder: (context, box) {
-                      // Keep the icon clear of the top-right box.
+                      // Keep the icon clear of the top-right box. Cards are
+                      // always wider than 2 boxes (2-column grid or list).
+                      assert(box.maxWidth > 4 * (_boxSize + _boxInset));
                       final maxIconWidth = math.max(
                         24.0,
                         box.maxWidth - 2 * (_boxSize + _boxInset + 4),
@@ -440,57 +442,66 @@ class _PreferencesState extends State<Preferences> {
                         iconHeight * 124 / 68,
                         maxIconWidth,
                       );
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(
-                            category.icon,
-                            width: iconWidth,
-                            height: iconWidth * 68 / 124,
-                            colorFilter: ColorFilter.mode(
-                              selected ? _ink : _offInk,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Text(
-                              categoryNameText(category.title),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: selected ? _heading : _offInk,
-                                fontSize: compact ? 15 : 17,
-                                height: 1.25,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -0.4,
+                      return SizedBox(
+                        width: box.maxWidth,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              category.icon,
+                              width: iconWidth,
+                              height: iconWidth * 68 / 124,
+                              colorFilter: ColorFilter.mode(
+                                selected ? _ink : _offInk,
+                                BlendMode.srcIn,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Text(
-                              category.subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: selected ? _text : _offInk,
-                                fontSize: compact ? 11 : 12,
-                                height: 1.25,
-                                fontWeight: FontWeight.w400,
-                                letterSpacing: -0.2,
+                            const SizedBox(height: 4),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              child: Text(
+                                categoryNameText(category.title),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: selected ? _heading : _offInk,
+                                  fontSize: compact ? 15 : 17,
+                                  height: 1.25,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.4,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                        ],
+                            const SizedBox(height: 3),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              child: Text(
+                                category.subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: selected ? _text : _offInk,
+                                  fontSize: compact ? 11 : 12,
+                                  height: 1.25,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                          ],
+                        ),
                       );
                     },
                   ),
+                  // The container above has 6 px vertical padding, so the
+                  // box sits _boxInset from the card's top edge.
                   Positioned(
                     top: _boxInset - 6,
                     right: _boxInset,

@@ -105,6 +105,17 @@ int _expectNoOverlap(WidgetTester tester, String reason) {
         );
       }
     }
+    // The icon and the title stay centred in the card (look unchanged).
+    for (final type in [SvgPicture, Text]) {
+      final c = tester.getRect(
+        find.descendant(of: card, matching: find.byType(type)).first,
+      );
+      expect(
+        (c.center.dx - cardRect.center.dx).abs(),
+        lessThan(1.5),
+        reason: '$reason: $type not centred',
+      );
+    }
   }
   return boxes.length;
 }
