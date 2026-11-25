@@ -15,6 +15,14 @@ class AuthRepository {
   final ApiClient _api;
   final TokenStore _tokens;
 
+  /// Review #683 (SHOULD): counts the sessions saved by a sign-in on this
+  /// device. A sign-out that finishes after a newer sign-in (the details
+  /// screen stops waiting after 8 s) must not clear that newer session.
+  int _signIns = 0;
+
+  /// See [_signIns].
+  int get signInCount => _signIns;
+
   static const requestPath = '/api/v1/auth/otp/request';
   static const verifyPath = '/api/v1/auth/otp/verify';
   static const providerPath = '/api/v1/auth/provider';
@@ -163,6 +171,7 @@ class AuthRepository {
       throw StateError('Sign-in response did not contain valid tokens.');
     }
     await _tokens.save(access: access, refresh: refresh);
+    _signIns++;
     final actor = response['actor'];
     final expiresIn = response['expiresIn'];
     return DriverSignInResult(
@@ -232,6 +241,7 @@ class AuthRepository {
   /// it stays here too (the tokens are kept) and [SignOutOnTrip] is thrown.
   /// Any other failure still clears this phone.
   Future<void> signOut() async {
+    final signIns = _signIns;
     try {
       if (await hasSession()) await _api.post(signOutPath);
     } on ApiError catch (error) {
@@ -245,6 +255,9 @@ class AuthRepository {
         name: 'auth',
       );
     }
+    // Review #683: a newer sign-in overtook this late sign-out; its
+    // session stays.
+    if (_signIns != signIns) return;
     await _tokens.clear();
   }
 }

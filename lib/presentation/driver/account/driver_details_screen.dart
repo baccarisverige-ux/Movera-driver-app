@@ -39,7 +39,8 @@ import 'package:movera/widgets/keep_above_keyboard.dart';
 /// Round 4b additions: the phone is shown read-only; Apple / Google
 /// prefill the names and e-mail (editable); picking the language switches
 /// the app at once; the company number is checked per country; a draft is
-/// kept on the phone while the app is closed; Back signs out (step 1);
+/// kept on the phone while the app is closed; Back opens the country step
+/// (Log out signs out);
 /// and Profile opens the same screen in [editing] mode while the account
 /// is on hold (a resend replaces the details).
 class DriverDetailsScreen extends StatefulWidget {
@@ -74,7 +75,7 @@ class DriverDetailsScreen extends StatefulWidget {
   /// fields start from the account.
   final bool editing;
 
-  /// What Back does; null in the sign-in flow signs out (step 1).
+  /// What Back does; null in the sign-in flow: the country step.
   final VoidCallback? onBack;
 
   /// The draft store (tests hand in one over a memory settings store).
@@ -456,17 +457,15 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     }
   }
 
-  /// Back on step 3 is the way out of the sign-in: the session ends and
-  /// step 1 comes back (the draft stays on this phone until the sign-out
-  /// clears local data).
+  /// Owner 2026-11-25 ("Page précédente (pays)"): Back on step 3 goes to
+  /// the step before, "Which country do you work in?", and the driver stays
+  /// signed in; with edited fields "Leave without saving?" first. Only the
+  /// Log out button signs out. An account that can no longer change its
+  /// country (approved: no country step) keeps the old way out: Back asks
+  /// "Leave sign-up?" and signs out.
   Future<void> _back() async {
     // Bug 2026-11-25: Back while sending says so instead of doing nothing.
-    if (_busy) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(tr.pleaseWait)));
-      return;
-    }
+    if (_busy) return _pleaseWait();
     if (_leaving) return;
     final edited = _edited;
     if (edited && !await confirmLeaveWithoutSaving(context)) return;
@@ -476,39 +475,104 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       onBack();
       return;
     }
-    final leave = edited
-        ? true
-        : await showDialog<bool>(
-            context: context,
-            builder: (dialog) => MoveraDialogTheme(
-              child: AlertDialog(
-                backgroundColor: Colors.white,
-                title: Text(tr.acctLeaveSignUpQ),
-                content: Text(tr.acctLeaveSignUpBody),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialog).pop(false),
-                    child: Text(tr.stay),
+    if (_countryStepReachable) {
+      // The popup said the changes are lost: the draft goes with them.
+      if (edited) await _draft.clear();
+      if (!mounted) return;
+      _openCountryStep();
+      return;
+    }
+    if (!edited && !await _confirmLogOut()) return;
+    await _signOut();
+  }
+
+  /// The explicit Log out button (sign-in flow only). Owner 2026-11-25
+  /// ("Si déconnecter donc demande déconnecter sans modifier"): with
+  /// edited fields "Log out without saving?" first; otherwise the usual
+  /// log-out question.
+  Future<void> _logOut() async {
+    if (_busy) return _pleaseWait();
+    if (_leaving) return;
+    final ok = _edited
+        ? await confirmLogOutWithoutSaving(context)
+        : await _confirmLogOut();
+    if (!ok || !mounted) return;
+    await _signOut();
+  }
+
+  void _pleaseWait() {
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text(tr.pleaseWait)));
+  }
+
+  /// The sign-in flow with an account that may still change its country.
+  bool get _countryStepReachable =>
+      !widget.editing &&
+      widget.onBack == null &&
+      (widget.account.account?.canSendDetails ?? false);
+
+  /// The country step in place of this screen; Continue there opens this
+  /// form again (the same way on: [DriverDetailsScreen.onDone]).
+  void _openCountryStep() {
+    final w = widget;
+    Navigator.of(context, rootNavigator: true).pushReplacement(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: 'driver-country'),
+        builder: (_) => driverCountryScreen(
+          account: w.account,
+          selected: _country,
+          onDone: (context, _) =>
+              Navigator.of(context, rootNavigator: true).pushReplacement(
+                MaterialPageRoute<void>(
+                  settings: const RouteSettings(name: 'driver-details'),
+                  builder: (_) => driverDetailsScreen(
+                    account: w.account,
+                    phone: w.phone,
+                    prefill: w.prefill,
+                    onDone: w.onDone,
                   ),
-                  FilledButton(
-                    key: const ValueKey('details-sign-out'),
-                    onPressed: () => Navigator.of(dialog).pop(true),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AccountStyle.ink,
-                    ),
-                    child: Text(tr.logOut),
-                  ),
-                ],
+                ),
               ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _confirmLogOut() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => MoveraDialogTheme(
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(tr.acctLeaveSignUpQ),
+          content: Text(tr.acctLeaveSignUpBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialog).pop(false),
+              child: Text(tr.stay),
             ),
-          );
-    if (leave != true || !mounted) return;
+            FilledButton(
+              key: const ValueKey('details-sign-out'),
+              onPressed: () => Navigator.of(dialog).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AccountStyle.ink),
+              child: Text(tr.logOut),
+            ),
+          ],
+        ),
+      ),
+    );
+    return leave == true;
+  }
+
+  Future<void> _signOut() async {
+    if (!mounted) return;
     setState(() => _leaving = true);
     final scope = DriverRuntimeScope.maybeOf(context);
     try {
       // Bug 2026-11-25 (TestFlight build 12, iPad): Back froze the screen
-      // while a slow sign-out never answered; the tokens are cleared first,
-      // so after 8 s step 1 opens all the same.
+      // while a slow sign-out never answered; after 8 s step 1 opens all
+      // the same (a late finish never touches a newer sign-in, review #683).
       await scope?.logout?.call().timeout(const Duration(seconds: 8));
     } on SignOutOnTrip {
       // v0.18.49 §71 (owner Q8): refused for a current trip; still signed in.
@@ -518,8 +582,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       }
       return;
     } catch (_) {
-      // The tokens are gone either way (AuthController.signOut clears
-      // them before anything else can fail); step 1 is right.
+      // Timed out or failed: step 1 is right all the same.
     }
     if (!mounted) return;
     final signIn = driverRootAfterSignOut(scope);
@@ -840,6 +903,20 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
             onPressed: _submit,
           ),
         ),
+        // Owner 2026-11-25: Back goes to the country step; signing out is
+        // this button only (sign-in flow).
+        if (!widget.editing && widget.onBack == null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Center(
+              child: TextButton(
+                key: const ValueKey('details-log-out'),
+                onPressed: _leaving ? null : _logOut,
+                style: TextButton.styleFrom(foregroundColor: AccountStyle.ink),
+                child: Text(tr.logOut),
+              ),
+            ),
+          ),
       ],
     );
   }
