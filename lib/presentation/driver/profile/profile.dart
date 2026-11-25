@@ -1,3 +1,6 @@
+// v0.18.162: the country step loads with this deferred part (web budget:
+// no new deferred library in the first download).
+export 'package:movera/presentation/driver/account/driver_country_screen.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';

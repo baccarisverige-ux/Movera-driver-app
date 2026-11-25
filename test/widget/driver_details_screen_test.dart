@@ -16,6 +16,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Round 4: the details screen after the first sign-in, against a fake
@@ -26,6 +27,7 @@ class _Server {
   /// A `400 invalid_request` reason to answer with, or null to accept.
   final String? refuse;
   final List<Map<String, dynamic>> bodies = [];
+  final List<String> countries = [];
 
   http.Client get client => MockClient((request) async {
     final body = jsonDecode(request.body) as Map<String, dynamic>;
@@ -35,6 +37,21 @@ class _Server {
       status,
       headers: {'content-type': 'application/json'},
     );
+    // v0.18.162: PUT /driver/country (the country step).
+    if (request.url.path == DriverAccountRepository.countryPath) {
+      countries.add(body['country'] as String);
+      return json(200, {
+        'driverId': 'drv_1',
+        'accountStatus': 'pending',
+        'onlineStatus': 'offline',
+        'firstName': '',
+        'country': body['country'],
+        'zoneIds': [],
+        'categoryIds': [],
+        'documents': [],
+        'version': 2,
+      });
+    }
     if (request.url.path != DriverAccountRepository.onboardingPath) {
       return json(404, {'code': 'not_found', 'message': 'x'});
     }
@@ -154,6 +171,7 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
+  setUpAll(loadDeferredScreens);
   testWidgets('empty fields and an under-age date are said under the right '
       'field, nothing is sent', (tester) async {
     final server = _Server();
@@ -173,36 +191,31 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('the country picker shows the flags, Tunisia as coming soon '
-      'and not pickable; the city follows the country', (tester) async {
-    await _pump(tester, _Server());
+  testWidgets('v0.18.162: the country is read-only here; tapping it opens '
+      'the country step (open countries only, saved by the server) and the '
+      'city follows the country', (tester) async {
+    final server = _Server();
+    await _pump(tester, server);
     await _tap(tester, 'details-country');
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-SE')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-FR')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-TN')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('country-FR')));
     await tester.pump();
-    expect(find.text(tr.acctChooseCountry), findsOneWidget);
-    expect(find.byKey(const ValueKey('country-flag-SE')), findsWidgets);
-    expect(find.byKey(const ValueKey('country-flag-FR')), findsOneWidget);
-    expect(find.byKey(const ValueKey('country-flag-TN')), findsOneWidget);
-    expect(find.text(tr.acctComingSoon.toUpperCase()), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('pick-country-TN')));
-    await tester.pump();
-    // The sheet stays open, Tunisia was not taken.
-    expect(find.text(tr.acctChooseCountry), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('pick-country-FR')));
-    await tester.pump();
-    await tester.pump();
-    expect(find.text(tr.acctChooseCountry), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('country-continue')));
+    await _settle(tester);
+    expect(server.countries, ['FR']);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsNothing);
     expect(find.text(tr.acctCountryFrance), findsOneWidget);
     expect(find.text('Paris'), findsOneWidget);
     expect(find.text('Stockholm län'), findsNothing);
-    // The city picker lists the country's cities without flags.
     await _tap(tester, 'details-city');
     await tester.pump();
     expect(find.byKey(const ValueKey('pick-city-paris')), findsOneWidget);
     expect(find.byKey(const ValueKey('pick-city-stockholm_lan')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('country-flag-FR')),
-      findsOneWidget,
-    ); // only the box, not the sheet
     await tester.tap(find.byKey(const ValueKey('pick-city-paris')));
     await tester.pump();
     await tester.pumpWidget(const SizedBox.shrink());

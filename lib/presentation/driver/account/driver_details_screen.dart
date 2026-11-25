@@ -3,6 +3,7 @@ import 'package:movera/widgets/country_flag.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/details_draft.dart';
@@ -257,8 +258,20 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     });
   }
 
+  /// v0.18.162 (`driverCountryFirst`): the country was picked at the step
+  /// before this form and is shown read-only; tapping it opens the same
+  /// step again (saved by the server) while the account is not approved.
   Future<void> _pickCountry() async {
-    final picked = await showDetailsCountryPicker(context, selected: _country);
+    if (!(widget.account.account?.canSendDetails ?? false)) return;
+    final picked = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => driverCountryScreen(
+          account: widget.account,
+          selected: _country,
+          onDone: (context, saved) => Navigator.of(context).pop(saved.country),
+        ),
+      ),
+    );
     if (picked == null || !mounted || !_open(picked)) return;
     setState(() {
       _country = picked;

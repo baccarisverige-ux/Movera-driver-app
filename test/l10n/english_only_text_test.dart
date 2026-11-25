@@ -36,6 +36,10 @@ const _dataFiles = {
   'lib/core/auth/phone_country_list.dart',
   'lib/core/content/driver_app_texts.dart',
   'lib/core/history/trip_history.dart',
+  // v0.18.162 driver country first: the screen's texts are written in en, sv
+  // and fr in the file itself, so they load with the deferred screen and the
+  // first web download does not grow (web budget).
+  'lib/presentation/driver/account/driver_country_screen.dart',
 };
 
 const _allowed = <String, Set<String>>{
