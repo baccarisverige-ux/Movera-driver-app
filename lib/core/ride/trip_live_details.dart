@@ -343,7 +343,8 @@ class TripTerms {
   /// Q2: a rider cancel after the driver arrived is charged as a no-show.
   final bool cancelAfterArrivedIsNoShow;
 
-  /// Status item 4: how far the rider may move the pickup (default 200 m).
+  /// Status item 4: how far the rider may move the pickup (default 300 m since
+  /// v0.18.160, was 200 m).
   final int maxPickupMoveMeters;
 
   /// Contract v0.18.8 `terms.stopFreeWaitMin`: free minutes at each middle
