@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/logging/crash_breadcrumbs.dart';
 
 enum DriverLogLevel { info, warn, error }
 
@@ -68,6 +69,22 @@ class DriverLog {
     sink(
       DriverLogRecord(level: DriverLogLevel.warn, name: name, message: message),
     );
+    _breadcrumb(name, message);
+  }
+
+  /// v0.18.158 (`contract.json#crashCatcher.breadcrumbs`): a warning or error
+  /// line is a `log` breadcrumb (ids out, scrubbed); API lines are added by
+  /// the API client as `network` breadcrumbs.
+  static void _breadcrumb(String name, String message) {
+    if (name == 'api') return;
+    try {
+      CrashBreadcrumbs.instance.add(
+        'log',
+        CrashBreadcrumbs.withoutIds('$name: $message'),
+      );
+    } catch (_) {
+      // Never shown and never fatal: a crash report must not crash the app.
+    }
   }
 
   /// An uncaught framework or platform error (see installGlobalErrorHooks).
@@ -99,5 +116,6 @@ class DriverLog {
         stack: stack,
       ),
     );
+    _breadcrumb(name, message);
   }
 }
