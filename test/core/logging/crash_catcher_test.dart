@@ -10,7 +10,7 @@ import 'package:movera/core/logging/crash_files.dart';
 import 'package:movera/core/logging/crash_reports.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
-/// Owner 2026-11-24 "Add to admin all kind of crash" (contract v0.18.157
+/// Owner 2026-11-24 "Add to admin all kind of crash" (contract v0.18.158
 /// `contract.json#crashCatcher`), driver app. Rule 36: fails on main — no
 /// crash catcher, no native_crash / freeze / dart_error kind, no
 /// breadcrumbs, no outbox file and no crashReports.on switch.

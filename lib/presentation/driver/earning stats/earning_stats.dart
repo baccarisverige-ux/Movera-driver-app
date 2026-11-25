@@ -65,7 +65,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                     MediaQuery.textScalerOf(context).scale(ResSize.setSp(16)) +
                     24,
                 child: ListView.builder(
-                  physics: BouncingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   shrinkWrap: true,
                   clipBehavior: Clip.none,
                   scrollDirection: Axis.horizontal,
@@ -127,7 +127,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
             // Rides List
             Expanded(
               child: SingleChildScrollView(
-                physics: BouncingScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 child: Column(
                   children: [
                     Container(

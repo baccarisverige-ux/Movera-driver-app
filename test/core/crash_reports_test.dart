@@ -72,7 +72,7 @@ void main() {
     expect(body['appVersion'], '1.0.0');
     expect(body['build'], '1');
     expect(body['screen'], 'driver-home');
-    // v0.18.157 (contract.json#crashCatcher.kinds): an uncaught error is dart_error.
+    // v0.18.158 (contract.json#crashCatcher.kinds): an uncaught error is dart_error.
     expect(body['kind'], 'dart_error');
     expect(DateTime.parse(body['occurredAt'] as String).isUtc, isTrue);
     final error = body['error'] as String;

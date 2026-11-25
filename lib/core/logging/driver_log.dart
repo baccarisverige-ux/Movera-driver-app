@@ -72,7 +72,7 @@ class DriverLog {
     _breadcrumb(name, message);
   }
 
-  /// v0.18.157 (`contract.json#crashCatcher.breadcrumbs`): a warning or error
+  /// v0.18.158 (`contract.json#crashCatcher.breadcrumbs`): a warning or error
   /// line is a `log` breadcrumb (ids out, scrubbed); API lines are added by
   /// the API client as `network` breadcrumbs.
   static void _breadcrumb(String name, String message) {

@@ -69,7 +69,7 @@ class CrashReportSink {
   final Duration maxRetryDelay;
   final int maxAttempts;
 
-  /// v0.18.157 (`contract.json#crashCatcher.outbox`): every report is kept in
+  /// v0.18.158 (`contract.json#crashCatcher.outbox`): every report is kept in
   /// a file until the server answered 2xx / 4xx; [resendOutbox] sends what
   /// a previous run could not.
   CrashOutbox? outbox;
@@ -126,7 +126,7 @@ class CrashReportSink {
     // Contract v0.18.2 `auth.beforeSignIn`: a refused session (401) is not
     // an app fault and is never sent as an error report.
     if (_disposed || isUnauthorized(error)) return;
-    // v0.18.157 crashReports.on: the zone's switch off sends nothing.
+    // v0.18.158 crashReports.on: the zone's switch off sends nothing.
     if (!CrashReports.reportingEnabled) return;
     try {
       final now = _clock();
@@ -308,7 +308,7 @@ abstract final class CrashReports {
   static const kindCrash = 'crash';
   static const kindError = 'error';
 
-  /// v0.18.157 (`contract.json#crashCatcher.kinds`): an uncaught Dart error,
+  /// v0.18.158 (`contract.json#crashCatcher.kinds`): an uncaught Dart error,
   /// an unclean end found at the next launch, a frozen screen.
   static const kindDartError = 'dart_error';
   static const kindNativeCrash = 'native_crash';
@@ -321,15 +321,15 @@ abstract final class CrashReports {
     kindFreeze,
   };
 
-  /// v0.18.157 `crashReports.on`: the zone's switch (last known value; true
+  /// v0.18.158 `crashReports.on`: the zone's switch (last known value; true
   /// until a document says otherwise). Off: no crash report leaves the phone.
   static bool reportingEnabled = true;
 
-  /// v0.18.157: the fields every report carries (device, OS, breadcrumbs),
+  /// v0.18.158: the fields every report carries (device, OS, breadcrumbs),
   /// given by the crash catcher once it runs.
   static Map<String, Object?> Function()? context;
 
-  /// v0.18.157: the trip on screen and the zone the driver is in, when known.
+  /// v0.18.158: the trip on screen and the zone the driver is in, when known.
   static String? currentTripId;
   static String? currentZoneId;
 

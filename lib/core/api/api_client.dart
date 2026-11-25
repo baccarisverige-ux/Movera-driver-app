@@ -49,7 +49,7 @@ class ApiClient {
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
   /// G30 (v0.18.76): `GET /driver/reminders` sends the line
   /// `email_not_verified` only to apps at 0.18.76 or later.
-  static const contractVersion = '0.18.157';
+  static const contractVersion = '0.18.158';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);
@@ -275,7 +275,7 @@ class ApiClient {
         name: 'api',
       );
       if (response.statusCode >= 400) {
-        // v0.18.157: a failed call is a network breadcrumb (no body).
+        // v0.18.158: a failed call is a network breadcrumb (no body).
         CrashBreadcrumbs.instance.network(method, path, response.statusCode);
         // v0.18.154 P16c: 426 app_update_required shows "Update Movera to
         // continue" (never while a trip is active).

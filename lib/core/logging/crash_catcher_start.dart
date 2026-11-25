@@ -4,7 +4,7 @@ import 'package:movera/core/logging/crash_files.dart';
 import 'package:movera/core/logging/crash_reports.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
-/// Owner 2026-11-24 "Add to admin all kind of crash" (contract v0.18.157
+/// Owner 2026-11-24 "Add to admin all kind of crash" (contract v0.18.158
 /// `contract.json#crashCatcher`): starts the crash catcher of a live build
 /// next to its [reports] sink: the unclean end of the last run is reported,
 /// the running marker and the freeze watch start, the main isolate's own

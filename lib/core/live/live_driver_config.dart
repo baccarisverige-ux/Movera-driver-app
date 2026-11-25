@@ -376,7 +376,7 @@ class LiveDriverConfig extends ChangeNotifier {
     // v0.18.154 P16c (contract.json#appUpdate): the zone's minimum app
     // version and store links of the document now in use.
     if (used) MinAppVersion.accept(document['appUpdate']);
-    // v0.18.157 (contract.json#crashCatcher.setting): the zone's crash
+    // v0.18.158 (contract.json#crashCatcher.setting): the zone's crash
     // reports switch of the document now in use (missing = on).
     if (used) {
       CrashCatcher.acceptSwitch(
