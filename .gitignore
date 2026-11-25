@@ -47,3 +47,4 @@ app.*.map.json
 # Source snapshots belong in GitHub Releases, not in the tree.
 *.zip
 /coverage/
+ios/Flutter/GoogleSignIn.xcconfig

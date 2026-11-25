@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+import 'provider_sdk.dart'
+    if (dart.library.js_interop) 'provider_sdk_web.dart'
+    deferred as sdk;
+import 'provider_sign_in_config.dart';
 
 /// What the provider's SDK gave the app: the identity token the server
 /// verifies, and the name Apple shows only the first time (sent as `name`).
@@ -16,8 +19,8 @@ class ProviderIdentityToken {
   final String? name;
 }
 
-/// The provider's SDK is not usable here: the web build, a desktop host,
-/// or Google without the native configuration. The button then shows
+/// The provider's SDK is not usable here: a desktop host, or a build
+/// without that provider's client id (ProviderSignInConfig). The button then shows
 /// "Coming soon", like a server without provider keys.
 class ProviderUnavailable implements Exception {
   const ProviderUnavailable(this.provider, [this.cause]);
@@ -34,23 +37,31 @@ abstract class ProviderTokenSource {
   Future<ProviderIdentityToken?> obtain(String provider);
 }
 
-/// The real SDKs: `sign_in_with_apple` on iOS and macOS, `google_sign_in`
-/// on Android and iOS. Everything else is [ProviderUnavailable]; nothing
+/// The real SDKs: `sign_in_with_apple` (native sheet on iOS and macOS, the
+/// Services ID web flow on the web and Android) and `google_sign_in`
+/// (Android, iOS, and Google One Tap on the web), loaded on first use
+/// (provider_sdk.dart, deferred). A provider whose client id
+/// was not given at build time ([ProviderSignInConfig]) answers
+/// [ProviderUnavailable], so its button keeps saying "coming soon"; nothing
 /// here throws past the sign-in screen's error handling.
 class PlatformProviderTokenSource implements ProviderTokenSource {
-  PlatformProviderTokenSource();
+  PlatformProviderTokenSource({
+    ProviderSignInConfig config = ProviderSignInConfig.fromEnvironment,
+    bool? isWeb,
+    TargetPlatform? platform,
+    Duration webGoogleTimeout = const Duration(minutes: 2),
+  }) : _config = config,
+       _isWeb = isWeb,
+       _platform = platform,
+       _webGoogleTimeout = webGoogleTimeout;
 
-  bool _googleReady = false;
+  final ProviderSignInConfig _config;
+  final bool? _isWeb;
+  final TargetPlatform? _platform;
+  final Duration _webGoogleTimeout;
 
-  static bool get _apple =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.macOS);
-
-  static bool get _google =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS);
+  bool get _web => _isWeb ?? kIsWeb;
+  TargetPlatform get _target => _platform ?? defaultTargetPlatform;
 
   @override
   Future<ProviderIdentityToken?> obtain(String provider) => switch (provider) {
@@ -59,70 +70,32 @@ class PlatformProviderTokenSource implements ProviderTokenSource {
     _ => throw ArgumentError.value(provider, 'provider'),
   };
 
-  Future<ProviderIdentityToken?> _obtainApple() async {
-    if (!_apple) throw const ProviderUnavailable('apple');
-    final AuthorizationCredentialAppleID credential;
+  Future<void> _loadSdk(String provider) async {
     try {
-      if (!await SignInWithApple.isAvailable()) {
-        throw const ProviderUnavailable('apple');
-      }
-      credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-    } on SignInWithAppleAuthorizationException catch (error) {
-      if (error.code == AuthorizationErrorCode.canceled) return null;
-      throw ProviderUnavailable('apple', error);
-    } on ProviderUnavailable {
-      rethrow;
+      await sdk.loadLibrary();
     } catch (error) {
-      throw ProviderUnavailable('apple', error);
+      throw ProviderUnavailable(provider, error);
     }
-    final token = credential.identityToken;
-    if (token == null || token.isEmpty) {
-      throw const ProviderUnavailable('apple', 'no identity token');
+  }
+
+  Future<ProviderIdentityToken?> _obtainApple() async {
+    if (!_config.appleAvailable(web: _web, platform: _target)) {
+      throw const ProviderUnavailable('apple');
     }
-    final name = [
-      credential.givenName,
-      credential.familyName,
-    ].whereType<String>().map((s) => s.trim()).where((s) => s.isNotEmpty);
-    return ProviderIdentityToken(
-      provider: 'apple',
-      idToken: token,
-      name: name.isEmpty ? null : name.join(' '),
-    );
+    await _loadSdk('apple');
+    return sdk.obtainApple(_config, web: _web, target: _target);
   }
 
   Future<ProviderIdentityToken?> _obtainGoogle() async {
-    if (!_google) throw const ProviderUnavailable('google');
-    final signIn = GoogleSignIn.instance;
-    try {
-      if (!_googleReady) {
-        await signIn.initialize();
-        _googleReady = true;
-      }
-      if (!signIn.supportsAuthenticate()) {
-        throw const ProviderUnavailable('google');
-      }
-      final account = await signIn.authenticate();
-      final token = account.authentication.idToken;
-      if (token == null || token.isEmpty) {
-        throw const ProviderUnavailable('google', 'no identity token');
-      }
-      return ProviderIdentityToken(
-        provider: 'google',
-        idToken: token,
-        name: account.displayName,
-      );
-    } on GoogleSignInException catch (error) {
-      if (error.code == GoogleSignInExceptionCode.canceled) return null;
-      throw ProviderUnavailable('google', error);
-    } on ProviderUnavailable {
-      rethrow;
-    } catch (error) {
-      throw ProviderUnavailable('google', error);
+    if (!_config.googleAvailable(web: _web, platform: _target)) {
+      throw const ProviderUnavailable('google');
     }
+    await _loadSdk('google');
+    return sdk.obtainGoogle(
+      _config,
+      web: _web,
+      target: _target,
+      webGoogleTimeout: _webGoogleTimeout,
+    );
   }
 }
