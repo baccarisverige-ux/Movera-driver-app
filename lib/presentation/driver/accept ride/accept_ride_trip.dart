@@ -927,7 +927,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     await _advanceRide();
   }
 
-  /// v0.18.58 §80: "You are {m} m from the destination – the trip ends
+  /// v0.18.58 §80: "You are {m} from the destination – the trip ends
   /// early" (from the preview's distanceToDropoffMeters) above the G8 Q2
   /// price note; null when the trip is not ending early.
   String? _earlyEndNote(CompletePreview? preview) {
@@ -938,7 +938,11 @@ extension _AcceptRideTrip on _AcceptRideState {
       false => tr.g8BookedPriceStands,
       null => null,
     };
-    final lines = [if (far != null) tr.arrivedFarWarning(far), ?price];
+    final lines = [
+      if (far != null)
+        tr.arrivedFarWarning(formatEarlyEndDistance(far, tr.localeName)),
+      ?price,
+    ];
     return lines.isEmpty ? null : lines.join('\n');
   }
 

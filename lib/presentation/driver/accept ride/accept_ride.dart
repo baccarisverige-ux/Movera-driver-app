@@ -4,6 +4,7 @@ import 'package:movera/presentation/driver/accept ride/meter_change_notice.dart'
 import 'package:movera/core/ride/meter_price_watch.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
+import 'package:movera/core/live/early_end_distance.dart';
 import 'package:movera/core/live/live_location_share.dart';
 import 'package:movera/presentation/driver/accept ride/driver_live_location_card.dart';
 import 'package:movera/core/contracts/category_name_text.dart';

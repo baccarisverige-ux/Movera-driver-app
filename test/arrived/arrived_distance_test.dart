@@ -49,15 +49,15 @@ void main() {
 
   test('the warning in en, sv and fr (contract arrivedDistance.texts)', () {
     expect(
-      lookupAppLocalizations(const Locale('en')).arrivedFarWarning(940),
+      lookupAppLocalizations(const Locale('en')).arrivedFarWarning('940 m'),
       'You are 940 m from the destination – the trip ends early',
     );
     expect(
-      lookupAppLocalizations(const Locale('sv')).arrivedFarWarning(940),
+      lookupAppLocalizations(const Locale('sv')).arrivedFarWarning('940 m'),
       'Du är 940 m från destinationen – resan avslutas tidigt',
     );
     expect(
-      lookupAppLocalizations(const Locale('fr')).arrivedFarWarning(940),
+      lookupAppLocalizations(const Locale('fr')).arrivedFarWarning('940 m'),
       'Vous êtes à 940 m de la destination – la course se termine plus tôt',
     );
   });
