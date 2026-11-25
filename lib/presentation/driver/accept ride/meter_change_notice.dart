@@ -68,7 +68,9 @@ class MeterChangeNotice {
     _timer = null;
     final entry = _entry;
     _entry = null;
-    if (entry != null && entry.mounted) entry.remove();
+    // Always remove: an entry inserted in this same frame is not mounted
+    // yet, and skipping it left the banner stuck on the root overlay.
+    entry?.remove();
   }
 
   /// The screen goes: the notice goes with it.
