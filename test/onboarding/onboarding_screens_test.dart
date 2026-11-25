@@ -271,6 +271,21 @@ void main() {
         await tester.pumpAndSettle();
         expect(attempt, 2);
         expect(picker.calls, ['camera']);
+        // v0.18.164 (documents.reviewNeedsFile, owner "Yes, fix all 3"): both
+        // tries of the one picked photo carry the same Idempotency-Key, so a
+        // retry after a timeout never makes a second version.
+        final uploads = [
+          for (final r in server.requests)
+            if (r.url.path.endsWith(DriverAccountRepository.documentsPath)) r,
+        ];
+        expect(uploads, hasLength(2));
+        final keys = {
+          for (final r in uploads)
+            r.headers.entries
+                .firstWhere((e) => e.key.toLowerCase() == 'idempotency-key')
+                .value,
+        };
+        expect(keys, hasLength(1));
         expect(
           server.requests.last.bodyBytes.length,
           greaterThan(_photo.bytes.length),

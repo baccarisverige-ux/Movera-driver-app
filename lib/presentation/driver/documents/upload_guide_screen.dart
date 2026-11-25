@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -63,6 +64,12 @@ class UploadGuideScreen extends StatefulWidget {
 
 class _UploadGuideScreenState extends State<UploadGuideScreen> {
   PickedDocumentFile? _picked;
+
+  /// Contract v0.18.164 `documents.reviewNeedsFile` (owner 2026-11-25 "Yes,
+  /// fix all 3"): one Idempotency-Key per picked photo, so "Try again"
+  /// after a timeout never makes a second version (the server answers the
+  /// first upload again, shown as uploaded).
+  String? _uploadKey;
   bool _uploading = false;
   bool _cameraBlocked = false;
   String? _error;
@@ -157,6 +164,7 @@ class _UploadGuideScreenState extends State<UploadGuideScreen> {
     }
     setState(() {
       _picked = picked;
+      _uploadKey = ApiClient.randomKey();
       _cameraBlocked = false;
     });
     await _send();
@@ -178,6 +186,7 @@ class _UploadGuideScreenState extends State<UploadGuideScreen> {
         fileName: picked.fileName,
         mediaType: picked.mediaType,
         ownerId: widget.isCar ? widget.ownerId : null,
+        idempotencyKey: _uploadKey,
       );
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(

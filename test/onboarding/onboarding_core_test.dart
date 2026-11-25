@@ -168,7 +168,10 @@ void main() {
       // Booster Seat (child_seat, no rule of its own) also needs the base
       // year; before, a 2015 car still fitted it in France.
       expect(fits(fr, 2015, 4, 'petrol'), isEmpty);
-      expect(fits(fr, 2016, 4, 'petrol'), contains('economy'));
+      // v0.18.164: the FR age rule (6 years, hybrid/electric exempt) is the
+      // server's; its driver read raises minYear to the age year, so the
+      // app's base year (the "from {year}" text) follows with no app code.
+      expect(fits(fr, 2016, 4, 'hybrid'), contains('economy'));
       // XL needs 6 seats; Electric needs an electric car.
       expect(fits(se, 2023, 6, 'diesel'), contains('xl'));
       expect(fits(se, 2023, 4, 'diesel'), isNot(contains('xl')));

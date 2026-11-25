@@ -157,7 +157,7 @@ abstract final class DriverOnboardingRules {
       fr: 'Carte professionnelle VTC',
     ),
     'company_registration': DocumentTypeInfo(
-      owner: 'driver',
+      owner: 'fleet',
       kind: DocumentKind.file,
       en: 'Company registration',
       sv: 'Registreringsbevis (Bolagsverket)',
@@ -223,21 +223,21 @@ abstract final class DriverOnboardingRules {
       },
     ),
     'vtc_register_certificate': DocumentTypeInfo(
-      owner: 'driver',
+      owner: 'fleet',
       kind: DocumentKind.file,
       en: 'VTC operators register certificate',
       sv: 'Intyg från VTC-registret',
       fr: 'Certificat d’inscription au registre des exploitants VTC',
     ),
     'rc_pro_insurance': DocumentTypeInfo(
-      owner: 'driver',
+      owner: 'fleet',
       kind: DocumentKind.file,
       en: 'Professional liability insurance (RC pro)',
       sv: 'Ansvarsförsäkring (RC pro)',
       fr: 'Attestation RC professionnelle',
     ),
     'urssaf_certificate': DocumentTypeInfo(
-      owner: 'driver',
+      owner: 'fleet',
       kind: DocumentKind.file,
       en: 'URSSAF certificate',
       sv: 'URSSAF-intyg',

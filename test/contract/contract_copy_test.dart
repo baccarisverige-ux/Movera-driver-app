@@ -46,9 +46,9 @@ void main() {
   test('the copy is contract v0.18.162', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
-      contains('"version": "0.18.162"'),
+      contains('"version": "0.18.164"'),
     );
-    expect(TripTransitions.contractVersion, '0.18.162');
+    expect(TripTransitions.contractVersion, '0.18.164');
   });
 
   // v0.18.87 (owner 2026-11-13 "Movera commission is how much movera

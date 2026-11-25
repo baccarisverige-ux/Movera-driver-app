@@ -1,11 +1,11 @@
-# Movera API v0.18.162 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
+# Movera API v0.18.164 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
 openapi: 3.1.0
 info:
   title: Movera API
-  version: 0.18.162
+  version: 0.18.164
   description: '**Proposed contract — no backend exists yet.** One future backend serves the Rider (Flutter), Driver (Flutter)
     and Admin (React/TS) apps. Source of truth for names, enums, transitions, realtime and errors is `contract.json` + `CONTRACT.md`
-    v0.18.162 in this folder; this file must agree with them.
+    v0.18.164 in this folder; this file must agree with them.
 
 
     Wire rules: ids match `^[A-Za-z0-9_-]{1,64}$`; times are RFC 3339 UTC with `Z`; durations are integer seconds; money is
@@ -84,7 +84,7 @@ tags:
 - name: Admin · Finance
 x-contract:
   name: movera
-  version: 0.18.162
+  version: 0.18.164
   source: contract.json
 paths:
   /auth/otp/request:
@@ -21331,16 +21331,16 @@ paths:
         the country he works in on his first sign-in, before any of his data is made; his data then shows in the admin only
         under that country ("If he chooses France, his information goes in admin only in France... when admin clicks Sweden
         he doesn''t see him"). PUT /driver/country { country } (driver token) answers the Driver. country is one of driverOnboarding.countries
-        with open true (today SE, FR); a closed or unknown one is 400 country_not_open. It saves drivers.country and sets
-        drivers.cityId and drivers.zoneIds to the country''s first city and its zone (so the admin lists by country see him
-        at once and never under the old country). Saving the same country again changes nothing (no version bump; a missing
-        zone is filled). Only while Driver.accountStatus is pending or on_hold (before approval); after that 409 invalid_transition
-        reason details_locked (an admin changes it). A driver linked to a fleet cannot pick another country than the fleet''s:
-        409 conflict reason fleet_other_country (driverOnboarding.fleetInvitations.oneCountry); a fleet owner alone in his
-        fleet moves the fleet with him (Fleet.country, cityId and zoneId = the new country''s first city). A number a fleet
-        owner invited before it had an account gets the inviting fleet''s country at sign-in (drivers.country = Fleet.country,
-        zoneIds = [Fleet.zoneId]) when all its waiting invitations are from fleets of one country; it then never sees the
-        step (with invitations of two countries it picks, and joining a fleet of another country stays 409 fleet_other_country).'
+        with open true (today SE, FR); a closed or unknown one is 400 country_not_open. It saves drivers.country and, while
+        the driver has no zone, drivers.zoneIds = [the zone of the country''s first city] (so the admin lists by country see
+        him at once). Saving the same country again changes nothing (no version bump). Only while Driver.accountStatus is
+        pending or on_hold (before approval); after that 409 invalid_transition reason details_locked (an admin changes it).
+        A driver linked to a fleet cannot pick another country than the fleet''s: 409 conflict reason fleet_other_country
+        (driverOnboarding.fleetInvitations.oneCountry); a fleet owner alone in his fleet moves the fleet with him (Fleet.country,
+        cityId and zoneId = the new country''s first city). A number a fleet owner invited before it had an account gets the
+        inviting fleet''s country at sign-in (drivers.country = Fleet.country, zoneIds = [Fleet.zoneId]) when all its waiting
+        invitations are from fleets of one country; it then never sees the step (with invitations of two countries it picks,
+        and joining a fleet of another country stays 409 fleet_other_country).'
       tags:
       - Driver · Account
       x-actor:
@@ -21389,18 +21389,17 @@ paths:
         country, reason } (drivers.activate, as the driver status) answers the admin Driver view. The admin Driver detail
         page is the only place to change a driver''s country. An admin with zones (not "*") may change only a driver in his
         zones (a driver with no zone: any), and only to a country where he holds a zone; else 403 forbidden reason zone_out_of_scope.
-        country must be in driverOnboarding.countries and have a city (a closed country with no city yet, TN today, or an
-        unknown one is 400 country_not_open). reason 1-500 characters (missing 400 reason_required). A changed driver (expectedVersion)
-        is 409 version_mismatch. On a trip: 409 invalid_transition reason on_trip. An online driver is set offline. Fleet
-        rules as the step: a member of a fleet of another country 409 conflict reason fleet_other_country; a fleet owner with
-        other drivers in his fleet 409 fleet_other_country; a fleet owner alone moves the fleet (country, cityId, zoneId of
-        the new country''s first city). drivers.country, cityId and zoneIds = the new country''s first city and its zone (a
-        city of the old country is never kept). The cars he owns (the fleet''s cars for a fleet owner, else his own) are re-checked
-        against the new country''s car rules (vehicleRules): an approved car that breaks them goes back to pending (listed
-        in the audit entry''s carsBackToReview; the admin reviews it again) and no driver keeps it picked; a car that fits
-        stays approved. One admin audit entry action driver.country, target the driver, detail { from, to, reason, fleetMoved,
-        carsBackToReview[] }; none when nothing changed (the same country again). Version, trip and status checks run on the
-        locked driver row (fleet locked first).'
+        country must be in driverOnboarding.countries (open or closed; unknown 400 country_not_open). reason 1-500 characters
+        (missing 400 reason_required). A changed driver (expectedVersion) is 409 version_mismatch. On a trip: 409 invalid_transition
+        reason on_trip. An online driver is set offline. Fleet rules as the step: a member of a fleet of another country 409
+        conflict reason fleet_other_country; a fleet owner with other drivers in his fleet 409 fleet_other_country; a fleet
+        owner alone moves the fleet (country, cityId, zoneId of the new country''s first city; a country with no city yet
+        is 400 country_not_open for a fleet owner). drivers.country, cityId and zoneIds = the new country''s first city and
+        its zone (a city of the old country is never kept). The cars he owns (the fleet''s cars for a fleet owner, else his
+        own) are re-checked against the new country''s car rules (vehicleRules): an approved car that breaks them goes back
+        to pending (listed in the audit entry''s carsBackToReview; the admin reviews it again) and no driver keeps it picked;
+        a car that fits stays approved. One admin audit entry action driver.country, target the driver, detail { from, to,
+        reason, fleetMoved, carsBackToReview[] }.'
       tags:
       - Admin · People
       x-actor:
@@ -23457,6 +23456,28 @@ components:
           description: 'v0.18.84 (owner Q-M2 / Q-S5-5): Q-S5-5: Quote.walletDebt (Money in the quote''s currency; absent when
             that balance is ≥ 0) is information only, not in Quote.total and not a fare line: the rider app shows texts.quoteDebtLine
             under the price. The amount paid is the one read at payment.'
+        tripSeconds:
+          type: integer
+          minimum: 0
+          description: 'v0.18.163 (contract.json#liveTraffic): the drive time this price used, in seconds (live traffic when
+            routeSource is google). The rider app shows the server''s Quote.tripSeconds as the trip time (Select ride, the
+            search screen); its own straight-line minutes only when the quote has no tripSeconds (an older server). The contract
+            QuoteRequest never sent a duration; the old non-contract quote call no longer sends a placeholder 600 s (durationSeconds
+            is sent only when the app really has one). Absent from an older server.'
+        tripMeters:
+          type: integer
+          minimum: 0
+          description: 'v0.18.163 (contract.json#liveTraffic): the road distance this price used, in metres. Absent from an
+            older server.'
+        routeSource:
+          type: string
+          enum:
+          - google
+          - osrm
+          - estimate
+          description: 'v0.18.163 (contract.json#liveTraffic): Every route says where it came from: google (live traffic)
+            or estimate (straight line x roadFactor at pickupKmh); osrm stays a known value for older stored quotes only (the
+            server no longer asks OSRM). quotes.route_source keeps it (migration 0138 adds google). Absent from an older server.'
     RouteQuote:
       type: object
       description: 'Price for a route change after request; apply with PATCH /trips/{tripId}. Priced from the booking (owner
@@ -23635,6 +23656,17 @@ components:
             admin driver page list both: the approved one and, right after it, its renewal. The Home line of the approved
             one (expiring / expired) carries renewalStatus (in_review | rejected). With renewalStatus rejected the line also
             carries reviewNote = the admin''s note on the rejected renewal (why), so Home can show it.'
+        hasFile:
+          type: boolean
+          description: 'v0.18.164 (documents.reviewNeedsFile): true when a file is stored for this document (or renewal).
+            Absent from an older server (treat as unknown). v0.18.164 (owner 2026-11-25 "Yes, fix all 3", upload safety):
+            POST /admin/documents/{documentId}/review { decision: approved } of a document whose type has kind file (in its
+            country) and that has no stored file is 400 invalid_request, reason no_file; rejecting stays allowed. DocumentSummary.hasFile
+            (admin and driver document lists) says whether a file is stored; the admin panel shows Open and Approve only for
+            a row with a file (hasFile true, or fileUrl), else "No file" (Reject stays). Test accounts (seed-test, SEED_TEST_ON_START)
+            store a tiny placeholder file for each file document when the server has a fixed document key. The driver app
+            sends one Idempotency-Key per picked photo, so a retry after a timeout never makes a second version, and shows
+            the document as uploaded when the server already has it.'
     Document:
       type: object
       required:
@@ -24043,7 +24075,8 @@ components:
             base year whatever its categories: the smallest minYear among the country''s settings.vehicles.categories that
             are on and are not extraCategories (defaults: SE 2015, FR 2016, TN 2012). An older car is 400 invalid_request,
             reason category_not_allowed, with details "<category>:year_too_old" for each of its categories ("car:year_too_old"
-            when it has none), on POST /driver/vehicles and PATCH /admin/vehicles/{vehicleId}.'
+            when it has none), on POST /driver/vehicles and PATCH /admin/vehicles/{vehicleId}. v0.18.164: a country with settings.vehicles.maxAgeYears
+            also has the rolling age year of vehicleRules.maxAge (FR: 6 years, hybrid and electric exempt).'
         pickable:
           type: boolean
           description: 'v0.18.0: the asking driver can pick this car now. v0.18.0 (owner decision 19: "Driver dont see documents
@@ -30492,6 +30525,48 @@ components:
               minimum: 0
               maximum: 240
               default: 60
+        liveTraffic:
+          type: object
+          description: 'v0.18.163 (contract.json#liveTraffic): DispatchDocument.liveTraffic { on, offRouteMeters, offRouteSeconds,
+            behindMinutes } per zone, or per country as the country standard (Admin > Dispatch > Rides, with an "i" text).
+            A zone that follows its country standard reads the standard''s values; a document without on (or no document)
+            reads the default for the zone''s country: on for SE and FR, off elsewhere (defaultOnCountries); a missing or
+            out-of-range threshold reads its default (recall). Off = the straight-line estimate. 5. Google is asked again
+            only when the driver left the route (more than recall.offRouteMeters from it for more than recall.offRouteSeconds)
+            or is more than recall.behindMinutes behind the route''s planned arrival; and once for a route change (its price
+            and its new route). google -> estimate. Google is asked with a timeout (default 2500 ms) behind a circuit breaker
+            (5 failures in a row open it for 60 s, then one probe). Any Google failure, a 4xx/5xx answer, a timeout, the open
+            breaker or the per-copy rate cap takes the straight-line estimate. Each failure is one warn log line (never the
+            key); while, in a country with live traffic on, at least 3 quotes of the last 10 minutes and none from Google
+            were made, the admin gets one system_health alert per country book (key system_health:live_traffic:<CC>, "Live
+            traffic is not available: trip times use roads without traffic"), solved by itself when Google answers again.
+            No alert when the server has no Google key.'
+          required:
+          - 'on'
+          properties:
+            'on':
+              type: boolean
+              description: 'v0.18.163 (contract.json#liveTraffic): true: trip times with live traffic (Google), else the straight-line
+                estimate.'
+            offRouteMeters:
+              type: integer
+              minimum: 50
+              maximum: 2000
+              description: 'v0.18.163 (contract.json#liveTraffic): metres off the stored route that count as leaving it, 50
+                to 2000, default 200.'
+            offRouteSeconds:
+              type: integer
+              minimum: 10
+              maximum: 600
+              description: 'v0.18.163 (contract.json#liveTraffic): seconds off the route before Google is asked again, 10
+                to 600, default 30.'
+            behindMinutes:
+              type: integer
+              minimum: 1
+              maximum: 60
+              description: 'v0.18.163 (contract.json#liveTraffic): minutes behind the route''s planned arrival before Google
+                is asked again, 1 to 60, default 5.'
+          additionalProperties: false
       x-server-only: true
       x-ranges:
         radar.drivers:
@@ -34523,19 +34598,21 @@ components:
         (owner item 14: "First answer , and admin can change text and add or delete documents so must add on contract and
         server and admin ! Also same for Sweden"): per country the admin also creates new document types (customTypes), changes
         the name and help text of any type (texts), sets which expire (expiringTypes), and adds or removes types in each list.
-        Rules: documents.driver, documents.fleet: types whose owner is driver; documents.vehicle: types whose owner is vehicle
-        (documents.types). An unknown type or one of the wrong owner is 400 invalid_document. A new type needs a contract
-        change (it has names in sv / fr / en and a kind). documents.driver always contains driving_license (admin rule "The
-        driving licence is always needed"). expiringTypes: the listed types need an expiry date when an admin approves them
-        (documentExpiry). steps: every id of stepIds once, at least one on, days within limits.stepDays. The server stores
-        and serves them; the admin panel shows the funnel with them. signUpReminders.everyDays within limits.remindEveryDays,
+        Rules: documents.driver, documents.fleet: types whose owner is driver or fleet (v0.18.164 documents.ownerFleet); documents.vehicle:
+        types whose owner is vehicle (documents.types). An unknown type or one of the wrong owner is 400 invalid_document.
+        A new type needs a contract change (it has names in sv / fr / en and a kind). documents.driver always contains driving_license
+        (admin rule "The driving licence is always needed"). expiringTypes: the listed types need an expiry date when an admin
+        approves them (documentExpiry). steps: every id of stepIds once, at least one on, days within limits.stepDays. The
+        server stores and serves them; the admin panel shows the funnel with them. signUpReminders.everyDays within limits.remindEveryDays,
         stuckAfterDays within limits.stuckAfterDays. expiry.warnDays: 1 to 3 numbers within limits.warnDays, largest first,
         each smaller than the one before. vehicles.categories: each category of the catalog at most once; minYear, minSeats
         within limits; a category that is on allows at least one fuel of fuels; vehicles.warnDays within limits.vehicleWarnDays.
         customTypes: ids unique and of idPattern; the scope list a custom type is in matches its owner (driver → documents.driver,
         fleet → documents.fleet, vehicle → documents.vehicle); names and help in sv, fr and en. v0.18.3: guides and validMonths
         keys are types of the country (contract types or its customTypes); guide lines within guideLimits; validMonths within
-        limits.validMonths. v0.18.76: emailVerifiedForApproval is a boolean; missing = false (contract.json#emailVerified.approvalSetting).'
+        limits.validMonths. v0.18.76: emailVerifiedForApproval is a boolean; missing = false (contract.json#emailVerified.approvalSetting).
+        v0.18.164: vehicles.maxAgeYears (optional) within limits.maxAgeYears; vehicles.hybridElectricExempt (optional, missing
+        = false).'
       required:
       - version
       - country
@@ -34684,6 +34761,32 @@ components:
             photosNeeded:
               type: boolean
               description: The four photo types are required car documents.
+            maxAgeYears:
+              type: integer
+              minimum: 1
+              maximum: 30
+              description: 'v0.18.164: the oldest a car may be, in years (rolling: current year minus N). Missing = no age
+                rule. v0.18.164 (owner 2026-11-25, France "Moins de 6 ans"; Rules decisions/session-2026-11-06.md 2026-11-25):
+                settings.vehicles.maxAgeYears = N (1 to 30, per country, admin setting; missing = no age rule, so Sweden,
+                Tunisia and every country without it keep the base year rule unchanged). With N set, the country''s age year
+                is the current calendar year (UTC) minus N (2026 with FR 6 → 2020): a car with year below the age year breaks
+                the rule, the same as below the base year: "<category>:year_too_old" for each of its categories ("car:year_too_old"
+                when it has none) on POST /driver/vehicles and PATCH /admin/vehicles/{vehicleId}, missing from Vehicle.fitCategories,
+                listed in Vehicle.ruleProblems and refused on approval (409 vehicle_rules_not_met). The base year and every
+                category minYear still apply on top (the stricter one wins). settings.vehicles.hybridElectricExempt = true
+                (admin toggle, missing = false; FR default true): a car with fuel hybrid or electric is exempt from the age
+                year (not from minYear). A car with no fuel is not exempt. The year rolls every 1 January with no publish.
+                Existing approved cars are not put back to pending (no migration): an approved car that breaks the age year
+                stays approved and shows its ruleProblems in red until an admin decides (owner OK needed before any hold).
+                Driver read: GET /driver/onboarding/settings serves each category minYear raised to at least the age year
+                (the stored document and GET /admin/config/onboarding are unchanged), so the driver app''s base year and its
+                "the car must be from <year> or later" text follow with no app change; the server''s own checks use the stored
+                document and the exemption.'
+            hybridElectricExempt:
+              type: boolean
+              description: 'v0.18.164: hybrid and electric cars are exempt from maxAgeYears (not from minYear). Missing =
+                false.'
+              default: false
         guides:
           type: object
           description: 'v0.18.3 (owner decisions of 2026-10-30, driver group 2 re-check R8 "Admin edits all text (Recommended)"):
@@ -34691,7 +34794,9 @@ components:
             at most 300 characters) is the upload guide of that document type in this country (a contract type or the country''s
             own custom type; any other key is 400 invalid_document). The driver app shows the admin''s lines; a type with
             no guide (or an empty list) falls back to the app''s built-in text; the drawing stays Movera''s. Served to the
-            app in DocumentTypeInfo.guide.'
+            app in DocumentTypeInfo.guide. v0.18.164: default FR insurance guide (the car''s RC Circulation certificate shows
+            the plate and the words "transport de personnes à titre onéreux"; a normal car insurance is not enough; not the
+            RC Pro; based on Uber FR); WORDING WAITS FOR THE OWNER''S OK.'
           additionalProperties:
             $ref: '#/components/schemas/DocumentGuide'
         validMonths:
@@ -34701,7 +34806,7 @@ components:
             (default FR urssaf_certificate 6). When an admin approves it with issuedAt (the date on the paper, not in the
             future) and no expiresAt, the server sets expiresAt = issuedAt + N months; an expiresAt the admin types wins.
             A type of expiringTypes still needs one of the two (400 expiry_required). Any key must be a type of the country
-            (400 invalid_document).'
+            (400 invalid_document). v0.18.164: default FR vtc_register_certificate 60 (REVTC, owner 2026-11-25).'
           additionalProperties:
             type: integer
             minimum: 1
@@ -34857,8 +34962,6 @@ components:
             - company_registration
             - vtc_register_certificate
             - rc_pro_insurance
-            - urssaf_certificate
-            - national_id
             - bank_statement
             vehicle:
             - vehicle_registration
@@ -34965,11 +35068,30 @@ components:
             warnDays: 30
             autoHold: true
             photosNeeded: true
+            maxAgeYears: 6
+            hybridElectricExempt: true
           customTypes: []
           texts: {}
           validMonths:
             urssaf_certificate: 6
-          guides: {}
+            vtc_register_certificate: 60
+          guides:
+            insurance:
+              checklist:
+              - fr: L’attestation d’assurance (RC Circulation) du véhicule, avec la plaque et la mention « transport de personnes
+                  à titre onéreux ». Une assurance auto classique ne suffit pas, et ce n’est pas la RC Pro.
+                en: The car’s insurance certificate (RC Circulation), showing the plate and the words “transport de personnes
+                  à titre onéreux” (paid passenger transport). A normal car insurance is not enough, and this is not the RC
+                  Pro.
+                sv: Bilens försäkringsintyg (RC Circulation) med registreringsnumret och texten ”transport de personnes à
+                  titre onéreux” (betald persontransport). En vanlig bilförsäkring räcker inte, och det är inte RC Pro.
+              - en: The plate number
+                sv: Registreringsnumret
+                fr: Le numéro d’immatriculation
+              - en: The valid-until date
+                sv: Giltig till-datumet
+                fr: La date de fin de validité
+              tips: []
           emailVerifiedForApproval: false
           fleetNeedsCarForApproval: true
         TN:
@@ -35081,7 +35203,10 @@ components:
         guides[type] = { checklist: LocalText[], tips: LocalText[] } (each 0 to 10 lines, every line in sv, fr and en, at
         most 300 characters) is the upload guide of that document type in this country (a contract type or the country''s
         own custom type; any other key is 400 invalid_document). The driver app shows the admin''s lines; a type with no guide
-        (or an empty list) falls back to the app''s built-in text; the drawing stays Movera''s. Served to the app in DocumentTypeInfo.guide.'
+        (or an empty list) falls back to the app''s built-in text; the drawing stays Movera''s. Served to the app in DocumentTypeInfo.guide.
+        v0.18.164: default FR insurance guide (the car''s RC Circulation certificate shows the plate and the words "transport
+        de personnes à titre onéreux"; a normal car insurance is not enough; not the RC Pro; based on Uber FR); WORDING WAITS
+        FOR THE OWNER''S OK.'
       properties:
         checklist:
           type: array
@@ -37471,12 +37596,17 @@ components:
         source:
           type: string
           enum:
+          - google
           - osrm
           - estimate
           - stale
-          description: 'osrm | estimate | stale (stale: the driver sent no position for more than 120 s, dispatch''s "gone"
-            age; the previous ETA is kept with at = now, nothing new is routed; the apps show the last number and may say
-            it is old)'
+          description: 'google | osrm | estimate | stale (stale: the driver sent no position for more than 120 s, dispatch''s
+            "gone" age; the previous ETA is kept with at = now, nothing new is routed; the apps show the last number and may
+            say it is old) v0.18.163 (contract.json#liveTraffic): google: worked out along the stored Google route with live
+            traffic (4. During the trip NO calls: each ETA tick works out the remaining distance along the stored polyline
+            from the driver''s position, times the route''s average speed (Google duration / distance). To the drop-off the
+            trip''s quote polyline is used from boarding (no call).); osrm is no longer sent (Owner 2026-11-25 "We cannot
+            use data for open street map"). Apps treat an unknown value like estimate.'
     WaitingRuleOverride:
       type: object
       description: 'v0.18.8: DriverAppConfig.waiting (Admin › Dispatch › Waiting at pickup, per zone): farPickup { on, km,
@@ -43179,9 +43309,9 @@ components:
       type: object
       description: 'v0.18.162 (contract.json#driverCountryFirst): PUT /driver/country { country } (driver token) answers the
         Driver. country is one of driverOnboarding.countries with open true (today SE, FR); a closed or unknown one is 400
-        country_not_open. It saves drivers.country and sets drivers.cityId and drivers.zoneIds to the country''s first city
-        and its zone (so the admin lists by country see him at once and never under the old country). Saving the same country
-        again changes nothing (no version bump; a missing zone is filled).'
+        country_not_open. It saves drivers.country and, while the driver has no zone, drivers.zoneIds = [the zone of the country''s
+        first city] (so the admin lists by country see him at once). Saving the same country again changes nothing (no version
+        bump).'
       required:
       - country
       properties:
