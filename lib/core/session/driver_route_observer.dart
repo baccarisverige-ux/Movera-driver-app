@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:movera/core/logging/crash_breadcrumbs.dart';
 import 'package:movera/core/logging/crash_reports.dart';
 import 'package:movera/core/logging/restart_watch.dart';
 
@@ -40,6 +41,8 @@ class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   /// Contract v0.16.0: a crash report names the screen on top.
   static void _top(Route<dynamic>? route) {
     if (route != null) CrashReports.currentScreen = route.settings.name;
+    // v0.18.158: the screen change is a breadcrumb (contract.json#crashCatcher).
+    if (route != null) CrashBreadcrumbs.instance.route(route.settings.name);
     RestartWatch.touch();
   }
 }
