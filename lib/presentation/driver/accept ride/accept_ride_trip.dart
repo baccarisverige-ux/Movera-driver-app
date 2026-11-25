@@ -1081,9 +1081,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       _completionInFlight = false;
       _stageTransitioning = false;
       // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
-      final changed = _AcceptRideLive(
-        this,
-      )._liveTrips?.takePriceChanged(widget.tripId);
+      final changed = _AcceptRideLive(this)._liveTrips
+          ?.takePriceChanged(widget.tripId);
       if (changed != null && mounted) {
         unawaited(_collectCash(changed: changed));
       }
