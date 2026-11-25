@@ -6,6 +6,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/presentation/driver/account/details_pickers.dart';
 import 'package:movera/widgets/country_flag.dart';
+import 'package:movera/widgets/movera_dialog_theme.dart';
 
 /// Contract v0.18.162 (contract.json#driverCountryFirst; owner 2026-11-25
 /// "Yes": "On the first sign-in ever, when a driver or a fleet owner signs
@@ -192,52 +193,77 @@ class _DriverCountryScreenState extends State<DriverCountryScreen> {
 /// Owner 2026-11-25 ("OK comme ça"): the driver edited the details and
 /// taps Back: "Leave without saving?" with Stay (black, default) and Leave
 /// (red). On the root navigator with the keyboard closed first, so it shows
-/// on iPad. True = leave. Its texts live here with the country step's
-/// (deferred part, web budget).
-Future<bool> confirmLeaveWithoutSaving(BuildContext context) async {
+/// on iPad. True = leave. Back keeps the driver signed in (owner
+/// 2026-11-25 "Page précédente (pays)"). Its texts live here with the
+/// country step's (deferred part, web budget).
+Future<bool> confirmLeaveWithoutSaving(BuildContext context) => _confirmUnsaved(
+  context,
+  key: 'leave-unsaved',
+  title: const {
+    'en': 'Leave without saving?',
+    'sv': 'Lämna utan att spara?',
+    'fr': 'Quitter sans enregistrer ?',
+  },
+  leave: const {'en': 'Leave', 'sv': 'Lämna', 'fr': 'Quitter'},
+);
+
+/// Owner 2026-11-25 ("Si déconnecter donc demande déconnecter sans
+/// modifier"): Log out with edited fields asks first. True = log out.
+Future<bool> confirmLogOutWithoutSaving(BuildContext context) =>
+    _confirmUnsaved(
+      context,
+      key: 'logout-unsaved',
+      title: const {
+        'en': 'Log out without saving?',
+        'sv': 'Logga ut utan att spara?',
+        'fr': 'Se déconnecter sans enregistrer ?',
+      },
+      leave: const {'en': 'Log out', 'sv': 'Logga ut', 'fr': 'Se déconnecter'},
+    );
+
+Future<bool> _confirmUnsaved(
+  BuildContext context, {
+  required String key,
+  required Map<String, String> title,
+  required Map<String, String> leave,
+}) async {
   FocusManager.instance.primaryFocus?.unfocus();
   String text(Map<String, String> row) =>
       row[DriverAppTexts.language] ?? row['en']!;
-  final leave = await showDialog<bool>(
+  final result = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
-    builder: (dialog) => AlertDialog(
-      key: const ValueKey('leave-unsaved'),
-      backgroundColor: Colors.white,
-      title: Text(
-        text(const {
-          'en': 'Leave without saving?',
-          'sv': 'Lämna utan att spara?',
-          'fr': 'Quitter sans enregistrer ?',
-        }),
-      ),
-      content: Text(
-        text(const {
-          'en': 'Your changes will be lost.',
-          'sv': 'Dina ändringar går förlorade.',
-          'fr': 'Vos modifications seront perdues.',
-        }),
-      ),
-      actions: [
-        FilledButton(
-          key: const ValueKey('leave-unsaved-stay'),
-          autofocus: true,
-          style: FilledButton.styleFrom(backgroundColor: Colors.black),
-          onPressed: () => Navigator.of(dialog).pop(false),
-          child: Text(
-            text(const {'en': 'Stay', 'sv': 'Stanna', 'fr': 'Rester'}),
-          ),
+    builder: (dialog) => MoveraDialogTheme(
+      child: AlertDialog(
+        key: ValueKey(key),
+        backgroundColor: Colors.white,
+        title: Text(text(title)),
+        content: Text(
+          text(const {
+            'en': 'Your changes will be lost.',
+            'sv': 'Dina ändringar går förlorade.',
+            'fr': 'Vos modifications seront perdues.',
+          }),
         ),
-        TextButton(
-          key: const ValueKey('leave-unsaved-leave'),
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
-          onPressed: () => Navigator.of(dialog).pop(true),
-          child: Text(
-            text(const {'en': 'Leave', 'sv': 'Lämna', 'fr': 'Quitter'}),
+        actions: [
+          FilledButton(
+            key: ValueKey('$key-stay'),
+            autofocus: true,
+            style: FilledButton.styleFrom(backgroundColor: Colors.black),
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: Text(
+              text(const {'en': 'Stay', 'sv': 'Stanna', 'fr': 'Rester'}),
+            ),
           ),
-        ),
-      ],
+          TextButton(
+            key: ValueKey('$key-leave'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: Text(text(leave)),
+          ),
+        ],
+      ),
     ),
   );
-  return leave == true;
+  return result == true;
 }
