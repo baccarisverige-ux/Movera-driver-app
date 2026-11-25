@@ -1,5 +1,6 @@
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+
 import 'dart:math' as math;
 
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -26,6 +27,11 @@ class _PreferencesState extends State<Preferences> {
   static const Color _border = Color(0xFF2A302E);
   static const Color _offInk = Color(0xFFB7BCBA);
   static const Color _offBorder = Color(0xFFDDE1DF);
+  // Owner 2026-11-25: small box top-right of each card (green = active).
+  static const Color _boxOn = Color(0xFF2FBF5B);
+  static const Color _boxOff = Color(0xFF12201C);
+  static const double _boxSize = 20;
+  static const double _boxInset = 8;
 
   // Stored order: the saved `selected` list is indexed by this list, so new
   // categories are only ever appended. It matches DriverCategoryAccess.all,
@@ -400,6 +406,7 @@ class _PreferencesState extends State<Preferences> {
       button: true,
       enabled: _canEdit,
       selected: selected,
+      checked: selected,
       // Greyed while a claim is with dispatch (Decision 4).
       child: Opacity(
         opacity: ClaimLock.locked ? 0.45 : 1,
@@ -420,53 +427,75 @@ class _PreferencesState extends State<Preferences> {
                 ),
               ),
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  SvgPicture.asset(
-                    category.icon,
-                    width: iconHeight * 124 / 68,
-                    height: iconHeight,
-                    colorFilter: ColorFilter.mode(
-                      selected ? _ink : _offInk,
-                      BlendMode.srcIn,
-                    ),
+                  LayoutBuilder(
+                    builder: (context, box) {
+                      // Keep the icon clear of the top-right box.
+                      final maxIconWidth = math.max(
+                        24.0,
+                        box.maxWidth - 2 * (_boxSize + _boxInset + 4),
+                      );
+                      final iconWidth = math.min(
+                        iconHeight * 124 / 68,
+                        maxIconWidth,
+                      );
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgPicture.asset(
+                            category.icon,
+                            width: iconWidth,
+                            height: iconWidth * 68 / 124,
+                            colorFilter: ColorFilter.mode(
+                              selected ? _ink : _offInk,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text(
+                              categoryNameText(category.title),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: selected ? _heading : _offInk,
+                                fontSize: compact ? 15 : 17,
+                                height: 1.25,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text(
+                              category.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: selected ? _text : _offInk,
+                                fontSize: compact ? 11 : 12,
+                                height: 1.25,
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 4),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text(
-                      categoryNameText(category.title),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: selected ? _heading : _offInk,
-                        fontSize: compact ? 15 : 17,
-                        height: 1.25,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -0.4,
-                      ),
-                    ),
+                  Positioned(
+                    top: _boxInset - 6,
+                    right: _boxInset,
+                    child: ExcludeSemantics(child: _RideTypeBox(on: selected)),
                   ),
-                  const SizedBox(height: 3),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text(
-                      category.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: selected ? _text : _offInk,
-                        fontSize: compact ? 11 : 12,
-                        height: 1.25,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
                 ],
               ),
             ),
@@ -506,6 +535,44 @@ class _PreferencesState extends State<Preferences> {
               letterSpacing: -0.2,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The small active box on a ride-type card (owner 2026-11-25).
+class _RideTypeBox extends StatelessWidget {
+  const _RideTypeBox({required this.on});
+
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      key: ValueKey<String>(on ? 'ride-type-box-on' : 'ride-type-box-off'),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      width: _PreferencesState._boxSize,
+      height: _PreferencesState._boxSize,
+      decoration: BoxDecoration(
+        color: on ? _PreferencesState._boxOn : Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: on
+              ? _PreferencesState._boxOn
+              : _PreferencesState._boxOff.withValues(alpha: 0.45),
+          width: 1.4,
+        ),
+      ),
+      child: AnimatedScale(
+        scale: on ? 1 : 0.4,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutBack,
+        child: AnimatedOpacity(
+          opacity: on ? 1 : 0,
+          duration: const Duration(milliseconds: 160),
+          child: const Icon(Icons.check_rounded, size: 15, color: Colors.white),
         ),
       ),
     );
