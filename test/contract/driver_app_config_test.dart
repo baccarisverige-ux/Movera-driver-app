@@ -262,7 +262,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.159');
+      expect(contract['version'], '0.18.160');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
@@ -322,7 +322,7 @@ void main() {
         );
         expect(config.paymentMethods, ['cash', 'card', 'apple_pay']);
         expect(config.maxStops, 3);
-        expect(config.maxPickupMoveMeters, 200);
+        expect(config.maxPickupMoveMeters, 300); // v0.18.160
         expect(config.autoOffline, isTrue);
         // G4-E2 (owner "Set 10 everywhere"): the seed said 3 until v0.18.6.
         expect(config.missedExclusiveBeforeOffline, 10);
@@ -363,7 +363,7 @@ void main() {
       expect(config.languages.driver, 'fr');
       expect(config.paymentMethods, ZoneDefaults.paymentMethods);
       expect(config.maxStops, 3);
-      expect(config.maxPickupMoveMeters, 200);
+      expect(config.maxPickupMoveMeters, 300); // v0.18.160
       expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull);
       expect(
@@ -400,7 +400,7 @@ void main() {
       expect(config.languages.rider, 'en');
       expect(config.paymentMethods, ['apple_pay', 'cash']);
       expect(config.maxStops, 3);
-      expect(config.maxPickupMoveMeters, 200);
+      expect(config.maxPickupMoveMeters, 300); // v0.18.160
       expect(config.autoOffline, isTrue);
       expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull, reason: 'limit above the hard max');
