@@ -3,7 +3,6 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
-import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 
 /// The sign-in flow's controller for [context]: the one the app root put
@@ -81,7 +80,7 @@ void _openDetails(
       settings: const RouteSettings(name: 'driver-details'),
       // Step 3 of the sign-in: the phone just confirmed, and what Apple /
       // Google gave (round 4b).
-      builder: (_) => DriverDetailsScreen(
+      builder: (_) => driverDetailsScreen(
         account: account,
         phone: auth?.signedInPhone,
         prefill: auth?.providerLink,

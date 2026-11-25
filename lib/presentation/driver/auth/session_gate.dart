@@ -8,7 +8,6 @@ import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/privacy/start_clean_up.dart';
-import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 
 /// The app's first route when a session is required
@@ -175,7 +174,7 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
               );
             }),
           ),
-          _Root.details => DriverDetailsScreen(
+          _Root.details => driverDetailsScreen(
             account: widget.account!,
             phone: widget.auth.signedInPhone,
             prefill: widget.auth.providerLink,

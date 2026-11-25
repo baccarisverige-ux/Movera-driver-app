@@ -17,12 +17,18 @@ import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
+import 'dart:async';
+import 'package:movera/core/session/driver_runtime_scope.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Round 4: the details screen after the first sign-in, against a fake
 /// server that answers like movera-server's onboarding.
 class _Server {
-  _Server({this.refuse});
+  _Server({this.refuse, this.hang = false});
+
+  /// Bug 2026-11-25: the send never answers (Back while busy).
+  final bool hang;
 
   /// A `400 invalid_request` reason to answer with, or null to accept.
   final String? refuse;
@@ -55,6 +61,7 @@ class _Server {
     if (request.url.path != DriverAccountRepository.onboardingPath) {
       return json(404, {'code': 'not_found', 'message': 'x'});
     }
+    if (hang) return Completer<http.Response>().future;
     if (refuse != null) {
       return json(400, {
         'code': 'invalid_request',
@@ -189,6 +196,82 @@ void main() {
     expect(find.text(tr.acctTermsRequired), findsNothing);
     expect(server.bodies, isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('bug 2026-11-25 (TestFlight build 12, iPad): Back after '
+      'editing never freezes, even when the sign-out never answers', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = DriverSessionController();
+    addTearDown(controller.dispose);
+    final session = _session(_Server());
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverRuntimeScope(
+          session: controller,
+          homeBuilder: () => const Scaffold(body: Text('Step one')),
+          logout: () => Completer<void>().future,
+          account: session,
+          child: DriverDetailsScreen(
+            account: session,
+            onDone: (_) {},
+            clock: () => DateTime(2026, 10, 25),
+            draft: _memoryDraft(),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await _fillPerson(tester, dob: '1990-01-01');
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await tester.pump();
+    // Owner 2026-11-25: edited fields ask "Leave without saving?" first.
+    expect(find.text('Leave without saving?'), findsOneWidget);
+    expect(find.text('Your changes will be lost.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('leave-unsaved-stay')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('leave-unsaved')), findsNothing);
+    expect(find.byType(DriverDetailsScreen), findsOneWidget);
+    await nav.maybePop();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('leave-unsaved-leave')));
+    await tester.pump();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('details-leaving')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 9));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Step one'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('owner 2026-11-25: nothing edited, Back keeps the old '
+      'Leave sign-up question (no unsaved popup)', (tester) async {
+    await _pump(tester, _Server());
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('leave-unsaved')), findsNothing);
+    expect(find.byKey(const ValueKey('details-sign-out')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('bug 2026-11-25: Back while the details are being sent says '
+      'please wait', (tester) async {
+    await _pump(tester, _Server(hang: true));
+    await _fillPerson(tester);
+    await _tap(tester, 'details-continue');
+    await tester.pump();
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await tester.pump();
+    expect(find.text(tr.pleaseWait), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(minutes: 2));
   });
 
   testWidgets('v0.18.162: the country is read-only here; tapping it opens '

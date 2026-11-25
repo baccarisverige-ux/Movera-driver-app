@@ -188,3 +188,56 @@ class _DriverCountryScreenState extends State<DriverCountryScreen> {
     );
   }
 }
+
+/// Owner 2026-11-25 ("OK comme ça"): the driver edited the details and
+/// taps Back: "Leave without saving?" with Stay (black, default) and Leave
+/// (red). On the root navigator with the keyboard closed first, so it shows
+/// on iPad. True = leave. Its texts live here with the country step's
+/// (deferred part, web budget).
+Future<bool> confirmLeaveWithoutSaving(BuildContext context) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  String text(Map<String, String> row) =>
+      row[DriverAppTexts.language] ?? row['en']!;
+  final leave = await showDialog<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (dialog) => AlertDialog(
+      key: const ValueKey('leave-unsaved'),
+      backgroundColor: Colors.white,
+      title: Text(
+        text(const {
+          'en': 'Leave without saving?',
+          'sv': 'Lämna utan att spara?',
+          'fr': 'Quitter sans enregistrer ?',
+        }),
+      ),
+      content: Text(
+        text(const {
+          'en': 'Your changes will be lost.',
+          'sv': 'Dina ändringar går förlorade.',
+          'fr': 'Vos modifications seront perdues.',
+        }),
+      ),
+      actions: [
+        FilledButton(
+          key: const ValueKey('leave-unsaved-stay'),
+          autofocus: true,
+          style: FilledButton.styleFrom(backgroundColor: Colors.black),
+          onPressed: () => Navigator.of(dialog).pop(false),
+          child: Text(
+            text(const {'en': 'Stay', 'sv': 'Stanna', 'fr': 'Rester'}),
+          ),
+        ),
+        TextButton(
+          key: const ValueKey('leave-unsaved-leave'),
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          onPressed: () => Navigator.of(dialog).pop(true),
+          child: Text(
+            text(const {'en': 'Leave', 'sv': 'Lämna', 'fr': 'Quitter'}),
+          ),
+        ),
+      ],
+    ),
+  );
+  return leave == true;
+}

@@ -20,6 +20,7 @@ import 'package:movera/presentation/driver/settings/settings.dart'
 import 'package:movera/presentation/driver/support/support_inbox.dart'
     deferred as support;
 import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/widgets/deferred_screen.dart';
 
@@ -129,5 +130,22 @@ Widget driverCountryScreen({
     account: account,
     onDone: onDone,
     selected: selected,
+  ),
+);
+
+/// Bug 2026-11-25 / web budget: the sign-up details screen (step 3) loads
+/// with the Profile part too, so the first download keeps room for the fixes.
+Widget driverDetailsScreen({
+  required DriverAccountSession account,
+  required void Function(BuildContext context) onDone,
+  String? phone,
+  ProviderLink? prefill,
+}) => DeferredScreen(
+  load: profile.loadLibrary,
+  builder: (_) => profile.DriverDetailsScreen(
+    account: account,
+    onDone: onDone,
+    phone: phone,
+    prefill: prefill,
   ),
 );
