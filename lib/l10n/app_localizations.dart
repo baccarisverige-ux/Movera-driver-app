@@ -310,6 +310,12 @@ abstract class AppLocalizations {
   /// **'Movera sets these from your car. Switch off any you don’t want.'**
   String get prefMoveraSetsFromCar;
 
+  /// Ride types screen: a tap on a box could not be saved; the box goes back (owner 2026-11-25).
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved, try again'**
+  String get prefAutoSaveFailed;
+
   /// No description provided for @prefSave.
   ///
   /// In en, this message translates to:

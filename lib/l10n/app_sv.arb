@@ -34,6 +34,7 @@
   "prefChooseRideOptions": "Välj dina reseval",
   "prefSelectRideTypes": "Välj vilka resetyper du vill få",
   "prefMoveraSetsFromCar": "Movera ställer in dessa utifrån din bil. Stäng av dem du inte vill ha.",
+  "prefAutoSaveFailed": "Inte sparat, försök igen",
   "prefSave": "Spara inställningar",
   "anaPreview": "Förhandsvisning av statistik",
   "anaSample3Rides": "Exempel: 3 resor slutförda",

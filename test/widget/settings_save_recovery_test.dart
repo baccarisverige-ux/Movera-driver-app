@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/settings/settings_repository.dart';
-import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/settings/accessibility/accessibility.dart';
 import 'package:movera/presentation/driver/settings/sound & voice/sound_voice.dart';
 
@@ -40,7 +39,8 @@ VoidCallback _edit(WidgetTester tester, String surface) {
 
 void main() {
   final surfaces = <String, Widget Function(_Settings)>{
-    'categories': (repo) => Preferences(repository: repo),
+    // Ride types autosave without Retry (owner 2026-11-25): see
+    // test/widget/preferences_explicit_save_test.dart.
     'accessibility': (repo) => Accessibility(repository: repo),
     'sound': (repo) => SoundAndVoice(repository: repo),
   };

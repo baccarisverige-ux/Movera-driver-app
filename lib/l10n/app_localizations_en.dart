@@ -135,6 +135,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Movera sets these from your car. Switch off any you don’t want.';
 
   @override
+  String get prefAutoSaveFailed => 'Not saved, try again';
+
+  @override
   String get prefSave => 'Save preferences';
 
   @override

@@ -133,6 +133,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Movera ställer in dessa utifrån din bil. Stäng av dem du inte vill ha.';
 
   @override
+  String get prefAutoSaveFailed => 'Inte sparat, försök igen';
+
+  @override
   String get prefSave => 'Spara inställningar';
 
   @override

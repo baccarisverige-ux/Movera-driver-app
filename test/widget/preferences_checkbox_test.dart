@@ -119,8 +119,8 @@ int _expectNoOverlap(WidgetTester tester, String reason) {
   return boxes.length;
 }
 
-/// The icon's drawn lines never touch the box: a 3 px ring around each
-/// box is plain white in the rendered screen.
+/// The icon's drawn lines never touch the box: a ring 1.5-4 px around each
+/// box (past the black frame's edge pixels) is plain white in the rendered screen.
 Future<void> _expectRingClear(WidgetTester tester, String reason) async {
   final boundary = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(const ValueKey('cb-proof')),
@@ -139,10 +139,16 @@ Future<void> _expectRingClear(WidgetTester tester, String reason) async {
   });
   final (bytes, w) = data!;
   for (final r in rects) {
-    final ring = r.inflate(3);
+    final ring = r.inflate(4);
     for (var x = ring.left.floor(); x <= ring.right.ceil(); x++) {
       for (var y = ring.top.floor(); y <= ring.bottom.ceil(); y++) {
-        if (r.inflate(0.5).contains(Offset(x.toDouble(), y.toDouble()))) {
+        if (r.inflate(1.5).contains(Offset(x.toDouble(), y.toDouble()))) {
+          continue;
+        }
+        if (x < 0 ||
+            x >= w ||
+            y < 0 ||
+            (y * w + x) * 4 >= bytes.lengthInBytes) {
           continue;
         }
         final i = (y * w + x) * 4;
@@ -190,6 +196,7 @@ void main() {
 
     // Tap the box itself.
     await tester.tap(find.byKey(const ValueKey('ride-type-box-on')).first);
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
     expect(find.text('${total - 1} av $total aktiva'), findsOneWidget);
     expect(find.byKey(const ValueKey('ride-type-box-off')), findsOneWidget);
@@ -203,6 +210,7 @@ void main() {
           )
           .first,
     );
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
     expect(find.text('${total - 2} av $total aktiva'), findsOneWidget);
     await _shot(tester, 'ride-types-sv-two-off');
@@ -219,6 +227,7 @@ void main() {
     );
     expect(pet.flagsCollection.isChecked, ui.CheckedState.isFalse);
     await tester.tap(find.text('Movera Pet'));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
     final petOn = tester.getSemantics(
       find
@@ -233,16 +242,73 @@ void main() {
   });
 
   for (final size in const [Size(390, 844), Size(375, 667)]) {
-    testWidgets('all cards, header and Save on one screen: $size', (
+    testWidgets('all cards and header on one screen, no Save: $size', (
       tester,
     ) async {
       DriverAppTexts.language = 'sv';
       await _open(tester, size: size);
       expect(find.byType(ListView), findsNothing);
       expect(_boxes.hitTestable(), findsNWidgets(_boxes.evaluate().length));
-      final save = tester.getRect(find.text('Spara inställningar'));
-      expect(save.bottom, lessThanOrEqualTo(size.height));
+      // Owner 2026-11-25: no Save button, each tap saves.
+      expect(find.text('Spara inställningar'), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
+      for (final e in _boxes.evaluate()) {
+        expect(
+          tester.getRect(find.byWidget(e.widget)).bottom,
+          lessThanOrEqualTo(size.height),
+        );
+      }
       expect(find.text('Välj dina reseval'), findsOneWidget);
+    });
+  }
+
+  testWidgets('box: white with black frame; black check only when on', (
+    tester,
+  ) async {
+    await _open(tester);
+    const ink = Color(0xFF12201C);
+    void expectBox(String key, {required bool check}) {
+      final box = tester.widget<AnimatedContainer>(
+        find.byKey(ValueKey<String>(key)).first,
+      );
+      final deco = box.decoration! as BoxDecoration;
+      expect(deco.color, Colors.white);
+      expect((deco.border! as Border).top.color, ink);
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byKey(ValueKey<String>(key)).first,
+          matching: find.byType(Icon),
+        ),
+      );
+      expect(icon.color, ink);
+      final opacity = tester.widget<AnimatedOpacity>(
+        find.descendant(
+          of: find.byKey(ValueKey<String>(key)).first,
+          matching: find.byType(AnimatedOpacity),
+        ),
+      );
+      expect(opacity.opacity, check ? 1 : 0);
+    }
+
+    expectBox('ride-type-box-on', check: true);
+    await tester.tap(find.byKey(const ValueKey('ride-type-box-on')).first);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expectBox('ride-type-box-off', check: false);
+  });
+
+  for (final lang in const ['sv', 'fr']) {
+    testWidgets('screenshots $lang on/off', (tester) async {
+      DriverAppTexts.language = lang;
+      final font = await _fonts();
+      await _open(tester, font: font);
+      await _shot(tester, 'ride-types-v2-$lang-all-on');
+      await tester.tap(find.byKey(const ValueKey('ride-type-box-on')).first);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.byKey(const ValueKey('ride-type-box-on')).at(2));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      await _shot(tester, 'ride-types-v2-$lang-two-off');
     });
   }
 
@@ -264,6 +330,7 @@ void main() {
             final on = find.byKey(const ValueKey('ride-type-box-on'));
             if (on.hitTestable().evaluate().isNotEmpty) {
               await tester.tap(on.hitTestable().first);
+              await tester.pump(const Duration(milliseconds: 400));
               await tester.pumpAndSettle();
               _expectNoOverlap(tester, '$lang $size x$scale off $step');
             }

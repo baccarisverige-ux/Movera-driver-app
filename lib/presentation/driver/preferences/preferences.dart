@@ -1,9 +1,11 @@
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:movera/widgets/owned_route_exit.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -25,11 +27,11 @@ class _PreferencesState extends State<Preferences> {
   static const Color _heading = Color(0xFF0F221C);
   static const Color _text = Color(0xFF1F2523);
   static const Color _border = Color(0xFF2A302E);
-  static const Color _offInk = Color(0xFFB7BCBA);
-  static const Color _offBorder = Color(0xFFDDE1DF);
-  // Owner 2026-11-25: small box top-right of each card (green = active).
-  static const Color _boxOn = Color(0xFF2FBF5B);
-  static const Color _boxOff = Color(0xFF12201C);
+  // Owner 2026-11-25 (v2): white box, black frame, black check when active;
+  // white empty box with the same black frame when off. No green.
+  static const Color _boxInk = Color(0xFF12201C);
+  // Taps close together go up as one save (the last state wins).
+  static const Duration _saveDelay = Duration(milliseconds: 300);
   static const double _boxSize = 20;
   static const double _boxInset = 8;
 
@@ -94,10 +96,12 @@ class _PreferencesState extends State<Preferences> {
   bool _loading = true;
   bool _restoreFailed = false;
   bool _restoring = false;
-  bool _saveFailed = false;
-  bool _retryingSave = false;
-  bool _explicitSaving = false;
-  int _saveRevision = 0;
+  // Owner 2026-11-25: no Save button; each tap saves at once. The last
+  // state the save accepted, so a failed save can put the boxes back.
+  late List<bool> _confirmed;
+  Timer? _saveTimer;
+  bool _saving = false;
+  bool _saveAgain = false;
   bool get _canEdit =>
       mounted &&
       ModalRoute.of(context)?.isCurrent == true &&
@@ -133,6 +137,7 @@ class _PreferencesState extends State<Preferences> {
             ...List<bool>.filled(_categories.length - saved.length, true),
           ];
         }
+        _confirmed = List<bool>.of(_selected);
       });
       _publishChoice();
     } catch (_) {
@@ -147,32 +152,56 @@ class _PreferencesState extends State<Preferences> {
     }
   }
 
-  Future<bool> _persistSettings() async {
-    if (!_canEdit) return false;
-    final revision = ++_saveRevision;
-    var saved = false;
-    try {
-      await _settings.save(DriverCategoryChoice.section, {
-        'selected': _selected,
-      });
-      saved = true;
-    } catch (_) {
-      saved = false;
-    }
-    if (mounted && revision == _saveRevision) {
-      setState(() => _saveFailed = !saved);
-    }
-    return saved;
+  void _scheduleSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(_saveDelay, _flushSave);
   }
 
-  Future<void> _retrySave() async {
-    if (!_canEdit || _retryingSave) return;
-    setState(() => _retryingSave = true);
-    try {
-      await _persistSettings();
-    } finally {
-      if (mounted) setState(() => _retryingSave = false);
+  /// One save at a time; a tap during a save is sent after it, with the
+  /// newest choice. Same path the old Save button used.
+  Future<void> _flushSave() async {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    if (_saving) {
+      _saveAgain = true;
+      return;
     }
+    final wanted = List<bool>.of(_selected);
+    if (listEquals(wanted, _confirmed)) return;
+    _saving = true;
+    var ok = false;
+    try {
+      await _settings.save(DriverCategoryChoice.section, {'selected': wanted});
+      ok = true;
+    } catch (_) {
+      ok = false;
+    }
+    _saving = false;
+    if (ok) _confirmed = wanted;
+    if (_saveAgain || _saveTimer != null) {
+      // A newer tap is waiting: its save decides the end state.
+      _saveAgain = false;
+      if (_saveTimer == null) unawaited(_flushSave());
+      return;
+    }
+    if (ok || !mounted) return;
+    setState(() => _selected = List<bool>.of(_confirmed));
+    _publishChoice();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.hideCurrentSnackBar();
+    messenger?.showSnackBar(
+      SnackBar(
+        key: const ValueKey('ride-types-save-failed'),
+        content: Text(
+          tr.prefAutoSaveFailed,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: _ink,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   @override
@@ -180,12 +209,15 @@ class _PreferencesState extends State<Preferences> {
     super.initState();
     ClaimLock.listenable.addListener(_onClaimLock);
     _selected = List<bool>.filled(_categories.length, true);
+    _confirmed = List<bool>.of(_selected);
     _restoreSettings();
   }
 
   @override
   void dispose() {
     ClaimLock.listenable.removeListener(_onClaimLock);
+    // Leaving right after a tap still sends that tap.
+    if (_saveTimer != null) unawaited(_flushSave());
     super.dispose();
   }
 
@@ -205,38 +237,7 @@ class _PreferencesState extends State<Preferences> {
       _selected[index] = !_selected[index];
     });
     _publishChoice();
-    _persistSettings();
-  }
-
-  Future<void> _save() async {
-    if (!_canEdit || _explicitSaving || _selectedCount == 0) return;
-    setState(() => _explicitSaving = true);
-    try {
-      final selectedCount = _selectedCount;
-      final request = _persistSettings();
-      final revision = _saveRevision;
-      if (!await request ||
-          !mounted ||
-          !_canEdit ||
-          revision != _saveRevision) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            tr.prefCategoriesSaved(selectedCount),
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: _ink,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _explicitSaving = false);
-    }
+    _scheduleSave();
   }
 
   @override
@@ -256,7 +257,7 @@ class _PreferencesState extends State<Preferences> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: _buildCategory(index),
                     ),
-                  _buildSaveArea(),
+                  const SizedBox(height: 12),
                 ],
               )
             : Column(
@@ -291,10 +292,6 @@ class _PreferencesState extends State<Preferences> {
                       },
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: side),
-                    child: _buildSaveArea(),
-                  ),
                 ],
               ),
       ),
@@ -306,16 +303,6 @@ class _PreferencesState extends State<Preferences> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_loading) const LinearProgressIndicator(),
-        if (_saveFailed)
-          TextButton(
-            key: const ValueKey('settings-save-retry'),
-            onPressed: _retryingSave ? null : _retrySave,
-            child: Text(
-              _retryingSave
-                  ? tr.savingPreferencesEllipsis
-                  : tr.changesNotSavedRetry,
-            ),
-          ),
         if (_restoreFailed)
           TextButton(
             onPressed: _restoreSettings,
@@ -503,41 +490,6 @@ class _PreferencesState extends State<Preferences> {
       ),
     );
   }
-
-  Widget _buildSaveArea() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 12),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: OutlinedButton(
-          onPressed: !_canEdit || _explicitSaving || _selectedCount == 0
-              ? null
-              : _save,
-          style: OutlinedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: _heading,
-            disabledForegroundColor: _offInk,
-            side: BorderSide(
-              color: _selectedCount == 0 ? _offBorder : _border,
-              width: 1.4,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(11),
-            ),
-          ),
-          child: Text(
-            _explicitSaving ? tr.savingPreferencesEllipsis : tr.prefSave,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.2,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// The small active box on a ride-type card (owner 2026-11-25).
@@ -555,14 +507,9 @@ class _RideTypeBox extends StatelessWidget {
       width: _PreferencesState._boxSize,
       height: _PreferencesState._boxSize,
       decoration: BoxDecoration(
-        color: on ? _PreferencesState._boxOn : Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: on
-              ? _PreferencesState._boxOn
-              : _PreferencesState._boxOff.withValues(alpha: 0.45),
-          width: 1.4,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: _PreferencesState._boxInk, width: 1.8),
       ),
       child: AnimatedScale(
         scale: on ? 1 : 0.4,
@@ -571,7 +518,11 @@ class _RideTypeBox extends StatelessWidget {
         child: AnimatedOpacity(
           opacity: on ? 1 : 0,
           duration: const Duration(milliseconds: 160),
-          child: const Icon(Icons.check_rounded, size: 15, color: Colors.white),
+          child: const Icon(
+            Icons.check_rounded,
+            size: 15,
+            color: _PreferencesState._boxInk,
+          ),
         ),
       ),
     );
