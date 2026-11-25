@@ -17,7 +17,9 @@ import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
+
 import 'dart:async';
+
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -198,10 +200,12 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('bug 2026-11-25 (TestFlight build 12, iPad): Back after '
-      'editing never freezes, even when the sign-out never answers', (
-    tester,
-  ) async {
+  /// The details screen in the sign-in flow, under a runtime scope whose
+  /// logout never answers (counted in [logouts]).
+  Future<({List<int> logouts, DriverAccountSession session})> pumpScoped(
+    WidgetTester tester, {
+    String status = 'pending',
+  }) async {
     tester.view.physicalSize = const Size(390, 1800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -209,12 +213,25 @@ void main() {
     final controller = DriverSessionController();
     addTearDown(controller.dispose);
     final session = _session(_Server());
+    session.replace(
+      DriverAccount(
+        driverId: 'drv_1',
+        accountStatus: status,
+        firstName: '',
+        country: 'SE',
+        version: 1,
+      ),
+    );
+    final logouts = <int>[];
     await tester.pumpWidget(
       MaterialApp(
         home: DriverRuntimeScope(
           session: controller,
           homeBuilder: () => const Scaffold(body: Text('Step one')),
-          logout: () => Completer<void>().future,
+          logout: () {
+            logouts.add(1);
+            return Completer<void>().future;
+          },
           account: session,
           child: DriverDetailsScreen(
             account: session,
@@ -226,11 +243,19 @@ void main() {
       ),
     );
     await tester.pump();
+    return (logouts: logouts, session: session);
+  }
+
+  testWidgets('owner 2026-11-25 "Page précédente (pays)": Back after editing '
+      'asks "Leave without saving?"; Leave opens the country step and the '
+      'driver stays signed in; Continue there opens the form again', (
+    tester,
+  ) async {
+    final scoped = await pumpScoped(tester);
     await _fillPerson(tester, dob: '1990-01-01');
     final NavigatorState nav = tester.state(find.byType(Navigator).first);
     await nav.maybePop();
     await tester.pump();
-    // Owner 2026-11-25: edited fields ask "Leave without saving?" first.
     expect(find.text('Leave without saving?'), findsOneWidget);
     expect(find.text('Your changes will be lost.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('leave-unsaved-stay')));
@@ -240,8 +265,71 @@ void main() {
     await nav.maybePop();
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('leave-unsaved-leave')));
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsOneWidget);
+    expect(find.byKey(const ValueKey('details-leaving')), findsNothing);
+    expect(scoped.logouts, isEmpty);
+    expect(find.text('Step one'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('country-continue')));
+    await _settle(tester);
+    expect(find.byType(DriverDetailsScreen), findsOneWidget);
+    expect(scoped.logouts, isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('owner 2026-11-25: nothing edited, Back goes straight to the '
+      'country step (no popup, no sign-out)', (tester) async {
+    final scoped = await pumpScoped(tester);
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await _settle(tester);
+    expect(find.byKey(const ValueKey('leave-unsaved')), findsNothing);
+    expect(find.byKey(const ValueKey('details-sign-out')), findsNothing);
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsOneWidget);
+    expect(scoped.logouts, isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('review #686: Back, a new country on the step, Continue: the '
+      'form shows and sends the new country (not the draft\'s)', (
+    tester,
+  ) async {
+    await pumpScoped(tester);
+    final NavigatorState nav = tester.state(find.byType(Navigator).first);
+    await nav.maybePop();
+    await _settle(tester);
+    await tester.tap(find.byKey(const ValueKey('country-FR')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('country-continue')));
+    await _settle(tester);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(DriverDetailsScreen), findsOneWidget);
+    expect(find.text(tr.acctCountryFrance), findsOneWidget);
+    expect(find.text('Paris'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('owner 2026-11-25 ("Si déconnecter donc demande déconnecter '
+      'sans modifier"): Log out after editing asks "Log out without '
+      'saving?"; Log out never freezes, even when the sign-out never '
+      'answers', (tester) async {
+    final scoped = await pumpScoped(tester);
+    await _fillPerson(tester, dob: '1990-01-01');
+    await _tap(tester, 'details-log-out');
+    await tester.pump();
+    expect(find.text('Log out without saving?'), findsOneWidget);
+    expect(find.text('Your changes will be lost.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('details-sign-out')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('logout-unsaved-stay')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('logout-unsaved')), findsNothing);
+    expect(scoped.logouts, isEmpty);
+    await _tap(tester, 'details-log-out');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('logout-unsaved-leave')));
     await tester.pump();
     await tester.pump();
+    expect(scoped.logouts, [1]);
     expect(find.byKey(const ValueKey('details-leaving')), findsOneWidget);
     await tester.pump(const Duration(seconds: 9));
     await tester.pump(const Duration(seconds: 1));
@@ -249,13 +337,28 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('owner 2026-11-25: nothing edited, Back keeps the old '
-      'Leave sign-up question (no unsaved popup)', (tester) async {
-    await _pump(tester, _Server());
+  testWidgets('owner 2026-11-25: Log out with nothing edited keeps the usual '
+      'log-out question', (tester) async {
+    final scoped = await pumpScoped(tester);
+    await _tap(tester, 'details-log-out');
+    await tester.pump();
+    expect(find.byKey(const ValueKey('logout-unsaved')), findsNothing);
+    expect(find.byKey(const ValueKey('details-sign-out')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('details-sign-out')));
+    await tester.pump();
+    await tester.pump();
+    expect(scoped.logouts, [1]);
+    await tester.pump(const Duration(seconds: 10));
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('an approved account (no country step) keeps the old Back: '
+      'the log-out question', (tester) async {
+    await pumpScoped(tester, status: 'active');
     final NavigatorState nav = tester.state(find.byType(Navigator).first);
     await nav.maybePop();
     await tester.pump();
-    expect(find.byKey(const ValueKey('leave-unsaved')), findsNothing);
+    expect(find.byKey(const ValueKey('driver-country-screen')), findsNothing);
     expect(find.byKey(const ValueKey('details-sign-out')), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });

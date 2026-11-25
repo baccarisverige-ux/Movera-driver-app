@@ -43,7 +43,7 @@ void main() {
     }
   });
 
-  test('the copy is contract v0.18.162', () {
+  test('the copy is contract v0.18.164', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
       contains('"version": "0.18.164"'),

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:movera/presentation/common/chat/call_screen.dart';
 import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/sos_not_sent_notice.dart';
@@ -696,6 +697,9 @@ class _MoveraAppState extends State<MoveraApp> {
     // none possible) keeps its logout as it was and never touches the
     // token store.
     if (DriverRuntimeConfig.current.authRequired) {
+      // Review #683 (SHOULD): the details screen stops waiting after 8 s;
+      // a sign-in that came meanwhile must keep its session and data.
+      final signIns = _auth.signInCount;
       // Offline on the server while the token is still there (never on a
       // trip: that would set "offline after the trip").
       if (_session.activeTripId == null) {
@@ -709,8 +713,20 @@ class _MoveraAppState extends State<MoveraApp> {
       // to the caller), nothing here changes. It removes the session's
       // push devices itself.
       await _auth.signOut();
+      if (_auth.signInCount != signIns) return;
       await _push?.signingOut(server: false);
+      if (_auth.signInCount != signIns) return;
       _account.clear();
+      try {
+        await _clearLocal(
+          guard: () {
+            if (_auth.signInCount != signIns) throw const _SignInOvertook();
+          },
+        );
+      } on _SignInOvertook {
+        // The newer driver's data stays.
+      }
+      return;
     }
     await _clearLocal();
   }
@@ -773,4 +789,9 @@ class _MoveraAppState extends State<MoveraApp> {
     homeConfigRepository: _homeConfig,
     activeRideRepository: _activeRide,
   );
+}
+
+/// Review #683: a sign-in came while a late sign-out was still clearing.
+class _SignInOvertook implements Exception {
+  const _SignInOvertook();
 }
