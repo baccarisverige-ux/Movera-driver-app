@@ -168,6 +168,8 @@ void main() {
       // Booster Seat (child_seat, no rule of its own) also needs the base
       // year; before, a 2015 car still fitted it in France.
       expect(fits(fr, 2015, 4, 'petrol'), isEmpty);
+      // The FR 6-year rule (v0.18.164) is the server's: its driver read
+      // raises minYear; this fixture is the stored document.
       expect(fits(fr, 2016, 4, 'petrol'), contains('economy'));
       // XL needs 6 seats; Electric needs an electric car.
       expect(fits(se, 2023, 6, 'diesel'), contains('xl'));

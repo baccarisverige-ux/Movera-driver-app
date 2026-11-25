@@ -382,6 +382,8 @@ class DriverAccountRepository {
     required String mediaType,
     String? ownerId,
     DateTime? expiresAt,
+    // v0.18.164: the same key for every try of one picked file.
+    String? idempotencyKey,
   }) async => AccountDocument.fromJson(
     await _api.postMultipart(
       documentsPath,
@@ -396,6 +398,7 @@ class DriverAccountRepository {
       mediaType: mediaType,
       // Owner item 6: a slow upload is waited for up to 60 s.
       timeout: DocumentUploadPolicy.timeout,
+      idempotencyKey: idempotencyKey,
     ),
   );
 }
