@@ -46,11 +46,11 @@ const Map<String, Map<String, String>> _texts = {
   },
   'body': {
     'en':
-        "Your cars and trips belong to this country. You can't change it yourself later.",
+        'Your cars and trips belong to this country. You can change it only until your account is approved.',
     'sv':
-        'Dina bilar och resor hör till detta land. Du kan inte ändra det själv senare.',
+        'Dina bilar och resor hör till detta land. Du kan bara ändra det tills ditt konto är godkänt.',
     'fr':
-        'Vos voitures et vos courses appartiennent à ce pays. Vous ne pourrez pas le changer vous-même plus tard.',
+        "Vos voitures et vos courses appartiennent à ce pays. Vous pouvez le changer seulement jusqu'à la validation de votre compte.",
   },
   'continue': {'en': 'Continue', 'sv': 'Fortsätt', 'fr': 'Continuer'},
   'error': {
