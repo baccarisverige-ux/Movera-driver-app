@@ -10,11 +10,11 @@ Future<ProviderIdentityToken?> obtainApple(
   ProviderSignInConfig config, {
   required bool web,
   required TargetPlatform target,
-}) async => throw const ProviderUnavailable('apple', 'not on the web build');
+}) async => throw const ProviderUnavailable('apple');
 
 Future<ProviderIdentityToken?> obtainGoogle(
   ProviderSignInConfig config, {
   required bool web,
   required TargetPlatform target,
   required Duration webGoogleTimeout,
-}) async => throw const ProviderUnavailable('google', 'not on the web build');
+}) async => throw const ProviderUnavailable('google');
