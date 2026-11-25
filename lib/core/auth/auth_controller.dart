@@ -115,11 +115,19 @@ class AuthController {
 
   /// Contract v0.15.0 (decision 6): the test numbers, test builds only.
 
+  /// Sessions saved by a sign-in on this device (review #683: a late
+  /// sign-out never touches a newer session).
+  int get signInCount => _auth.signInCount;
+
   /// Ends the session on the server and on this device.
   Future<void> signOut() async {
+    final signIns = _auth.signInCount;
     // v0.18.49 §71 (owner Q8): the server first; a refusal (a current trip,
     // [SignOutOnTrip]) changes nothing on this phone.
     await _auth.signOut();
+    // Review #683: a newer sign-in came while this one was still running
+    // (the details screen stopped waiting): leave the new session alone.
+    if (_auth.signInCount != signIns) return;
     // Owner 2026-11-20: a kept SOS never goes with the next driver; this
     // driver is told it was not sent.
     // Not awaited: sign-out never waits for the phone storage.
@@ -129,6 +137,7 @@ class AuthController {
     SignedOutNotice.clear();
     // Checker HIGH 2: the next account on this phone is asked on its own.
     await DriverLegal.instance.signedOut();
+    if (_auth.signInCount != signIns) return;
     signInResult = null;
     lastChallenge = null;
     providerLink = null;
