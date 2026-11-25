@@ -306,7 +306,7 @@ void main() {
       );
     });
 
-    // v0.18.156 (owner 2026-11-23): the rider moves the pickup up to 300 m for
+    // v0.18.160 (owner 2026-11-23): the rider moves the pickup up to 300 m for
     // free; the default was 200 m.
     test('the pickup move default is 300 m, as the contract says', () {
       expect(ZoneDefaults.maxPickupMoveMeters, 300);

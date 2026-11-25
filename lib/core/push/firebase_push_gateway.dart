@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:movera/core/push/native_push_platform.dart';
 import 'package:movera/core/push/push_config.dart';
@@ -18,8 +19,29 @@ class FirebasePushGateway implements NativePushGateway {
         appId: settings.appId,
         messagingSenderId: settings.messagingSenderId,
         projectId: settings.projectId,
+        iosBundleId: settings.iosBundleId,
       ),
     );
+    if (_isIos) {
+      // v0.18.156: a push that comes while the app is open is not shown
+      // (the offer stream and the bell list show it), as on Android.
+      await _messaging.setForegroundNotificationPresentationOptions();
+    }
+  }
+
+  static bool get _isIos =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// v0.18.156: on iOS FCM gives a token only once APNs gave this phone
+  /// its own token (right after the permission); wait for it up to 5 s.
+  /// False: not yet (the registrar tries again when the app comes back).
+  Future<bool> _apnsReady() async {
+    if (!_isIos) return true;
+    for (var i = 0; i < 10; i++) {
+      if (await _messaging.getAPNSToken() != null) return true;
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+    return false;
   }
 
   @override
@@ -28,6 +50,8 @@ class FirebasePushGateway implements NativePushGateway {
 
   @override
   Future<bool> requestPermission() async {
+    // iOS: alert, sound and badge (the defaults); Android 13+: the system
+    // notification permission.
     final settings = await _messaging.requestPermission();
     return _status(settings.authorizationStatus) == 'granted';
   }
@@ -42,6 +66,7 @@ class FirebasePushGateway implements NativePushGateway {
 
   @override
   Future<String?> token() async {
+    if (!await _apnsReady()) return null;
     final token = await _messaging.getToken();
     return token == null || token.isEmpty ? null : token;
   }

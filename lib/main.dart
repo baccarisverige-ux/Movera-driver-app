@@ -7,6 +7,7 @@ import 'package:movera/core/session/driver_route_observer.dart';
 
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
+import 'package:movera/core/logging/crash_catcher_start.dart';
 import 'package:movera/core/logging/crash_reports.dart';
 import 'package:movera/core/logging/restart_watch.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -86,6 +87,7 @@ import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/platform/safe_area_insets.dart';
 import 'package:movera/core/web/web_splash.dart';
 import 'package:movera/core/preview/preview_mode.dart';
+import 'package:movera/core/movera_scroll_behavior.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -241,6 +243,10 @@ class _MoveraAppState extends State<MoveraApp> {
         next: DriverLog.sink,
       );
       DriverLog.sink = reports.call;
+      // v0.18.158 (owner 2026-11-24 "Add to admin all kind of crash"): the
+      // last run's unclean end, the running marker, the freeze watch, the
+      // main isolate's errors and the unsent reports.
+      unawaited(startDriverCrashCatcher(reports));
       // Owner 2026-11-07 ("5. Mouchard redémarrage"): proof of a page
       // that iOS restarts from zero (live web builds only).
       RestartWatch.instance = startRestartWatch(
@@ -476,6 +482,8 @@ class _MoveraAppState extends State<MoveraApp> {
             navigatorObservers: [driverRouteObserver],
             title: 'Movera Driver',
             debugShowCheckedModeBanner: false,
+            // Owner 2026-11-24: nothing bounces past its edge on iOS.
+            scrollBehavior: const MoveraScrollBehavior(),
             locale: Locale(DriverLanguage.current.value),
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: const [

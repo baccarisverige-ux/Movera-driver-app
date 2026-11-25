@@ -72,9 +72,8 @@ class PushOpen {
 /// `web/movera_push.js` and the service worker `web/firebase-messaging-sw.js`,
 /// both started from [PushConfig] at run time. Android (BQ-V43, contract
 /// v0.18.105) starts Firebase from the server's public Android settings
-/// (`native_push_platform.dart`). iOS has no push yet: it needs the APNs
-/// key (Apple Developer account), so [supported] is false there and
-/// nothing is asked.
+/// (`native_push_platform.dart`). iOS (v0.18.156) does the same from the
+/// server's public iOS settings (`iosConfig`).
 abstract class PushPlatform {
   bool get supported;
 

@@ -614,7 +614,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                     key: _fullScrollKey,
                     controller: _tripMotion.fullScroll,
                     padding: const EdgeInsets.only(bottom: 16),
-                    physics: const TopClampedBouncingScrollPhysics(),
+                    physics: const ClampingScrollPhysics(),
                     child: Column(
                       key: _fullContentKey,
                       crossAxisAlignment: CrossAxisAlignment.start,

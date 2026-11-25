@@ -12,7 +12,6 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -22,8 +21,8 @@ import 'island_side_targets.dart';
 
 // D3 on Home, at 320x568 and 375x667 with text at 130 %:
 // UI-03 Android Back closes what is on top of Home before it leaves the app;
-// UI-02 the account-hold sheet's "Contact support" can be tapped and opens
-// support; UI-12 the Cash rides switch is read with its label.
+// UI-02 the account-hold sheet's links can be tapped (owner 2026-11-24: no
+// "Contact support" there; support stays in the side menu); UI-12 the Cash rides switch is read with its label.
 
 const _sizes = <Size>[Size(320, 568), Size(375, 667)];
 const _scale = 1.3;
@@ -218,8 +217,8 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('UI-02 hold sheet: Contact support is tappable and opens '
-        'support at $at', (tester) async {
+    testWidgets('UI-02 hold sheet: no Contact support, links tappable '
+        'at $at', (tester) async {
       var exits = 0;
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
@@ -239,26 +238,23 @@ void main() {
       await _pumpHome(tester, size, pending: true);
       await _tapRadar(tester);
       await _frames(tester, const Duration(milliseconds: 900));
-      final contact = find.text('Contact support');
-      expect(contact, findsOneWidget);
-      // Nothing (the red dock) sits on top of it.
-      final centre = tester.getCenter(contact);
+      // Owner 2026-11-24: no "Contact support" link on this sheet.
+      expect(find.text('Contact support'), findsNothing);
+      final skip = find.text('Skip demo');
+      expect(skip, findsOneWidget);
+      // Nothing (the red dock) sits on top of the sheet's links.
+      final centre = tester.getCenter(skip);
       expect(centre.dy, lessThan(size.height));
       final hits = tester.hitTestOnBinding(centre);
       expect(
-        hits.path.any((e) => e.target == tester.renderObject(contact)),
+        hits.path.any((e) => e.target == tester.renderObject(skip)),
         isTrue,
-        reason: 'the red dock covers Contact support',
+        reason: 'the red dock covers the hold sheet links',
       );
       // Back closes the hold sheet first; Home stays.
       expect(await _back(tester, () => exits), 0);
       await _frames(tester, const Duration(milliseconds: 900));
       expect(_panel(tester).panelPosition, lessThan(0.05));
-      await _tapRadar(tester);
-      await _frames(tester, const Duration(milliseconds: 900));
-      await tester.tap(find.text('Contact support'));
-      await _frames(tester, const Duration(milliseconds: 600));
-      expect(find.byType(SupportInboxScreen), findsOneWidget);
       await _end(tester);
     });
 

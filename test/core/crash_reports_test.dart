@@ -34,61 +34,59 @@ void main() {
 
   tearDown(() => CrashReports.currentScreen = null);
 
-  test(
-    'an uncaught error goes out as a crash with the v0.16.0 fields',
-    () async {
-      final sent = <http.Request>[];
-      final console = <DriverLogRecord>[];
-      final sink = sinkWith(
-        (r) async {
-          sent.add(r);
-          return http.Response('', 202);
-        },
-        token: () async => 'driver-access',
-        next: console.add,
-      );
-      CrashReports.currentScreen = 'driver-home';
-      sink(
-        DriverLogRecord(
-          level: DriverLogLevel.error,
-          name: 'movera',
-          message: 'Uncaught async error',
-          error: StateError(
-            'rider Anna +46 70 123 45 67 anna@example.com 59.334591,18.063240 '
-            '{"riderName":"Anna","pickupAddress":"Storgatan 1"}',
-          ),
-          stack: StackTrace.current,
-          fatal: true,
+  test('an uncaught error goes out as a crash with the v0.16.0 fields', () async {
+    final sent = <http.Request>[];
+    final console = <DriverLogRecord>[];
+    final sink = sinkWith(
+      (r) async {
+        sent.add(r);
+        return http.Response('', 202);
+      },
+      token: () async => 'driver-access',
+      next: console.add,
+    );
+    CrashReports.currentScreen = 'driver-home';
+    sink(
+      DriverLogRecord(
+        level: DriverLogLevel.error,
+        name: 'movera',
+        message: 'Uncaught async error',
+        error: StateError(
+          'rider Anna +46 70 123 45 67 anna@example.com 59.334591,18.063240 '
+          '{"riderName":"Anna","pickupAddress":"Storgatan 1"}',
         ),
-      );
-      await settle();
-      expect(console, hasLength(1), reason: 'the console still gets it');
-      expect(
-        sent.single.url.toString(),
-        'https://api.movera.example/api/v1/telemetry/crashes',
-      );
-      expect(sent.single.headers['Authorization'], 'Bearer driver-access');
-      final body = jsonDecode(sent.single.body) as Map<String, dynamic>;
-      expect(body['app'], 'driver');
-      expect(body['platform'], 'android');
-      expect(body['appVersion'], '1.0.0');
-      expect(body['build'], '1');
-      expect(body['screen'], 'driver-home');
-      expect(body['kind'], 'crash');
-      expect(DateTime.parse(body['occurredAt'] as String).isUtc, isTrue);
-      final error = body['error'] as String;
-      for (final personal in [
-        '123 45 67',
-        'anna@example.com',
-        '59.334591',
-        '"Anna"',
-        'Storgatan',
-      ]) {
-        expect(error, isNot(contains(personal)));
-      }
-      sink.dispose();
-    },
-  );
+        stack: StackTrace.current,
+        fatal: true,
+      ),
+    );
+    await settle();
+    expect(console, hasLength(1), reason: 'the console still gets it');
+    expect(
+      sent.single.url.toString(),
+      'https://api.movera.example/api/v1/telemetry/crashes',
+    );
+    expect(sent.single.headers['Authorization'], 'Bearer driver-access');
+    final body = jsonDecode(sent.single.body) as Map<String, dynamic>;
+    expect(body['app'], 'driver');
+    expect(body['platform'], 'android');
+    expect(body['appVersion'], '1.0.0');
+    expect(body['build'], '1');
+    expect(body['screen'], 'driver-home');
+    // v0.18.158 (contract.json#crashCatcher.kinds): an uncaught error is dart_error.
+    expect(body['kind'], 'dart_error');
+    expect(DateTime.parse(body['occurredAt'] as String).isUtc, isTrue);
+    final error = body['error'] as String;
+    for (final personal in [
+      '123 45 67',
+      'anna@example.com',
+      '59.334591',
+      '"Anna"',
+      'Storgatan',
+    ]) {
+      expect(error, isNot(contains(personal)));
+    }
+    sink.dispose();
+  });
 
   test(
     'DriverLog.error with an error is kind error; info lines stay home',
