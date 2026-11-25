@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-
 import '_helpers.dart';
 
 void main() {

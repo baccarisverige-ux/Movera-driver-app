@@ -1,5 +1,4 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';

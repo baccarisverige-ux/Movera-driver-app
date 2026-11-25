@@ -8,7 +8,6 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-
 import '_helpers.dart';
 
 void main() {

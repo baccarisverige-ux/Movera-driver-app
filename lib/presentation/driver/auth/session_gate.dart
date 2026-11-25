@@ -1,5 +1,4 @@
 import 'package:movera/presentation/driver/deferred_screens.dart';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';

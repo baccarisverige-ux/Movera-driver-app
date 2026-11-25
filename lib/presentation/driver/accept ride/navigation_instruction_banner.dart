@@ -2,7 +2,6 @@ import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

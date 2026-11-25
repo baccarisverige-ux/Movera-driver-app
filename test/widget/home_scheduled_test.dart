@@ -1,6 +1,5 @@
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 /// Passive debug samples: never writes panel position or drives animation.

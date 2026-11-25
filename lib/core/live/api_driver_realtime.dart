@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:movera/core/live/live_location_share.dart';
-
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;

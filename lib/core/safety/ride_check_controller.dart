@@ -1,5 +1,4 @@
 import 'package:movera/core/safety/emergency_numbers.dart';
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';

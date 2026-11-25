@@ -9,7 +9,6 @@ import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
-
 import '_helpers.dart';
 
 void main() {

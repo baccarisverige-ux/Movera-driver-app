@@ -7,7 +7,6 @@ import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-
 import '_helpers.dart';
 
 void main() {
