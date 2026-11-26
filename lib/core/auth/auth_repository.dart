@@ -246,8 +246,8 @@ class AuthRepository {
     try {
       // Follow-up #686 (a), review: this session's own tokens, read once.
       // A 401 renews them here, never through the shared refresh (which
-      // could save over, or use, a newer sign-in's tokens), and the
-      // renewed pair is not saved: it only ends this same session.
+      // could save over, or use, a newer sign-in's tokens); the renewed
+      // pair is saved only while no newer sign-in replaced this session.
       final access = await _tokens.readAccess();
       final refresh = await _tokens.readRefresh();
       if (access?.isNotEmpty == true && refresh?.isNotEmpty == true) {
