@@ -78,6 +78,7 @@ import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
 import 'package:movera/core/waybill/last_trip_tip.dart';
+import 'package:movera/core/waybill/last_trip_restore.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/movera_line_icon.dart';
