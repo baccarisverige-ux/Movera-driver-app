@@ -44,6 +44,9 @@ class SettingsRepository {
   static final Map<String, _SectionSaves> _saves = <String, _SectionSaves>{};
 
   _SectionSaves _savesOf(String section) {
+    // A repository from before a logout never touches the current
+    // session's order (its own writes fail the session check anyway).
+    if (_generation != LocalWriteSession.generation) return _SectionSaves();
     final prefix = '$_generation|';
     _saves.removeWhere((key, _) => !key.startsWith(prefix));
     return _saves.putIfAbsent('$prefix$section', _SectionSaves.new);
@@ -57,6 +60,8 @@ class SettingsRepository {
     if (server == null || !server.handles(section)) return local;
     try {
       final values = await server.read(section, local);
+      // The save order is not touched: a refusal compares the phone text,
+      // so a server copy written here is never put back by mistake.
       if (!identical(values, local)) await _saveLocal(section, values);
       return values;
     } catch (error) {

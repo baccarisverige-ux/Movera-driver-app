@@ -280,7 +280,56 @@ void main() {
         DriverCategoryChoice.section,
       );
       remote.offline = false;
-      expect(data['selected'], isNot([false, false]));
+      // The next driver's refusal put back their own (empty) phone copy.
+      expect(data['selected'], isNull);
+    },
+  );
+
+  test(
+    'a save from before the logout never resets the next driver\'s order',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final two = _TwoGates();
+      SettingsRepository.remote = two;
+      final stale = SettingsRepository();
+      LocalWriteSession.beginCleanup();
+      LocalWriteSession.endCleanup();
+      await SettingsRepository().save(DriverCategoryChoice.section, {
+        'selected': [true, true],
+      });
+      two.hold = true;
+      final a = SettingsRepository()
+          .save(DriverCategoryChoice.section, {
+            'selected': [false, true],
+          })
+          .then((_) => true, onError: (_) => false);
+      await pumpEventQueue();
+      // A screen still open from before the logout saves (and fails).
+      await stale
+          .save(DriverCategoryChoice.section, {
+            'selected': [false, false],
+          })
+          .then((_) {}, onError: (_) {});
+      final b = SettingsRepository()
+          .save(DriverCategoryChoice.section, {
+            'selected': [true, false],
+          })
+          .then((_) => true, onError: (_) => false);
+      await pumpEventQueue();
+      for (final gate in two.waiting.toList()) {
+        gate.complete(false);
+        await pumpEventQueue();
+      }
+      await a;
+      await b;
+      two.hold = false;
+      remote.offline = true;
+      SettingsRepository.remote = remote;
+      final data = await SettingsRepository().read(
+        DriverCategoryChoice.section,
+      );
+      remote.offline = false;
+      expect(data['selected'], [true, true]);
     },
   );
 }
