@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,7 @@ class _Remote implements RemoteSettings {
   Map<String, dynamic> server = {};
   bool fail = false;
   bool offline = false;
+  Completer<void>? gate;
   @override
   bool handles(String section) => section == DriverCategoryChoice.section;
   @override
@@ -27,6 +29,11 @@ class _Remote implements RemoteSettings {
 
   @override
   Future<void> save(String section, Map<String, dynamic> values) async {
+    final wait = gate;
+    if (wait != null) {
+      gate = null;
+      await wait.future;
+    }
     if (fail) throw const SocketException('offline');
     server = Map.of(values);
   }
@@ -68,6 +75,36 @@ void main() {
       expect(data['selected'], [true, true]);
     },
   );
+
+  test('a newer save is not undone by an older refused one', () async {
+    final repo = SettingsRepository();
+    await repo.save(DriverCategoryChoice.section, {
+      'selected': [true, true],
+    });
+    final held = Completer<void>();
+    remote.gate = held;
+    remote.fail = true;
+    final older = repo.save(DriverCategoryChoice.section, {
+      'selected': [false, true],
+    });
+    await SettingsRepository.settle();
+    await Future<void>.delayed(Duration.zero);
+    // A newer save reaches the phone while the older one is with the server.
+    await SettingsRepository().save('other', {});
+    remote.fail = false;
+    final newerRepo = SettingsRepository();
+    SettingsRepository.remote = null;
+    await newerRepo.save(DriverCategoryChoice.section, {
+      'selected': [true, false],
+    });
+    SettingsRepository.remote = remote;
+    remote.fail = true;
+    held.complete();
+    await expectLater(older, throwsA(isA<SocketException>()));
+    remote.offline = true;
+    final data = await SettingsRepository().read(DriverCategoryChoice.section);
+    expect(data['selected'], [true, false]);
+  });
 
   test(
     'the saved choice comes back after a sign-in (logout reset it)',

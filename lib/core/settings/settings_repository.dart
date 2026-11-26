@@ -135,7 +135,12 @@ class SettingsRepository {
       await server.save(section, values);
     } catch (_) {
       try {
-        await _saveLocal(section, before);
+        // Only while the phone still holds this refused value: a newer
+        // save that came meanwhile keeps its own.
+        final now = await _readLocal(section);
+        if (jsonEncode(now) == jsonEncode(values)) {
+          await _saveLocal(section, before);
+        }
       } catch (error) {
         DriverLog.warn('Settings $section not put back: $error');
       }
