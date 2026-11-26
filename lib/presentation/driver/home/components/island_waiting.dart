@@ -205,6 +205,13 @@ class _DigitalWaitingFaceState extends State<DigitalWaitingFace>
     duration: const Duration(milliseconds: 1200),
   );
 
+  /// Owner 2026-11-26 "Make the green dot bit blinking": the "Finding
+  /// trips" lamp fades 1 → 0.35 → 1 in a 1.2 s ease-in-out loop.
+  late final AnimationController _blink = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  );
+
   /// One loop of the three dots: each lights up in turn, then all rest.
   late final AnimationController _dots = AnimationController(
     vsync: this,
@@ -220,7 +227,13 @@ class _DigitalWaitingFaceState extends State<DigitalWaitingFace>
     if (_still) {
       _breath.stop();
       _dots.stop();
+      _blink
+        ..stop()
+        ..value = 0;
     } else {
+      if (widget.dots && !_blink.isAnimating) {
+        _blink.repeat(reverse: true);
+      }
       if (!_breath.isAnimating) {
         _breath.repeat(reverse: true);
       }
@@ -234,38 +247,43 @@ class _DigitalWaitingFaceState extends State<DigitalWaitingFace>
   void dispose() {
     _breath.dispose();
     _dots.dispose();
+    _blink.dispose();
     super.dispose();
   }
 
   Widget _lamp() => AnimatedBuilder(
-    animation: _breath,
+    animation: Listenable.merge([_breath, _blink]),
     builder: (context, _) {
       final t = _still ? 0.5 : _breath.value;
       final color = widget.color;
-      return SizedBox(
-        width: DigitalWaitingFace._lamp,
-        height: DigitalWaitingFace._lamp,
-        child: Center(
-          child: Container(
-            width: 18,
-            height: 18,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.16 + 0.08 * t),
-            ),
+      return Opacity(
+        key: const ValueKey<String>('island-finding-lamp'),
+        opacity: 1 - 0.65 * Curves.easeInOut.transform(_blink.value),
+        child: SizedBox(
+          width: DigitalWaitingFace._lamp,
+          height: DigitalWaitingFace._lamp,
+          child: Center(
             child: Container(
-              width: 9,
-              height: 9,
+              width: 18,
+              height: 18,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: color,
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.35 + 0.35 * t),
-                    blurRadius: 5 + 6 * t,
-                  ),
-                ],
+                color: color.withValues(alpha: 0.16 + 0.08 * t),
+              ),
+              child: Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35 + 0.35 * t),
+                      blurRadius: 5 + 6 * t,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

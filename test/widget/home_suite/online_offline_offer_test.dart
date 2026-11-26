@@ -45,7 +45,30 @@ void main() {
     expectNoException(tester);
   });
 
-  testWidgets('Q19: a long press on the radar asks "Go offline?" first', (
+  testWidgets(
+    '2026-11-26: a long press on the radar goes offline, no question',
+    (WidgetTester tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await pumpHome(tester, const Size(375, 812));
+      await tester.tap(find.text('OFF'));
+      await tester.pump(const Duration(milliseconds: 1550));
+      expect(find.text('LIVE'), findsOneWidget);
+
+      // The sheet is closed: the radar button at the bottom.
+      final radar = find.byKey(const ValueKey<String>('home-radar-long-press'));
+      await tester.longPress(radar);
+      await advanceAnimation(tester, const Duration(milliseconds: 520));
+      expect(find.text('Go offline?'), findsNothing);
+      expect(find.text('Tap to scan'), findsOneWidget);
+      // Offline, a long press on the radar asks nothing.
+      await tester.longPress(find.text('OFF'));
+      await advanceAnimation(tester, const Duration(milliseconds: 320));
+      expect(find.text('Go offline?'), findsNothing);
+      expectNoException(tester);
+    },
+  );
+
+  testWidgets('2026-11-26: a tap on the scanning radar goes offline', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -53,31 +76,14 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 1550));
     expect(find.text('LIVE'), findsOneWidget);
-
-    // The sheet is closed: the radar button at the bottom.
-    final radar = find.byKey(const ValueKey<String>('home-radar-long-press'));
-    await tester.longPress(radar);
-    await advanceAnimation(tester, const Duration(milliseconds: 320));
-    expect(find.text('Go offline?'), findsOneWidget);
-    // Stay online: nothing changes.
-    await tester.tap(find.byKey(const ValueKey<String>('go-offline-stay')));
-    await advanceAnimation(tester, const Duration(milliseconds: 320));
-    expect(find.text('Go offline?'), findsNothing);
-    expect(find.text('LIVE'), findsOneWidget);
-
-    await tester.longPress(radar);
-    await advanceAnimation(tester, const Duration(milliseconds: 320));
-    await tester.tap(find.byKey(const ValueKey<String>('go-offline-yes')));
+    await tester.tap(find.text('LIVE'));
     await advanceAnimation(tester, const Duration(milliseconds: 520));
-    expect(find.text('Tap to scan'), findsOneWidget);
-    // Offline, a long press on the radar asks nothing.
-    await tester.longPress(find.text('OFF'));
-    await advanceAnimation(tester, const Duration(milliseconds: 320));
     expect(find.text('Go offline?'), findsNothing);
+    expect(find.text('Tap to scan'), findsOneWidget);
     expectNoException(tester);
   });
 
-  testWidgets('Q19: holding the island while online asks "Go offline?"', (
+  testWidgets('2026-11-26: holding the island while online goes offline', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -85,8 +91,6 @@ void main() {
     await wakeIsland(tester);
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 1550));
-    // Let "Radar online" pass: the island says "Finding trips", the top
-    // of the radar.
     for (
       var i = 0;
       i < 20 && find.text('Finding trips').evaluate().isEmpty;
@@ -97,11 +101,9 @@ void main() {
     expect(find.text('Finding trips'), findsOneWidget);
     final island = find.byKey(const ValueKey<String>('last-trip-launcher'));
     await tester.longPress(island);
-    await advanceAnimation(tester, const Duration(milliseconds: 320));
-    expect(find.text('Go offline?'), findsOneWidget);
-    expect(find.byType(DriverRideHistory), findsNothing);
-    await tester.tap(find.byKey(const ValueKey<String>('go-offline-yes')));
     await advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Go offline?'), findsNothing);
+    expect(find.byType(DriverRideHistory), findsNothing);
     expect(find.text('Tap to scan'), findsOneWidget);
     expectNoException(tester);
   });

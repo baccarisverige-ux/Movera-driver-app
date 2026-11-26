@@ -490,7 +490,11 @@ class MoveraRadarOrb extends StatelessWidget {
                               left: 0,
                               right: 0,
                               child: Center(
-                                child: RadarStatusDot(online: online, scale: s),
+                                child: RadarStatusDot(
+                                  online: online,
+                                  offer: online && found,
+                                  scale: s,
+                                ),
                               ),
                             ),
                             if (loading)
@@ -526,19 +530,36 @@ class MoveraRadarOrb extends StatelessWidget {
 }
 
 /// The orb's status dot (owner 2026-11-24, P1 + S2): a 5 px dot in a 1 px
-/// white ring (7 px on the 104 px orb, scaled with it). Green with a soft
-/// 2.2 s pulse (to 1.06) while the radar is on; red and still, with a light
-/// glow, in every other state. No pulse with reduce motion.
+/// white ring (7 px on the 104 px orb, scaled with it). Green and gently
+/// blinking while the radar is on (owner 2026-11-26 "Make the green dot bit
+/// blinking": opacity 1 → 0.35 → 1, a 1.2 s ease-in-out loop, no size
+/// change); red and still, with a light glow, in every other state. No
+/// blink with reduce motion.
 class RadarStatusDot extends StatefulWidget {
-  const RadarStatusDot({super.key, required this.online, this.scale = 1});
+  const RadarStatusDot({
+    super.key,
+    required this.online,
+    this.offer = false,
+    this.scale = 1,
+  });
 
   final bool online;
+
+  /// Owner 2026-11-26 ("quand on voit offre radar card"): a Radar offer
+  /// card is up: the dot turns [amber] and keeps the same blink.
+  final bool offer;
   final double scale;
 
   static const Color green = Color(0xFF2FBF5B);
   static const Color red = Color(0xFFE5341C);
+
+  /// The app's warning amber (the island's warning / demand colour).
+  static const Color amber = Color(0xFFFFB020);
   static const double diameter = 7;
-  static const Duration period = Duration(milliseconds: 2200);
+  static const Duration period = Duration(milliseconds: 1200);
+
+  /// The lowest opacity of the blink.
+  static const double dimmest = 0.35;
   static const Key dotKey = ValueKey<String>('radar-status-dot');
 
   @override
@@ -583,14 +604,21 @@ class _RadarStatusDotState extends State<RadarStatusDot>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.online ? RadarStatusDot.green : RadarStatusDot.red;
+    final color = !widget.online
+        ? RadarStatusDot.red
+        : widget.offer
+        ? RadarStatusDot.amber
+        : RadarStatusDot.green;
     final d = RadarStatusDot.diameter * widget.scale;
     // Its own layer: the pulse repaints the dot only, not the orb.
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _pulse,
-        builder: (context, _) => Transform.scale(
-          scale: 1 + 0.06 * Curves.easeInOut.transform(_pulse.value),
+        builder: (context, _) => Opacity(
+          opacity:
+              1 -
+              (1 - RadarStatusDot.dimmest) *
+                  Curves.easeInOut.transform(_pulse.value),
           child: Container(
             key: RadarStatusDot.dotKey,
             width: d,

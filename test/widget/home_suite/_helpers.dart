@@ -169,10 +169,9 @@ Future<void> holdRadarOff(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 250));
   }
   await gesture.up();
-  await advanceAnimation(tester, const Duration(milliseconds: 320));
-  expect(find.text('Go offline?'), findsOneWidget);
-  await tester.tap(find.byKey(const ValueKey<String>('go-offline-yes')));
+  // Owner 2026-11-26: no "Go offline?" question, offline at once.
   await advanceAnimation(tester, const Duration(milliseconds: 520));
+  expect(find.text('Go offline?'), findsNothing);
 }
 
 /// No green or red wash on the Home sheet (R13-6).

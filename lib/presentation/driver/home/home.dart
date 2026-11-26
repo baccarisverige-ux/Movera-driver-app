@@ -115,6 +115,7 @@ import 'package:movera/presentation/driver/home/components/island_waiting.dart';
 import 'package:movera/core/island/island_waiting_signals.dart';
 import 'package:movera/core/surge/surge_map.dart';
 import 'package:movera/core/sound/radar_offer_sound.dart';
+import 'package:movera/core/sound/online_switch_sound.dart';
 import 'package:movera/presentation/driver/home/components/trip_problem_sheet.dart';
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/presentation/driver/home/components/driver_suspended_sheet.dart';
@@ -1135,6 +1136,7 @@ class _DriverHomeState extends State<DriverHome>
         setState(() {
           _driverSession.completeGoingOnline();
         });
+        unawaited(OnlineSwitchSound.wentOnline()); // owner 2026-11-26
         _HomeOfferRadar(this)._scheduleVisibleOffers();
       },
     );
@@ -1290,7 +1292,9 @@ class _DriverHomeState extends State<DriverHome>
           sweep: _radarSweepController.value,
           wedge: _radarWedge(found: hasRadarOffer),
           statusPulse: hasRadarOffer ? _matchPulse : 0,
-          onTap: hasRadarOffer ? _openRideOffers : null,
+          onTap: hasRadarOffer
+              ? _openRideOffers
+              : () => unawaited(_confirmGoOffline()),
         );
       },
     );

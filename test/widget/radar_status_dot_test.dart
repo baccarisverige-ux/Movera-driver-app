@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/presentation/driver/home/components/island_waiting.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 
 // Owner 2026-11-24: the Radar status dot, P1 (top-centre inside the disc,
@@ -95,25 +96,35 @@ Color _dotColor(WidgetTester tester) {
   return (box.decoration! as BoxDecoration).color!;
 }
 
-double _dotScale(WidgetTester tester) {
-  final t = tester.widget<Transform>(
+double _dotOpacity(WidgetTester tester) {
+  final o = tester.widget<Opacity>(
     find
         .ancestor(
           of: find.byKey(RadarStatusDot.dotKey),
-          matching: find.byType(Transform),
+          matching: find.byType(Opacity),
         )
         .first,
   );
-  return t.transform.getMaxScaleOnAxis();
+  return o.opacity;
 }
+
+bool _dotScaled(WidgetTester tester) => find
+    .ancestor(
+      of: find.byKey(RadarStatusDot.dotKey),
+      matching: find.byType(Transform),
+    )
+    .evaluate()
+    .any((e) => (e.widget as Transform).transform.getMaxScaleOnAxis() != 1);
 
 void main() {
   const green = Color(0xFF2FBF5B);
   const red = Color(0xFFE5341C);
+  // Owner 2026-11-26: a Radar offer card is up: amber.
+  const amber = Color(0xFFFFB020);
   final expected = {
     _State.on: green,
     _State.starting: green,
-    _State.offer: green,
+    _State.offer: amber,
     _State.exclusive: green,
     _State.reserve: green,
     _State.off: red,
@@ -123,12 +134,16 @@ void main() {
 
   for (final e in expected.entries) {
     testWidgets(
-      '${e.key.name}: one dot, ${e.value == green ? 'green' : 'red'}',
+      '${e.key.name}: one dot, ${e.value == green
+          ? 'green'
+          : e.value == amber
+          ? 'amber'
+          : 'red'}',
       (tester) async {
         await _pump(tester, _orb(e.key));
         expect(find.byKey(RadarStatusDot.dotKey), findsOneWidget);
         expect(_dotColor(tester), e.value);
-        final label = e.value == green ? 'Online' : 'Offline';
+        final label = e.value == red ? 'Offline' : 'Online';
         expect(
           find.bySemanticsLabel(RegExp('\\. $label')),
           findsWidgets,
@@ -177,26 +192,52 @@ void main() {
     );
   });
 
-  testWidgets('green pulses to 1.06 over 2.2 s; red stands still', (
+  testWidgets(
+    'green blinks 1 → 0.35 → 1 over 1.2 s, no size change; red still',
+    (tester) async {
+      await _pump(tester, _orb(_State.on));
+      expect(_dotOpacity(tester), closeTo(1, 0.001));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(_dotOpacity(tester), closeTo(0.35, 0.001));
+      expect(_dotScaled(tester), isFalse);
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(_dotOpacity(tester), closeTo(1, 0.001));
+
+      await _pump(tester, _orb(_State.offer));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(_dotColor(tester), amber);
+      expect(_dotOpacity(tester), lessThan(0.5), reason: 'amber blinks too');
+
+      await _pump(tester, _orb(_State.off));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(_dotOpacity(tester), 1);
+      expect(tester.binding.transientCallbackCount, 0);
+    },
+  );
+
+  testWidgets('"Finding trips" pill lamp blinks; still with reduce motion', (
     tester,
   ) async {
-    await _pump(tester, _orb(_State.on));
-    expect(_dotScale(tester), closeTo(1, 0.001));
-    await tester.pump(const Duration(milliseconds: 1100));
-    expect(_dotScale(tester), closeTo(1.06, 0.001));
-    await tester.pump(const Duration(milliseconds: 1100));
-    expect(_dotScale(tester), closeTo(1, 0.001));
-
-    await _pump(tester, _orb(_State.off));
-    await tester.pump(const Duration(milliseconds: 1100));
-    expect(_dotScale(tester), 1);
-    expect(tester.binding.transientCallbackCount, 0);
+    double lamp() => tester
+        .widget<Opacity>(
+          find.byKey(const ValueKey<String>('island-finding-lamp')),
+        )
+        .opacity;
+    await _pump(tester, const DigitalWaitingFace.finding());
+    expect(lamp(), closeTo(1, 0.001));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(lamp(), closeTo(0.35, 0.001));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(lamp(), closeTo(1, 0.001));
+    await _pump(tester, const DigitalWaitingFace.finding(), reduceMotion: true);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(lamp(), 1);
   });
 
-  testWidgets('reduce motion: no pulse', (tester) async {
+  testWidgets('reduce motion: no blink', (tester) async {
     await _pump(tester, _orb(_State.on), reduceMotion: true);
-    await tester.pump(const Duration(milliseconds: 1100));
-    expect(_dotScale(tester), 1);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_dotOpacity(tester), 1);
     expect(tester.binding.transientCallbackCount, 0);
   });
 
