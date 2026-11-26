@@ -18,6 +18,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/documents/document_file_picker.dart';
+import 'package:movera/presentation/driver/signup/signup_texts.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
 /// Documents, live (contract v0.5.3 §14): the person's required documents
@@ -312,14 +313,24 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
       now: DateTime.now(),
     );
     final expiresAt = doc?.expiresAt ?? _summaryExpiry(type, summary);
+    // v0.18.166 (signupV2.profilePhoto.locked, owner 2026-11-26 "Peut
+    // pas"): an approved profile photo is changed only by support; no
+    // change entry here (the server answers 409 profile_photo_locked).
+    final photoLocked =
+        type == 'profile_photo' &&
+        (status == 'approved' || status == 'expired' || status == 'expiring');
     final opens =
-        kind == DocumentKind.file ||
-        (kind == DocumentKind.adminCheck && type == InfoSessionScreen.type);
+        !photoLocked &&
+        (kind == DocumentKind.file ||
+            (kind == DocumentKind.adminCheck &&
+                type == InfoSessionScreen.type));
     final row = DocumentRow(
       key: ValueKey('doc-row-$ownerId-$type'),
       title: settings.nameOf(type, language),
       status: status,
-      note: kind == DocumentKind.adminCheck
+      note: photoLocked
+          ? st('photoLocked')
+          : kind == DocumentKind.adminCheck
           ? (type == InfoSessionScreen.type && status != 'approved'
                 ? tr.infoHowToBook
                 : null)

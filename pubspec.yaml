@@ -77,6 +77,8 @@ dependencies:
   flutter_webrtc: ^1.6.3
   flutter_tts: ^4.2.5
   flutter_stripe: 11.5.0
+  cunning_document_scanner: ^3.1.0
+  image: ^4.5.4
 
 dev_dependencies:
   integration_test:
