@@ -161,10 +161,9 @@ extension _HomeMapPanels on _DriverHomeState {
   /// a tap does what the face says (scanning: go offline, 2026-11-26).
   Widget _radarLongPressOff(Widget radar) => GestureDetector(
     key: const ValueKey<String>('home-radar-long-press'),
-    onLongPress: () {
-      HapticFeedback.mediumImpact();
-      unawaited(_confirmGoOffline());
-    },
+    // One haptic only: going offline plays its own (OnlineSwitchSound,
+    // follow-up 2026-11-26: the hold gave two).
+    onLongPress: () => unawaited(_confirmGoOffline()),
     child: radar,
   );
 
@@ -340,9 +339,8 @@ extension _HomeMapPanels on _DriverHomeState {
                   activeTrackColor: const Color(0xFF1C6B45),
                   onChanged: _HomeOfferRules(this)._setAcceptsCash,
                 ),
-                onTap: () => _HomeOfferRules(
-                  this,
-                )._setAcceptsCash(!DriverOfferPreferences.acceptsCash.value),
+                onTap: () => _HomeOfferRules(this)
+                    ._setAcceptsCash(!DriverOfferPreferences.acceptsCash.value),
               ),
             ),
             if (showPerformance)
