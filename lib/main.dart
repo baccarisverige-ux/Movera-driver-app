@@ -746,8 +746,9 @@ class _MoveraAppState extends State<MoveraApp> {
     // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
-    // The Vibrate setting went with the settings.
-    OfferAlertSettings.reset();
+    // The Vibrate setting is a kept device setting (local_data.dart
+    // keptDeviceSettingKeys): read again, not reset.
+    unawaited(OfferAlertSettings.restore());
     _activeRide = PrefsActiveRideRepository();
     _waybills.reset();
     final dispatch = _dispatch;

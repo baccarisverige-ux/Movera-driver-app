@@ -6,6 +6,7 @@ import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_recorder.dart';
+import 'package:movera/core/settings/navigation_app.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
 import 'package:movera/core/support/local_support_repository.dart';
@@ -92,7 +93,9 @@ const localDataInventory = <LocalDataRecord>[
     dataClass: LocalDataClass.personal,
     purpose:
         'Section settings such as trusted-contact phones and vehicle drafts.',
-    retention: 'Until logout; the language section is kept (device setting).',
+    retention:
+        'Until logout; the device settings (language, navigation app, '
+        'sound, accessibility) are kept.',
   ),
   LocalDataRecord(
     key: DriverStartPosition.key,
@@ -170,6 +173,19 @@ Future<void> _removeOwner(SharedPreferences prefs) async {
 const String languageSectionKey =
     '${SettingsRepository.sectionPrefix}${DriverLanguage.section}';
 
+/// Tester 2026-11-25 ("Google Maps resets to the default"): the phone's own
+/// app settings, kept across logout like the language. None holds personal
+/// data: the navigation app (Trip settings), Sound & voice, Accessibility
+/// (flash, vibration). Before, logout removed them while the screens kept
+/// showing the choice from memory, so the next start fell back to the
+/// defaults (Google Maps, vibration on).
+const Set<String> keptDeviceSettingKeys = <String>{
+  languageSectionKey,
+  '${SettingsRepository.sectionPrefix}${NavigationAppSetting.section}',
+  '${SettingsRepository.sectionPrefix}sound',
+  '${SettingsRepository.sectionPrefix}accessibility',
+};
+
 /// Removes classified personal and recovery keys.
 ///
 /// Active-trip recovery still works until this runs. After it runs, terminal
@@ -225,7 +241,7 @@ Future<void> clearLocalUserData({
         .where(
           (key) =>
               (key.startsWith(SettingsRepository.sectionPrefix) &&
-                  key != languageSectionKey) ||
+                  !keptDeviceSettingKeys.contains(key)) ||
               key.startsWith(LocalQuarantine.prefix),
         )
         .toList(growable: false);
