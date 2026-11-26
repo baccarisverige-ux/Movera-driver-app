@@ -244,16 +244,25 @@ class AuthRepository {
   Future<void> signOut() async {
     final signIns = _signIns;
     try {
-      if (await hasSession()) {
-        // Follow-up #686 (a): this session's own token, no refresh on a
-        // 401, so a newer sign-in's refresh token is never spent here.
-        final access = await _tokens.readAccess();
+      // Follow-up #686 (a), review: this session's own tokens, read once.
+      // A 401 renews them here, never through the shared refresh (which
+      // could save over, or use, a newer sign-in's tokens), and the
+      // renewed pair is not saved: it only ends this same session.
+      final access = await _tokens.readAccess();
+      final refresh = await _tokens.readRefresh();
+      if (access?.isNotEmpty == true && refresh?.isNotEmpty == true) {
         try {
           await _api.post(signOutPath, bearer: access);
         } on ApiError catch (error) {
-          // Expired token, same session still here: renew it and retry.
-          if (error.statusCode != 401 || _signIns != signIns) rethrow;
-          await _api.post(signOutPath);
+          if (error.statusCode != 401) rethrow;
+          final renewed = await _api.post(
+            ApiClient.refreshPath,
+            body: {'refreshToken': refresh},
+            authenticated: false,
+          );
+          final next = renewed['accessToken'];
+          if (next is! String || next.isEmpty) rethrow;
+          await _api.post(signOutPath, bearer: next);
         }
       }
     } on ApiError catch (error) {

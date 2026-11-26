@@ -114,13 +114,15 @@ void main() {
     'a late sign-out with an expired token never spends the new refresh token',
     () async {
       final signOutAnswer = Completer<http.Response>();
-      var refreshes = 0;
+      final refreshTokensSent = <Object?>[];
       final client = MockClient((request) async {
         switch (request.url.path) {
           case AuthRepository.signOutPath:
             return signOutAnswer.future;
           case ApiClient.refreshPath:
-            refreshes++;
+            refreshTokensSent.add(
+              (jsonDecode(request.body) as Map)['refreshToken'],
+            );
             return http.Response(
               jsonEncode({'accessToken': 'x', 'refreshToken': 'xr'}),
               200,
@@ -149,7 +151,7 @@ void main() {
       await repository.verify('+46701234567', 'otp-1', '1234');
       signOutAnswer.complete(http.Response('{}', 401));
       await late;
-      expect(refreshes, 0);
+      expect(refreshTokensSent, isNot(contains('nr')));
       expect(await tokens.readAccess(), 'n');
       expect(await tokens.readRefresh(), 'nr');
     },
@@ -184,6 +186,58 @@ void main() {
       await repository.signOut();
       expect(seen.last, 'Bearer fresh');
       expect(await tokens.readAccess(), isNull);
+    },
+  );
+
+  test(
+    'a sign-in that lands during the renewal keeps its tokens and session',
+    () async {
+      final refreshAnswer = Completer<http.Response>();
+      final signOutBearers = <String?>[];
+      final client = MockClient((request) async {
+        switch (request.url.path) {
+          case AuthRepository.signOutPath:
+            signOutBearers.add(request.headers['Authorization']);
+            return request.headers['Authorization'] == 'Bearer o2'
+                ? http.Response('{}', 200)
+                : http.Response('{}', 401);
+          case ApiClient.refreshPath:
+            return refreshAnswer.future;
+          case AuthRepository.verifyPath:
+            return http.Response(
+              jsonEncode({'accessToken': 'n', 'refreshToken': 'nr'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('{}', 404);
+      });
+      final tokens = MemoryTokenStore()..save(access: 'o', refresh: 'or');
+      final repository = AuthRepository(
+        api: ApiClient(
+          client: client,
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: tokens,
+        ),
+        tokens: tokens,
+      );
+      final late = repository.signOut();
+      for (var i = 0; i < 20 && !refreshAnswer.isCompleted; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      await repository.verify('+46701234567', 'otp-1', '1234');
+      refreshAnswer.complete(
+        http.Response(
+          jsonEncode({'accessToken': 'o2', 'refreshToken': 'or2'}),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      );
+      await late;
+      expect(signOutBearers, isNot(contains('Bearer n')));
+      expect(signOutBearers.last, 'Bearer o2');
+      expect(await tokens.readAccess(), 'n');
+      expect(await tokens.readRefresh(), 'nr');
     },
   );
 }
