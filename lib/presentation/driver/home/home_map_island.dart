@@ -129,7 +129,13 @@ extension _HomeMapIsland on _DriverHomeState {
   /// Owner 2026-11-07: LAST TRIP is fare + tip, a tip given after the trip
   /// included. [auto]: Home shown, back on top or back to the front.
   void _refreshLastTripTip({bool auto = false}) {
-    unawaited(LastTripTip.refresh(_waybills, auto: auto));
+    // Owner 2026-11-26: after a restart the island's last trip is read
+    // back (phone, then server) before the tip check.
+    unawaited(
+      LastTripRestore.restore(
+        _waybills,
+      ).then((_) => LastTripTip.refresh(_waybills, auto: auto)),
+    );
   }
 
   /// A trip that just ended still has its money updating.

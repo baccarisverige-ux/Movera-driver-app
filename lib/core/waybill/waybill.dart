@@ -343,6 +343,13 @@ abstract interface class WaybillRepository {
   /// after the trip); kept when the last trip is another one by then.
   void updateLast(WaybillRecord record);
 
+  /// Owner 2026-11-26 ("Why cant see last trip (amount in island)"): the
+  /// last finished trip read back after the app restarts (the phone's
+  /// save or `GET /driver/trips`). Only fills an empty slot: a trip
+  /// finished on this run is never replaced; [over] (an earlier restored
+  /// copy still shown) may be.
+  void restoreLast(WaybillRecord record, {WaybillRecord? over});
+
   /// Move a secured next trip into the current slot.
   ///
   /// Returns the promoted current record, or null if no trip is queued or
@@ -439,6 +446,12 @@ class InMemoryWaybillRepository implements WaybillRepository {
   @override
   void updateLast(WaybillRecord record) {
     if (last?.tripId != record.tripId) return;
+    _last.value = record;
+  }
+
+  @override
+  void restoreLast(WaybillRecord record, {WaybillRecord? over}) {
+    if (last != null && (over == null || !identical(last, over))) return;
     _last.value = record;
   }
 

@@ -11,6 +11,7 @@ import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
 import 'package:movera/core/support/local_support_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
+import 'package:movera/core/waybill/last_trip_restore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Class of a local key. This store is recoverable demo state, not secure storage.
@@ -223,6 +224,8 @@ Future<void> clearLocalUserData({
       PrefsActiveRideRepository.terminalKey,
       DriverStartPosition.key,
       RecentDestinations.key,
+      // Owner 2026-11-26: the island's saved last trip is the driver's.
+      LastTripRestore.prefsKey,
     ];
     guard?.call();
     DriverStartPosition.clearMemory();
