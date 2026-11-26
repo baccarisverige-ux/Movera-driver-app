@@ -166,19 +166,15 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
         }
         return switch (snapshot.data) {
           _Root.home => widget.homeBuilder(),
-          _Root.country => driverCountryScreen(
-            account: widget.account!,
-            onDone: (_, saved) => setState(() {
-              _root = Future.value(
-                saved.needsDetails ? _Root.details : _Root.home,
-              );
-            }),
-          ),
-          _Root.details => driverDetailsScreen(
+          // v0.18.166 (signupV2): the country step and the details form
+          // are now ONE "Vos informations" screen, then the checklist; it
+          // comes back on every opening until the registration is sent.
+          // driverCountryScreen / driverDetailsScreen stay (Rule 21).
+          _Root.country || _Root.details => driverSignupScreen(
             account: widget.account!,
             phone: widget.auth.signedInPhone,
             prefill: widget.auth.providerLink,
-            onDone: (context) => Navigator.of(context).pushAndRemoveUntil(
+            onHome: (context) => Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute<void>(builder: (_) => widget.homeBuilder()),
               (_) => false,
             ),

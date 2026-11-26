@@ -2,6 +2,7 @@
 // no new deferred library in the first download).
 export 'package:movera/presentation/driver/account/driver_country_screen.dart';
 export 'package:movera/presentation/driver/account/driver_details_screen.dart';
+export 'package:movera/presentation/driver/signup/signup_entry.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
@@ -19,7 +20,7 @@ import 'package:movera/presentation/driver/profile/delete_account.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/presentation/driver/account/contact_change_screen.dart';
-import 'package:movera/presentation/driver/account/driver_details_screen.dart';
+import 'package:movera/presentation/driver/signup/signup_entry.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
@@ -279,12 +280,15 @@ class _DriverProfileState extends State<DriverProfile> {
                 _item(
                   Icons.badge_outlined,
                   ptr.acctDetailsTitle,
-                  DriverDetailsScreen(
+                  // v0.18.166 (signupV2, review 2026-11-26): the new
+                  // "Vos informations" + checklist, which send the address
+                  // and personnummer the server now requires. The old
+                  // DriverDetailsScreen stays in the code (Rule 21).
+                  SignupEntry(
                     key: const ValueKey('profile-details'),
                     account: _liveSession!,
-                    editing: true,
-                    onBack: () => maybePopOwned(context),
-                    onDone: (context) {
+                    phone: null,
+                    onHome: (context) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(ptr.acctDetailsSaved)),
                       );

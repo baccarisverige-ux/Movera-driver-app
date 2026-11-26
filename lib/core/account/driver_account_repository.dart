@@ -17,6 +17,9 @@ class DriverAccountRepository {
 
   final ApiClient _api;
 
+  /// v0.18.166: the address suggestions of the sign-up use the same client.
+  ApiClient get api => _api;
+
   static const profilePath = '/api/v1/driver/profile';
   static const onboardingPath = '/api/v1/driver/onboarding';
   static const countryPath = '/api/v1/driver/country';
@@ -160,9 +163,15 @@ class DriverAccountRepository {
 
   /// v0.18.162 (`driverCountryFirst.step`): `PUT /driver/country`, the
   /// first-sign-in country step (before approval only).
-  Future<DriverAccount> setCountry(String country) async =>
+  ///
+  /// v0.18.166 (`signupV2.regionStep`): [cityId] is the Région picked on
+  /// "Vos informations" (400 `invalid_city` for another country's).
+  Future<DriverAccount> setCountry(String country, {String? cityId}) async =>
       DriverAccount.fromJson(
-        await _api.put(countryPath, body: {'country': country}),
+        await _api.put(
+          countryPath,
+          body: {'country': country, 'cityId': ?cityId},
+        ),
       );
 
   /// Contract v0.17.0: `GET /driver/onboarding/settings`, the admin's

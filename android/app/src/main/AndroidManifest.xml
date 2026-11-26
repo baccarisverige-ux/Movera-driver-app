@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -24,7 +25,12 @@
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules"
-        android:dataExtractionRules="@xml/data_extraction_rules">
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        tools:replace="android:fullBackupContent,android:dataExtractionRules"
+        tools:remove="android:theme">
+        <!-- v0.18.166 sign-up v2: cunning_document_scanner declares its own
+             backup rules and an AppCompat theme on <application>; Movera
+             keeps its backup rules and its activity themes. -->
         <meta-data android:name="com.google.android.geo.API_KEY"
                    android:value="${googleMapsApiKey}"/>
         <activity
