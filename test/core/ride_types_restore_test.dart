@@ -39,6 +39,27 @@ class _Remote implements RemoteSettings {
   }
 }
 
+/// Holds every server save until the test lets it answer.
+class _TwoGates implements RemoteSettings {
+  bool fail = false;
+  final waiting = <Completer<void>>[];
+  @override
+  bool handles(String section) => section == DriverCategoryChoice.section;
+  @override
+  Future<Map<String, dynamic>> read(
+    String section,
+    Map<String, dynamic> local,
+  ) async => local;
+  @override
+  Future<void> save(String section, Map<String, dynamic> values) async {
+    if (!fail) return;
+    final gate = Completer<void>();
+    waiting.add(gate);
+    await gate.future;
+    throw const SocketException('offline');
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late _Remote remote;
@@ -90,7 +111,6 @@ void main() {
     await SettingsRepository.settle();
     await Future<void>.delayed(Duration.zero);
     // A newer save reaches the phone while the older one is with the server.
-    await SettingsRepository().save('other', {});
     remote.fail = false;
     final newerRepo = SettingsRepository();
     SettingsRepository.remote = null;
@@ -124,4 +144,44 @@ void main() {
       expect(signedIn, contains('DriverCategoryChoice.restore()'));
     },
   );
+
+  test('two screens both refused offline: the last confirmed choice comes '
+      'back, whichever refusal lands first', () async {
+    for (final olderFirst in [true, false]) {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final two = _TwoGates();
+      SettingsRepository.remote = two;
+      final repo = SettingsRepository();
+      two.fail = false;
+      await repo.save(DriverCategoryChoice.section, {
+        'selected': [true, true],
+      });
+      two.fail = true;
+      final a = repo.save(DriverCategoryChoice.section, {
+        'selected': [false, true],
+      });
+      await pumpEventQueue();
+      final b = SettingsRepository().save(DriverCategoryChoice.section, {
+        'selected': [true, false],
+      });
+      await pumpEventQueue();
+      expect(two.waiting, hasLength(2));
+      final refusedA = expectLater(a, throwsA(isA<SocketException>()));
+      final refusedB = expectLater(b, throwsA(isA<SocketException>()));
+      final order = olderFirst ? [0, 1] : [1, 0];
+      for (final index in order) {
+        two.waiting[index].complete();
+        await pumpEventQueue();
+      }
+      await refusedA;
+      await refusedB;
+      remote.offline = true;
+      SettingsRepository.remote = remote;
+      final data = await SettingsRepository().read(
+        DriverCategoryChoice.section,
+      );
+      expect(data['selected'], [true, true], reason: 'olderFirst=$olderFirst');
+      remote.offline = false;
+    }
+  });
 }

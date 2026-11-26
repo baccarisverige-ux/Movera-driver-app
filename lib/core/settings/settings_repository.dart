@@ -37,6 +37,13 @@ class SettingsRepository {
   /// set by a live build (main.dart); null in the demo and in tests.
   static RemoteSettings? remote;
 
+  /// Per section: server saves still waiting, and the last choice the
+  /// server took (or the phone copy before the first waiting save). Two
+  /// screens both refused offline put back that, in any order (review #695).
+  static final Map<String, int> _inFlight = <String, int>{};
+  static final Map<String, Map<String, dynamic>> _confirmed =
+      <String, Map<String, dynamic>>{};
+
   /// The section's values: the server's when [remote] covers it and answers
   /// (the phone copy is then updated), else the phone copy.
   Future<Map<String, dynamic>> read(String section) async {
@@ -130,21 +137,33 @@ class SettingsRepository {
       return;
     }
     final before = await _readLocal(section);
+    if ((_inFlight[section] ?? 0) == 0) _confirmed[section] = before;
+    _inFlight[section] = (_inFlight[section] ?? 0) + 1;
     await _saveLocal(section, values);
     try {
       await server.save(section, values);
+      _confirmed[section] = Map<String, dynamic>.of(values);
     } catch (_) {
       try {
         // Only while the phone still holds this refused value: a newer
-        // save that came meanwhile keeps its own.
+        // save that came meanwhile keeps its own. What goes back is the
+        // last choice the server took, so two refused saves end right in
+        // any order (review #695).
         final now = await _readLocal(section);
         if (jsonEncode(now) == jsonEncode(values)) {
-          await _saveLocal(section, before);
+          await _saveLocal(section, _confirmed[section] ?? before);
         }
       } catch (error) {
         DriverLog.warn('Settings $section not put back: $error');
       }
       rethrow;
+    } finally {
+      final left = (_inFlight[section] ?? 1) - 1;
+      if (left <= 0) {
+        _inFlight.remove(section);
+      } else {
+        _inFlight[section] = left;
+      }
     }
   }
 
