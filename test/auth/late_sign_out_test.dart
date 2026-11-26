@@ -109,4 +109,81 @@ void main() {
       expect(await tokens.readAccess(), 'n');
     },
   );
+
+  test(
+    'a late sign-out with an expired token never spends the new refresh token',
+    () async {
+      final signOutAnswer = Completer<http.Response>();
+      var refreshes = 0;
+      final client = MockClient((request) async {
+        switch (request.url.path) {
+          case AuthRepository.signOutPath:
+            return signOutAnswer.future;
+          case ApiClient.refreshPath:
+            refreshes++;
+            return http.Response(
+              jsonEncode({'accessToken': 'x', 'refreshToken': 'xr'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case AuthRepository.verifyPath:
+            return http.Response(
+              jsonEncode({'accessToken': 'n', 'refreshToken': 'nr'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('{}', 404);
+      });
+      final tokens = MemoryTokenStore()..save(access: 'o', refresh: 'or');
+      final repository = AuthRepository(
+        api: ApiClient(
+          client: client,
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: tokens,
+        ),
+        tokens: tokens,
+      );
+      final late = repository.signOut();
+      await Future<void>.delayed(Duration.zero);
+      await repository.verify('+46701234567', 'otp-1', '1234');
+      signOutAnswer.complete(http.Response('{}', 401));
+      await late;
+      expect(refreshes, 0);
+      expect(await tokens.readAccess(), 'n');
+      expect(await tokens.readRefresh(), 'nr');
+    },
+  );
+
+  test(
+    'an expired token of the same session is renewed, then signed out',
+    () async {
+      final seen = <String?>[];
+      final client = MockClient((request) async {
+        if (request.url.path == ApiClient.refreshPath) {
+          return http.Response(
+            jsonEncode({'accessToken': 'fresh', 'refreshToken': 'fr'}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        seen.add(request.headers['Authorization']);
+        return request.headers['Authorization'] == 'Bearer fresh'
+            ? http.Response('{}', 200)
+            : http.Response('{}', 401);
+      });
+      final tokens = MemoryTokenStore()..save(access: 'old', refresh: 'r');
+      final repository = AuthRepository(
+        api: ApiClient(
+          client: client,
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: tokens,
+        ),
+        tokens: tokens,
+      );
+      await repository.signOut();
+      expect(seen.last, 'Bearer fresh');
+      expect(await tokens.readAccess(), isNull);
+    },
+  );
 }

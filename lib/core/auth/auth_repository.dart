@@ -244,7 +244,18 @@ class AuthRepository {
   Future<void> signOut() async {
     final signIns = _signIns;
     try {
-      if (await hasSession()) await _api.post(signOutPath);
+      if (await hasSession()) {
+        // Follow-up #686 (a): this session's own token, no refresh on a
+        // 401, so a newer sign-in's refresh token is never spent here.
+        final access = await _tokens.readAccess();
+        try {
+          await _api.post(signOutPath, bearer: access);
+        } on ApiError catch (error) {
+          // Expired token, same session still here: renew it and retry.
+          if (error.statusCode != 401 || _signIns != signIns) rethrow;
+          await _api.post(signOutPath);
+        }
+      }
     } on ApiError catch (error) {
       if (error.statusCode == 409 && error.reason == SignOutOnTrip.reason) {
         throw SignOutOnTrip(error.message);
