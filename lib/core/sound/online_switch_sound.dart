@@ -9,8 +9,8 @@ import 'package:movera/core/sound/phone_sound.dart';
 
 /// Owner 2026-11-26: a short sound when the driver goes online
 /// (`assets/sounds/radar_on.mp3`) and offline (`radar_off.mp3`), with a
-/// light haptic. Both files are a placeholder until the owner picks the
-/// final sounds; swapping the files needs no code change. Quiet while the
+/// light haptic. The owner's chosen sound (Pixabay "notification center",
+/// Pixabay content licence); offline is the same, lower pitch. Quiet while the
 /// phone is on silent (or very low) and while the driver's Sound & voice
 /// "General volume" is at 0; the haptic follows his Vibration setting.
 abstract final class OnlineSwitchSound {
