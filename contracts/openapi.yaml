@@ -1,11 +1,11 @@
-# Movera API v0.18.169 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
+# Movera API v0.18.168 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
 openapi: 3.1.0
 info:
   title: Movera API
-  version: 0.18.169
+  version: 0.18.168
   description: '**Proposed contract — no backend exists yet.** One future backend serves the Rider (Flutter), Driver (Flutter)
     and Admin (React/TS) apps. Source of truth for names, enums, transitions, realtime and errors is `contract.json` + `CONTRACT.md`
-    v0.18.169 in this folder; this file must agree with them.
+    v0.18.168 in this folder; this file must agree with them.
 
 
     Wire rules: ids match `^[A-Za-z0-9_-]{1,64}$`; times are RFC 3339 UTC with `Z`; durations are integer seconds; money is
@@ -84,7 +84,7 @@ tags:
 - name: Admin · Finance
 x-contract:
   name: movera
-  version: 0.18.169
+  version: 0.18.168
   source: contract.json
 paths:
   /auth/otp/request:
@@ -23491,7 +23491,7 @@ components:
         routePolyline:
           type: string
           minLength: 1
-          description: 'v0.18.169 (contract.json#offerRouteLine): Offer.routePolyline: the Google encoded polyline (precision
+          description: 'v0.18.168 (contract.json#offerRouteLine): Offer.routePolyline: the Google encoded polyline (precision
             5) of the trip, pickup through every stop to the drop-off, as stored from its quote (trips.route_polyline). Sent
             only on an open offer (offer_created / offer_updated and GET reads of an open offer); absent on a closed offer
             (withdrawn, expired, declined, accepted, claimed elsewhere), when the trip has no stored Google route (estimate,

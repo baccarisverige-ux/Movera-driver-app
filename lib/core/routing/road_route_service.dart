@@ -91,7 +91,7 @@ class RoadRouteService implements RouteRepository {
     if (_closed) {
       throw const RoadRouteException('Routing is closed.');
     }
-    // v0.18.169 (contract.json#offerRouteLine): an offer's own Google road,
+    // v0.18.168 (contract.json#offerRouteLine): an offer's own Google road,
     // kept from Offer.routePolyline; no request.
     final kept = OfferRoutes.leg(origin, destination);
     if (kept != null) return kept;

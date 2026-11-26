@@ -4,7 +4,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/routing/offer_routes.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 
-/// v0.18.169 (contract.json#offerRouteLine, owner 2026-11-26 "Route in
+/// v0.18.168 (contract.json#offerRouteLine, owner 2026-11-26 "Route in
 /// driver !!"): the offer preview draws the offer's own Google road
 /// (Offer.routePolyline) with no route request; without it, the old one.
 String encode(List<GeoPoint> points) {

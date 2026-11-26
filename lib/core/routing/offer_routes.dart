@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/routing/route_repository.dart';
 
-/// v0.18.169 (contract.json#offerRouteLine, owner 2026-11-26 "Route in
+/// v0.18.168 (contract.json#offerRouteLine, owner 2026-11-26 "Route in
 /// driver !!"): the Google route an offer carries (`Offer.routePolyline`,
 /// the trip's stored quote route). The offer parser keeps it here, cut into
 /// one leg per stop, and [RoadRouteService] answers those legs from it, so

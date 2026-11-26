@@ -83,7 +83,7 @@ abstract final class OfferWire {
           })
         : null;
     String two(int n) => n.toString().padLeft(2, '0');
-    // v0.18.169 (contract.json#offerRouteLine): the trip's Google road, drawn
+    // v0.18.168 (contract.json#offerRouteLine): the trip's Google road, drawn
     // by the offer preview with no route request.
     final line = json['routePolyline'];
     if (line is String && line.isNotEmpty) {

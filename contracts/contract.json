@@ -1,6 +1,6 @@
 {
   "contract": "movera",
-  "version": "0.18.169",
+  "version": "0.18.168",
   "note": "Canonical cross-app contract for Rider, Driver and Admin. Frontend-only today; a future single backend implements it. Every app ships an identical copy under contracts/ and runs contract tests against it.",
   "wire": {
     "ids": {
@@ -12117,8 +12117,8 @@
     "admin": "Admin: not affected (no new setting; live traffic stays Admin > Dispatch > Rides > Live traffic (Google), contract.json#liveTraffic.setting)."
   },
   "offerRouteLine": {
-    "since": "0.18.169",
-    "note": "v0.18.169 (the driver's offer card draws the real Google route; owner 2026-11-26 \"Route in driver !!\" (an Exclusive offer Södertälje -> Arlanda drew a straight line); owner rule about 2 Google calls per trip; Rule 0; X-Api-Version stays `0.5`; additive, optional; no migration; follows v0.18.167 (0.18.168 is reserved for the SMS providers)): the trip already holds the Google route of its quote (trips.route_polyline, contract.json#liveTraffic.calls.quote); the offer now carries it and the driver app draws it. No new Google call.",
+    "since": "0.18.168",
+    "note": "v0.18.168 (the driver's offer card draws the real Google route; owner 2026-11-26 \"Route in driver !!\" (an Exclusive offer Södertälje -> Arlanda drew a straight line); owner rule about 2 Google calls per trip; Rule 0; X-Api-Version stays `0.5`; additive, optional; no migration; follows v0.18.167): the trip already holds the Google route of its quote (trips.route_polyline, contract.json#liveTraffic.calls.quote); the offer now carries it and the driver app draws it. No new Google call.",
     "offer": "Offer.routePolyline: the Google encoded polyline (precision 5) of the trip, pickup through every stop to the drop-off, as stored from its quote (trips.route_polyline). Sent only on an open offer (offer_created / offer_updated and GET reads of an open offer); absent on a closed offer (withdrawn, expired, declined, accepted, claimed elsewhere), when the trip has no stored Google route (estimate, a route change cleared it) and from an older server. Not in the offer push (the push carries ids only).",
     "calls": "No extra Google call: it is the polyline the quote's one call stored. GET /routes/driving is unchanged.",
     "driver": "The Home offer preview (Exclusive, Radar and reservation offers) draws the decoded Offer.routePolyline as the trip line, with no route request; without it the app asks GET /routes/driving per leg as before (the straight line when the server has no stored route). After accept the trip map keeps GET /routes/driving (the stored Google route of the active trip, contract.json#liveTraffic.navigation).",

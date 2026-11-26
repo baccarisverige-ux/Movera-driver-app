@@ -10,7 +10,7 @@ import 'package:movera/core/routing/offer_routes.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 
-/// v0.18.169 screenshots for the owner (Rules plan/inspiration-ride-change-
+/// v0.18.168 screenshots for the owner (Rules plan/inspiration-ride-change-
 /// 2026-11-20/shots-route-line-driver): the line the Home offer preview gets
 /// for an offer Södertälje -> Arlanda with Offer.routePolyline (the road)
 /// vs without one on a server with no stored route (the straight line).
