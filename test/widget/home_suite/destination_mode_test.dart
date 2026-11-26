@@ -244,15 +244,14 @@ void main() {
     expect(find.text('Go offline'), findsOneWidget);
     expect(find.text('LIVE'), findsNothing);
 
-    // A short tap does nothing.
+    // Owner 2026-11-26: a short tap goes offline at once, no question,
+    // and the open sheet comes down by itself.
     await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Hold'), findsOneWidget);
-
-    await holdRadarOff(tester);
+    await advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Go offline?'), findsNothing);
     expect(find.text('Tap to scan'), findsOneWidget);
     expect(find.text('OFF'), findsOneWidget);
-    // Holding the radar still goes offline; the sheet stays white.
+    // The sheet stays white.
     expectSheetNotTinted(tester);
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(

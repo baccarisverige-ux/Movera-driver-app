@@ -49,7 +49,12 @@ class RadarHoldOff extends StatefulWidget {
     this.size = 104,
     this.semanticsLabel,
     this.holdKey = const ValueKey<String>('home-radar-hold-off'),
+    this.tapGoes = false,
   });
+
+  /// Owner 2026-11-26 (Home): a plain tap also calls [onConfirmed], no
+  /// hold needed. Off (the trip dock): a tap shows the "Hold" hint.
+  final bool tapGoes;
 
   final Widget child;
   final VoidCallback onConfirmed;
@@ -96,7 +101,12 @@ class _RadarHoldOffState extends State<RadarHoldOff>
   // "Hold to go offline" hint so drivers know how to go offline.
   void _release() {
     if (!_fired) {
-      _showHint();
+      if (widget.tapGoes) {
+        _fired = true;
+        widget.onConfirmed();
+      } else {
+        _showHint();
+      }
     }
     _hold.reverse();
   }

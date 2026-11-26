@@ -134,8 +134,10 @@ extension _HomeMapPanels on _DriverHomeState {
     );
   }
 
-  /// Q19: holding the Radar asks "Go offline?" first; only Go offline
-  /// takes the driver offline.
+  /// Owner 2026-11-26 ("Pas de confirmation pour aller off"): the Radar
+  /// takes the driver offline at once, no "Go offline?" question (its
+  /// texts stay in l10n, Rule 21), with the offline sound. An open sheet
+  /// comes down by itself ([_goOffline] closes it).
   Future<void> _confirmGoOffline() async {
     if (!mounted || !_isOnline || ModalRoute.of(context)?.isCurrent != true) {
       return;
@@ -151,16 +153,12 @@ extension _HomeMapPanels on _DriverHomeState {
       );
       return;
     }
-    if (!await showGoOfflineConfirm(context)) {
-      return;
-    }
-    if (mounted && _isOnline) {
-      await _goOffline();
-    }
+    unawaited(OnlineSwitchSound.wentOffline());
+    await _goOffline();
   }
 
-  /// The radar button with the sheet closed: a long press asks to go
-  /// offline (Q19); a tap does what the face says.
+  /// The radar button with the sheet closed: a long press goes offline;
+  /// a tap does what the face says (scanning: go offline, 2026-11-26).
   Widget _radarLongPressOff(Widget radar) => GestureDetector(
     key: const ValueKey<String>('home-radar-long-press'),
     onLongPress: () {
@@ -171,9 +169,10 @@ extension _HomeMapPanels on _DriverHomeState {
   );
 
   /// The online radar with the sheet open: same look, "Hold · OFF ·
-  /// Go offline"; a one-second hold vibrates and asks "Go offline?".
+  /// Go offline"; a tap or a hold goes offline at once (2026-11-26).
   Widget _holdOffRadar() {
     return RadarHoldOff(
+      tapGoes: true,
       onConfirmed: () => unawaited(_confirmGoOffline()),
       child: AnimatedBuilder(
         animation: Listenable.merge([
