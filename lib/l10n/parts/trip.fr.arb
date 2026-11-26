@@ -13,6 +13,8 @@
   "pickupTimePickupInLeft": "Prise en charge à {pickupTime} (dans {left})",
   "accept": "Accepter",
   "hold": "Maintenir appuyé",
+  "radarTap": "Toucher",
+  "tapToGoOffline": "Toucher pour passer hors ligne",
   "cashRides": "Courses réglées en espèces",
   "exclusiveReservation": "Réservation exclusive",
   "exclusiveOffer": "Offre exclusive",
