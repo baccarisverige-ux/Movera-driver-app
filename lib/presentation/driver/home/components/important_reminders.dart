@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
@@ -118,12 +119,7 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
                       padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
                       child: Row(
                         children: [
-                          ReminderBell(
-                            count: items.length,
-                            color: blocking
-                                ? ImportantRemindersBox.red
-                                : ImportantRemindersBox.orange,
-                          ),
+                          ReminderBell(count: items.length),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -312,11 +308,13 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
 /// when the box appears and again whenever a new reminder comes in; then
 /// it rests. Never on a loop. Still with reduce motion.
 class ReminderBell extends StatefulWidget {
-  const ReminderBell({super.key, required this.count, required this.color});
+  const ReminderBell({super.key, required this.count});
 
   /// The number of reminders: a higher number rings again.
   final int count;
-  final Color color;
+
+  /// The owner's own red and gold bell design (2026-11-26).
+  static const double size = 28;
 
   /// One ring.
   static const Duration ring = Duration(milliseconds: 1100);
@@ -388,11 +386,13 @@ class _ReminderBellState extends State<ReminderBell>
         angle: _ring.isAnimating ? ReminderBell.angleAt(_ring.value) : 0,
         child: child,
       ),
-      child: Icon(
-        Icons.notification_important_outlined,
+      child: Image.asset(
+        AppAssets.reminderBell,
         key: ReminderBell.bellKey,
-        size: 22,
-        color: widget.color,
+        width: ReminderBell.size,
+        height: ReminderBell.size,
+        filterQuality: FilterQuality.medium,
+        excludeFromSemantics: true,
       ),
     );
   }
