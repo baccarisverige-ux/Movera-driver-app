@@ -173,6 +173,7 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
           _Root.country || _Root.details => driverSignupScreen(
             account: widget.account!,
             phone: widget.auth.signedInPhone,
+            prefill: widget.auth.providerLink,
             onHome: (context) => Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute<void>(builder: (_) => widget.homeBuilder()),
               (_) => false,

@@ -14,6 +14,7 @@ import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/destination/destination_search.dart';
@@ -39,7 +40,10 @@ final String? _shots = Platform.environment['SIGNUP_SHOTS'];
 final String _suffix = Platform.environment['SIGNUP_SHOTS_SUFFIX'] ?? '';
 
 class _Server {
-  _Server({this.photoStatus});
+  _Server({this.photoStatus, this.failUploads = false});
+
+  /// Every document upload answers 500.
+  final bool failUploads;
 
   String? photoStatus;
   final List<Map<String, dynamic>> countries = [];
@@ -74,6 +78,9 @@ class _Server {
       headers: {'content-type': 'application/json'},
     );
     final path = request.url.path;
+    if (failUploads && path == DriverAccountRepository.documentsPath) {
+      return json(500, {'code': 'internal', 'message': 'down'});
+    }
     if (path == DriverAccountRepository.documentsPath &&
         request.method == 'POST') {
       final text = latin1.decode(request.bodyBytes);
@@ -548,6 +555,58 @@ void main() {
       expect(server.uploads.last, 'company_registration');
       await tester.pump(const Duration(seconds: 1));
       await _settle(tester);
+    },
+  );
+
+  testWidgets(
+    'a failed upload never shows Envoyé and keeps the photos to retry',
+    (tester) async {
+      DriverAppTexts.language = 'fr';
+      final server = _Server(failUploads: true);
+      final flow = _flow(server, phone: '+33612345678', pages: [_page(5)])
+        ..data.country = 'FR';
+      await _pump(
+        tester,
+        DocumentAddScreen(
+          flow: flow,
+          type: 'company_registration',
+          name: 'Kbis',
+          twoSided: false,
+          mode: 'pick',
+        ),
+      );
+      await _tap(tester, 'doc-pick-gallery');
+      await _tap(tester, 'doc-send');
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('doc-sent-ok')), findsNothing);
+      expect(find.text(st('sendFailed')), findsOneWidget);
+      expect(find.byKey(const ValueKey('doc-send')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Apple / Google prefill fills name and e-mail; no phone row without a phone',
+    (tester) async {
+      final server = _Server();
+      SharedPreferences.setMockInitialValues({});
+      final flow = SignupFlow(
+        account: _session(server),
+        phone: null,
+        onHome: (_) {},
+        draft: DetailsDraft(repository: SettingsRepository()),
+        settingsLoader: (c) async => _fr,
+        prefill: const ProviderLink(
+          provider: 'apple',
+          linkToken: 't',
+          firstName: 'Luc',
+          lastName: 'Martin',
+          email: 'luc@example.fr',
+        ),
+      );
+      await _pump(tester, SignupInfoScreen(flow: flow));
+      expect(find.text('Luc'), findsOneWidget);
+      expect(find.text('luc@example.fr'), findsOneWidget);
+      expect(find.byKey(const ValueKey('signup-phone')), findsNothing);
     },
   );
 

@@ -141,10 +141,15 @@ Widget driverSignupScreen({
   required DriverAccountSession account,
   required String? phone,
   required void Function(BuildContext context) onHome,
+  ProviderLink? prefill,
 }) => DeferredScreen(
   load: profile.loadLibrary,
-  builder: (_) =>
-      profile.SignupEntry(account: account, phone: phone, onHome: onHome),
+  builder: (_) => profile.SignupEntry(
+    account: account,
+    phone: phone,
+    onHome: onHome,
+    prefill: prefill,
+  ),
 );
 
 /// Bug 2026-11-25 / web budget: the sign-up details screen (step 3) loads

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/details_draft.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
@@ -182,6 +183,7 @@ class SignupFlow {
     this.settingsLoader,
     this.deviceCountry,
     this.joiner = joinSides,
+    this.prefill,
   }) : draft = draft ?? DetailsDraft(),
        picker = picker ?? const DeviceDocumentFilePicker(),
        scanner = scanner ?? const DeviceDocumentScanner();
@@ -215,11 +217,16 @@ class SignupFlow {
   )
   joiner;
 
+  /// What Apple / Google gave at sign-in (name, e-mail), or null.
+  final ProviderLink? prefill;
+
   SignupData data = SignupData();
   final Map<String, OnboardingSettings> _settings = {};
 
   Future<void> restore() async {
     data = SignupData.fromMap(await draft.restore());
+    // A driver in review editing from Profile: his type is already saved.
+    data.accountType ??= profile?.accountType;
   }
 
   void save() => draft.save(data.toMap());

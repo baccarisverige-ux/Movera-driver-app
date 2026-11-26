@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/destination/destination_search.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/signup/signup_checklist_screen.dart';
@@ -18,6 +19,7 @@ class SignupEntry extends StatefulWidget {
     required this.phone,
     required this.onHome,
     this.flow,
+    this.prefill,
   });
 
   final DriverAccountSession account;
@@ -26,6 +28,9 @@ class SignupEntry extends StatefulWidget {
 
   /// Tests hand in a prepared flow.
   final SignupFlow? flow;
+
+  /// What Apple / Google gave at sign-in.
+  final ProviderLink? prefill;
 
   @override
   State<SignupEntry> createState() => _SignupEntryState();
@@ -40,6 +45,7 @@ class _SignupEntryState extends State<SignupEntry> {
         onHome: widget.onHome,
         places: ApiDestinationSearch(api: widget.account.repository.api),
         deviceCountry: deviceCountryIfAllowed,
+        prefill: widget.prefill,
       );
   bool? _checklist;
 

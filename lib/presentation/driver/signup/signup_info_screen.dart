@@ -89,10 +89,15 @@ class _SignupInfoScreenState extends State<SignupInfoScreen> {
     data.cityId ??= profile?.cityId;
     _fixRegion();
     if (data.firstName.isEmpty) {
-      data.firstName = known(profile?.firstName) ?? '';
+      data.firstName =
+          known(profile?.firstName) ?? flow.prefill?.firstName ?? '';
     }
-    if (data.lastName.isEmpty) data.lastName = known(profile?.lastName) ?? '';
-    if (data.email.isEmpty) data.email = known(profile?.email) ?? '';
+    if (data.lastName.isEmpty) {
+      data.lastName = known(profile?.lastName) ?? flow.prefill?.lastName ?? '';
+    }
+    if (data.email.isEmpty) {
+      data.email = known(profile?.email) ?? flow.prefill?.email ?? '';
+    }
     if (data.dateOfBirth.isEmpty) data.dateOfBirth = profile?.dateOfBirth ?? '';
     if (data.personalNumber.isEmpty) {
       data.personalNumber = profile?.personalNumber ?? '';
@@ -293,6 +298,16 @@ class _SignupInfoScreenState extends State<SignupInfoScreen> {
     if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_email.text.trim())) {
       _errors['email'] = _email.text.trim().isEmpty ? need : st('badEmail');
     }
+    if (_on('dateOfBirth')) {
+      final iso = isoOfTypedDate(_date.text);
+      if (_date.text.trim().isEmpty && _required('dateOfBirth')) {
+        _errors['dateOfBirth'] = need;
+      } else if (_date.text.trim().isNotEmpty && iso == null) {
+        _errors['dateOfBirth'] = st('badDate');
+      } else if (iso != null) {
+        data.dateOfBirth = iso;
+      }
+    }
     if (_on('personalNumber')) {
       final typed = _personal.text.trim();
       final normalized = normalizePersonalNumber(typed);
@@ -303,16 +318,6 @@ class _SignupInfoScreenState extends State<SignupInfoScreen> {
       } else if (normalized != null) {
         data.personalNumber = normalized;
         data.dateOfBirth = dateOfPersonalNumber(normalized);
-      }
-    }
-    if (_on('dateOfBirth')) {
-      final iso = isoOfTypedDate(_date.text);
-      if (_date.text.trim().isEmpty && _required('dateOfBirth')) {
-        _errors['dateOfBirth'] = need;
-      } else if (_date.text.trim().isNotEmpty && iso == null) {
-        _errors['dateOfBirth'] = st('badDate');
-      } else if (iso != null) {
-        data.dateOfBirth = iso;
       }
     }
     final dob = DateTime.tryParse(data.dateOfBirth);
@@ -476,8 +481,10 @@ class _SignupInfoScreenState extends State<SignupInfoScreen> {
         ),
         const SizedBox(height: 20),
         Text(st('you'), style: AccountStyle.section()),
-        SignupLabel(st('phone')),
-        _field('phone', phone, locked: true),
+        if (flow.phone != null) ...[
+          SignupLabel(st('phone')),
+          _field('phone', phone, locked: true),
+        ],
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

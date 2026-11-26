@@ -56,6 +56,7 @@ Future<void> enterDriverApp(BuildContext context) async {
         builder: (_) => driverSignupScreen(
           account: account,
           phone: scope?.auth?.signedInPhone,
+          prefill: scope?.auth?.providerLink,
           onHome: (context) => _openHome(context, home),
         ),
       ),
