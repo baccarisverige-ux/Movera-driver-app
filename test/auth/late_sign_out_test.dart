@@ -240,4 +240,43 @@ void main() {
       expect(await tokens.readRefresh(), 'nr');
     },
   );
+
+  test(
+    '401, renewal, then 409 on a trip: SignOutOnTrip and the renewed pair kept',
+    () async {
+      final client = MockClient((request) async {
+        if (request.url.path == ApiClient.refreshPath) {
+          return http.Response(
+            jsonEncode({'accessToken': 'o2', 'refreshToken': 'or2'}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.headers['Authorization'] == 'Bearer o2') {
+          return http.Response(
+            jsonEncode({
+              'error': 'conflict',
+              'reason': 'sign_out_on_trip',
+              'message': 'Finish the trip first.',
+            }),
+            409,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response('{}', 401);
+      });
+      final tokens = MemoryTokenStore()..save(access: 'o', refresh: 'or');
+      final repository = AuthRepository(
+        api: ApiClient(
+          client: client,
+          baseUri: Uri.parse('https://api.test.movera.se'),
+          tokens: tokens,
+        ),
+        tokens: tokens,
+      );
+      await expectLater(repository.signOut(), throwsA(isA<SignOutOnTrip>()));
+      expect(await tokens.readAccess(), 'o2');
+      expect(await tokens.readRefresh(), 'or2');
+    },
+  );
 }

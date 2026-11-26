@@ -261,7 +261,16 @@ class AuthRepository {
             authenticated: false,
           );
           final next = renewed['accessToken'];
+          final nextRefresh = renewed['refreshToken'];
           if (next is! String || next.isEmpty) rethrow;
+          // Review: the old refresh token is now used; keep the renewed
+          // pair while no newer sign-in replaced it (a 409 keeps the
+          // session). This skips _postRefresh's single lost-answer retry.
+          if (_signIns == signIns &&
+              nextRefresh is String &&
+              nextRefresh.isNotEmpty) {
+            await _tokens.save(access: next, refresh: nextRefresh);
+          }
           await _api.post(signOutPath, bearer: next);
         }
       }
