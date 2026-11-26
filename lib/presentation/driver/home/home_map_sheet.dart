@@ -712,7 +712,7 @@ extension _HomeMapSheet on _DriverHomeState {
   }
 
   /// Owner 2026-11-26: the radar switch (online or offline) brings an open
-  /// sheet down in two steps: 70% of the way, a 0.2 s stop, then the rest.
+  /// sheet down in one smooth ease ("Forgot about stop in the way").
   Future<void> _radarSheetDown() async {
     if (!_panelController.isAttached ||
         _panelController.panelPosition <= 0.003) {
@@ -720,7 +720,7 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     _snapSheet.rangePx =
         _homeExpandedHeight(context) - MoveraSheetMetrics.collapsedHeight;
-    await _snapSheet.twoStepTo(0);
+    await _snapSheet.easeTo(0);
   }
 
   /// Account on hold: the red sheet still rests a little open to show

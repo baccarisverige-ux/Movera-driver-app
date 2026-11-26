@@ -124,7 +124,7 @@ void main() {
     expectNoException(tester);
   });
 
-  testWidgets('Home: the sheet goes down in two steps: 70%, 0.2 s stop', (
+  testWidgets('Home: the sheet goes down in one smooth ease, no stop', (
     tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -134,17 +134,19 @@ void main() {
     await openPanel(tester);
     await tester.pump(const Duration(milliseconds: 400));
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    final start = panel.controller!.panelPosition;
+    var last = panel.controller!.panelPosition;
     await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
     await tester.pump();
-    // End of the first leg (340 ms) and inside the 200 ms stop.
-    await tester.pump(const Duration(milliseconds: 360));
-    final paused = panel.controller!.panelPosition;
-    expect(paused, closeTo(start * 0.3, 0.02));
-    await tester.pump(const Duration(milliseconds: 150));
-    expect(panel.controller!.panelPosition, closeTo(paused, 0.001));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(panel.controller!.panelPosition, closeTo(0, 0.005));
+    // Every frame moves down until the end (no pause, no bounce).
+    for (var t = 0; t < 520; t += 40) {
+      await tester.pump(const Duration(milliseconds: 40));
+      final now = panel.controller!.panelPosition;
+      expect(now, lessThan(last), reason: 'at ${t + 40} ms');
+      expect(now, greaterThanOrEqualTo(0));
+      last = now;
+    }
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(panel.controller!.panelPosition, closeTo(0, 0.001));
     expectNoException(tester);
   });
 }
