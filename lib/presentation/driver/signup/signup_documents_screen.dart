@@ -510,6 +510,9 @@ class _DocumentAddScreenState extends State<DocumentAddScreen> {
                 children: [
                   IconButton(
                     key: const ValueKey('doc-step-close'),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).closeButtonTooltip,
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),

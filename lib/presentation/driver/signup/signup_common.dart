@@ -298,6 +298,9 @@ class SignupScaffold extends StatelessWidget {
                   if (onBack != null)
                     IconButton(
                       key: const ValueKey('signup-back'),
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
                       icon: const Icon(Icons.chevron_left, size: 28),
                       onPressed: onBack,
                     )

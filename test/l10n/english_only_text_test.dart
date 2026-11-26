@@ -40,6 +40,8 @@ const _dataFiles = {
   // and fr in the file itself, so they load with the deferred screen and the
   // first web download does not grow (web budget).
   'lib/presentation/driver/account/driver_country_screen.dart',
+  // v0.18.166 sign-up v2: the same, en / fr / sv in the file (deferred part).
+  'lib/presentation/driver/signup/signup_texts.dart',
 };
 
 const _allowed = <String, Set<String>>{
