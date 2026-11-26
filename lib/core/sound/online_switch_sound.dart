@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/sound/app_tones.dart';
 import 'package:movera/core/sound/offer_alert.dart';
@@ -41,6 +42,9 @@ abstract final class OnlineSwitchSound {
       return;
     }
     _do('sound:$asset', () {
+      // Like the radar offer sound: machines without a sound device
+      // (integration tests) turn the radar sounds off.
+      if (!DriverRuntimeConfig.current.radarSound) return;
       unawaited(
         (_player ??= AppTones.create())
             .playOnce(asset)
