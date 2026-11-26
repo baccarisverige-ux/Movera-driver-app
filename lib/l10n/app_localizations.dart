@@ -10315,6 +10315,18 @@ abstract class AppLocalizations {
   /// **'Hold'**
   String get hold;
 
+  /// Radar face title with the Home sheet open: a tap goes offline (owner 2026-11-26, no Hold wording).
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get radarTap;
+
+  /// Screen reader label of the radar with the Home sheet open.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to go offline'**
+  String get tapToGoOffline;
+
   /// No description provided for @cashRides.
   ///
   /// In en, this message translates to:

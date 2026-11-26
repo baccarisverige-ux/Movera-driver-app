@@ -6040,6 +6040,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String get hold => 'Håll';
 
   @override
+  String get radarTap => 'Tryck';
+
+  @override
+  String get tapToGoOffline => 'Tryck för att gå offline';
+
+  @override
   String get cashRides => 'Kontantresor';
 
   @override

@@ -1120,6 +1120,8 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     unawaited(_HomeMapSheet(this)._startDriverLocation(moveCamera: true));
     IslandMessages.show(HomeIslandNotices.online);
+    // Owner 2026-11-26: an open sheet comes down on going online too.
+    unawaited(_HomeMapSheet(this)._radarSheetDown());
     // A live build asks the server while the switch animates.
     final serverAnswer = _HomeLive(this)._askServerOnline();
 
@@ -1182,7 +1184,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeMapSheet(this)._clearDemoDestinationTrips();
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     if (!radarListOpen) {
-      await _HomeMapSheet(this)._closeDriverSheet();
+      await _HomeMapSheet(this)._radarSheetDown();
     } // Its sheet is not mounted.
   }
 

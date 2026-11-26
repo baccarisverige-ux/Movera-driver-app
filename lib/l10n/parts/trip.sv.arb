@@ -13,6 +13,8 @@
   "pickupTimePickupInLeft": "Upphämtning {pickupTime} om {left}",
   "accept": "Acceptera",
   "hold": "Håll",
+  "radarTap": "Tryck",
+  "tapToGoOffline": "Tryck för att gå offline",
   "cashRides": "Kontantresor",
   "exclusiveReservation": "Exklusiv bokning",
   "exclusiveOffer": "Exklusivt erbjudande",

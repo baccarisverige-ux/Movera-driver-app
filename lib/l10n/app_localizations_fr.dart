@@ -6145,6 +6145,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hold => 'Maintenir appuyé';
 
   @override
+  String get radarTap => 'Toucher';
+
+  @override
+  String get tapToGoOffline => 'Toucher pour passer hors ligne';
+
+  @override
   String get cashRides => 'Courses réglées en espèces';
 
   @override

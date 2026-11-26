@@ -187,4 +187,26 @@ void main() {
     expect(location.left, greaterThan(safety.left));
     expectNoException(tester);
   });
+
+  testWidgets('Today title is hidden while the sheet rests down', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpHome(tester, const Size(375, 812));
+    double todayOpacity() => tester
+        .widget<Opacity>(
+          find
+              .ancestor(
+                of: find.byKey(const ValueKey<String>('home-sheet-today')),
+                matching: find.byType(Opacity),
+              )
+              .first,
+        )
+        .opacity;
+    expect(todayOpacity(), 0);
+    await openPanel(tester);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(todayOpacity(), 1);
+    expectNoException(tester);
+  });
 }

@@ -112,6 +112,49 @@ class MoveraSnapSheetController {
     }
   }
 
+  /// Owner 2026-11-26: the radar switch brings the sheet down in one
+  /// smooth ease-out, no stop on the way and no bounce. Reduce motion:
+  /// it is there at once.
+  Future<void> easeTo(
+    double target, {
+    Duration duration = const Duration(milliseconds: 550),
+  }) async {
+    stopSpring();
+    if (!panel.isAttached) {
+      return;
+    }
+    target = target.clamp(0.0, 1.0);
+    stopPanelAnimation();
+    final start = panel.panelPosition;
+    if (reduceMotion?.call() == true || (start - target).abs() < 0.003) {
+      panel.panelPosition = target;
+      return;
+    }
+    final controller = AnimationController(vsync: _vsync, duration: duration);
+    _spring = controller;
+    _target = target;
+    _noOvershoot = true;
+    final path = Tween<double>(
+      begin: start,
+      end: target,
+    ).chain(CurveTween(curve: Curves.easeOutCubic));
+    controller.addListener(() {
+      if (panel.isAttached) {
+        panel.panelPosition = path.transform(controller.value).clamp(0.0, 1.0);
+      }
+    });
+    try {
+      await controller.forward().orCancel;
+    } on TickerCanceled {
+      // A new drag or disposal owns the panel now.
+    } finally {
+      if (identical(_spring, controller)) {
+        controller.dispose();
+        _spring = null;
+      }
+    }
+  }
+
   bool _noOvershoot = false;
 
   /// The sheet's travel changed to [newRangePx] (its content was measured

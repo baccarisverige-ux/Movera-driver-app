@@ -6035,6 +6035,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hold => 'Hold';
 
   @override
+  String get radarTap => 'Tap';
+
+  @override
+  String get tapToGoOffline => 'Tap to go offline';
+
+  @override
   String get cashRides => 'Cash rides';
 
   @override
