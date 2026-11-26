@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/settings/server_settings_sync.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/storage/local_write_session.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,7 +43,8 @@ class _Remote implements RemoteSettings {
 /// Holds every server save until the test lets it answer.
 class _TwoGates implements RemoteSettings {
   bool fail = false;
-  final waiting = <Completer<void>>[];
+  bool hold = false;
+  final waiting = <Completer<bool>>[];
   @override
   bool handles(String section) => section == DriverCategoryChoice.section;
   @override
@@ -52,11 +54,12 @@ class _TwoGates implements RemoteSettings {
   ) async => local;
   @override
   Future<void> save(String section, Map<String, dynamic> values) async {
-    if (!fail) return;
-    final gate = Completer<void>();
+    if (!fail && !hold) return;
+    if (!hold) throw const SocketException('offline');
+    // The test answers: true = taken, false = refused (offline).
+    final gate = Completer<bool>();
     waiting.add(gate);
-    await gate.future;
-    throw const SocketException('offline');
+    if (!await gate.future) throw const SocketException('offline');
   }
 }
 
@@ -156,7 +159,7 @@ void main() {
       await repo.save(DriverCategoryChoice.section, {
         'selected': [true, true],
       });
-      two.fail = true;
+      two.hold = true;
       final a = repo.save(DriverCategoryChoice.section, {
         'selected': [false, true],
       });
@@ -170,7 +173,7 @@ void main() {
       final refusedB = expectLater(b, throwsA(isA<SocketException>()));
       final order = olderFirst ? [0, 1] : [1, 0];
       for (final index in order) {
-        two.waiting[index].complete();
+        two.waiting[index].complete(false);
         await pumpEventQueue();
       }
       await refusedA;
@@ -184,4 +187,100 @@ void main() {
       remote.offline = false;
     }
   });
+
+  Future<List<bool>?> phoneAfter(
+    List<int> order,
+    List<bool> taken, {
+    bool logoutBetween = false,
+  }) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final two = _TwoGates();
+    SettingsRepository.remote = two;
+    await SettingsRepository().save(DriverCategoryChoice.section, {
+      'selected': [true, true],
+    });
+    two.hold = true;
+    final a = SettingsRepository().save(DriverCategoryChoice.section, {
+      'selected': [false, true],
+    });
+    await pumpEventQueue();
+    final b = SettingsRepository().save(DriverCategoryChoice.section, {
+      'selected': [true, false],
+    });
+    await pumpEventQueue();
+    final saves = [a, b];
+    final answered = [
+      for (var i = 0; i < 2; i++)
+        saves[i].then((_) => true, onError: (_) => false),
+    ];
+    for (final index in order) {
+      two.waiting[index].complete(taken[index]);
+      await pumpEventQueue();
+    }
+    await Future.wait(answered);
+    two.hold = false;
+    remote.offline = true;
+    SettingsRepository.remote = remote;
+    final data = await SettingsRepository().read(DriverCategoryChoice.section);
+    remote.offline = false;
+    return (data['selected'] as List?)?.cast<bool>();
+  }
+
+  test('newer refused, then older taken: the phone follows the older '
+      '(the server has it)', () async {
+    expect(await phoneAfter([1, 0], [true, false]), [false, true]);
+  });
+
+  test('older taken, then newer refused: the older comes back', () async {
+    expect(await phoneAfter([0, 1], [true, false]), [false, true]);
+  });
+
+  test('newer taken, then older refused: the newer stays', () async {
+    expect(await phoneAfter([1, 0], [false, true]), [true, false]);
+  });
+
+  test('both taken, answers out of order: the newer stays', () async {
+    expect(await phoneAfter([1, 0], [true, true]), [true, false]);
+  });
+
+  test(
+    'a new local session (next driver) starts from its own phone copy',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final two = _TwoGates()..hold = true;
+      SettingsRepository.remote = two;
+      final first = SettingsRepository();
+      final late = first
+          .save(DriverCategoryChoice.section, {
+            'selected': [false, false],
+          })
+          .then((_) => true, onError: (_) => false);
+      await pumpEventQueue();
+      // Logout: the local data is cleared and a new session starts.
+      LocalWriteSession.beginCleanup();
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      LocalWriteSession.endCleanup();
+      final next = SettingsRepository();
+      final nextAnswer = next
+          .save(DriverCategoryChoice.section, {
+            'selected': [true, true],
+          })
+          .then((_) => true, onError: (_) => false);
+      await pumpEventQueue();
+      // The next driver's save is refused, then the old driver's is taken.
+      two.waiting.last.complete(false);
+      await pumpEventQueue();
+      two.waiting.first.complete(true);
+      await late;
+      await nextAnswer;
+      two.hold = false;
+      remote.offline = true;
+      SettingsRepository.remote = remote;
+      final data = await SettingsRepository().read(
+        DriverCategoryChoice.section,
+      );
+      remote.offline = false;
+      expect(data['selected'], isNot([false, false]));
+    },
+  );
 }

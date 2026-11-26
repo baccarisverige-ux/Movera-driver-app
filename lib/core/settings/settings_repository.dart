@@ -37,12 +37,17 @@ class SettingsRepository {
   /// set by a live build (main.dart); null in the demo and in tests.
   static RemoteSettings? remote;
 
-  /// Per section: server saves still waiting, and the last choice the
-  /// server took (or the phone copy before the first waiting save). Two
-  /// screens both refused offline put back that, in any order (review #695).
-  static final Map<String, int> _inFlight = <String, int>{};
-  static final Map<String, Map<String, dynamic>> _confirmed =
-      <String, Map<String, dynamic>>{};
+  /// Per local session and section: the order of server saves (review of
+  /// #695 follow-up). Two Ride types screens saving at once end on the last
+  /// choice the server took, whatever order the answers come in; nothing
+  /// carries over to the next driver (a new local session starts afresh).
+  static final Map<String, _SectionSaves> _saves = <String, _SectionSaves>{};
+
+  _SectionSaves _savesOf(String section) {
+    final prefix = '$_generation|';
+    _saves.removeWhere((key, _) => !key.startsWith(prefix));
+    return _saves.putIfAbsent('$prefix$section', _SectionSaves.new);
+  }
 
   /// The section's values: the server's when [remote] covers it and answers
   /// (the phone copy is then updated), else the phone copy.
@@ -136,33 +141,45 @@ class SettingsRepository {
       await _saveLocal(section, values);
       return;
     }
+    final saves = _savesOf(section);
     final before = await _readLocal(section);
-    if ((_inFlight[section] ?? 0) == 0) _confirmed[section] = before;
-    _inFlight[section] = (_inFlight[section] ?? 0) + 1;
+    // What the phone holds now is the last confirmed choice unless a save
+    // of this session is still waiting with its value there.
+    if (saves.phoneBy == saves.confirmedSeq) saves.confirmed = before;
+    final mine = ++saves.seq;
     await _saveLocal(section, values);
+    saves.phoneBy = mine;
     try {
       await server.save(section, values);
-      _confirmed[section] = Map<String, dynamic>.of(values);
     } catch (_) {
       try {
         // Only while the phone still holds this refused value: a newer
         // save that came meanwhile keeps its own. What goes back is the
-        // last choice the server took, so two refused saves end right in
-        // any order (review #695).
+        // last choice the server took.
         final now = await _readLocal(section);
-        if (jsonEncode(now) == jsonEncode(values)) {
-          await _saveLocal(section, _confirmed[section] ?? before);
+        if (saves.phoneBy == mine && jsonEncode(now) == jsonEncode(values)) {
+          await _saveLocal(section, saves.confirmed ?? before);
+          saves.phoneBy = saves.confirmedSeq;
         }
       } catch (error) {
         DriverLog.warn('Settings $section not put back: $error');
       }
       rethrow;
-    } finally {
-      final left = (_inFlight[section] ?? 1) - 1;
-      if (left <= 0) {
-        _inFlight.remove(section);
-      } else {
-        _inFlight[section] = left;
+    }
+    if (mine > saves.confirmedSeq) {
+      // The phone follows the server's latest choice unless a newer save
+      // still waits with its own value there.
+      final phoneFollows =
+          saves.phoneBy == saves.confirmedSeq || saves.phoneBy <= mine;
+      saves.confirmedSeq = mine;
+      saves.confirmed = Map<String, dynamic>.of(values);
+      if (phoneFollows) {
+        try {
+          if (saves.phoneBy != mine) await _saveLocal(section, values);
+          saves.phoneBy = mine;
+        } catch (error) {
+          DriverLog.warn('Settings $section not updated: $error');
+        }
       }
     }
   }
@@ -205,4 +222,19 @@ class SettingsRepository {
     });
     return result;
   }
+}
+
+/// The order of one section's server saves in one local session.
+class _SectionSaves {
+  /// The last save started.
+  int seq = 0;
+
+  /// The save whose value the phone holds (after a put back: the
+  /// confirmed one).
+  int phoneBy = 0;
+
+  /// The newest save the server took (0: none yet; [confirmed] is then the
+  /// phone copy before the first save).
+  int confirmedSeq = 0;
+  Map<String, dynamic>? confirmed;
 }
