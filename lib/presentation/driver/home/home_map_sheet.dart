@@ -711,6 +711,18 @@ extension _HomeMapSheet on _DriverHomeState {
     await _springPanelTo(0);
   }
 
+  /// Owner 2026-11-26: the radar switch (online or offline) brings an open
+  /// sheet down in two steps: 70% of the way, a 0.2 s stop, then the rest.
+  Future<void> _radarSheetDown() async {
+    if (!_panelController.isAttached ||
+        _panelController.panelPosition <= 0.003) {
+      return;
+    }
+    _snapSheet.rangePx =
+        _homeExpandedHeight(context) - MoveraSheetMetrics.collapsedHeight;
+    await _snapSheet.twoStepTo(0);
+  }
+
   /// Account on hold: the red sheet still rests a little open to show
   /// its buttons. Every other Home sheet is closed or open, nothing else.
   bool get _homeSheetInactive => _activationHold && !isAccountActivated;
@@ -1374,15 +1386,24 @@ extension _HomeMapSheet on _DriverHomeState {
                   ),
                 ),
                 Expanded(
-                  child: Text(
-                    tr.today,
-                    key: ValueKey<String>('home-sheet-today'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _sheetInk,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
+                  // Owner 2026-11-26: never shown while the sheet rests
+                  // down beside the radar; only once it is raised.
+                  child: ValueListenableBuilder<double>(
+                    valueListenable: _panelSlidePosition,
+                    builder: (context, position, child) => Opacity(
+                      opacity: ((position - 0.02) / 0.1).clamp(0.0, 1.0),
+                      child: child,
+                    ),
+                    child: Text(
+                      tr.today,
+                      key: ValueKey<String>('home-sheet-today'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _sheetInk,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
                     ),
                   ),
                 ),

@@ -112,6 +112,72 @@ class MoveraSnapSheetController {
     }
   }
 
+  /// Owner 2026-11-26 ("2 tranche"): the sheet goes [firstLeg] of the way
+  /// to [target], stops [pause], then finishes, each leg on a smooth ease
+  /// with no bounce. Reduce motion: it is there at once.
+  Future<void> twoStepTo(
+    double target, {
+    double firstLeg = 0.7,
+    Duration pause = const Duration(milliseconds: 200),
+    Duration firstDuration = const Duration(milliseconds: 340),
+    Duration lastDuration = const Duration(milliseconds: 260),
+  }) async {
+    stopSpring();
+    if (!panel.isAttached) {
+      return;
+    }
+    target = target.clamp(0.0, 1.0);
+    stopPanelAnimation();
+    final start = panel.panelPosition;
+    if (reduceMotion?.call() == true || (start - target).abs() < 0.003) {
+      panel.panelPosition = target;
+      return;
+    }
+    final mid = start + (target - start) * firstLeg;
+    final controller = AnimationController(
+      vsync: _vsync,
+      duration: firstDuration + pause + lastDuration,
+    );
+    _spring = controller;
+    _target = target;
+    _noOvershoot = true;
+    final path = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(
+          begin: start,
+          end: mid,
+        ).chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: firstDuration.inMicroseconds.toDouble(),
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween(mid),
+        weight: pause.inMicroseconds.toDouble(),
+      ),
+      TweenSequenceItem(
+        tween: Tween(
+          begin: mid,
+          end: target,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: lastDuration.inMicroseconds.toDouble(),
+      ),
+    ]);
+    controller.addListener(() {
+      if (panel.isAttached) {
+        panel.panelPosition = path.transform(controller.value).clamp(0.0, 1.0);
+      }
+    });
+    try {
+      await controller.forward().orCancel;
+    } on TickerCanceled {
+      // A new drag or disposal owns the panel now.
+    } finally {
+      if (identical(_spring, controller)) {
+        controller.dispose();
+        _spring = null;
+      }
+    }
+  }
+
   bool _noOvershoot = false;
 
   /// The sheet's travel changed to [newRangePx] (its content was measured

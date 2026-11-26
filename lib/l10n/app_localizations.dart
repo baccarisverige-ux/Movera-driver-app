@@ -10315,6 +10315,18 @@ abstract class AppLocalizations {
   /// **'Hold'**
   String get hold;
 
+  /// No description provided for @radarTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap'**
+  String get radarTap;
+
+  /// No description provided for @tapToGoOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to go offline'**
+  String get tapToGoOffline;
+
   /// No description provided for @cashRides.
   ///
   /// In en, this message translates to:

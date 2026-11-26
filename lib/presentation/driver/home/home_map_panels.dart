@@ -168,11 +168,13 @@ extension _HomeMapPanels on _DriverHomeState {
     child: radar,
   );
 
-  /// The online radar with the sheet open: same look, "Hold · OFF ·
-  /// Go offline"; a tap or a hold goes offline at once (2026-11-26).
+  /// The online radar with the sheet open: same look, "Tap · OFF ·
+  /// Go offline"; a tap goes offline at once (owner 2026-11-26: no
+  /// "Hold" wording on the radar; tr.hold stays for the trip dock).
   Widget _holdOffRadar() {
     return RadarHoldOff(
       tapGoes: true,
+      semanticsLabel: tr.tapToGoOffline,
       onConfirmed: () => unawaited(_confirmGoOffline()),
       child: AnimatedBuilder(
         animation: Listenable.merge([
@@ -180,7 +182,7 @@ extension _HomeMapPanels on _DriverHomeState {
           _radarSweepController,
         ]),
         builder: (context, child) => _buildRadarOrb(
-          title: tr.hold,
+          title: tr.radarTap,
           status: tr.orbOff,
           subtitle: tr.goOffline,
           active: true,

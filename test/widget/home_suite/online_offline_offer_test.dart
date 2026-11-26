@@ -39,8 +39,9 @@ void main() {
     await advanceAnimation(tester, const Duration(milliseconds: 420));
 
     expect(find.byType(DriverHome), findsOneWidget);
-    // Still online: with the sheet open the radar reads "Hold · OFF".
-    expect(find.text('Hold'), findsOneWidget);
+    // Still online: with the sheet open the radar reads "Tap · OFF" (owner 2026-11-26).
+    expect(find.text('Tap'), findsOneWidget);
+    expect(find.text('Hold'), findsNothing);
     expect(find.text('Go offline'), findsOneWidget);
     expectNoException(tester);
   });

@@ -76,8 +76,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(panel.controller!.panelPosition, greaterThan(0.5));
+    // The radar face says tap, never hold (owner 2026-11-26).
+    expect(find.text('Tap'), findsOneWidget);
+    expect(find.text('Hold'), findsNothing);
     await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
-    await advanceAnimation(tester, const Duration(milliseconds: 520));
+    await advanceAnimation(tester, const Duration(milliseconds: 900));
     expect(find.text('Go offline?'), findsNothing);
     expect(find.text('Tap to scan'), findsOneWidget);
     expect(alerts.last, 'sound:${OnlineSwitchSound.offline}');
@@ -100,6 +103,48 @@ void main() {
     expect(find.text('Tap to scan'), findsOneWidget);
     expect(panel.controller!.panelPosition, closeTo(0, 0.02));
     expect(alerts.last, 'sound:${OnlineSwitchSound.offline}');
+    expectNoException(tester);
+  });
+
+  testWidgets('Home: sheet up, offline, tap → online, sheet comes down', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpHome(tester, const Size(375, 812));
+    await openPanel(tester);
+    await tester.pump(const Duration(milliseconds: 400));
+    final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
+    expect(panel.controller!.panelPosition, greaterThan(0.5));
+    await tester.tap(find.text('OFF'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(find.text('LIVE'), findsOneWidget);
+    expect(panel.controller!.panelPosition, closeTo(0, 0.02));
+    expectNoException(tester);
+  });
+
+  testWidgets('Home: the sheet goes down in two steps: 70%, 0.2 s stop', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpHome(tester, const Size(375, 812));
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 1550));
+    await openPanel(tester);
+    await tester.pump(const Duration(milliseconds: 400));
+    final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
+    final start = panel.controller!.panelPosition;
+    await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
+    await tester.pump();
+    // End of the first leg (340 ms) and inside the 200 ms stop.
+    await tester.pump(const Duration(milliseconds: 360));
+    final paused = panel.controller!.panelPosition;
+    expect(paused, closeTo(start * 0.3, 0.02));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(panel.controller!.panelPosition, closeTo(paused, 0.001));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(panel.controller!.panelPosition, closeTo(0, 0.005));
     expectNoException(tester);
   });
 }

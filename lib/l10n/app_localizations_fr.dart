@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6143,6 +6144,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get hold => 'Maintenir appuyé';
+
+  @override
+  String get radarTap => 'Toucher';
+
+  @override
+  String get tapToGoOffline => 'Toucher pour passer hors ligne';
 
   @override
   String get cashRides => 'Courses réglées en espèces';
