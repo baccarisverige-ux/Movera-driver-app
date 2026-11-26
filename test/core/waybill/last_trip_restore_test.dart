@@ -153,6 +153,7 @@ void main() {
     final pending = LastTripRestore.restore(repo);
     await pumpEventQueue();
     LocalWriteSession.beginCleanup();
+    addTearDown(LocalWriteSession.endCleanup);
     repo.reset();
     answer.complete({
       'items': [item(id: 'old-driver')],

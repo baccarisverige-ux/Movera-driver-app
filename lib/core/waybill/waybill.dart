@@ -128,7 +128,7 @@ class WaybillRecord {
   /// Owner 2026-11-26: a last trip read back after a restart (phone copy
   /// or `GET /driver/trips`): only its amount, for Home's island. No
   /// waybill is opened for it.
-  static const String restoredSource = 'Restored last trip';
+  static const String restoredSource = 'restored_last_trip';
 
   bool get restoredAmountOnly => source == restoredSource;
   static const String exclusiveOfferSource = 'Exclusive offer';
