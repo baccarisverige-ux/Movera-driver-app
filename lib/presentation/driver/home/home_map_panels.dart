@@ -161,10 +161,9 @@ extension _HomeMapPanels on _DriverHomeState {
   /// a tap does what the face says (scanning: go offline, 2026-11-26).
   Widget _radarLongPressOff(Widget radar) => GestureDetector(
     key: const ValueKey<String>('home-radar-long-press'),
-    onLongPress: () {
-      HapticFeedback.mediumImpact();
-      unawaited(_confirmGoOffline());
-    },
+    // One haptic only: going offline plays its own (OnlineSwitchSound,
+    // follow-up 2026-11-26: the hold gave two).
+    onLongPress: () => unawaited(_confirmGoOffline()),
     child: radar,
   );
 
@@ -174,6 +173,7 @@ extension _HomeMapPanels on _DriverHomeState {
   Widget _holdOffRadar() {
     return RadarHoldOff(
       tapGoes: true,
+      ownHaptics: false,
       semanticsLabel: tr.tapToGoOffline,
       onConfirmed: () => unawaited(_confirmGoOffline()),
       child: AnimatedBuilder(

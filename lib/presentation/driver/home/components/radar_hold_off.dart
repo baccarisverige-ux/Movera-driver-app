@@ -50,7 +50,13 @@ class RadarHoldOff extends StatefulWidget {
     this.semanticsLabel,
     this.holdKey = const ValueKey<String>('home-radar-hold-off'),
     this.tapGoes = false,
+    this.ownHaptics = true,
   });
+
+  /// False when [onConfirmed] plays its own haptic (Home: going offline
+  /// does, OnlineSwitchSound): no press click and no completion vibration
+  /// here, so the driver feels one (follow-up 2026-11-26).
+  final bool ownHaptics;
 
   /// Owner 2026-11-26 (Home): a plain tap also calls [onConfirmed], no
   /// hold needed. Off (the trip dock): a tap shows the "Hold" hint.
@@ -85,13 +91,13 @@ class _RadarHoldOffState extends State<RadarHoldOff>
       return;
     }
     _fired = true;
-    HapticFeedback.heavyImpact();
+    if (widget.ownHaptics) HapticFeedback.heavyImpact();
     widget.onConfirmed();
   }
 
   void _press() {
     _fired = false;
-    HapticFeedback.selectionClick();
+    if (widget.ownHaptics) HapticFeedback.selectionClick();
     _hold.forward();
   }
 

@@ -28,9 +28,26 @@ class MoveraSnapSheetController {
 
   bool get isSpringing => _spring != null;
 
+  /// The running animation's panel speed in position units per second
+  /// (what [keepHeight] carries over), 0 at rest.
+  @visibleForTesting
+  double get panelVelocity =>
+      _spring == null ? 0 : (_positionVelocity?.call() ?? _spring!.velocity);
+
+  /// The running animation's own value and speed (its controller units).
+  @visibleForTesting
+  (double, double)? get rawForTest =>
+      _spring == null ? null : (_spring!.value, _spring!.velocity);
+
+  /// Whether the running animation must not bounce (false at rest).
+  @visibleForTesting
+  bool get noOvershootForTest => _noOvershoot;
+
   void stopSpring() {
     _spring?.dispose();
     _spring = null;
+    _noOvershoot = false;
+    _positionVelocity = null;
   }
 
   /// SlidingUpPanel still starts a 410ms decelerate fling when
@@ -83,6 +100,8 @@ class MoveraSnapSheetController {
     }
     _target = target;
     _noOvershoot = noOvershoot;
+    // An unbounded spring's value is the panel position: its speed is too.
+    _positionVelocity = () => controller.velocity;
     final simulation = SpringSimulation(
       MoveraSheetMetrics.spring,
       start,
@@ -108,6 +127,8 @@ class MoveraSnapSheetController {
       if (identical(_spring, controller)) {
         controller.dispose();
         _spring = null;
+        _noOvershoot = false;
+        _positionVelocity = null;
       }
     }
   }
@@ -138,6 +159,17 @@ class MoveraSnapSheetController {
       begin: start,
       end: target,
     ).chain(CurveTween(curve: Curves.easeOutCubic));
+    // Follow-up 2026-11-26: this controller runs 0..1 over [duration], so
+    // the panel's speed is the path's slope times the controller's speed.
+    _positionVelocity = () {
+      // Cubic curves are solved to about 0.001, so the slope is taken
+      // over a wider, centred step.
+      const step = 0.02;
+      final t = controller.value.clamp(step, 1.0 - step);
+      final slope =
+          (path.transform(t + step) - path.transform(t - step)) / (2 * step);
+      return slope * controller.velocity;
+    };
     controller.addListener(() {
       if (panel.isAttached) {
         panel.panelPosition = path.transform(controller.value).clamp(0.0, 1.0);
@@ -151,11 +183,17 @@ class MoveraSnapSheetController {
       if (identical(_spring, controller)) {
         controller.dispose();
         _spring = null;
+        // Follow-up 2026-11-26: the ease's no-bounce does not stay behind.
+        _noOvershoot = false;
+        _positionVelocity = null;
       }
     }
   }
 
   bool _noOvershoot = false;
+
+  /// The running animation's panel speed (position units per second).
+  double Function()? _positionVelocity;
 
   /// The sheet's travel changed to [newRangePx] (its content was measured
   /// again). Keeps the sheet's height on screen instead of letting it jump,
@@ -175,7 +213,8 @@ class MoveraSnapSheetController {
     }
     final spring = _spring;
     final target = _target;
-    final velocityPx = spring == null ? 0.0 : spring.velocity * oldRange;
+    final noOvershoot = spring != null && _noOvershoot;
+    final velocityPx = spring == null ? 0.0 : panelVelocity * oldRange;
     if ((newRangePx - oldRange).abs() < 0.5) {
       // Same travel, but the stop a running spring heads for moved.
       final moved = spring == null || target == null ? null : mapStop(target);
@@ -184,7 +223,7 @@ class MoveraSnapSheetController {
           springTo(
             moved,
             velocityPxPerSec: -velocityPx,
-            noOvershoot: _noOvershoot,
+            noOvershoot: noOvershoot,
           ),
         );
       }
@@ -206,7 +245,7 @@ class MoveraSnapSheetController {
         springTo(
           next,
           velocityPxPerSec: toward ? -velocityPx : 0,
-          noOvershoot: _noOvershoot,
+          noOvershoot: noOvershoot,
         ),
       );
       return;

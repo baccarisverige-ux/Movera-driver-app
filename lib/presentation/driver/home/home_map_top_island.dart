@@ -271,10 +271,9 @@ extension _HomeMapTopIsland on _DriverHomeState {
                         onLongPress: reservation != null || exclusive != null
                             ? null
                             : _isOnline
-                            ? () {
-                                HapticFeedback.mediumImpact();
-                                unawaited(_confirmGoOffline());
-                              }
+                            // One haptic: going offline plays its own
+                            // (follow-up 2026-11-26).
+                            ? () => unawaited(_confirmGoOffline())
                             : message != null || destination
                             ? null
                             : () {
