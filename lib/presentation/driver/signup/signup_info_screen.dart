@@ -13,6 +13,7 @@ import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/signup/signup_checklist_screen.dart';
 import 'package:movera/presentation/driver/signup/signup_common.dart';
 import 'package:movera/presentation/driver/signup/signup_texts.dart';
+import 'package:movera/presentation/driver/signup/solar_icons.dart';
 
 /// Contract v0.18.166 (`signupV2.infoScreen`, owner 2026-11-26 "Oui, tout
 /// construire" + "Oui, ajouter l'adresse (Recommandé)"): after the SMS code,
@@ -412,9 +413,7 @@ class _SignupInfoScreenState extends State<SignupInfoScreen> {
       ),
       decoration: AccountStyle.decoration(hint: hint, error: _errors[key])
           .copyWith(
-            suffixIcon: locked
-                ? const Icon(Icons.lock_outline, size: 18)
-                : null,
+            suffixIcon: locked ? const SolarIcon(Solar.lock, size: 18) : null,
           ),
     );
   }
@@ -544,7 +543,7 @@ class _SignupInfoScreenState extends State<SignupInfoScreen> {
               key: ValueKey('address-suggestion-${place.id}'),
               dense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 6),
-              leading: const Icon(Icons.place_outlined, size: 20),
+              leading: const SolarIcon(Solar.pin, size: 20),
               title: Text(place.name, style: AccountStyle.body()),
               subtitle: Text(place.address, style: AccountStyle.hint()),
               onTap: () => _pickSuggestion(place),

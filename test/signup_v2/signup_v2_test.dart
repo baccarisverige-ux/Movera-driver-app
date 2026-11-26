@@ -36,6 +36,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// the new sign-up against a fake movera-server. With `SIGNUP_SHOTS=dir`
 /// the fr and sv screens are also written as PNG files for the owner.
 final String? _shots = Platform.environment['SIGNUP_SHOTS'];
+final String _suffix = Platform.environment['SIGNUP_SHOTS_SUFFIX'] ?? '';
 
 class _Server {
   _Server({this.photoStatus});
@@ -606,7 +607,7 @@ void main() {
         await tester.runAsync(() async {
           final image = await boundary.toImage(pixelRatio: 2);
           final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-          final file = File('$_shots/$lang-$name.png');
+          final file = File('$_shots/$lang-$name$_suffix.png');
           await file.parent.create(recursive: true);
           await file.writeAsBytes(bytes!.buffer.asUint8List());
           image.dispose();

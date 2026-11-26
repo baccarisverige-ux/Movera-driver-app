@@ -7,6 +7,7 @@ import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/documents/document_file_picker.dart';
 import 'package:movera/presentation/driver/signup/signup_common.dart';
 import 'package:movera/presentation/driver/signup/signup_texts.dart';
+import 'package:movera/presentation/driver/signup/solar_icons.dart';
 
 /// Contract v0.18.166 (`signupV2.profilePhoto` + `accountTypeLabels`):
 /// "Votre profil" / "Din profil". The round photo is the existing document
@@ -185,8 +186,8 @@ class _SignupProfileScreenState extends State<SignupProfileScreen> {
                 backgroundColor: AccountStyle.field,
                 backgroundImage: image,
                 child: image == null
-                    ? Icon(
-                        has ? Icons.check_circle_outline : Icons.person_outline,
+                    ? SolarIcon(
+                        has ? Solar.check : Solar.user,
                         size: 44,
                         color: AccountStyle.muted,
                       )
@@ -200,8 +201,8 @@ class _SignupProfileScreenState extends State<SignupProfileScreen> {
                   backgroundColor: locked
                       ? AccountStyle.muted
                       : AccountStyle.ink,
-                  child: Icon(
-                    locked ? Icons.lock_outline : Icons.photo_camera_outlined,
+                  child: SolarIcon(
+                    locked ? Solar.lock : Solar.camera,
                     size: 16,
                     color: Colors.white,
                   ),

@@ -8,6 +8,7 @@ import 'package:movera/presentation/driver/signup/signup_documents_screen.dart';
 import 'package:movera/presentation/driver/signup/signup_info_screen.dart';
 import 'package:movera/presentation/driver/signup/signup_profile_screen.dart';
 import 'package:movera/presentation/driver/signup/signup_texts.dart';
+import 'package:movera/presentation/driver/signup/solar_icons.dart';
 
 /// Contract v0.18.166 (`signupV2.checklist`): "Configurons votre compte" /
 /// "Nu skapar vi ditt konto". Progress over 3 items (Vos informations,
@@ -131,7 +132,7 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
 
   Widget _row({
     required String key,
-    required IconData icon,
+    required Solar icon,
     required String title,
     String? subtitle,
     bool done = false,
@@ -153,10 +154,10 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
                 color: dark ? AccountStyle.ink : AccountStyle.field,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
+              child: SolarIcon(
                 icon,
                 size: 19,
-                color: dark ? Colors.white : AccountStyle.ink,
+                color: dark ? Colors.white : null,
               ),
             ),
             const SizedBox(width: 12),
@@ -182,7 +183,7 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: AccountStyle.muted),
+            const SolarIcon(Solar.forward, color: AccountStyle.muted),
           ],
         ),
       ),
@@ -267,7 +268,7 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
             children: [
               _row(
                 key: 'details',
-                icon: Icons.list_alt,
+                icon: Solar.checklist,
                 title: st('infoTitle'),
                 done: data.detailsDone,
                 dark: data.detailsDone,
@@ -275,7 +276,7 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
               ),
               _row(
                 key: 'photo',
-                icon: Icons.person_outline,
+                icon: Solar.user,
                 title: st('profilePhoto'),
                 done: flow.profilePhotoDone,
                 dark: flow.profilePhotoDone,
@@ -284,7 +285,7 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
               ),
               _row(
                 key: 'account-type',
-                icon: Icons.work_outline,
+                icon: Solar.briefcase,
                 title: st('youAre'),
                 subtitle: st(country == 'SE' ? 'youAreHintSE' : 'youAreHintFR'),
                 done: data.accountTypeDone,
@@ -302,7 +303,7 @@ class _SignupChecklistScreenState extends State<SignupChecklistScreen> {
             children: [
               _row(
                 key: 'documents',
-                icon: Icons.description_outlined,
+                icon: Solar.document,
                 title: st('sendDocuments'),
                 subtitle: sent > 0
                     ? st('documentsSent', [sent])

@@ -11,6 +11,7 @@ import 'package:movera/presentation/driver/documents/document_file_picker.dart';
 import 'package:movera/presentation/driver/documents/document_scanner.dart';
 import 'package:movera/presentation/driver/signup/signup_common.dart';
 import 'package:movera/presentation/driver/signup/signup_texts.dart';
+import 'package:movera/presentation/driver/signup/solar_icons.dart';
 
 /// Contract v0.18.166 (`signupV2.documentsScreen`, mockup screen 4):
 /// "Vos documents" / "Dina dokument", optional. Sections "Vous" (the
@@ -105,7 +106,7 @@ class _SignupDocumentsScreenState extends State<SignupDocumentsScreen> {
               color: AccountStyle.field,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.description_outlined, size: 19),
+            child: const SolarIcon(Solar.document, size: 19),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -148,7 +149,7 @@ class _SignupDocumentsScreenState extends State<SignupDocumentsScreen> {
                 visualDensity: VisualDensity.compact,
               ),
               onPressed: () => _add(type),
-              icon: const Icon(Icons.add, size: 16),
+              icon: const SolarIcon(Solar.add, size: 16),
               label: Text(
                 st('add'),
                 style: AuthText.urbanist(size: 13, weight: FontWeight.w600),
@@ -260,7 +261,7 @@ class _AddSheet extends StatelessWidget {
   Widget _option(
     BuildContext context,
     String value,
-    IconData icon,
+    Solar icon,
     String title,
     String hint, {
     String? tag,
@@ -281,7 +282,7 @@ class _AddSheet extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                Icon(icon, color: AccountStyle.ink),
+                SolarIcon(icon),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -329,7 +330,7 @@ class _AddSheet extends StatelessWidget {
               _option(
                 context,
                 'scan',
-                Icons.document_scanner_outlined,
+                Solar.scanner,
                 st('scanner'),
                 twoSided ? st('scannerHint') : '${st('scannerHint')} · 1 photo',
                 tag: st('recommended'),
@@ -337,7 +338,7 @@ class _AddSheet extends StatelessWidget {
             _option(
               context,
               'pick',
-              Icons.photo_library_outlined,
+              Solar.gallery,
               st('pickFile'),
               st('pickFileHint'),
             ),
@@ -483,7 +484,7 @@ class _DocumentAddScreenState extends State<DocumentAddScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.picture_as_pdf_outlined, size: 40),
+                      const SolarIcon(Solar.pdf, size: 40),
                       Text(st('pdfFile'), style: AccountStyle.hint()),
                     ],
                   ),
@@ -513,7 +514,7 @@ class _DocumentAddScreenState extends State<DocumentAddScreen> {
                     tooltip: MaterialLocalizations.of(
                       context,
                     ).closeButtonTooltip,
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: const SolarIcon(Solar.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Expanded(
@@ -570,10 +571,8 @@ class _DocumentAddScreenState extends State<DocumentAddScreen> {
                     border: Border.all(color: Colors.white, width: 2),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    widget.mode == 'scan'
-                        ? Icons.document_scanner_outlined
-                        : Icons.photo_library_outlined,
+                  child: SolarIcon(
+                    widget.mode == 'scan' ? Solar.scanner : Solar.gallery,
                     color: Colors.white54,
                     size: 44,
                   ),
@@ -717,11 +716,7 @@ class _DocumentAddScreenState extends State<DocumentAddScreen> {
         if (widget.twoSided && _back != null)
           Row(
             children: [
-              const Icon(
-                Icons.check_circle,
-                color: Color(0xFF1E7B3A),
-                size: 18,
-              ),
+              const SolarIcon(Solar.check, color: Color(0xFF1E7B3A), size: 18),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(st('bothSharp'), style: AccountStyle.hint()),

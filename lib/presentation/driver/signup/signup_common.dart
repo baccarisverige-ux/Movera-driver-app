@@ -12,6 +12,7 @@ import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/documents/document_file_picker.dart';
 import 'package:movera/presentation/driver/documents/document_scanner.dart';
 import 'package:movera/presentation/driver/signup/signup_texts.dart';
+import 'package:movera/presentation/driver/signup/solar_icons.dart';
 
 /// Contract v0.18.166 (`contract.json#signupV2`): what the driver typed on
 /// "Vos informations" and chose on "Votre profil", kept on the phone (the
@@ -301,7 +302,7 @@ class SignupScaffold extends StatelessWidget {
                       tooltip: MaterialLocalizations.of(
                         context,
                       ).backButtonTooltip,
-                      icon: const Icon(Icons.chevron_left, size: 28),
+                      icon: const SolarIcon(Solar.back, size: 28),
                       onPressed: onBack,
                     )
                   else
@@ -446,7 +447,7 @@ class SignupSelectBox extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(Icons.keyboard_arrow_down, size: 20),
+                  const SolarIcon(Solar.down, size: 20),
                 ],
               ),
             ),
@@ -610,13 +611,9 @@ Future<String?> showAccountTypeSheet(
                               ],
                             ),
                           ),
-                          Icon(
-                            selected == type
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_off,
-                            color: selected == type
-                                ? AccountStyle.ink
-                                : AccountStyle.muted,
+                          SolarIcon(
+                            selected == type ? Solar.check : Solar.circle,
+                            color: selected == type ? null : AccountStyle.muted,
                           ),
                         ],
                       ),
@@ -669,7 +666,7 @@ Future<T?> showSignupList<T>(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                 title: Text(label, style: AccountStyle.rowTitle()),
                 trailing: value == selected
-                    ? const Icon(Icons.check, color: AccountStyle.ink)
+                    ? const SolarIcon(Solar.checkPlain)
                     : null,
                 onTap: () => Navigator.of(context).pop(value),
               ),
