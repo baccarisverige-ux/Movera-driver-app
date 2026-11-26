@@ -69,14 +69,36 @@ void main() {
     await done;
   });
 
-  test('the radar long press plays one haptic (going offline has its own)', () {
-    final source = File(
+  test('the Home radar and island long presses play one haptic (going '
+      'offline has its own); the tap radar adds none of its own', () {
+    final panels = File(
       'lib/presentation/driver/home/home_map_panels.dart',
     ).readAsStringSync();
-    final longPress = source.substring(
-      source.indexOf('Widget _radarLongPressOff('),
-      source.indexOf('Widget _holdOffRadar()'),
+    final longPress = panels.substring(
+      panels.indexOf('Widget _radarLongPressOff('),
+      panels.indexOf('Widget _holdOffRadar()'),
     );
     expect(longPress, isNot(contains('HapticFeedback')));
+    final holdOff = panels.substring(
+      panels.indexOf('Widget _holdOffRadar()'),
+      panels.indexOf(
+        'child: AnimatedBuilder(',
+        panels.indexOf('Widget _holdOffRadar()'),
+      ),
+    );
+    expect(holdOff, contains('ownHaptics: false'));
+    final island = File(
+      'lib/presentation/driver/home/home_map_top_island.dart',
+    ).readAsStringSync();
+    final start = island.indexOf('onLongPress: reservation != null');
+    final online = island.substring(
+      start,
+      island.indexOf('_openRideHistoryFromIsland();', start),
+    );
+    expect(
+      RegExp('HapticFeedback').allMatches(online).length,
+      1,
+      reason: 'only the offline branch (Ride history) keeps its own',
+    );
   });
 }

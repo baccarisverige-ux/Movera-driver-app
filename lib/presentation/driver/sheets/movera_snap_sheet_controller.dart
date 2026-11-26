@@ -34,11 +34,12 @@ class MoveraSnapSheetController {
   double get panelVelocity =>
       _spring == null ? 0 : (_positionVelocity?.call() ?? _spring!.velocity);
 
-  /// Whether the running animation must not bounce (false at rest).
   /// The running animation's own value and speed (its controller units).
   @visibleForTesting
   (double, double)? get rawForTest =>
       _spring == null ? null : (_spring!.value, _spring!.velocity);
+
+  /// Whether the running animation must not bounce (false at rest).
   @visibleForTesting
   bool get noOvershootForTest => _noOvershoot;
 
@@ -126,6 +127,8 @@ class MoveraSnapSheetController {
       if (identical(_spring, controller)) {
         controller.dispose();
         _spring = null;
+        _noOvershoot = false;
+        _positionVelocity = null;
       }
     }
   }

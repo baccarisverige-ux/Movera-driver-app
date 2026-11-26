@@ -173,6 +173,7 @@ extension _HomeMapPanels on _DriverHomeState {
   Widget _holdOffRadar() {
     return RadarHoldOff(
       tapGoes: true,
+      ownHaptics: false,
       semanticsLabel: tr.tapToGoOffline,
       onConfirmed: () => unawaited(_confirmGoOffline()),
       child: AnimatedBuilder(
@@ -339,8 +340,9 @@ extension _HomeMapPanels on _DriverHomeState {
                   activeTrackColor: const Color(0xFF1C6B45),
                   onChanged: _HomeOfferRules(this)._setAcceptsCash,
                 ),
-                onTap: () => _HomeOfferRules(this)
-                    ._setAcceptsCash(!DriverOfferPreferences.acceptsCash.value),
+                onTap: () => _HomeOfferRules(
+                  this,
+                )._setAcceptsCash(!DriverOfferPreferences.acceptsCash.value),
               ),
             ),
             if (showPerformance)
