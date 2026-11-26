@@ -119,11 +119,27 @@ class SettingsRepository {
 
   /// Saves on the phone, then on the server for a section [remote] covers;
   /// a refused server save throws, so the screen offers Retry.
+  ///
+  /// A refused server save puts the phone copy back to what it was before,
+  /// so phone, screen (which shows the last confirmed choice again) and
+  /// server agree, also after a restart offline (coordinator 2026-11-26, A).
   Future<void> save(String section, Map<String, dynamic> values) async {
-    await _saveLocal(section, values);
     final server = remote;
-    if (server != null && server.handles(section)) {
+    if (server == null || !server.handles(section)) {
+      await _saveLocal(section, values);
+      return;
+    }
+    final before = await _readLocal(section);
+    await _saveLocal(section, values);
+    try {
       await server.save(section, values);
+    } catch (_) {
+      try {
+        await _saveLocal(section, before);
+      } catch (error) {
+        DriverLog.warn('Settings $section not put back: $error');
+      }
+      rethrow;
     }
   }
 

@@ -171,7 +171,7 @@ void main() {
       _categories,
       '{"schemaVersion":1,"values":{"selected":[false]}}',
     );
-    DriverCategoryChoice.off.value = {'Economy'};
+    DriverCategoryChoice.off.value = DriverCategoryChoice.fromSaved([false]);
     InMemoryWaybillRepository.instance
       ..beginCurrent(
         WaybillRecord(
@@ -432,7 +432,10 @@ void main() {
     expect(prefs.getString(PrefsTripHistoryRepository.key), isNotNull);
     expect(prefs.getString(RecentDestinations.key), isNotNull);
     expect(prefs.getString(_categories), isNotNull);
-    expect(DriverCategoryChoice.off.value, {'Economy'});
+    expect(
+      DriverCategoryChoice.off.value,
+      DriverCategoryChoice.fromSaved([false]),
+    );
     expect(InMemoryWaybillRepository.instance.last?.fare, '418,00 kr');
     expect(DriverNotificationFeed.instance.items, hasLength(1));
     await close(tester);

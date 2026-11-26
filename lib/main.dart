@@ -689,6 +689,9 @@ class _MoveraAppState extends State<MoveraApp> {
       rethrow;
     }
     _live?.signedIn();
+    // The saved Ride preferences (server copy) after every sign-in, not
+    // only at app start: logout reset them to all on.
+    unawaited(DriverCategoryChoice.restore());
   }
 
   Future<void> _logout() async {
