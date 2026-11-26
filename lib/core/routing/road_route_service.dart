@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/routing/offer_routes.dart';
 import 'package:movera/core/routing/osrm_route_parser.dart';
 import 'package:movera/core/routing/route_repository.dart';
 
@@ -90,6 +91,10 @@ class RoadRouteService implements RouteRepository {
     if (_closed) {
       throw const RoadRouteException('Routing is closed.');
     }
+    // v0.18.169 (contract.json#offerRouteLine): an offer's own Google road,
+    // kept from Offer.routePolyline; no request.
+    final kept = OfferRoutes.leg(origin, destination);
+    if (kept != null) return kept;
     final coordinates =
         '${origin.longitude},${origin.latitude};'
         '${destination.longitude},${destination.latitude}';

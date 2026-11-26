@@ -17,6 +17,7 @@ import 'package:movera/core/dispatch/owes_movera_refusal.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/routing/offer_routes.dart';
 
 part 'one_stream_backup.dart';
 
@@ -82,6 +83,23 @@ abstract final class OfferWire {
           })
         : null;
     String two(int n) => n.toString().padLeft(2, '0');
+    // v0.18.169 (contract.json#offerRouteLine): the trip's Google road, drawn
+    // by the offer preview with no route request.
+    final line = json['routePolyline'];
+    if (line is String && line.isNotEmpty) {
+      OfferRoutes.remember(
+        [
+          point(pickup),
+          if (stops is List)
+            for (final stop in stops) point(place(stop)),
+          point(dropoff),
+        ],
+        line,
+        tripSeconds: json['tripSeconds'] is num
+            ? (json['tripSeconds'] as num).toInt()
+            : 0,
+      );
+    }
     return RideOffer(
       id: text('offerId'),
       tripId: text('tripId'),
@@ -1242,11 +1260,13 @@ class ApiDispatchRepository implements DispatchRepository, OfferFeedHealth {
     var version = offer.version;
     try {
       for (var attempt = 0; attempt < 2; attempt++) {
-        final response =
-            await _command('/offers/${Uri.encodeComponent(offerId)}/decline', {
-              'expectedVersion': version,
-              if (reasonCode != null) 'reasonCode': reasonCode,
-            });
+        final response = await _command(
+          '/offers/${Uri.encodeComponent(offerId)}/decline',
+          {
+            'expectedVersion': version,
+            if (reasonCode != null) 'reasonCode': reasonCode,
+          },
+        );
         if (response.statusCode == 200) {
           _goneDuringLoad.add(offerId);
           _offers.remove(offerId);
