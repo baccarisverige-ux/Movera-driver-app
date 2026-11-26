@@ -244,7 +244,36 @@ class AuthRepository {
   Future<void> signOut() async {
     final signIns = _signIns;
     try {
-      if (await hasSession()) await _api.post(signOutPath);
+      // Follow-up #686 (a), review: this session's own tokens, read once.
+      // A 401 renews them here, never through the shared refresh (which
+      // could save over, or use, a newer sign-in's tokens); the renewed
+      // pair is saved only while no newer sign-in replaced this session.
+      final access = await _tokens.readAccess();
+      final refresh = await _tokens.readRefresh();
+      if (access?.isNotEmpty == true && refresh?.isNotEmpty == true) {
+        try {
+          await _api.post(signOutPath, bearer: access);
+        } on ApiError catch (error) {
+          if (error.statusCode != 401) rethrow;
+          final renewed = await _api.post(
+            ApiClient.refreshPath,
+            body: {'refreshToken': refresh},
+            authenticated: false,
+          );
+          final next = renewed['accessToken'];
+          final nextRefresh = renewed['refreshToken'];
+          if (next is! String || next.isEmpty) rethrow;
+          // Review: the old refresh token is now used; keep the renewed
+          // pair while no newer sign-in replaced it (a 409 keeps the
+          // session). This skips _postRefresh's single lost-answer retry.
+          if (_signIns == signIns &&
+              nextRefresh is String &&
+              nextRefresh.isNotEmpty) {
+            await _tokens.save(access: next, refresh: nextRefresh);
+          }
+          await _api.post(signOutPath, bearer: next);
+        }
+      }
     } on ApiError catch (error) {
       if (error.statusCode == 409 && error.reason == SignOutOnTrip.reason) {
         throw SignOutOnTrip(error.message);
