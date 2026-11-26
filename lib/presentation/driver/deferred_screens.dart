@@ -133,6 +133,20 @@ Widget driverCountryScreen({
   ),
 );
 
+/// Contract v0.18.166 (`signupV2`, owner 2026-11-26 "Oui, tout construire"):
+/// the new sign-up ("Vos informations", then the checklist), loaded with the
+/// Profile part. Replaces the country step and the details form on the
+/// first sign-in (both screens and their routes stay, Rule 21).
+Widget driverSignupScreen({
+  required DriverAccountSession account,
+  required String? phone,
+  required void Function(BuildContext context) onHome,
+}) => DeferredScreen(
+  load: profile.loadLibrary,
+  builder: (_) =>
+      profile.SignupEntry(account: account, phone: phone, onHome: onHome),
+);
+
 /// Bug 2026-11-25 / web budget: the sign-up details screen (step 3) loads
 /// with the Profile part too, so the first download keeps room for the fixes.
 Widget driverDetailsScreen({

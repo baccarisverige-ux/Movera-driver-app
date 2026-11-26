@@ -175,6 +175,8 @@ class OnboardingSettings {
     this.autoHold = true,
     this.photosNeeded = true,
     this.documentTypes = const {},
+    this.signUpFieldSwitches = const {},
+    this.twoSidedTypesSaved,
   });
 
   factory OnboardingSettings.fromJson(Map<String, dynamic> json) {
@@ -204,6 +206,17 @@ class OnboardingSettings {
       vehicleWarnDays: _whole(vehicles['warnDays'], 30),
       autoHold: vehicles['autoHold'] != false,
       photosNeeded: vehicles['photosNeeded'] != false,
+      signUpFieldSwitches: {
+        for (final entry in _map(json['signUpFields']).entries)
+          if (entry.value is Map)
+            entry.key: SignUpFieldSwitch(
+              on: (entry.value as Map)['on'] == true,
+              required: (entry.value as Map)['required'] == true,
+            ),
+      },
+      twoSidedTypesSaved: json['twoSidedTypes'] is List
+          ? _strings(json['twoSidedTypes'])
+          : null,
       documentTypes: {
         for (final entry in types.entries)
           if (entry.value is Map)
@@ -233,6 +246,51 @@ class OnboardingSettings {
   ];
 
   final String country;
+
+  /// v0.18.166 (`signupV2.signUpFields`): the admin's switches, by field.
+  final Map<String, SignUpFieldSwitch> signUpFieldSwitches;
+
+  /// v0.18.166 (`signupV2.twoSided`): null = the contract defaults.
+  final List<String>? twoSidedTypesSaved;
+
+  /// `contract.json#signupV2.signUpFields.defaults`.
+  static const Map<String, Map<String, SignUpFieldSwitch>> signUpDefaults = {
+    'SE': {
+      'dateOfBirth': SignUpFieldSwitch.off,
+      'personalNumber': SignUpFieldSwitch.required_,
+      'taxiLicenseNumber': SignUpFieldSwitch(on: true, required: false),
+      'language': SignUpFieldSwitch.required_,
+      'address': SignUpFieldSwitch.required_,
+    },
+    'FR': {
+      'dateOfBirth': SignUpFieldSwitch.required_,
+      'personalNumber': SignUpFieldSwitch.off,
+      'taxiLicenseNumber': SignUpFieldSwitch.off,
+      'language': SignUpFieldSwitch.required_,
+      'address': SignUpFieldSwitch.required_,
+    },
+  };
+
+  /// `contract.json#signupV2.twoSided.defaults`.
+  static const Map<String, List<String>> twoSidedDefaults = {
+    'SE': ['national_id', 'driving_license', 'taxi_driver_license'],
+    'FR': ['national_id', 'driving_license', 'vtc_card'],
+  };
+
+  /// The switch of [field]: the admin's, else the country's default.
+  SignUpFieldSwitch signUpField(String field) {
+    final saved = signUpFieldSwitches[field];
+    if (saved != null) return saved;
+    final defaults = signUpDefaults[country];
+    return defaults?[field] ??
+        (field == 'dateOfBirth' || field == 'language' || field == 'address'
+            ? SignUpFieldSwitch.required_
+            : SignUpFieldSwitch.off);
+  }
+
+  /// The types photographed recto + verso in this country.
+  List<String> get twoSidedTypes =>
+      twoSidedTypesSaved ?? twoSidedDefaults[country] ?? const [];
 
   /// 0 = the admin's defaults (nothing published yet).
   final int version;
@@ -379,4 +437,15 @@ class OnboardingSettingsStore extends ChangeNotifier {
     country = null;
     notifyListeners();
   }
+}
+
+/// v0.18.166 (`signupV2.signUpFields`): one sign-up field's switch.
+class SignUpFieldSwitch {
+  const SignUpFieldSwitch({required this.on, required this.required});
+
+  static const off = SignUpFieldSwitch(on: false, required: false);
+  static const required_ = SignUpFieldSwitch(on: true, required: true);
+
+  final bool on;
+  final bool required;
 }

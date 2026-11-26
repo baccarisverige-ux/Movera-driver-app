@@ -209,6 +209,9 @@ class DriverAccount {
     this.offlineAt,
     this.drivingTime,
     this.activeTripId,
+    this.personalNumber,
+    this.taxiLicenseNumber,
+    this.address,
   });
 
   factory DriverAccount.fromJson(Map<String, dynamic> json) {
@@ -238,6 +241,9 @@ class DriverAccount {
       ],
       requiredDocuments: _strings(json['requiredDocuments']),
       requiredFleetDocuments: _strings(json['requiredFleetDocuments']),
+      personalNumber: _text(json['personalNumber']),
+      taxiLicenseNumber: _text(json['taxiLicenseNumber']),
+      address: DriverAddress.fromJson(json['address']),
       onlineStatus: _text(json['onlineStatus']),
       offlineReason: _text(json['offlineReason']),
       offlineNote: _text(json['offlineNote']),
@@ -295,6 +301,11 @@ class DriverAccount {
   final List<DocumentSummary> documents;
   final List<String> requiredDocuments;
   final List<String> requiredFleetDocuments;
+
+  /// v0.18.166 (`signupV2`): the sign-up details the server keeps.
+  final String? personalNumber;
+  final String? taxiLicenseNumber;
+  final DriverAddress? address;
 
   /// `offline`, `online` or `on_trip` (driver group 3: the server sets a
   /// driver without a position offline, G3-R1); null when not sent.
@@ -784,6 +795,9 @@ class DriverDetailsRequest {
     required this.accountType,
     this.company,
     this.fleetJoin,
+    this.personalNumber,
+    this.taxiLicenseNumber,
+    this.address,
   });
 
   final String firstName;
@@ -801,6 +815,15 @@ class DriverDetailsRequest {
   final FleetCompany? company;
   final FleetJoinRequest? fleetJoin;
 
+  /// v0.18.166 (`signupV2`): Sweden, `YYYYMMDD-XXXX`.
+  final String? personalNumber;
+
+  /// v0.18.166: the number on the Taxiförarlegitimation.
+  final String? taxiLicenseNumber;
+
+  /// v0.18.166 (owner 2026-11-26 "Oui, ajouter l'adresse"): home address.
+  final DriverAddress? address;
+
   Map<String, dynamic> toJson() => {
     'firstName': firstName.trim(),
     'lastName': lastName.trim(),
@@ -813,6 +836,45 @@ class DriverDetailsRequest {
     'termsAccepted': true,
     if (company != null) 'company': company!.toJson(),
     if (fleetJoin != null) 'fleetJoin': fleetJoin!.toJson(),
+    if (personalNumber != null && personalNumber!.trim().isNotEmpty)
+      'personalNumber': personalNumber!.trim(),
+    if (taxiLicenseNumber != null && taxiLicenseNumber!.trim().isNotEmpty)
+      'taxiLicenseNumber': taxiLicenseNumber!.trim(),
+    if (address != null) 'address': address!.toJson(),
+  };
+}
+
+/// v0.18.166 (`signupV2.address`): the driver's home address (DAC7,
+/// invoices).
+class DriverAddress {
+  const DriverAddress({
+    required this.street,
+    required this.postalCode,
+    required this.city,
+  });
+
+  static DriverAddress? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final street = json['street'];
+    final postal = json['postalCode'];
+    final city = json['city'];
+    if (street is! String || postal is! String || city is! String) return null;
+    return DriverAddress(street: street, postalCode: postal, city: city);
+  }
+
+  final String street;
+  final String postalCode;
+  final String city;
+
+  bool get complete =>
+      street.trim().isNotEmpty &&
+      postalCode.trim().isNotEmpty &&
+      city.trim().isNotEmpty;
+
+  Map<String, dynamic> toJson() => {
+    'street': street.trim(),
+    'postalCode': postalCode.trim(),
+    'city': city.trim(),
   };
 }
 

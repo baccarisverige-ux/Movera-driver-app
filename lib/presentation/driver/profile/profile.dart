@@ -2,6 +2,7 @@
 // no new deferred library in the first download).
 export 'package:movera/presentation/driver/account/driver_country_screen.dart';
 export 'package:movera/presentation/driver/account/driver_details_screen.dart';
+export 'package:movera/presentation/driver/signup/signup_entry.dart';
 import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/initials_avatar.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';

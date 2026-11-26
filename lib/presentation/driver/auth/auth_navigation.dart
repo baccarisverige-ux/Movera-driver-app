@@ -45,28 +45,29 @@ Future<void> enterDriverApp(BuildContext context) async {
   }
   // v0.18.162 (driverCountryFirst): a driver or fleet owner with no country
   // yet picks it first (no default), then the details form or Home.
-  if (account != null && (account.account?.needsCountry ?? isNew)) {
+  // v0.18.166 (signupV2): one "Vos informations" screen (country, region
+  // and details), then the checklist. The old steps stay (Rule 21).
+  final pending = account?.account?.needsDetails ?? false;
+  if (account != null &&
+      ((account.account?.needsCountry ?? isNew) || isNew || pending)) {
     navigator.pushAndRemoveUntil(
       MaterialPageRoute<void>(
-        builder: (_) => driverCountryScreen(
+        settings: const RouteSettings(name: 'driver-signup'),
+        builder: (_) => driverSignupScreen(
           account: account,
-          onDone: (context, saved) => saved.needsDetails
-              ? _openDetails(context, account, scope, home)
-              : _openHome(context, home),
+          phone: scope?.auth?.signedInPhone,
+          onHome: (context) => _openHome(context, home),
         ),
       ),
       (_) => false,
     );
     return;
   }
-  final pending = account?.account?.needsDetails ?? false;
-  if (account != null && (isNew || pending)) {
-    _openDetails(context, account, scope, home);
-    return;
-  }
   _openHome(context, home);
 }
 
+// v0.18.166: kept (Rule 21); the new sign-up replaced this step.
+// ignore: unused_element
 void _openDetails(
   BuildContext context,
   DriverAccountSession account,
