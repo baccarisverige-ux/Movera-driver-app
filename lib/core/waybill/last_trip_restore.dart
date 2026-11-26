@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/storage/local_write_session.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +40,7 @@ class LastTripRestore {
   }
 
   static Future<void> _save(WaybillRecord? last) async {
+    final generation = LocalWriteSession.generation;
     try {
       final prefs = await SharedPreferences.getInstance();
       if (last == null) {
@@ -46,6 +48,8 @@ class LastTripRestore {
         return;
       }
       if (!last.fare.contains(RegExp(r'\d'))) return;
+      // Never write a departing driver's trip after sign-out began.
+      if (!_sameSession(generation)) return;
       await prefs.setString(
         prefsKey,
         jsonEncode({
@@ -65,10 +69,13 @@ class LastTripRestore {
   /// its final money).
   static Future<void> restore(WaybillRepository waybills) async {
     watch(waybills);
-    if (waybills.last != null || _busy) return;
+    if (waybills.last != null || _busy || LocalWriteSession.clearing) return;
+    final generation = LocalWriteSession.generation;
     _busy = true;
     try {
       final saved = await _readSaved();
+      // A sign-out meanwhile: the next driver never sees this trip.
+      if (!_sameSession(generation)) return;
       if (saved != null) waybills.restoreLast(saved);
       final Map<String, dynamic>? body;
       try {
@@ -77,7 +84,7 @@ class LastTripRestore {
         return;
       }
       final server = body == null ? null : newestFinished(body);
-      if (server == null) return;
+      if (server == null || !_sameSession(generation)) return;
       final shown = waybills.last;
       if (shown == null) {
         waybills.restoreLast(server);
@@ -91,6 +98,9 @@ class LastTripRestore {
       _busy = false;
     }
   }
+
+  static bool _sameSession(int generation) =>
+      !LocalWriteSession.clearing && LocalWriteSession.generation == generation;
 
   static Future<WaybillRecord?> _readSaved() async {
     try {
@@ -162,7 +172,7 @@ class LastTripRestore {
     riderName: '',
     pickup: '',
     dropoff: '',
-    source: '',
+    source: WaybillRecord.restoredSource,
     driverName: '',
     vehicle: '',
     licensePlate: '',

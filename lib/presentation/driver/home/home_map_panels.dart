@@ -354,30 +354,37 @@ extension _HomeMapPanels on _DriverHomeState {
               ),
             ValueListenableBuilder<WaybillRecord?>(
               valueListenable: _waybills.lastListenable,
-              builder: (context, lastWaybill, _) => _sheetRow(
-                key: const ValueKey<String>('home-sheet-last-waybill'),
-                icon: _solarIcon(AppAssets.solarBillList),
-                label: tr.latestWaybill,
-                trailing: lastWaybill == null
-                    ? Text(
-                        tr.noneYet,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _HomeMapSheet._sheetSub,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    : null,
-                onTap: lastWaybill == null
+              // Owner 2026-11-26: a last trip restored after a restart
+              // holds only the island's amount: no waybill to open.
+              builder: (context, last, _) {
+                final lastWaybill = last == null || last.restoredAmountOnly
                     ? null
-                    : () => showMoveraWaybillSheet(
-                        context,
-                        lastWaybill,
-                        title: tr.latestWaybill,
-                      ),
-              ),
+                    : last;
+                return _sheetRow(
+                  key: const ValueKey<String>('home-sheet-last-waybill'),
+                  icon: _solarIcon(AppAssets.solarBillList),
+                  label: tr.latestWaybill,
+                  trailing: lastWaybill == null
+                      ? Text(
+                          tr.noneYet,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _HomeMapSheet._sheetSub,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      : null,
+                  onTap: lastWaybill == null
+                      ? null
+                      : () => showMoveraWaybillSheet(
+                          context,
+                          lastWaybill,
+                          title: tr.latestWaybill,
+                        ),
+                );
+              },
             ),
           ],
         ),

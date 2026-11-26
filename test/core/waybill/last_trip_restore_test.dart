@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/storage/local_write_session.dart';
 import 'package:movera/core/waybill/last_trip_restore.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -75,11 +78,10 @@ void main() {
       LastTripRestore.prefsKey,
     );
     expect(saved, isNotNull);
-    SharedPreferences.setMockInitialValues({LastTripRestore.prefsKey: saved!});
+    LastTripRestore.resetForTesting();
     repo.setLastForTesting(null);
     await pumpEventQueue();
-    SharedPreferences.setMockInitialValues({LastTripRestore.prefsKey: saved});
-    LastTripRestore.resetForTesting();
+    SharedPreferences.setMockInitialValues({LastTripRestore.prefsKey: saved!});
     LastTripRestore.readTrips = () async => throw Exception('offline');
     await LastTripRestore.restore(repo);
     expect(repo.last?.tripId, 't2');
@@ -136,4 +138,62 @@ void main() {
       expect(repo.last?.fare, contains('20'));
     },
   );
+
+  test('restored trips only feed the island amount', () async {
+    LastTripRestore.readTrips = () async => {
+      'items': [item(id: 't9')],
+    };
+    await LastTripRestore.restore(repo);
+    expect(repo.last?.restoredAmountOnly, isTrue);
+  });
+
+  test('a sign-out during the read restores and saves nothing', () async {
+    final answer = Completer<Map<String, dynamic>?>();
+    LastTripRestore.readTrips = () => answer.future;
+    final pending = LastTripRestore.restore(repo);
+    await pumpEventQueue();
+    LocalWriteSession.beginCleanup();
+    repo.reset();
+    answer.complete({
+      'items': [item(id: 'old-driver')],
+    });
+    await pending;
+    LocalWriteSession.endCleanup();
+    await pumpEventQueue();
+    expect(repo.last, isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(LastTripRestore.prefsKey), isNull);
+  });
+
+  test('a trip finished during the read is kept', () async {
+    SharedPreferences.setMockInitialValues({
+      LastTripRestore.prefsKey:
+          '{"tripId":"t3","fare":"10,00 kr","issuedAt":"2026-11-26T19:00:00Z","paidByCash":true}',
+    });
+    final answer = Completer<Map<String, dynamic>?>();
+    LastTripRestore.readTrips = () => answer.future;
+    final pending = LastTripRestore.restore(repo);
+    await pumpEventQueue();
+    expect(repo.last?.tripId, 't3');
+    repo.setLastForTesting(null);
+    repo.beginCurrent(done('now', '77,00 kr'));
+    repo.completeCurrent();
+    answer.complete({
+      'items': [item(id: 't3', total: 2000)],
+    });
+    await pending;
+    expect(repo.last?.tripId, 'now');
+  });
+
+  test('a newer phone copy is kept over an older server trip', () async {
+    SharedPreferences.setMockInitialValues({
+      LastTripRestore.prefsKey:
+          '{"tripId":"t5","fare":"55,00 kr","issuedAt":"2026-11-26T21:00:00Z","paidByCash":true}',
+    });
+    LastTripRestore.readTrips = () async => {
+      'items': [item(id: 't4')],
+    };
+    await LastTripRestore.restore(repo);
+    expect(repo.last?.tripId, 't5');
+  });
 }
