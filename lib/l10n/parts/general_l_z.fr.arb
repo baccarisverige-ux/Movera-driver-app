@@ -392,5 +392,6 @@
   "suspendedShortBody": "Votre compte est temporairement suspendu. Contactez l’assistance.",
   "previewBanner": "Aperçu",
   "previewNotSent": "Aperçu – non envoyé",
-  "swPayoutStatusPendingApproval": "En attente d’approbation"
+  "swPayoutStatusPendingApproval": "En attente d’approbation",
+  "statusStripOnline": "Vous êtes en ligne"
 }

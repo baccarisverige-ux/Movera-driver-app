@@ -939,5 +939,9 @@
   "swPayoutStatusPendingApproval": "Waiting for approval",
   "@swPayoutStatusPendingApproval": {
     "description": "Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py)."
+  },
+  "statusStripOnline": "You're online",
+  "@statusStripOnline": {
+    "description": "Status strip under the clock while the driver is online (owner-approved)."
   }
 }

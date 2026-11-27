@@ -3083,6 +3083,10 @@
   "@swPayoutStatusPendingApproval": {
     "description": "Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py)."
   },
+  "statusStripOnline": "You're online",
+  "@statusStripOnline": {
+    "description": "Status strip under the clock while the driver is online (owner-approved)."
+  },
   "goOfflineAfterTrip": "Go offline after this trip",
   "@goOfflineAfterTrip": {
     "description": "v0.18.37 §61: trip settings row; he goes offline when his trips end."
