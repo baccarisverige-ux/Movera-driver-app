@@ -8,6 +8,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/routing/offer_routes.dart';
 import 'package:movera/core/routing/osrm_route_parser.dart';
 import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 
 class RoadRouteException implements Exception {
   const RoadRouteException(this.message);
@@ -102,6 +103,12 @@ class RoadRouteService implements RouteRepository {
     final api = _api;
     if (api != null) {
       return _serverRoute(api, coordinates);
+    }
+    // Live builds never call the public OSRM demo host (owner: "prove first,
+    // then replace"). Without the server api the caller draws the
+    // approximate line. The OSRM path stays for demo builds.
+    if (DriverRuntimeConfig.current.authRequired) {
+      throw const RoadRouteException('Road routing needs the Movera server.');
     }
     final uri = Uri.https(host, '/route/v1/driving/$coordinates', _query);
 

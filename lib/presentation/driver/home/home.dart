@@ -566,7 +566,9 @@ class _DriverHomeState extends State<DriverHome>
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _driverLocationService =
         widget.locationRepository ?? const DriverLocationService();
-    _roadRouteService = widget.routeRepository ?? RoadRouteService();
+    _roadRouteService =
+        widget.routeRepository ??
+        RoadRouteService(api: LiveDriverServices.instance?.api);
     _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _ownsDispatch = widget.dispatchRepository == null;
     _dispatch = widget.dispatchRepository ?? DemoDispatchRepository();
