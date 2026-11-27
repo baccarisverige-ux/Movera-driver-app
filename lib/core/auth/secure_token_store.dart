@@ -102,6 +102,17 @@ abstract class SecureKeyValue {
   Future<void> delete(String key);
 }
 
+/// The phone's Keychain / Keystore on iOS and Android; null elsewhere (web,
+/// desktop, tests), where callers keep their own fallback.
+SecureKeyValue? nativeSecureKeyValue() {
+  if (kIsWeb) return null;
+  if (defaultTargetPlatform != TargetPlatform.iOS &&
+      defaultTargetPlatform != TargetPlatform.android) {
+    return null;
+  }
+  return const _FlutterSecureKeyValue(FlutterSecureStorage());
+}
+
 class _FlutterSecureKeyValue implements SecureKeyValue {
   const _FlutterSecureKeyValue(this._storage);
   final FlutterSecureStorage _storage;

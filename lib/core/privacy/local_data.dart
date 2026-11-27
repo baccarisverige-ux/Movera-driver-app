@@ -1,3 +1,4 @@
+import 'package:movera/core/account/details_draft.dart';
 import 'package:movera/core/destination/destination_search.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
@@ -254,6 +255,10 @@ Future<void> clearLocalUserData({
         throw StateError('Could not clear local data: $key');
       }
     }
+    // Follow-up 2026-11-26: the details draft's personnummer and address
+    // in the Keychain / Keystore.
+    guard?.call();
+    await DetailsDraft.clearSecure();
     // driver-u31: the Ride check audio files the cleared log pointed at.
     guard?.call();
     await deleteRideCheckRecordings();
