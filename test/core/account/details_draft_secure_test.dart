@@ -5,6 +5,7 @@ import 'package:movera/core/account/details_draft.dart';
 import 'package:movera/core/auth/secure_token_store.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/storage/local_write_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Follow-up 2026-11-26 (sign-up v2 review): the draft's personnummer and
@@ -18,6 +19,11 @@ class _FakeSecure implements SecureKeyValue {
   Future<String?> read(String key) async => values[key];
   @override
   Future<void> write(String key, String value) async => values[key] = value;
+}
+
+class _Broken extends _FakeSecure {
+  @override
+  Future<void> delete(String key) async => throw StateError('locked');
 }
 
 void main() {
@@ -50,7 +56,9 @@ void main() {
     final everything = prefs.getKeys().map((k) => '${prefs.get(k)}').join();
     expect(everything, isNot(contains('198503121234')));
     expect(everything, isNot(contains('Storgatan')));
-    final hidden = jsonDecode(secure.values[DetailsDraft.secureKey]!) as Map;
+    final hidden =
+        (jsonDecode(secure.values[DetailsDraft.secureKey]!) as Map)['values']
+            as Map;
     expect(hidden['v2.personalNumber'], '198503121234');
     // A closed app gets everything back.
     final back = await DetailsDraft().restore();
@@ -79,4 +87,50 @@ void main() {
     final back = await DetailsDraft().restore();
     expect(back['v2.personalNumber'], '198503121234');
   });
+
+  test(
+    'a Keychain entry that outlived a reinstall is never restored',
+    () async {
+      final draft = DetailsDraft();
+      draft.save({'v2.personalNumber': '198503121234'});
+      await draft.flush();
+      // Reinstall: the plain store (and its tag) is gone, the Keychain stays.
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final back = await DetailsDraft().restore();
+      expect(back.containsKey('v2.personalNumber'), isFalse);
+      expect(secure.values, isEmpty);
+    },
+  );
+
+  test(
+    'a save that lands after the sign-out began writes nothing secure',
+    () async {
+      final draft = DetailsDraft();
+      LocalWriteSession.beginCleanup();
+      draft.save({'v2.personalNumber': '198503121234'});
+      await draft.flush();
+      LocalWriteSession.endCleanup();
+      expect(secure.values, isEmpty);
+    },
+  );
+
+  test('a failed secure clear fails the sign-out clean-up', () async {
+    DetailsDraft.secure = _Broken();
+    await expectLater(clearLocalUserData(), throwsStateError);
+  });
+
+  test(
+    'a draft from before this version moves out of the plain store',
+    () async {
+      await SettingsRepository().save(DetailsDraft.section, {
+        'v2.firstName': 'Sara',
+        'v2.personalNumber': '198503121234',
+      });
+      final back = await DetailsDraft().restore();
+      expect(back['v2.personalNumber'], '198503121234');
+      final plain = await SettingsRepository().read(DetailsDraft.section);
+      expect(plain.containsKey('v2.personalNumber'), isFalse);
+      expect(secure.values[DetailsDraft.secureKey], contains('198503121234'));
+    },
+  );
 }

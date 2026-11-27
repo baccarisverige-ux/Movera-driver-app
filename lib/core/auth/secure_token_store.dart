@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:movera/core/auth/mobile_os.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/auth/web_session_token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -104,12 +105,11 @@ abstract class SecureKeyValue {
 
 /// The phone's Keychain / Keystore on iOS and Android; null elsewhere (web,
 /// desktop, tests), where callers keep their own fallback.
+/// The real operating system decides (not defaultTargetPlatform, which
+/// tests set to Android with no Keychain plugin).
 SecureKeyValue? nativeSecureKeyValue() {
   if (kIsWeb) return null;
-  if (defaultTargetPlatform != TargetPlatform.iOS &&
-      defaultTargetPlatform != TargetPlatform.android) {
-    return null;
-  }
+  if (!isMobileOs) return null;
   return const _FlutterSecureKeyValue(FlutterSecureStorage());
 }
 

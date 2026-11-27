@@ -121,6 +121,14 @@ const localDataInventory = <LocalDataRecord>[
     retention: 'Until logout.',
   ),
   LocalDataRecord(
+    key: DetailsDraft.tagKey,
+    dataClass: LocalDataClass.recovery,
+    purpose:
+        'A random tag tying the sign-up draft kept in the Keychain / '
+        'Keystore (personnummer, address) to this install and session.',
+    retention: 'Until the details are sent, or until logout.',
+  ),
+  LocalDataRecord(
     key: localDataOwnerKey,
     dataClass: LocalDataClass.recovery,
     purpose:
@@ -227,6 +235,8 @@ Future<void> clearLocalUserData({
       RecentDestinations.key,
       // Owner 2026-11-26: the island's saved last trip is the driver's.
       LastTripRestore.prefsKey,
+      // Follow-up 2026-11-26: the tag of the secure details draft.
+      DetailsDraft.tagKey,
     ];
     guard?.call();
     DriverStartPosition.clearMemory();
