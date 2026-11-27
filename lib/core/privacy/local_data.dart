@@ -1,3 +1,4 @@
+import 'package:movera/core/account/details_draft.dart';
 import 'package:movera/core/destination/destination_search.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
@@ -120,6 +121,14 @@ const localDataInventory = <LocalDataRecord>[
     retention: 'Until logout.',
   ),
   LocalDataRecord(
+    key: DetailsDraft.tagKey,
+    dataClass: LocalDataClass.recovery,
+    purpose:
+        'A random tag tying the sign-up draft kept in the Keychain / '
+        'Keystore (personnummer, address) to this install and session.',
+    retention: 'Until the details are sent, or until logout.',
+  ),
+  LocalDataRecord(
     key: localDataOwnerKey,
     dataClass: LocalDataClass.recovery,
     purpose:
@@ -226,6 +235,8 @@ Future<void> clearLocalUserData({
       RecentDestinations.key,
       // Owner 2026-11-26: the island's saved last trip is the driver's.
       LastTripRestore.prefsKey,
+      // Follow-up 2026-11-26: the tag of the secure details draft.
+      DetailsDraft.tagKey,
     ];
     guard?.call();
     DriverStartPosition.clearMemory();
@@ -254,6 +265,10 @@ Future<void> clearLocalUserData({
         throw StateError('Could not clear local data: $key');
       }
     }
+    // Follow-up 2026-11-26: the details draft's personnummer and address
+    // in the Keychain / Keystore.
+    guard?.call();
+    await DetailsDraft.clearSecure();
     // driver-u31: the Ride check audio files the cleared log pointed at.
     guard?.call();
     await deleteRideCheckRecordings();
