@@ -20,8 +20,9 @@ Future<void> _pump(
   WidgetTester tester,
   DriverSessionController session,
   GlobalKey<NavigatorState> nav,
-  ValueNotifier<bool> sos,
-) async {
+  ValueNotifier<bool> sos, {
+  Widget? home,
+}) async {
   tester.view.physicalSize = const Size(390 * 3, 844 * 3);
   tester.view.devicePixelRatio = 3;
   tester.view.padding = const FakeViewPadding(top: 47 * 3);
@@ -50,7 +51,7 @@ Future<void> _pump(
           ],
         ),
       ),
-      home: const Scaffold(body: Center(child: Text('Home map'))),
+      home: home ?? const Scaffold(body: Center(child: Text('Home map'))),
     ),
   );
 }
@@ -314,7 +315,8 @@ void main() {
     expect(session.activeTripId, isNull);
     nav.currentState!.push(
       MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Center(child: Text('Page after ride'))),
+        builder: (_) =>
+            const Scaffold(body: Center(child: Text('Page after ride'))),
       ),
     );
     await tester.pumpAndSettle();
@@ -325,6 +327,46 @@ void main() {
     await tester.tap(find.text('Du är online'));
     await tester.pumpAndSettle();
     expect(find.byType(DriverRideCompleted), findsOneWidget);
+  });
+
+  testWidgets('tap from menu page + sub-page closes the Home drawer too', (
+    tester,
+  ) async {
+    final scaffold = GlobalKey<ScaffoldState>();
+    await _pump(
+      tester,
+      session,
+      nav,
+      sos,
+      home: Scaffold(
+        key: scaffold,
+        drawer: const Drawer(child: Center(child: Text('Side menu'))),
+        body: const Center(child: Text('Home map')),
+      ),
+    );
+    session.setOnline(true);
+    scaffold.currentState!.openDrawer();
+    await tester.pumpAndSettle();
+    expect(find.text('Side menu'), findsOneWidget);
+    nav.currentState!.push(
+      driverMenuRouteForTest(
+        const Scaffold(body: Center(child: Text('Menu page'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    nav.currentState!.push(
+      RightToLeftTransition(
+        const Scaffold(body: Center(child: Text('Sub page'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sub page'), findsNothing);
+    expect(find.text('Menu page'), findsNothing);
+    expect(find.text('Side menu'), findsNothing);
+    expect(scaffold.currentState!.isDrawerOpen, isFalse);
+    expect(find.text('Home map'), findsOneWidget);
   });
 
   testWidgets('status bar icons are white (light style)', (tester) async {

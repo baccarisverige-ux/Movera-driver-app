@@ -80,6 +80,20 @@ class DriverOnlineStrip extends StatelessWidget {
     // Pages and side-menu routes (_DriverMenuRoute is a ModalRoute) all
     // close back to Home; never past a popup or a protected route.
     nav.popUntil((r) => r.isFirst || r is PopupRoute || _stops.contains(r));
+    // Back on Home: also close its open side drawer (a local history
+    // entry on the first route) so the main map shows.
+    Route<dynamic>? now;
+    nav.popUntil((r) {
+      now = r;
+      return true;
+    });
+    final home = now;
+    for (var i = 0; i < 4; i++) {
+      if (home == null || !home.isFirst || !home.willHandlePopInternally) {
+        break;
+      }
+      nav.pop();
+    }
   }
 
   @override
