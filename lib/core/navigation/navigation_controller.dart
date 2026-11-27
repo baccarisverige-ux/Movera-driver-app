@@ -176,6 +176,21 @@ class NavigationController extends ChangeNotifier {
   static const Duration _rerouteDelay = Duration(seconds: 2);
   static const Duration _maxRerouteDelay = Duration(seconds: 60);
 
+  /// TestFlight FR 2026-11-27: re-route answers that still leave the car
+  /// off route kept "Recalculating route…" up for good. After this many in
+  /// a row the pill goes; re-routing goes on quietly with the backoff.
+  static const int maxLoudOffRouteAnswers = 2;
+  int _offRouteAnswers = 0;
+  bool _quietReroute = false;
+
+  /// The longest "Recalculating route…" stays on screen at once.
+  static const Duration maxRecalculatingShown = Duration(seconds: 15);
+  DateTime? _recalculatingSince;
+
+  /// A route request that does not answer within this ends as a failure,
+  /// so a hung request cannot hold the route lane (and the pill) for good.
+  static const Duration routeRequestTimeout = Duration(seconds: 10);
+
   /// Last accepted measured fix, and a far one held back until a second fix
   /// agrees with it.
   DriverLocation? _lastMeasured;
@@ -248,6 +263,9 @@ class NavigationController extends ChangeNotifier {
       _drivenAlong = null;
       _rerouteOrigin = null;
       _stuckReroutes = 0;
+      _offRouteAnswers = 0;
+      _quietReroute = false;
+      _recalculatingSince = null;
     }
     _stage = stage;
     if (stage == ActiveRideStage.waitingForRider) {
@@ -450,10 +468,9 @@ class NavigationController extends ChangeNotifier {
     }
 
     try {
-      final route = await routeRepository.drivingRoute(
-        origin: origin,
-        destination: destination,
-      );
+      final route = await routeRepository
+          .drivingRoute(origin: origin, destination: destination)
+          .timeout(routeRequestTimeout);
       if (_disposed || token != _routeRequestToken) {
         return;
       }
@@ -491,6 +508,10 @@ class NavigationController extends ChangeNotifier {
       _drivenAlong = null;
       // The same road back is not "Route updated".
       if (rerouting && !_samePoints(kept.points, route.points)) _reroutes++;
+      if (_status == NavigationRouteStatus.recalculating) {
+        _offRouteAnswers++;
+        if (_offRouteAnswers >= maxLoudOffRouteAnswers) _quietReroute = true;
+      }
       _status = null;
       _rebuildBanner();
     } catch (_) {
@@ -562,13 +583,24 @@ class NavigationController extends ChangeNotifier {
         progress.offRoute &&
         _destination != null &&
         _stage != ActiveRideStage.waitingForRider) {
-      _status = NavigationRouteStatus.recalculating;
+      final now = _now();
+      final since = _recalculatingSince ??= now;
+      if (_quietReroute || now.difference(since) >= maxRecalculatingShown) {
+        // Still off route after the re-routes: keep the new line, no pill.
+        _quietReroute = true;
+        if (_status == NavigationRouteStatus.recalculating) _status = null;
+      } else {
+        _status = NavigationRouteStatus.recalculating;
+      }
       _scheduleReroute();
     } else if (progress != null && !progress.offRoute) {
       _rerouteDebounce?.cancel();
       _rerouteDebounce = null;
       _rerouteOrigin = null;
       _stuckReroutes = 0;
+      _offRouteAnswers = 0;
+      _quietReroute = false;
+      _recalculatingSince = null;
       if (_status == NavigationRouteStatus.recalculating) _status = null;
     }
 
