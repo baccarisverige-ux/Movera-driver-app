@@ -28,6 +28,17 @@ class DriverOnlineStrip extends StatelessWidget {
   static final ValueNotifier<bool> sosScreenOpen = ValueNotifier<bool>(false);
   static int _safetyCount = 0;
 
+  /// Routes the tap never pops (the ride-completed screen registers here).
+  static final Set<Route<dynamic>> _stops = <Route<dynamic>>{};
+
+  static void stopAt(Route<dynamic>? route) {
+    if (route != null) _stops.add(route);
+  }
+
+  static void releaseStop(Route<dynamic>? route) {
+    if (route != null) _stops.remove(route);
+  }
+
   static void safetyOpened() {
     _safetyCount++;
     sosScreenOpen.value = true;
@@ -65,8 +76,10 @@ class DriverOnlineStrip extends StatelessWidget {
     });
     // A dialog or bottom sheet is open: never answer it (a null result
     // means "close" for some, e.g. "Unresolved trip").
-    if (top is! PageRoute) return;
-    nav.popUntil((r) => r.isFirst || r is! PageRoute);
+    if (top is PopupRoute) return;
+    // Pages and side-menu routes (_DriverMenuRoute is a ModalRoute) all
+    // close back to Home; never past a popup or a protected route.
+    nav.popUntil((r) => r.isFirst || r is PopupRoute || _stops.contains(r));
   }
 
   @override

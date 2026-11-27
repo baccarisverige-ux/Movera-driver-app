@@ -19,6 +19,7 @@ import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/content/driver_online_strip.dart';
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -92,8 +93,23 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
   }
 
+  /// The "Du är online" strip never pops the ride-completed screen.
+  Route<dynamic>? _stripStop;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != _stripStop) {
+      DriverOnlineStrip.releaseStop(_stripStop);
+      _stripStop = route;
+      DriverOnlineStrip.stopAt(route);
+    }
+  }
+
   @override
   void dispose() {
+    DriverOnlineStrip.releaseStop(_stripStop);
     _comment.dispose();
     super.dispose();
   }

@@ -9,6 +9,10 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/content/driver_online_strip.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
+import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
+import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/widgets/navigation_transition.dart';
 
 const _shots = String.fromEnvironment('STRIP_SHOTS');
 
@@ -250,6 +254,77 @@ void main() {
     await tester.pump();
     expect(stripHeight(tester), greaterThan(47 + 18));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tap from a real side-menu route reaches Home', (tester) async {
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    nav.currentState!.push(
+      driverMenuRouteForTest(
+        const Scaffold(body: Center(child: Text('Menu page'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Menu page'), findsOneWidget);
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.text('Menu page'), findsNothing);
+    expect(find.text('Home map'), findsOneWidget);
+  });
+
+  testWidgets('tap from a sub-page above a side-menu route reaches Home', (
+    tester,
+  ) async {
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    nav.currentState!.push(
+      driverMenuRouteForTest(
+        const Scaffold(body: Center(child: Text('Menu page'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    nav.currentState!.push(
+      RightToLeftTransition(
+        const Scaffold(body: Center(child: Text('Sub page'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sub page'), findsNothing);
+    expect(find.text('Menu page'), findsNothing);
+    expect(find.text('Home map'), findsOneWidget);
+  });
+
+  testWidgets('tap never pops the real ride-completed screen', (tester) async {
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    final rideSession = DriverSessionController(initialOnline: true);
+    addTearDown(rideSession.dispose);
+    nav.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => DriverRideCompleted(
+          sessionController: rideSession,
+          waybillRepository: InMemoryWaybillRepository.instance,
+          ratingAllowed: false,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(session.activeTripId, isNull);
+    nav.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Center(child: Text('Page after ride'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.text('Page after ride'), findsNothing);
+    expect(find.byType(DriverRideCompleted), findsOneWidget);
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DriverRideCompleted), findsOneWidget);
   });
 
   testWidgets('status bar icons are white (light style)', (tester) async {
