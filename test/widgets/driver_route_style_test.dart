@@ -68,23 +68,26 @@ void main() {
     }
   });
 
-  test('route line is the Movera gradient in its dark shades, pickup green to '
-      'destination blue, with no outline and nothing white', () {
-    expect(DriverRouteStyle.pickupColor, const Color(0xFF05663F));
-    expect(DriverRouteStyle.destinationColor, const Color(0xFF0F4599));
-    expect(DriverRouteStyle.pickupLight, const Color(0xFF079A60));
-    expect(DriverRouteStyle.destinationLight, const Color(0xFF1769E8));
-    // Same hues, darker: every channel of the line is below the bright
-    // shade's, in the same proportions.
-    for (final (dark, light) in [
-      (DriverRouteStyle.pickupColor, DriverRouteStyle.pickupLight),
-      (DriverRouteStyle.destinationColor, DriverRouteStyle.destinationLight),
+  test('route line is Movera green at the pickup to Movera dark at the '
+      'destination (owner 2026-11-27: no blue), no outline, nothing white', () {
+    expect(DriverRouteStyle.pickupColor, const Color(0xFF2FBF5B));
+    expect(DriverRouteStyle.destinationColor, const Color(0xFF12201C));
+    for (final colour in [
+      for (var t = 0.0; t <= 1; t += 0.1) DriverRouteStyle.at(t),
+      for (var t = 0.0; t <= 1; t += 0.1) DriverRouteStyle.lightAt(t),
     ]) {
-      expect(dark.r, lessThan(light.r));
-      expect(dark.g, lessThan(light.g));
-      expect(dark.b, lessThan(light.b));
-      expect(dark.g / light.g, closeTo(dark.b / light.b, 0.03));
+      // No blue: blue is never the strongest channel.
+      expect(colour.b, lessThanOrEqualTo(colour.g));
     }
+    // The motion's band is brighter than the line under it.
+    expect(
+      DriverRouteStyle.pickupLight.computeLuminance(),
+      greaterThan(DriverRouteStyle.pickupColor.computeLuminance()),
+    );
+    expect(
+      DriverRouteStyle.destinationLight.computeLuminance(),
+      greaterThan(DriverRouteStyle.destinationColor.computeLuminance()),
+    );
     final lines = DriverRouteStyle.polylines(
       id: 'r',
       points: const [

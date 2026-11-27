@@ -6,23 +6,27 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 /// One route-line look for every driver map (Home destination, direct offer
 /// preview, trip to pickup/drop-off, reservation popup, destination-mode
 /// arc and the scheduled-rides preview): one line, no outline, that runs
-/// from the pickup green to the destination blue in their dark shades
-/// (owner round 4: "same colours but darker, no white"). The bright shades
-/// of the same hues ([lightAt]) are kept for the offer line's motion.
+/// from the Movera green at the pickup to the Movera dark at the
+/// destination (owner 2026-11-27: Movera colours only, no blue; no white).
+/// Brighter greens ([lightAt]) are kept for the offer line's motion.
 /// google_maps_flutter has no gradient polylines, so the line is drawn as
 /// [gradientSteps] short pieces. It widens as the map zooms in, as before.
 abstract final class DriverRouteStyle {
-  /// The line at the pickup end: the Movera green, darkened.
-  static const Color pickupColor = Color(0xFF05663F);
+  /// The line at the pickup end: the Movera green. Owner 2026-11-27
+  /// (driver offer route line, "Oui, fusionner"): Movera colours only,
+  /// #12201C and #2FBF5B, no blue.
+  static const Color pickupColor = Color(0xFF2FBF5B);
 
-  /// The line at the destination end: the Movera blue, darkened.
-  static const Color destinationColor = Color(0xFF0F4599);
+  /// The line at the destination end: the Movera dark.
+  static const Color destinationColor = Color(0xFF12201C);
 
-  /// The bright green the dark line is made from (the offer motion's band).
-  static const Color pickupLight = Color(0xFF079A60);
+  /// The offer motion's bright band at the pickup end: the Movera green,
+  /// lightened.
+  static const Color pickupLight = Color(0xFF8ADBA3);
 
-  /// The bright blue the dark line is made from (the offer motion's band).
-  static const Color destinationLight = Color(0xFF1769E8);
+  /// The offer motion's bright band at the destination end: the Movera
+  /// green over the dark line.
+  static const Color destinationLight = Color(0xFF2FBF5B);
 
   /// One colour for places that need a single one (half-way on the line).
   static final Color color = at(0.5);
