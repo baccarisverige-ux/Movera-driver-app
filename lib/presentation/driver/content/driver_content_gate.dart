@@ -12,7 +12,6 @@ import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/content/min_version_screen.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
-import 'package:movera/presentation/driver/content/driver_online_strip.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Contract v0.10.0 §19 over every screen: the app-versions rule ("Update
@@ -125,7 +124,6 @@ class _DriverContentGateState extends State<DriverContentGate> {
     final navigator = widget.navigatorKey.currentState;
     if (navigator == null) return;
     setState(() => _sosOpen = true);
-    DriverOnlineStrip.sosScreenOpen.value = true;
     unawaited(
       navigator
           .push(
@@ -135,7 +133,6 @@ class _DriverContentGateState extends State<DriverContentGate> {
             ),
           )
           .whenComplete(() {
-            DriverOnlineStrip.sosScreenOpen.value = false;
             if (mounted) setState(() => _sosOpen = false);
           }),
     );

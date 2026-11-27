@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/content/driver_online_strip.dart';
+import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 
 const _shots = String.fromEnvironment('STRIP_SHOTS');
 
@@ -118,6 +120,136 @@ void main() {
     await tester.tap(find.text('Du är online'));
     await tester.pumpAndSettle();
     expect(find.text('SOS'), findsOneWidget);
+  });
+
+  testWidgets('tap during a trip keeps the trip screen; online still shows', (
+    tester,
+  ) async {
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    session.beginTrip('trip-1');
+    nav.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: Scaffold(body: Center(child: Text('Trip screen'))),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Du är online'), findsOneWidget);
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.text('Trip screen'), findsOneWidget);
+  });
+
+  testWidgets('tap with the real safety sheet open keeps it open', (
+    tester,
+  ) async {
+    await _pump(tester, session, nav, DriverOnlineStrip.sosScreenOpen);
+    session.setOnline(true);
+    unawaited(showSafetyToolKitSheet<void>(nav.currentContext!));
+    await tester.pumpAndSettle();
+    expect(find.byType(SafetyToolKits), findsOneWidget);
+    expect(DriverOnlineStrip.sosScreenOpen.value, isTrue);
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SafetyToolKits), findsOneWidget);
+  });
+
+  testWidgets('tap with the real SOS screen (a page) keeps it open', (
+    tester,
+  ) async {
+    await _pump(tester, session, nav, DriverOnlineStrip.sosScreenOpen);
+    session.setOnline(true);
+    nav.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const SafetyToolKits()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SafetyToolKits), findsOneWidget);
+    nav.currentState!.pop();
+    await tester.pumpAndSettle();
+    expect(DriverOnlineStrip.sosScreenOpen.value, isFalse);
+  });
+
+  testWidgets('tap never answers a non-dismissible dialog', (tester) async {
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    bool? answer = true;
+    var closed = false;
+    unawaited(
+      showDialog<bool>(
+        context: nav.currentContext!,
+        barrierDismissible: false,
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: AlertDialog(title: Text('Unresolved trip')),
+        ),
+      ).then((v) {
+        answer = v;
+        closed = true;
+      }),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Du är online'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unresolved trip'), findsOneWidget);
+    expect(closed, isFalse);
+    expect(answer, isTrue);
+  });
+
+  testWidgets('the whole strip is a button, status bar included', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    nav.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Center(child: Text('Wallet'))),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(300, 10));
+    await tester.pumpAndSettle();
+    expect(find.text('Wallet'), findsNothing);
+    // Semantics of the strip alone (in the test harness the routes below
+    // hide semantics painted before them).
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('sv'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: DriverOnlineStrip(
+            session: session,
+            navigatorKey: GlobalKey<NavigatorState>(),
+            sosOpen: sos,
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Du är online')),
+      matchesSemantics(
+        isButton: true,
+        hasTapAction: true,
+        label: 'Du är online',
+      ),
+    );
+    handle.dispose();
+  });
+
+  testWidgets('large text grows the strip instead of clipping', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.5;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _pump(tester, session, nav, sos);
+    session.setOnline(true);
+    await tester.pump();
+    expect(stripHeight(tester), greaterThan(47 + 18));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('status bar icons are white (light style)', (tester) async {
