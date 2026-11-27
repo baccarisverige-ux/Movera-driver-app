@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/sound/offer_alert.dart';
@@ -27,6 +29,19 @@ void main() {
     OnlineSwitchSound.debugReset();
     PhoneSoundCheck.debugRead = null;
     OfferAlertSettings.reset();
+  });
+
+  test('owner 2026-11-27: the cleaned sounds play, the old files stay', () {
+    expect(OnlineSwitchSound.online, 'sounds/radar_on_clean.mp3');
+    expect(OnlineSwitchSound.offline, 'sounds/radar_off_clean.mp3');
+    for (final f in <String>[
+      'assets/${OnlineSwitchSound.online}',
+      'assets/${OnlineSwitchSound.offline}',
+      'assets/sounds/radar_on.mp3',
+      'assets/sounds/radar_off.mp3',
+    ]) {
+      expect(File(f).existsSync(), isTrue, reason: f);
+    }
   });
 
   test('online rises, offline falls, each with a light haptic', () async {
