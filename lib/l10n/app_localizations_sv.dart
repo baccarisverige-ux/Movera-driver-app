@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6496,6 +6495,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cashPriceChanged => 'Priset ändrades – ta emot det nya beloppet';
+
+  @override
+  String get cashPriceRecalculated => 'Priset har räknats om';
 
   @override
   String get cashPriceRecalculatedEarlyEnd =>

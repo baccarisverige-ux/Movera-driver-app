@@ -449,6 +449,10 @@
     "description": "Admin text key trip.goToDropoff (Content › Driver app texts)."
   },
   "cashPriceChanged": "The price changed – collect the new amount",
+  "cashPriceRecalculated": "Price recalculated",
+  "@cashPriceRecalculated": {
+    "description": "Collect-cash sheet: the line with the recalculation icon under the early-end note when the server priced the distance driven (owner-approved 2026-11-27)."
+  },
   "cashPriceRecalculatedEarlyEnd": "Ending before the destination – price recalculated",
   "tripCollectCash": "Collect cash",
   "@tripCollectCash": {
