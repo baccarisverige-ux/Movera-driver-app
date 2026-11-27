@@ -9,14 +9,17 @@ import 'package:movera/core/sound/offer_alert.dart';
 import 'package:movera/core/sound/phone_sound.dart';
 
 /// Owner 2026-11-26: a short sound when the driver goes online
-/// (`assets/sounds/radar_on.mp3`) and offline (`radar_off.mp3`), with a
-/// light haptic. The owner's chosen sound (Pixabay "notification center",
-/// Pixabay content licence); offline is the same, lower pitch. Quiet while the
+/// (`assets/sounds/radar_on_clean.mp3`) and offline
+/// (`radar_off_clean.mp3`), with a light haptic. Owner 2026-11-27: the
+/// cleaned versions replace the first ones (`radar_on.mp3`,
+/// `radar_off.mp3`, kept in the repo, unused, Rule 21). The cleaned files
+/// are a noise-cleaned edit of the same Pixabay "notification center"
+/// sound (Pixabay content licence); offline is the same, lower pitch. Quiet while the
 /// phone is on silent (or very low) and while the driver's Sound & voice
 /// "General volume" is at 0; the haptic follows his Vibration setting.
 abstract final class OnlineSwitchSound {
-  static const String online = 'sounds/radar_on.mp3';
-  static const String offline = 'sounds/radar_off.mp3';
+  static const String online = 'sounds/radar_on_clean.mp3';
+  static const String offline = 'sounds/radar_off_clean.mp3';
 
   /// Tests see what plays here instead of the device (`sound:<asset>`,
   /// `haptic`).
