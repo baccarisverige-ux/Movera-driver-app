@@ -188,10 +188,28 @@ class RoadRouteService implements RouteRepository {
       throw const RoadRouteException('Invalid route response.');
     }
 
+    final RoadRoute parsed;
     try {
-      return _parser.parseRoute(route);
+      parsed = _parser.parseRoute(route);
     } on FormatException catch (error) {
       throw RoadRouteException(error.message);
     }
+    // v0.18.171: source google | stored | estimate, code still "Ok". Only
+    // "estimate" is approximate; none (older server) is as before.
+    final source = switch (decoded['source']) {
+      final String s when _sources.contains(s) => s,
+      _ => null,
+    };
+    if (source == null) return parsed;
+    return RoadRoute(
+      points: parsed.points,
+      distanceMeters: parsed.distanceMeters,
+      durationSeconds: parsed.durationSeconds,
+      instructions: parsed.instructions,
+      source: source,
+      approximate: source == 'estimate',
+    );
   }
+
+  static const _sources = {'google', 'stored', 'estimate'};
 }

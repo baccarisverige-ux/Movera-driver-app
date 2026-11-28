@@ -20,6 +20,17 @@ abstract final class DriverRouteStyle {
   /// The line at the destination end: the Movera dark.
   static const Color destinationColor = Color(0xFF12201C);
 
+  /// v0.18.171: the server's straight estimate (GET /routes/driving
+  /// source "estimate") is drawn dashed in this Movera grey (#12201C at
+  /// 50 %), no blue, no text.
+  static const Color approximateColor = Color(0x8012201C);
+
+  /// The dash of [approximateColor] lines.
+  static final List<PatternItem> approximatePattern = [
+    PatternItem.dash(18),
+    PatternItem.gap(12),
+  ];
+
   /// The offer motion's bright band at the pickup end: the Movera green,
   /// lightened.
   static const Color pickupLight = Color(0xFF8ADBA3);

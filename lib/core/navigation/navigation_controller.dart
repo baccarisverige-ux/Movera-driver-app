@@ -176,6 +176,13 @@ class NavigationController extends ChangeNotifier {
   static const Duration _rerouteDelay = Duration(seconds: 2);
   static const Duration _maxRerouteDelay = Duration(seconds: 60);
 
+  /// v0.18.171: a moving car still off route once the pill is quiet gets
+  /// one prompt re-route, then waits 10 s, 20, 40, up to [_maxRerouteDelay]
+  /// between re-routes (counted in [_quietReroutes]). Back
+  /// on the line resets it. The server's 60 s rule is the second guard.
+  static const Duration _movingRerouteDelay = Duration(seconds: 10);
+  int _quietReroutes = 0;
+
   /// TestFlight FR 2026-11-27: re-route answers that still leave the car
   /// off route kept "Recalculating route…" up for good. After this many in
   /// a row the pill goes; re-routing goes on quietly with the backoff.
@@ -264,6 +271,7 @@ class NavigationController extends ChangeNotifier {
       _rerouteOrigin = null;
       _stuckReroutes = 0;
       _offRouteAnswers = 0;
+      _quietReroutes = 0;
       _quietReroute = false;
       _recalculatingSince = null;
     }
@@ -496,6 +504,8 @@ class NavigationController extends ChangeNotifier {
         distanceMeters: route.distanceMeters,
         durationSeconds: route.durationSeconds,
         instructions: List<RouteInstruction>.unmodifiable(route.instructions),
+        source: route.source,
+        approximate: route.approximate,
       );
       _routeLength = 0;
       for (var i = 1; i < route.points.length; i++) {
@@ -507,7 +517,12 @@ class NavigationController extends ChangeNotifier {
       _progressAlong = null;
       _drivenAlong = null;
       // The same road back is not "Route updated".
-      if (rerouting && !_samePoints(kept.points, route.points)) _reroutes++;
+      // v0.18.171: an estimate is no "Route updated" either.
+      if (rerouting &&
+          !route.approximate &&
+          !_samePoints(kept.points, route.points)) {
+        _reroutes++;
+      }
       if (_status == NavigationRouteStatus.recalculating) {
         _offRouteAnswers++;
         if (_offRouteAnswers >= maxLoudOffRouteAnswers) _quietReroute = true;
@@ -599,6 +614,7 @@ class NavigationController extends ChangeNotifier {
       _rerouteOrigin = null;
       _stuckReroutes = 0;
       _offRouteAnswers = 0;
+      _quietReroutes = 0;
       _quietReroute = false;
       _recalculatingSince = null;
       if (_status == NavigationRouteStatus.recalculating) _status = null;
@@ -746,9 +762,18 @@ class NavigationController extends ChangeNotifier {
     final last = _rerouteOrigin;
     final stuck =
         last != null && _snapshot.vehicle.distanceMetersTo(last) < _stuckMeters;
-    final delay = stuck
+    var delay = stuck
         ? _rerouteDelay * math.pow(2, math.min(_stuckReroutes + 1, 5))
         : _rerouteDelay;
+    // Moving but still off route with the pill quiet: after one prompt
+    // re-route, back off 10, 20, 40, 60 s. Leaving a parked spot (the
+    // last re-route was stuck) is prompt again.
+    final quiet = _quietReroute && !stuck;
+    if (quiet && _quietReroutes > 0) {
+      final moving =
+          _movingRerouteDelay * math.pow(2, math.min(_quietReroutes - 1, 3));
+      if (moving > delay) delay = moving;
+    }
     _rerouteDebounce = Timer(
       delay > _maxRerouteDelay ? _maxRerouteDelay : delay,
       () {
@@ -757,6 +782,7 @@ class NavigationController extends ChangeNotifier {
           return;
         }
         _stuckReroutes = stuck ? _stuckReroutes + 1 : 0;
+        _quietReroutes = quiet ? _quietReroutes + 1 : 0;
         _rerouteOrigin = _snapshot.vehicle;
         unawaited(
           ensureRoute(

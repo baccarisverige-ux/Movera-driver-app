@@ -777,6 +777,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     _roadGeoPoints,
     _camera.alongMetersOn(_roadGeoPoints),
     _routeZoomStep,
+    approximate: _navigation.route?.approximate ?? false,
   );
 
   void _onCameraMove(CameraPosition position) {
