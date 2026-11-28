@@ -167,12 +167,14 @@ extension _HomeMapPanels on _DriverHomeState {
     child: radar,
   );
 
-  /// The online radar with the sheet open: same look, "Tap · OFF ·
-  /// Go offline"; a tap goes offline at once (owner 2026-11-26: no
-  /// "Hold" wording on the radar; tr.hold stays for the trip dock).
+  /// The online radar with the sheet open: "Hold · OFF · Go offline",
+  /// like the trip radar. Only a 1 s hold (green ring) goes offline; a
+  /// short tap does nothing and shows no hint (owner 2026-11-28,
+  /// replaces the 2026-11-26 tap-goes rule). Semantics label unchanged.
   Widget _holdOffRadar() {
     return RadarHoldOff(
-      tapGoes: true,
+      tapGoes: false,
+      tapHint: false,
       ownHaptics: false,
       semanticsLabel: tr.tapToGoOffline,
       onConfirmed: () => unawaited(_confirmGoOffline()),
@@ -182,7 +184,7 @@ extension _HomeMapPanels on _DriverHomeState {
           _radarSweepController,
         ]),
         builder: (context, child) => _buildRadarOrb(
-          title: tr.radarTap,
+          title: tr.hold,
           status: tr.orbOff,
           subtitle: tr.goOffline,
           active: true,
