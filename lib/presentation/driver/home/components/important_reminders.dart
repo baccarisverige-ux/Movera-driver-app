@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
@@ -116,13 +119,7 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
                       padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.notification_important_outlined,
-                            size: 22,
-                            color: blocking
-                                ? ImportantRemindersBox.red
-                                : ImportantRemindersBox.orange,
-                          ),
+                          ReminderBell(count: items.length),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -301,6 +298,101 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Owner 2026-11-26 ("animated ringer icon, but classy"): the box's bell
+/// rings once, a short swing from its top that dies away (about 1.1 s),
+/// when the box appears and again whenever a new reminder comes in; then
+/// it rests. Never on a loop. Still with reduce motion.
+class ReminderBell extends StatefulWidget {
+  const ReminderBell({super.key, required this.count});
+
+  /// The number of reminders: a higher number rings again.
+  final int count;
+
+  /// The owner's own red and gold bell design (2026-11-26).
+  static const double size = 28;
+
+  /// One ring.
+  static const Duration ring = Duration(milliseconds: 1100);
+
+  /// The widest swing, in radians (about 14°).
+  static const double maxAngle = 0.24;
+
+  /// Three swings each way while it dies away.
+  static const int swings = 3;
+
+  /// The swing angle at [t] (0..1) of a ring.
+  static double angleAt(double t) {
+    if (t <= 0 || t >= 1) return 0;
+    final fade = math.pow(1 - t, 2).toDouble();
+    return maxAngle * fade * math.sin(t * swings * 2 * math.pi);
+  }
+
+  static const Key bellKey = ValueKey<String>('home-reminders-bell');
+
+  @override
+  State<ReminderBell> createState() => _ReminderBellState();
+}
+
+class _ReminderBellState extends State<ReminderBell>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ring = AnimationController(
+    vsync: this,
+    duration: ReminderBell.ring,
+  );
+
+  bool _rangOnce = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_rangOnce) {
+      _rangOnce = true;
+      _start();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ReminderBell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.count > oldWidget.count) _start();
+  }
+
+  void _start() {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      _ring.value = 0;
+      return;
+    }
+    _ring.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _ring.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ring,
+      builder: (context, child) => Transform.rotate(
+        // Hangs from its top, like a bell.
+        alignment: const Alignment(0, -0.85),
+        angle: _ring.isAnimating ? ReminderBell.angleAt(_ring.value) : 0,
+        child: child,
+      ),
+      child: Image.asset(
+        AppAssets.reminderBell,
+        key: ReminderBell.bellKey,
+        width: ReminderBell.size,
+        height: ReminderBell.size,
+        filterQuality: FilterQuality.medium,
+        excludeFromSemantics: true,
       ),
     );
   }

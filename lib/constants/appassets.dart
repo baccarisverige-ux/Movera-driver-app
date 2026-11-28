@@ -2,6 +2,8 @@ class AppAssets {
   // Icons
   static const String locationFill = 'assets/icons/location_fill.png';
   static const String send = 'assets/icons/send.png';
+  // Owner's own design (2026-11-26): the Important reminders bell.
+  static const String reminderBell = 'assets/icons/reminder_bell.png';
   static const String phoneOutl = 'assets/icons/phone_outl.png';
   static const String wallet2 = 'assets/icons/wallet2.png';
   static const String menu = 'assets/icons/menu.png';
