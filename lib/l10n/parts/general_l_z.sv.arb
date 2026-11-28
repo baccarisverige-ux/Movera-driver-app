@@ -392,5 +392,6 @@
   "suspendedShortBody": "Ditt konto är pausat. Kontakta support.",
   "previewBanner": "Förhandsvisning",
   "previewNotSent": "Förhandsvisning – inte skickat",
-  "swPayoutStatusPendingApproval": "Väntar på godkännande"
+  "swPayoutStatusPendingApproval": "Väntar på godkännande",
+  "statusStripOnline": "Du är online"
 }

@@ -685,6 +685,10 @@ class _MenuAction {
   final VoidCallback onTap;
 }
 
+/// The side menu's own route, for tests (e.g. the online strip tap).
+@visibleForTesting
+Route<void> driverMenuRouteForTest(Widget page) => _DriverMenuRoute(page);
+
 class _DriverMenuRoute extends ModalRoute<void> {
   _DriverMenuRoute(this.page);
 

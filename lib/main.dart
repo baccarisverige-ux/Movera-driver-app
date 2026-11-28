@@ -16,6 +16,7 @@ import 'package:movera/core/logging/driver_log.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:movera/presentation/driver/content/driver_content_gate.dart';
+import 'package:movera/presentation/driver/content/driver_online_strip.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:movera/core/account/driver_account_repository.dart';
@@ -528,9 +529,12 @@ class _MoveraAppState extends State<MoveraApp> {
                             if (PreviewMode.current.active)
                               const PreviewBanner()
                             else if (DriverRuntimeConfig.current.authRequired)
-                              const SafeArea(
-                                bottom: false,
-                                child: SizedBox.shrink(),
+                              // Owner 2026-11-27: black, white icons, and
+                              // "Du är online" under the clock while online.
+                              DriverOnlineStrip(
+                                session: _session,
+                                navigatorKey: _navigatorKey,
+                                sosOpen: DriverOnlineStrip.sosScreenOpen,
                               )
                             else
                               const DemoModeBanner(),

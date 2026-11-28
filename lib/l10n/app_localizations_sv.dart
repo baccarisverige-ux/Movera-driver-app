@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -4062,6 +4063,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get swPayoutStatusPendingApproval => 'Väntar på godkännande';
+
+  @override
+  String get statusStripOnline => 'Du är online';
 
   @override
   String get goOfflineAfterTrip => 'Gå offline efter den här resan';

@@ -7120,6 +7120,12 @@ abstract class AppLocalizations {
   /// **'Waiting for approval'**
   String get swPayoutStatusPendingApproval;
 
+  /// Status strip under the clock while the driver is online (owner-approved).
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re online'**
+  String get statusStripOnline;
+
   /// v0.18.37 §61: trip settings row; he goes offline when his trips end.
   ///
   /// In en, this message translates to:

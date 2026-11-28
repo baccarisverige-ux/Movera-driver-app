@@ -1,4 +1,5 @@
 import 'package:movera/core/session/driver_composition_guard.dart';
+import 'package:movera/presentation/driver/content/driver_online_strip.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -84,6 +85,20 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
 
   /// v0.18.57 §79: the SOS reached Movera; the other numbers show.
   bool _sosSent = false;
+
+  // Owner 2026-11-27: the "Du är online" strip ignores taps while the
+  // safety sheet or SOS screen (and its confirm dialog) is open.
+  @override
+  void initState() {
+    super.initState();
+    DriverOnlineStrip.safetyOpened();
+  }
+
+  @override
+  void dispose() {
+    DriverOnlineStrip.safetyClosed();
+    super.dispose();
+  }
 
   Future<bool> _launch(String number) {
     final dial = widget.dialNumber;
