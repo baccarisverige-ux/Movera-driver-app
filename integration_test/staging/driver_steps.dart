@@ -250,10 +250,10 @@ Future<bool> tapHit(WidgetTester tester, Finder finder, String what) async {
   return true;
 }
 
-/// Goes offline the app's way, then confirms "Go offline?". With the Home
-/// sheet open the online radar is a 1 s hold (`home-radar-hold-off`);
-/// with the sheet closed it is a long press on `home-radar-long-press`
-/// (home_map_panels.dart). Both open the same `go-offline-yes` dialog.
+/// Goes offline the app's way. With the Home sheet open the online radar
+/// is a 1 s hold (`home-radar-hold-off`); with the sheet closed it is a
+/// long press on `home-radar-long-press` (home_map_panels.dart). Both go
+/// offline at once, no question (owner 2026-11-26).
 Future<bool> goOffline(WidgetTester tester) async {
   final hold = byKey('home-radar-hold-off');
   final long = byKey('home-radar-long-press');
@@ -282,17 +282,18 @@ Future<bool> goOffline(WidgetTester tester) async {
     CheckLog.say('STEP go offline: long press on home-radar-long-press');
     await tester.longPress(long.hitTestable().first, warnIfMissed: false);
   }
-  final asked = await pumpUntil(
+  // Owner 2026-11-26 (#693): no "Go offline?" question; the hold or long
+  // press itself goes offline, and the online radar leaves the tree.
+  final off = await pumpUntil(
     tester,
-    () => shows(byKey('go-offline-yes')),
+    () => !shows(hold) && !shows(long),
     timeout: const Duration(seconds: 5),
     dismiss: false,
   );
-  if (!asked) {
-    CheckLog.miss('"go-offline-yes" (go-offline-confirm dialog) did not open');
-    return false;
-  }
-  if (!await tapHit(tester, byKey('go-offline-yes'), '"go-offline-yes"')) {
+  if (!off) {
+    CheckLog.miss(
+      'the online radar is still there 5 s after the hold / long press',
+    );
     return false;
   }
   await tester.pump(const Duration(milliseconds: 500));
