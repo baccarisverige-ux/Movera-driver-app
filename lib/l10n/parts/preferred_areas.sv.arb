@@ -22,5 +22,8 @@
   "legalMapDataSourcesBody": "Kartområden: Sverige © SCB (Statistiska centralbyrån), CC0. Frankrike © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.",
   "schedPreferredAreasTooMany": "Du kan välja högst {max} områden. Ta bort ett och spara igen.",
   "schedPreferredAreasRemovedGone": "{areas} erbjuds inte längre av Movera och togs bort. Tryck Spara för att behålla de andra.",
-  "schedPreferredAreasSaveFailed": "Det gick inte att spara. Försök igen."
+  "schedPreferredAreasSaveFailed": "Det gick inte att spara. Försök igen.",
+  "schedGroupFavourites": "I dina favoritområden",
+  "schedGroupOthers": "Övriga",
+  "schedGroupNoneInFavourites": "0 bokningar i dina favoritområden"
 }

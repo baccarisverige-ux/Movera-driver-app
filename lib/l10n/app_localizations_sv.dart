@@ -4874,6 +4874,15 @@ class AppLocalizationsSv extends AppLocalizations {
       'Det gick inte att spara. Försök igen.';
 
   @override
+  String get schedGroupFavourites => 'I dina favoritområden';
+
+  @override
+  String get schedGroupOthers => 'Övriga';
+
+  @override
+  String get schedGroupNoneInFavourites => '0 bokningar i dina favoritområden';
+
+  @override
   String get reservation => 'Bokning';
 
   @override

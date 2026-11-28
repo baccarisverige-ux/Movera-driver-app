@@ -4870,6 +4870,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get schedPreferredAreasSaveFailed => 'Could not save. Try again.';
 
   @override
+  String get schedGroupFavourites => 'In your favourite areas';
+
+  @override
+  String get schedGroupOthers => 'Others';
+
+  @override
+  String get schedGroupNoneInFavourites => '0 bookings in your favourite areas';
+
+  @override
   String get reservation => 'Reservation';
 
   @override

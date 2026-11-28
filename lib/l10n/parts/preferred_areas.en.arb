@@ -122,5 +122,17 @@
   "schedPreferredAreasSaveFailed": "Could not save. Try again.",
   "@schedPreferredAreasSaveFailed": {
     "description": "v0.18.172 contract.json#preferredAreas (reviewer 2026-11-28; owner OK of the text pending): Save refused for another reason (not the network)."
+  },
+  "schedGroupFavourites": "In your favourite areas",
+  "@schedGroupFavourites": {
+    "description": "v0.18.172 owner 2026-11-28 (two groups in Bokade resor): Header above the first open booked ride in his favourite areas (server order, inPreferredArea)."
+  },
+  "schedGroupOthers": "Others",
+  "@schedGroupOthers": {
+    "description": "v0.18.172 owner 2026-11-28 (two groups in Bokade resor): Header above the first open booked ride outside his favourite areas."
+  },
+  "schedGroupNoneInFavourites": "0 bookings in your favourite areas",
+  "@schedGroupNoneInFavourites": {
+    "description": "v0.18.172 owner 2026-11-28 (two groups in Bokade resor): Line at the top when he has favourite areas but none of the open rides is in them."
   }
 }

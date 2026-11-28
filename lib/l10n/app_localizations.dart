@@ -8434,6 +8434,24 @@ abstract class AppLocalizations {
   /// **'Could not save. Try again.'**
   String get schedPreferredAreasSaveFailed;
 
+  /// v0.18.172 owner 2026-11-28 (two groups in Bokade resor): Header above the first open booked ride in his favourite areas (server order, inPreferredArea).
+  ///
+  /// In en, this message translates to:
+  /// **'In your favourite areas'**
+  String get schedGroupFavourites;
+
+  /// v0.18.172 owner 2026-11-28 (two groups in Bokade resor): Header above the first open booked ride outside his favourite areas.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get schedGroupOthers;
+
+  /// v0.18.172 owner 2026-11-28 (two groups in Bokade resor): Line at the top when he has favourite areas but none of the open rides is in them.
+  ///
+  /// In en, this message translates to:
+  /// **'0 bookings in your favourite areas'**
+  String get schedGroupNoneInFavourites;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

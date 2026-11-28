@@ -4951,6 +4951,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d\'enregistrer. Réessayez.';
 
   @override
+  String get schedGroupFavourites => 'Dans vos zones favorites';
+
+  @override
+  String get schedGroupOthers => 'Autres';
+
+  @override
+  String get schedGroupNoneInFavourites => '0 course dans vos zones favorites';
+
+  @override
   String get reservation => 'Réservation';
 
   @override

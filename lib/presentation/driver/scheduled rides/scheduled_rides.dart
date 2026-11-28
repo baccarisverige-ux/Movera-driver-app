@@ -46,6 +46,7 @@ part 'scheduled_rides_cards.dart';
 part 'scheduled_rides_details.dart';
 part 'scheduled_rides_cancel.dart';
 part 'scheduled_rides_keep.dart';
+part 'scheduled_rides_groups.dart';
 
 // Solar line icons (stroke 1.5), tinted to match the surrounding text.
 Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
@@ -123,8 +124,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     );
   }
 
-  /// Owner BL-Q4: the driver's home area is where the phone is now.
-  /// v0.18.172: no longer on the house icon; kept (Rule 21).
+  /// Owner BL-Q4: home area = phone position (v0.18.172: unwired, kept).
   // ignore: unused_element
   Future<void> _setHomeArea() async {
     final services = LiveDriverServices.instance;
@@ -290,10 +290,15 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                 }
                 final ride = rides[index - 1];
                 final claiming = ScheduledRideStore.claimPending(ride.id);
-                return _ScheduledRideCard(
-                  ride: ride,
-                  claiming: claiming,
-                  onTap: claiming ? null : () => _openRideDetails(ride),
+                return _withRideGroup(
+                  rides,
+                  index - 1,
+                  _ScheduledRideCard(
+                    ride: ride,
+                    claiming: claiming,
+                    onTap: claiming ? null : () => _openRideDetails(ride),
+                  ),
+                  openTab: _selectedTab == 0,
                 );
               },
             );
