@@ -3818,9 +3818,9 @@
   "@payMoveraAmountChanged": {
     "description": "Pay Movera (DRAFT, Stripe): what he owes changed before the sheet opened; the screen reloads."
   },
-  "schedPreferredAreasTitle": "Preferred areas",
+  "schedPreferredAreasTitle": "Favourite areas",
   "@schedPreferredAreasTitle": {
-    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Title of the preferred areas picker opened by the house icon on Booked rides."
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Title of the preferred areas picker opened by the house icon on Booked rides. Owner 2026-11-28: title \"Favourite areas\" (key kept, Rule 21)."
   },
   "schedPreferredAreasSubtitle": "Choose areas where you want booked rides",
   "@schedPreferredAreasSubtitle": {

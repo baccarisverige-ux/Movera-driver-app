@@ -1363,7 +1363,7 @@
   "payMoveraCardChecking": "Betalningen är mottagen. Vi kontrollerar den.",
   "payMoveraCardFailed": "Betalningen gick inte igenom. Försök igen.",
   "payMoveraAmountChanged": "Beloppet har ändrats. Kontrollera det och försök igen.",
-  "schedPreferredAreasTitle": "Föredragna områden",
+  "schedPreferredAreasTitle": "Favoritområden",
   "schedPreferredAreasSubtitle": "Välj områden där du vill få bokade resor",
   "schedPreferredAreasClear": "Rensa",
   "schedPreferredAreasSearchHint": "Sök område eller adress",

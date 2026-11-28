@@ -8290,10 +8290,10 @@ abstract class AppLocalizations {
   /// **'The amount changed. Check it and try again.'**
   String get payMoveraAmountChanged;
 
-  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Title of the preferred areas picker opened by the house icon on Booked rides.
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Title of the preferred areas picker opened by the house icon on Booked rides. Owner 2026-11-28: title "Favourite areas" (key kept, Rule 21).
   ///
   /// In en, this message translates to:
-  /// **'Preferred areas'**
+  /// **'Favourite areas'**
   String get schedPreferredAreasTitle;
 
   /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Under the title.

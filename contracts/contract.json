@@ -12220,7 +12220,7 @@
       "fr": "Zones de la carte : Suède © SCB (Statistiques Suède), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.",
       "sv": "Kartområden: Sverige © SCB (Statistiska centralbyrån), CC0. Frankrike © IGN – ADMIN EXPRESS, Licence Ouverte 2.0."
     },
-    "driver": "Driver app: the house icon on Bokade resor opens the picker (Föredragna områden) with a count badge; a search field for an area name or an address (areas first, then addresses); multi-select; Spara (n) only when changed; Rensa; empty state 'Du får bokade resor i hela zonen'; the list rows of preferred rides show 'I ditt område'. Order comes from the server (no client sort). Address text and point are dropped at once, never stored on the phone.",
+    "driver": "Driver app: the house icon on Bokade resor opens the picker titled Favoritområden / Zones favorites / Favourite areas (owner 2026-11-28) with a count badge; a search field for an area name or an address (areas first, then addresses); multi-select; Spara (n) only when changed; Rensa; empty state 'Du får bokade resor i hela zonen'; the list rows of preferred rides show 'I ditt område'. Order comes from the server (no client sort). Address text and point are dropped at once, never stored on the phone.",
     "rider": "Rider app: not affected (no rider schema or path changes).",
     "seed": "Server: the area rows ship in the server image (data/areas, manifest.json with each file's sha256 and the row count per country) and are upserted at boot right after migrate (same MIGRATE_ON_START gate, advisory lock, skipped when the manifest hash is already in area_seed_runs). The seed never changes active or name_override (admin's) and never deletes a row (Rule 21). A wrong checksum or count stops the start."
   }

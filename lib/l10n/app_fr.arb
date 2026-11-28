@@ -1363,7 +1363,7 @@
   "payMoveraCardChecking": "Paiement reçu. Nous le vérifions.",
   "payMoveraCardFailed": "Le paiement n'a pas abouti. Réessayez.",
   "payMoveraAmountChanged": "Le montant a changé. Vérifiez-le et réessayez.",
-  "schedPreferredAreasTitle": "Zones préférées",
+  "schedPreferredAreasTitle": "Zones favorites",
   "schedPreferredAreasSubtitle": "Choisissez les zones où vous voulez des courses programmées",
   "schedPreferredAreasClear": "Effacer",
   "schedPreferredAreasSearchHint": "Rechercher une zone ou une adresse",

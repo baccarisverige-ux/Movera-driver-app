@@ -32,7 +32,7 @@ void main() {
     'several areas, Spara (n) only when changed, saves area ids only',
     (tester) async {
       final api = await open(tester, saved: const [sodermalm]);
-      expect(find.text('Föredragna områden'), findsOneWidget);
+      expect(find.text('Favoritområden'), findsOneWidget);
       expect(find.text('FÖRSLAG'), findsOneWidget);
       expect(find.byKey(const ValueKey('preferred-areas-save')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('preferred-area-SE-K-0184')));

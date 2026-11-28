@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -4861,7 +4860,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le montant a changé. Vérifiez-le et réessayez.';
 
   @override
-  String get schedPreferredAreasTitle => 'Zones préférées';
+  String get schedPreferredAreasTitle => 'Zones favorites';
 
   @override
   String get schedPreferredAreasSubtitle =>
