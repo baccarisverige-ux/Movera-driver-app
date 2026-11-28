@@ -17,10 +17,17 @@ class TripRouteLines extends ValueNotifier<Set<Polyline>> {
   RouteCameraGeometry? _geometry;
   int? _alongMeter;
   double? _zoom;
+  bool _approximate = false;
 
   /// [points]: the road route (none: no lines). [alongMeters]: how far the
-  /// car is along it. [zoom]: the map's line-width step.
-  void sync(List<GeoPoint> points, double alongMeters, double zoom) {
+  /// car is along it. [zoom]: the map's line-width step. [approximate]:
+  /// the server's straight estimate (v0.18.171), drawn dashed in grey.
+  void sync(
+    List<GeoPoint> points,
+    double alongMeters,
+    double zoom, {
+    bool approximate = false,
+  }) {
     if (points.length < 2) {
       _points = points;
       _geometry = null;
@@ -28,7 +35,10 @@ class TripRouteLines extends ValueNotifier<Set<Polyline>> {
       return;
     }
     final meter = alongMeters.round();
-    if (identical(points, _points) && meter == _alongMeter && zoom == _zoom) {
+    if (identical(points, _points) &&
+        meter == _alongMeter &&
+        zoom == _zoom &&
+        approximate == _approximate) {
       return;
     }
     if (!identical(points, _points) || _geometry == null) {
@@ -37,7 +47,12 @@ class TripRouteLines extends ValueNotifier<Set<Polyline>> {
     }
     _alongMeter = meter;
     _zoom = zoom;
+    _approximate = approximate;
     final geometry = _geometry!;
+    final remaining = geometry
+        .remaining(alongMeters)
+        .map((p) => p.toLatLng())
+        .toList();
     value = {
       if (alongMeters > 0)
         Polyline(
@@ -51,14 +66,22 @@ class TripRouteLines extends ValueNotifier<Set<Polyline>> {
           startCap: Cap.roundCap,
           endCap: Cap.roundCap,
         ),
-      ...DriverRouteStyle.polylines(
-        id: 'active-road-route',
-        points: geometry
-            .remaining(alongMeters)
-            .map((p) => p.toLatLng())
-            .toList(),
-        zoom: zoom,
-      ),
+      if (approximate)
+        Polyline(
+          polylineId: const PolylineId('active-road-route'),
+          points: remaining,
+          width: DriverRouteStyle.widthAt(zoom),
+          color: DriverRouteStyle.approximateColor,
+          patterns: DriverRouteStyle.approximatePattern,
+          zIndex: 2,
+          jointType: JointType.round,
+        )
+      else
+        ...DriverRouteStyle.polylines(
+          id: 'active-road-route',
+          points: remaining,
+          zoom: zoom,
+        ),
     };
   }
 }
