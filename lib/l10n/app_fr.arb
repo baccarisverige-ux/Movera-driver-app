@@ -1830,6 +1830,7 @@
   "tripGoToStop": "Aller au {stop} arrêt",
   "tripGoToDropoff": "Rejoindre la destination",
   "cashPriceChanged": "Le prix a changé – encaissez le nouveau montant",
+  "cashPriceRecalculated": "Prix recalculé",
   "cashPriceRecalculatedEarlyEnd": "Fin avant la destination – prix recalculé",
   "tripCollectCash": "Encaisser les espèces",
   "tripCompleteRide": "Terminer la course",

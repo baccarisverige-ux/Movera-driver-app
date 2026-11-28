@@ -142,13 +142,18 @@ class CashCollectSheet extends StatelessWidget {
     return CashBalance.fromLabels(fare: fare, cashCollected: cash);
   }
 
-  /// Share of the screen the sheet covers.
+  /// Share of the screen the sheet may cover at most (owner 2026-11-27:
+  /// a max height, not a fixed one, so the sheet sizes to its content and
+  /// small phones or large text never squeeze the buttons).
   static const double heightFactor = 0.76;
 
-  static const Color _ink = Color(0xFF111614);
-  static const Color _muted = Color(0xFF6F7B82);
-  static const Color _line = Color(0xFFECEEF0);
-  static const Color _greyInk = Color(0xFF5E6A71);
+  // Owner-approved premium design 2026-11-27: near-black ink and neutral
+  // greys only (no blue, no yellow).
+  static const Color _ink = Color(0xFF12201C);
+  static const Color _muted = Color(0xFF6B7470);
+  static const Color _line = Color(0xFFE6E8E7);
+  static const Color _noteInk = Color(0xFF3E4844);
+  static const Color _greyInk = Color(0xFF6B7470);
   static const Color _owe = Color(0xFFB4232C);
   static const Color _due = Color(0xFF1E7A46);
 
@@ -168,151 +173,220 @@ class CashCollectSheet extends StatelessWidget {
     final amount = _short(cash);
     final balance = _balance;
     final first = riderName.trim().split(' ').first;
-    final height = MediaQuery.sizeOf(context).height * heightFactor;
-    return SizedBox(
-      height: height,
+    final maxHeight = MediaQuery.sizeOf(context).height * heightFactor;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
       child: Material(
         key: const ValueKey<String>('cash-collect-sheet'),
         color: Colors.white,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
         ),
         clipBehavior: Clip.antiAlias,
         child: SafeArea(
           top: false,
           minimum: const EdgeInsets.only(bottom: 16),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD9DDDB),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  driverText(DriverTexts.tripCollectCash),
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  riderEnded
-                      ? tr.g8RiderEndedCollect(amount)
-                      : driverEnded
-                      ? tr.driverEndedEarlyCollect
-                      : first.isEmpty
-                      ? tr.takeCashBeforeYouFinish
-                      : tr.takeCashFromFirstBeforeYou(first),
-                  key: const ValueKey<String>('cash-collect-subtitle'),
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (earlyEndNote != null || recalculated) ...[
-                          _recalculatedNotice(),
-                          const SizedBox(height: 12),
-                        ],
-                        _cashCase(amount),
-                        // Live: the share and the cash always; the line
-                        // with Movera only with the server's number.
-                        if (showEarnings &&
-                            (balance != null ||
-                                (_live ?? LiveDriverServices.active))) ...[
-                          const SizedBox(height: 14),
-                          _balanceCard(balance),
-                        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  key: const ValueKey<String>('cash-collect-scroll'),
+                  padding: const EdgeInsets.fromLTRB(22, 10, 22, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDADDDB),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        driverText(DriverTexts.tripCollectCash),
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 24,
+                          height: 1.15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        riderEnded
+                            ? tr.g8RiderEndedCollect(amount)
+                            : driverEnded
+                            ? tr.driverEndedEarlyCollect
+                            : first.isEmpty
+                            ? tr.takeCashBeforeYouFinish
+                            : tr.takeCashFromFirstBeforeYou(first),
+                        key: const ValueKey<String>('cash-collect-subtitle'),
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 14,
+                          height: 1.45,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (earlyEndNote != null || recalculated) ...[
+                        _recalculatedNotice(),
+                        const SizedBox(height: 14),
                       ],
-                    ),
+                      _cashCase(amount),
+                      // Live: the share and the cash always; the line
+                      // with Movera only with the server's number.
+                      if (showEarnings &&
+                          (balance != null ||
+                              (_live ?? LiveDriverServices.active))) ...[
+                        const SizedBox(height: 14),
+                        _balanceCard(balance),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 58,
-                  child: FilledButton(
-                    key: const ValueKey<String>('cash-complete-ride'),
-                    onPressed: () => popOwned(context, true),
-                    style: FilledButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: _ink,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      _finishLabel,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+              ),
+              // The buttons stay pinned under the scrolling content.
+              Container(
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: _line)),
                 ),
-                const SizedBox(height: 4),
-                if (!_ended)
-                  TextButton(
-                    key: const ValueKey<String>('cash-not-yet'),
-                    onPressed: () => popOwned(context, false),
-                    child: Text(
-                      tr.notYet,
-                      style: TextStyle(
-                        color: _ink,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 54),
+                      child: FilledButton(
+                        key: const ValueKey<String>('cash-complete-ride'),
+                        onPressed: () => popOwned(context, true),
+                        style: FilledButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: _ink,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: Text(
+                          _finishLabel,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                    const SizedBox(height: 4),
+                    if (!_ended)
+                      TextButton(
+                        key: const ValueKey<String>('cash-not-yet'),
+                        onPressed: () => popOwned(context, false),
+                        child: Text(
+                          tr.notYet,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  /// "Ending before the destination – price recalculated".
+  /// The early-end note: a hairline-bordered note with a small info icon
+  /// (owner 2026-11-27: no yellow box). The server's "priced for the
+  /// distance driven" line shows as a recalculation icon with "Price
+  /// recalculated" (Rule 21: the old text key is kept, only not shown
+  /// here).
   Widget _recalculatedNotice() {
+    final lines = (earlyEndNote ?? tr.cashPriceRecalculatedEarlyEnd)
+        .split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
+    final repriced = lines.remove(tr.g8PricedForDriven);
+    const noteStyle = TextStyle(
+      color: _noteInk,
+      fontSize: 13,
+      height: 1.45,
+      fontWeight: FontWeight.w600,
+    );
     return Container(
       key: const ValueKey<String>('cash-price-recalculated'),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF4E0),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, size: 20, color: Color(0xFF7A5200)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              earlyEndNote ?? tr.cashPriceRecalculatedEarlyEnd,
-              style: const TextStyle(
-                color: Color(0xFF5C3D00),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+          if (lines.isNotEmpty)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.info_outline,
+                    key: ValueKey<String>('cash-note-info-icon'),
+                    size: 15,
+                    color: _muted,
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(child: Text(lines.join('\n'), style: noteStyle)),
+              ],
             ),
-          ),
+          if (repriced) ...[
+            if (lines.isNotEmpty) const SizedBox(height: 6),
+            Row(
+              key: const ValueKey<String>('cash-price-recalculated-line'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.autorenew,
+                    key: ValueKey<String>('cash-recalc-icon'),
+                    size: 15,
+                    color: _muted,
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    tr.cashPriceRecalculated,
+                    style: noteStyle.copyWith(
+                      color: _muted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -328,26 +402,26 @@ class CashCollectSheet extends StatelessWidget {
       // the top/left, soft light at the bottom, no outer drop shadow.
       child: CustomPaint(
         key: const ValueKey<String>('cash-collect-case'),
-        foregroundPainter: const _InsetTrayPainter(radius: 26),
+        foregroundPainter: const _InsetTrayPainter(radius: 20),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(20),
             gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFE6E8EB), Color(0xFFEFF1F3)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFECEEEF), Color(0xFFF1F2F3)],
             ),
           ),
           child: Column(
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 44,
+                height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.08),
@@ -358,12 +432,12 @@ class CashCollectSheet extends StatelessWidget {
                 ),
                 child: SvgPicture.asset(
                   AppAssets.solarWadOfMoney,
-                  width: 30,
-                  height: 30,
+                  width: 24,
+                  height: 24,
                   colorFilter: const ColorFilter.mode(_ink, BlendMode.srcIn),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(
                 tr.collect,
                 style: TextStyle(
@@ -379,10 +453,10 @@ class CashCollectSheet extends StatelessWidget {
                   key: const ValueKey<String>('cash-collect-amount'),
                   style: const TextStyle(
                     color: _ink,
-                    fontSize: 52,
+                    fontSize: 46,
                     height: 1.1,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.8,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1.5,
                   ),
                 ),
               ),
@@ -495,13 +569,16 @@ class CashCollectSheet extends StatelessWidget {
 }
 
 /// R10-3: Flutter has no inset BoxShadow, so the tray's inner shadow is
-/// painted over its fill: a blurred dark ring offset down/right (shadow on
-/// the top/left edge), a light ring offset up (light on the bottom edge),
-/// and a fine edge line, all clipped to the tray.
+/// painted over its fill: blurred ink rings offset down/right (soft shadow
+/// on the top/left edge) and a white ring offset up/left (highlight on the
+/// bottom/right edge), all clipped to the tray; no outer shadow.
 class _InsetTrayPainter extends CustomPainter {
   const _InsetTrayPainter({required this.radius});
 
   final double radius;
+
+  /// The top-left inner shadow: the sheet's ink at 9 % (no blue).
+  static const Color shadowColor = Color(0x1712201C);
 
   void _ring(Canvas canvas, RRect tray, Offset offset, Paint paint) {
     final ring = Path()
@@ -522,27 +599,28 @@ class _InsetTrayPainter extends CustomPainter {
     _ring(
       canvas,
       tray,
-      const Offset(2, 4),
+      const Offset(3, 3),
       Paint()
-        ..color = const Color(0xFF1C2A33).withValues(alpha: 0.16)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+        ..color = shadowColor
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5),
     );
     _ring(
       canvas,
       tray,
-      const Offset(-1, -3),
+      const Offset(1, 1),
       Paint()
-        ..color = Colors.white.withValues(alpha: 0.85)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        ..color = const Color(0xFF12201C).withValues(alpha: 0.06)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+    );
+    _ring(
+      canvas,
+      tray,
+      const Offset(-3, -3),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.95)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5),
     );
     canvas.restore();
-    canvas.drawRRect(
-      tray.deflate(0.5),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = const Color(0xFFD9DDE1),
-    );
   }
 
   @override

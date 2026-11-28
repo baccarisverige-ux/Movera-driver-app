@@ -1830,6 +1830,7 @@
   "tripGoToStop": "Kör till {stop} stoppet",
   "tripGoToDropoff": "Kör till avlämning",
   "cashPriceChanged": "Priset ändrades – ta emot det nya beloppet",
+  "cashPriceRecalculated": "Priset har räknats om",
   "cashPriceRecalculatedEarlyEnd": "Avslutas före destinationen – priset räknades om",
   "tripCollectCash": "Ta emot kontant",
   "tripCompleteRide": "Avsluta resan",

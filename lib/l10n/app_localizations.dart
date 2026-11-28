@@ -11101,6 +11101,12 @@ abstract class AppLocalizations {
   /// **'The price changed – collect the new amount'**
   String get cashPriceChanged;
 
+  /// Collect-cash sheet: the line with the recalculation icon under the early-end note when the server priced the distance driven (owner-approved 2026-11-27).
+  ///
+  /// In en, this message translates to:
+  /// **'Price recalculated'**
+  String get cashPriceRecalculated;
+
   /// No description provided for @cashPriceRecalculatedEarlyEnd.
   ///
   /// In en, this message translates to:
