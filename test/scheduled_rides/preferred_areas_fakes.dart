@@ -71,8 +71,9 @@ class FakeAreasApi implements PreferredAreasApi {
   @override
   Future<PreferredAreasSave> setPreferredAreas(List<String> areaIds) async {
     puts.add(List.of(areaIds));
-    if (refusals.isNotEmpty)
+    if (refusals.isNotEmpty) {
       return PreferredAreasSave.refused(refusals.removeAt(0));
+    }
     saved = [
       for (final id in areaIds)
         zoneAreas.firstWhere((a) => a.areaId == id, orElse: () => sodertalje),
