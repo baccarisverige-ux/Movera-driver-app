@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -4858,6 +4859,83 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get payMoveraAmountChanged =>
       'Le montant a changé. Vérifiez-le et réessayez.';
+
+  @override
+  String get schedPreferredAreasTitle => 'Zones préférées';
+
+  @override
+  String get schedPreferredAreasSubtitle =>
+      'Choisissez les zones où vous voulez des courses programmées';
+
+  @override
+  String get schedPreferredAreasClear => 'Effacer';
+
+  @override
+  String get schedPreferredAreasSearchHint =>
+      'Rechercher une zone ou une adresse';
+
+  @override
+  String get schedPreferredAreasAddressPrivacy =>
+      'Nous enregistrons seulement la zone, jamais la rue ni le numéro.';
+
+  @override
+  String get schedPreferredAreasSuggestions => 'Suggestions';
+
+  @override
+  String get schedPreferredAreasAreasHeader => 'Zones';
+
+  @override
+  String get schedPreferredAreasAddressesHeader => 'Adresses';
+
+  @override
+  String get schedPreferredAreasNoMatch => 'Aucune zone trouvée';
+
+  @override
+  String schedPreferredAreasSave(int count) {
+    return 'Enregistrer ($count)';
+  }
+
+  @override
+  String get schedPreferredAreasSaved =>
+      'Enregistré. Les courses programmées de vos zones s\'affichent en premier.';
+
+  @override
+  String get schedPreferredAreasEmptyTitle => 'Aucune zone choisie';
+
+  @override
+  String get schedPreferredAreasEmptyBody =>
+      'Vous recevez les courses programmées de toute la zone';
+
+  @override
+  String get schedPreferredAreasChoose => 'Choisir des zones';
+
+  @override
+  String schedPreferredAreasAddressAdded(String address, String area) {
+    return '$address se trouve dans $area - ajoutée';
+  }
+
+  @override
+  String get schedPreferredAreasNoAreaForAddress =>
+      'Cette adresse est hors des zones de vos secteurs. Choisissez une adresse dans votre zone.';
+
+  @override
+  String get schedPreferredAreasAddressNotFound =>
+      'Adresse introuvable. Réessayez.';
+
+  @override
+  String schedPreferredAreasAlreadyChosen(String area) {
+    return '$area est déjà choisie';
+  }
+
+  @override
+  String get schedInYourArea => 'Dans votre zone';
+
+  @override
+  String get legalMapDataSources => 'Sources des données cartographiques';
+
+  @override
+  String get legalMapDataSourcesBody =>
+      'Zones de la carte : Suède © SCB (Statistiques Suède), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
 
   @override
   String get reservation => 'Réservation';

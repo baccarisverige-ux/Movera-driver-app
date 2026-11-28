@@ -3,12 +3,13 @@ import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/scheduled/preferred_areas.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
 
 /// Contract v0.18.17 Book later (`contract.json#bookLater.driver`): the
 /// driver's Scheduled rides on the server. Before this the live app had
 /// no reservations at all (`GET /driver/reservations` answered 404).
-class LiveReservations {
+class LiveReservations implements PreferredAreasApi {
   LiveReservations({required ApiClient api, this.onStarted}) : _api = api;
 
   final ApiClient _api;
@@ -80,6 +81,48 @@ class LiveReservations {
         ),
       ) ==
       null;
+
+  /// v0.18.172 (`contract.json#preferredAreas.search`): areas of his
+  /// zones whose name matches [query]; areas only, never addresses.
+  @override
+  Future<List<PreferredArea>> searchAreas(String query) async {
+    final q = Uri.encodeQueryComponent(query.trim());
+    final page = await _api.get('/api/v1/driver/areas/search?q=$q');
+    return PreferredArea.listOf(page['items']);
+  }
+
+  /// v0.18.172 (`contract.json#preferredAreas.at`): the smallest area of
+  /// his zones holding the point, or null. The point is sent once and
+  /// never kept (not here, not on the server).
+  @override
+  Future<PreferredArea?> areaAt(double lat, double lng) async {
+    final answer = await _api.get(
+      '/api/v1/driver/areas/at?lat=${lat.toStringAsFixed(6)}&lng=${lng.toStringAsFixed(6)}',
+    );
+    return PreferredArea.fromJson(answer['area']);
+  }
+
+  /// v0.18.172: `PUT /driver/preferred-areas { areaIds }`, area ids only
+  /// (no address text, no point). The saved list, or null when refused.
+  @override
+  Future<List<PreferredArea>?> setPreferredAreas(List<String> areaIds) async {
+    try {
+      final driver = await _api.put(
+        '/api/v1/driver/preferred-areas',
+        body: {'areaIds': areaIds},
+      );
+      return PreferredArea.listOf(driver['preferredAreas']);
+    } on ApiError {
+      return null;
+    }
+  }
+
+  /// v0.18.172: `Driver.preferredAreas` of `GET /driver/profile`.
+  @override
+  Future<List<PreferredArea>> loadPreferredAreas() async =>
+      PreferredArea.listOf(
+        (await _api.get('/api/v1/driver/profile'))['preferredAreas'],
+      );
 
   /// `POST /driver/reservations/{tripId}/start`: head to the pickup. The
   /// trip opens as the current trip ([onStarted]).

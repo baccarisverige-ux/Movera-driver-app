@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -18,6 +19,8 @@ import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/live/live_reservations.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
+import 'package:movera/core/scheduled/preferred_areas.dart';
+import 'package:movera/presentation/driver/scheduled rides/preferred_areas.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -90,6 +93,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (LiveDriverServices.instance?.reservations case final live?) {
       ScheduledRideStore.keepQuestions.addListener(_askToKeep);
       unawaited(ScheduledRideStore.syncFromServer(live));
+      unawaited(PreferredAreasStore.refresh(live));
     }
   }
 
@@ -120,6 +124,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   }
 
   /// Owner BL-Q4: the driver's home area is where the phone is now.
+  /// v0.18.172: no longer on the house icon; kept (Rule 21).
+  // ignore: unused_element
   Future<void> _setHomeArea() async {
     final services = LiveDriverServices.instance;
     if (services == null) return;
@@ -525,11 +531,14 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               ],
             ),
           ),
+          // v0.18.172: the house icon opens the preferred areas picker
+          // (_setHomeArea is kept, no longer wired here; Rule 21).
           if (LiveDriverServices.active)
-            IconButton(
-              tooltip: tr.schedHomeArea,
-              onPressed: _setHomeArea,
-              icon: const Icon(Icons.home_outlined, color: Color(0xFF425058)),
+            PreferredAreasButton(
+              onPressed: () => openPreferredAreas(
+                context,
+                then: ScheduledRideStore.syncFromServer,
+              ),
             ),
           Container(
             height: 38,

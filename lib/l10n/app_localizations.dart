@@ -8290,6 +8290,132 @@ abstract class AppLocalizations {
   /// **'The amount changed. Check it and try again.'**
   String get payMoveraAmountChanged;
 
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Title of the preferred areas picker opened by the house icon on Booked rides.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred areas'**
+  String get schedPreferredAreasTitle;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Under the title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose areas where you want booked rides'**
+  String get schedPreferredAreasSubtitle;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Top right: unselect every area (save still needed).
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get schedPreferredAreasClear;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Search field hint: an area name or a full address.
+  ///
+  /// In en, this message translates to:
+  /// **'Search an area or address'**
+  String get schedPreferredAreasSearchHint;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Small grey line under the search field.
+  ///
+  /// In en, this message translates to:
+  /// **'We save only the area, never the street or number.'**
+  String get schedPreferredAreasAddressPrivacy;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Section header when the search is empty: his areas first, then his zone's areas A-Z.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get schedPreferredAreasSuggestions;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Section header of the area results.
+  ///
+  /// In en, this message translates to:
+  /// **'Areas'**
+  String get schedPreferredAreasAreasHeader;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Section header of the address results (existing address service).
+  ///
+  /// In en, this message translates to:
+  /// **'Addresses'**
+  String get schedPreferredAreasAddressesHeader;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): The search found no area and no address.
+  ///
+  /// In en, this message translates to:
+  /// **'No area found'**
+  String get schedPreferredAreasNoMatch;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Pinned black button, shown only when the selection changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save ({count})'**
+  String schedPreferredAreasSave(int count);
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Notice after a save.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Booked rides in your areas show first.'**
+  String get schedPreferredAreasSaved;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Empty state title (mockup frame 4).
+  ///
+  /// In en, this message translates to:
+  /// **'No areas chosen'**
+  String get schedPreferredAreasEmptyTitle;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Empty state text.
+  ///
+  /// In en, this message translates to:
+  /// **'You get booked rides from the whole zone'**
+  String get schedPreferredAreasEmptyBody;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Empty state link: puts the cursor in the search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose areas'**
+  String get schedPreferredAreasChoose;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Toast after an address was turned into its area.
+  ///
+  /// In en, this message translates to:
+  /// **'{address} is in {area} - added'**
+  String schedPreferredAreasAddressAdded(String address, String area);
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): /driver/areas/at answered no area.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is outside the areas of your zones. Choose an address in your zone.'**
+  String get schedPreferredAreasNoAreaForAddress;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): The address service found no position.
+  ///
+  /// In en, this message translates to:
+  /// **'Address not found. Try again.'**
+  String get schedPreferredAreasAddressNotFound;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): The address's area was already selected.
+  ///
+  /// In en, this message translates to:
+  /// **'{area} is already chosen'**
+  String schedPreferredAreasAlreadyChosen(String area);
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Small label on a booked ride whose pickup is in one of his preferred areas (DriverReservation.inPreferredArea).
+  ///
+  /// In en, this message translates to:
+  /// **'In your area'**
+  String get schedInYourArea;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Profile › Legal row: who made the area outlines.
+  ///
+  /// In en, this message translates to:
+  /// **'Map data sources'**
+  String get legalMapDataSources;
+
+  /// v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): contract.json#preferredAreas.attribution, word for word.
+  ///
+  /// In en, this message translates to:
+  /// **'Map areas: Sweden © SCB (Statistics Sweden), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.'**
+  String get legalMapDataSourcesBody;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

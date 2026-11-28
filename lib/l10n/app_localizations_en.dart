@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -4779,6 +4780,82 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get payMoveraAmountChanged =>
       'The amount changed. Check it and try again.';
+
+  @override
+  String get schedPreferredAreasTitle => 'Preferred areas';
+
+  @override
+  String get schedPreferredAreasSubtitle =>
+      'Choose areas where you want booked rides';
+
+  @override
+  String get schedPreferredAreasClear => 'Clear';
+
+  @override
+  String get schedPreferredAreasSearchHint => 'Search an area or address';
+
+  @override
+  String get schedPreferredAreasAddressPrivacy =>
+      'We save only the area, never the street or number.';
+
+  @override
+  String get schedPreferredAreasSuggestions => 'Suggestions';
+
+  @override
+  String get schedPreferredAreasAreasHeader => 'Areas';
+
+  @override
+  String get schedPreferredAreasAddressesHeader => 'Addresses';
+
+  @override
+  String get schedPreferredAreasNoMatch => 'No area found';
+
+  @override
+  String schedPreferredAreasSave(int count) {
+    return 'Save ($count)';
+  }
+
+  @override
+  String get schedPreferredAreasSaved =>
+      'Saved. Booked rides in your areas show first.';
+
+  @override
+  String get schedPreferredAreasEmptyTitle => 'No areas chosen';
+
+  @override
+  String get schedPreferredAreasEmptyBody =>
+      'You get booked rides from the whole zone';
+
+  @override
+  String get schedPreferredAreasChoose => 'Choose areas';
+
+  @override
+  String schedPreferredAreasAddressAdded(String address, String area) {
+    return '$address is in $area - added';
+  }
+
+  @override
+  String get schedPreferredAreasNoAreaForAddress =>
+      'This address is outside the areas of your zones. Choose an address in your zone.';
+
+  @override
+  String get schedPreferredAreasAddressNotFound =>
+      'Address not found. Try again.';
+
+  @override
+  String schedPreferredAreasAlreadyChosen(String area) {
+    return '$area is already chosen';
+  }
+
+  @override
+  String get schedInYourArea => 'In your area';
+
+  @override
+  String get legalMapDataSources => 'Map data sources';
+
+  @override
+  String get legalMapDataSourcesBody =>
+      'Map areas: Sweden © SCB (Statistics Sweden), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
 
   @override
   String get reservation => 'Reservation';

@@ -3818,6 +3818,108 @@
   "@payMoveraAmountChanged": {
     "description": "Pay Movera (DRAFT, Stripe): what he owes changed before the sheet opened; the screen reloads."
   },
+  "schedPreferredAreasTitle": "Preferred areas",
+  "@schedPreferredAreasTitle": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Title of the preferred areas picker opened by the house icon on Booked rides."
+  },
+  "schedPreferredAreasSubtitle": "Choose areas where you want booked rides",
+  "@schedPreferredAreasSubtitle": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Under the title."
+  },
+  "schedPreferredAreasClear": "Clear",
+  "@schedPreferredAreasClear": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Top right: unselect every area (save still needed)."
+  },
+  "schedPreferredAreasSearchHint": "Search an area or address",
+  "@schedPreferredAreasSearchHint": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Search field hint: an area name or a full address."
+  },
+  "schedPreferredAreasAddressPrivacy": "We save only the area, never the street or number.",
+  "@schedPreferredAreasAddressPrivacy": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Small grey line under the search field."
+  },
+  "schedPreferredAreasSuggestions": "Suggestions",
+  "@schedPreferredAreasSuggestions": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Section header when the search is empty: his areas first, then his zone's areas A-Z."
+  },
+  "schedPreferredAreasAreasHeader": "Areas",
+  "@schedPreferredAreasAreasHeader": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Section header of the area results."
+  },
+  "schedPreferredAreasAddressesHeader": "Addresses",
+  "@schedPreferredAreasAddressesHeader": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Section header of the address results (existing address service)."
+  },
+  "schedPreferredAreasNoMatch": "No area found",
+  "@schedPreferredAreasNoMatch": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): The search found no area and no address."
+  },
+  "schedPreferredAreasSave": "Save ({count})",
+  "@schedPreferredAreasSave": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Pinned black button, shown only when the selection changed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "schedPreferredAreasSaved": "Saved. Booked rides in your areas show first.",
+  "@schedPreferredAreasSaved": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Notice after a save."
+  },
+  "schedPreferredAreasEmptyTitle": "No areas chosen",
+  "@schedPreferredAreasEmptyTitle": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Empty state title (mockup frame 4)."
+  },
+  "schedPreferredAreasEmptyBody": "You get booked rides from the whole zone",
+  "@schedPreferredAreasEmptyBody": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Empty state text."
+  },
+  "schedPreferredAreasChoose": "Choose areas",
+  "@schedPreferredAreasChoose": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Empty state link: puts the cursor in the search field."
+  },
+  "schedPreferredAreasAddressAdded": "{address} is in {area} - added",
+  "@schedPreferredAreasAddressAdded": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Toast after an address was turned into its area.",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      },
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "schedPreferredAreasNoAreaForAddress": "This address is outside the areas of your zones. Choose an address in your zone.",
+  "@schedPreferredAreasNoAreaForAddress": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): /driver/areas/at answered no area."
+  },
+  "schedPreferredAreasAddressNotFound": "Address not found. Try again.",
+  "@schedPreferredAreasAddressNotFound": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): The address service found no position."
+  },
+  "schedPreferredAreasAlreadyChosen": "{area} is already chosen",
+  "@schedPreferredAreasAlreadyChosen": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): The address's area was already selected.",
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "schedInYourArea": "In your area",
+  "@schedInYourArea": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Small label on a booked ride whose pickup is in one of his preferred areas (DriverReservation.inPreferredArea)."
+  },
+  "legalMapDataSources": "Map data sources",
+  "@legalMapDataSources": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): Profile › Legal row: who made the area outlines."
+  },
+  "legalMapDataSourcesBody": "Map areas: Sweden © SCB (Statistics Sweden), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.",
+  "@legalMapDataSourcesBody": {
+    "description": "v0.18.172 contract.json#preferredAreas (owner 2026-11-27/28; owner OK of the texts pending): contract.json#preferredAreas.attribution, word for word."
+  },
   "reservation": "Reservation",
   "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
   "@leaveNowForPickupTimePickup": {

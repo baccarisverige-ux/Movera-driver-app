@@ -1,0 +1,23 @@
+{
+  "schedPreferredAreasTitle": "Zones préférées",
+  "schedPreferredAreasSubtitle": "Choisissez les zones où vous voulez des courses programmées",
+  "schedPreferredAreasClear": "Effacer",
+  "schedPreferredAreasSearchHint": "Rechercher une zone ou une adresse",
+  "schedPreferredAreasAddressPrivacy": "Nous enregistrons seulement la zone, jamais la rue ni le numéro.",
+  "schedPreferredAreasSuggestions": "Suggestions",
+  "schedPreferredAreasAreasHeader": "Zones",
+  "schedPreferredAreasAddressesHeader": "Adresses",
+  "schedPreferredAreasNoMatch": "Aucune zone trouvée",
+  "schedPreferredAreasSave": "Enregistrer ({count})",
+  "schedPreferredAreasSaved": "Enregistré. Les courses programmées de vos zones s'affichent en premier.",
+  "schedPreferredAreasEmptyTitle": "Aucune zone choisie",
+  "schedPreferredAreasEmptyBody": "Vous recevez les courses programmées de toute la zone",
+  "schedPreferredAreasChoose": "Choisir des zones",
+  "schedPreferredAreasAddressAdded": "{address} se trouve dans {area} - ajoutée",
+  "schedPreferredAreasNoAreaForAddress": "Cette adresse est hors des zones de vos secteurs. Choisissez une adresse dans votre zone.",
+  "schedPreferredAreasAddressNotFound": "Adresse introuvable. Réessayez.",
+  "schedPreferredAreasAlreadyChosen": "{area} est déjà choisie",
+  "schedInYourArea": "Dans votre zone",
+  "legalMapDataSources": "Sources des données cartographiques",
+  "legalMapDataSourcesBody": "Zones de la carte : Suède © SCB (Statistiques Suède), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0."
+}

@@ -418,6 +418,7 @@ class BookLaterRules {
     this.takeBackUntilMinBeforePickup = 15,
     this.noDriverStopAfterMin = 15,
     this.maxOpenPerRider = 3,
+    this.preferredAreasMax = 10,
   });
 
   /// FIX JOB 4 (contract v0.18.35 §59, owner Q2): the server takes a held
@@ -439,6 +440,11 @@ class BookLaterRules {
   /// next one. Rider-side only: the driver app reads it so the zone document
   /// round-trips, and never uses it.
   final int maxOpenPerRider;
+
+  /// v0.18.172 (contract.json#preferredAreas.maxPerDriver): the most
+  /// preferred areas he may keep (1-30, default 10). The server enforces it
+  /// (400 too_many_areas); the app reads it so the document round-trips.
+  final int preferredAreasMax;
 
   final int dispatchBeforeMin;
   final double listHomeKm;
@@ -556,6 +562,8 @@ class BookLaterRules {
           seed.noDriverStopAfterMin,
       maxOpenPerRider:
           _intIn(json['maxOpenPerRider'], 1, 50) ?? seed.maxOpenPerRider,
+      preferredAreasMax:
+          _intIn(json['preferredAreasMax'], 1, 30) ?? seed.preferredAreasMax,
     );
   }
 
@@ -592,5 +600,6 @@ class BookLaterRules {
     'takeBackUntilMinBeforePickup': takeBackUntilMinBeforePickup,
     'noDriverStopAfterMin': noDriverStopAfterMin,
     'maxOpenPerRider': maxOpenPerRider,
+    'preferredAreasMax': preferredAreasMax,
   };
 }
