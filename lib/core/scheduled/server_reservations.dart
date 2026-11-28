@@ -29,7 +29,13 @@ class ServerReservation {
     this.leaveAt,
     this.driveSeconds,
     this.riderFirstName = '',
+    this.inPreferredArea = false,
   });
+
+  /// v0.18.172 (`contract.json#preferredAreas.order`): the pickup lies in
+  /// one of the driver's preferred areas ("I ditt område"). The order of
+  /// the list is the server's; the app never sorts by it.
+  final bool inPreferredArea;
 
   /// v0.18.32 (contract.json#bookedRideSeen.leaveNowName): the rider's
   /// first name on his own accepted rides, for the leave-now popup.
@@ -151,6 +157,7 @@ class ServerReservation {
       riderFirstName: json['riderFirstName'] is String
           ? (json['riderFirstName'] as String).trim()
           : '',
+      inPreferredArea: json['inPreferredArea'] == true,
     );
   }
 

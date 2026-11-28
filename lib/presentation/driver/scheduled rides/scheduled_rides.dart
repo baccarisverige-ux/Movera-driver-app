@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -18,6 +19,8 @@ import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/live/live_reservations.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
+import 'package:movera/core/scheduled/preferred_areas.dart';
+import 'package:movera/presentation/driver/scheduled rides/preferred_areas.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -43,6 +46,7 @@ part 'scheduled_rides_cards.dart';
 part 'scheduled_rides_details.dart';
 part 'scheduled_rides_cancel.dart';
 part 'scheduled_rides_keep.dart';
+part 'scheduled_rides_groups.dart';
 
 // Solar line icons (stroke 1.5), tinted to match the surrounding text.
 Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
@@ -90,6 +94,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (LiveDriverServices.instance?.reservations case final live?) {
       ScheduledRideStore.keepQuestions.addListener(_askToKeep);
       unawaited(ScheduledRideStore.syncFromServer(live));
+      unawaited(PreferredAreasStore.refresh(live));
     }
   }
 
@@ -119,7 +124,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     );
   }
 
-  /// Owner BL-Q4: the driver's home area is where the phone is now.
+  /// Owner BL-Q4: home area = phone position (v0.18.172: unwired, kept).
+  // ignore: unused_element
   Future<void> _setHomeArea() async {
     final services = LiveDriverServices.instance;
     if (services == null) return;
@@ -284,10 +290,15 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                 }
                 final ride = rides[index - 1];
                 final claiming = ScheduledRideStore.claimPending(ride.id);
-                return _ScheduledRideCard(
-                  ride: ride,
-                  claiming: claiming,
-                  onTap: claiming ? null : () => _openRideDetails(ride),
+                return _withRideGroup(
+                  rides,
+                  index - 1,
+                  _ScheduledRideCard(
+                    ride: ride,
+                    claiming: claiming,
+                    onTap: claiming ? null : () => _openRideDetails(ride),
+                  ),
+                  openTab: _selectedTab == 0,
                 );
               },
             );
@@ -525,11 +536,14 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               ],
             ),
           ),
+          // v0.18.172: the house icon opens the preferred areas picker
+          // (_setHomeArea is kept, no longer wired here; Rule 21).
           if (LiveDriverServices.active)
-            IconButton(
-              tooltip: tr.schedHomeArea,
-              onPressed: _setHomeArea,
-              icon: const Icon(Icons.home_outlined, color: Color(0xFF425058)),
+            PreferredAreasButton(
+              onPressed: () => openPreferredAreas(
+                context,
+                then: ScheduledRideStore.syncFromServer,
+              ),
             ),
           Container(
             height: 38,

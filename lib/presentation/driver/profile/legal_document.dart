@@ -105,6 +105,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(paragraph, style: _style),
             ),
+          ..._mapDataSources(),
         ],
       );
     }
@@ -119,6 +120,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
                 : tr.legalPrivacyBody,
             style: _style,
           ),
+          ..._mapDataSources(),
         ],
       );
     }
@@ -144,6 +146,22 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
     }
     return const Center(child: CircularProgressIndicator());
   }
+
+  /// v0.18.172 (`contract.json#preferredAreas.attribution`): who made the
+  /// area outlines of preferred areas (SCB CC0, IGN Licence Ouverte 2.0),
+  /// at the end of the terms.
+  List<Widget> _mapDataSources() => widget.kind != LegalKind.terms
+      ? const []
+      : [
+          const SizedBox(height: 8),
+          Text(
+            tr.legalMapDataSources,
+            key: const ValueKey('legal-map-data-sources'),
+            style: _style.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(tr.legalMapDataSourcesBody, style: _style),
+        ];
 
   static const _style = TextStyle(
     color: Color(0xFF3F4A50),

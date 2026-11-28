@@ -3,12 +3,13 @@ import 'package:movera/core/app_update/min_app_version.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/scheduled/preferred_areas.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
 
 /// Contract v0.18.17 Book later (`contract.json#bookLater.driver`): the
 /// driver's Scheduled rides on the server. Before this the live app had
 /// no reservations at all (`GET /driver/reservations` answered 404).
-class LiveReservations {
+class LiveReservations implements PreferredAreasApi {
   LiveReservations({required ApiClient api, this.onStarted}) : _api = api;
 
   final ApiClient _api;
@@ -80,6 +81,80 @@ class LiveReservations {
         ),
       ) ==
       null;
+
+  /// v0.18.172 (`contract.json#preferredAreas.search`): areas of his
+  /// zones whose name matches [query]; areas only, never addresses.
+  @override
+  Future<List<PreferredArea>> searchAreas(String query) async {
+    final q = Uri.encodeQueryComponent(query.trim());
+    final page = await _api.get('/api/v1/driver/areas/search?q=$q');
+    return PreferredArea.listOf(page['items']);
+  }
+
+  /// v0.18.172 (`contract.json#preferredAreas.at`): the smallest area of
+  /// his zones holding the point, or null. The point goes in the body of a
+  /// POST, never in the URL, once; it is never kept (not here, not on the
+  /// server).
+  @override
+  Future<PreferredArea?> areaAt(double lat, double lng) async {
+    final answer = await _api.post(
+      '/api/v1/driver/areas/at',
+      body: {'lat': lat, 'lng': lng},
+    );
+    return PreferredArea.fromJson(answer['area']);
+  }
+
+  /// v0.18.172: `PUT /driver/preferred-areas { areaIds }`, area ids only
+  /// (no address text, no point). The saved list, or the server's reason:
+  /// too_many_areas (with the max), area_not_found (with the ids), network.
+  @override
+  Future<PreferredAreasSave> setPreferredAreas(List<String> areaIds) async {
+    try {
+      final driver = await _api.put(
+        '/api/v1/driver/preferred-areas',
+        body: {'areaIds': areaIds},
+      );
+      return PreferredAreasSave.saved(
+        PreferredArea.listOf(driver['preferredAreas']),
+      );
+    } on ApiError catch (error) {
+      return PreferredAreasSave.refused(refusalOf(error));
+    }
+  }
+
+  /// The picker's reason for a refused save.
+  static PreferredAreasRefusal refusalOf(ApiError error) {
+    if (error.code == ApiError.network || error.code == ApiError.timeout) {
+      return const PreferredAreasRefusal(PreferredAreasRefusalKind.network);
+    }
+    String? after(String prefix) => error.details
+        .where((d) => d.startsWith(prefix))
+        .map((d) => d.substring(prefix.length))
+        .firstOrNull;
+    if (error.reason == 'too_many_areas') {
+      return PreferredAreasRefusal(
+        PreferredAreasRefusalKind.tooMany,
+        max: int.tryParse(after('max:') ?? ''),
+      );
+    }
+    if (error.reason == 'area_not_found') {
+      return PreferredAreasRefusal(
+        PreferredAreasRefusalKind.gone,
+        goneIds: [
+          for (final d in error.details)
+            if (d.startsWith('areaId:')) d.substring('areaId:'.length),
+        ],
+      );
+    }
+    return const PreferredAreasRefusal(PreferredAreasRefusalKind.other);
+  }
+
+  /// v0.18.172: `Driver.preferredAreas` of `GET /driver/profile`.
+  @override
+  Future<List<PreferredArea>> loadPreferredAreas() async =>
+      PreferredArea.listOf(
+        (await _api.get('/api/v1/driver/profile'))['preferredAreas'],
+      );
 
   /// `POST /driver/reservations/{tripId}/start`: head to the pickup. The
   /// trip opens as the current trip ([onStarted]).

@@ -65,6 +65,13 @@ class _ScheduledRideCard extends StatelessWidget {
                                   'scheduled-boost-${ride.pickup}',
                                 ),
                               ),
+                            // v0.18.172 (preferredAreas.order): the pickup is
+                            // in one of his preferred areas (the server says).
+                            if (ScheduledRideStore.serverRow(
+                                  ride.id,
+                                )?.inPreferredArea ==
+                                true)
+                              const _InYourAreaLabel(),
                           ],
                         ),
                       ),
@@ -509,3 +516,38 @@ class _ScheduledRide {
 }
 
 enum _ScheduledRideAction { accepted, cancelled }
+
+/// v0.18.172: the small "I ditt område" label on a preferred booked ride.
+class _InYourAreaLabel extends StatelessWidget {
+  const _InYourAreaLabel();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('scheduled-in-your-area'),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF3F5F6),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: const Color(0xFFDCE1E3)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.home_work_outlined,
+          size: 13,
+          color: Color(0xFF12201C),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          tr.schedInYourArea,
+          style: const TextStyle(
+            color: Color(0xFF12201C),
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
+}

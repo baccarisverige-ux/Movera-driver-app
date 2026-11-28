@@ -49,7 +49,7 @@ class ApiClient {
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
   /// G30 (v0.18.76): `GET /driver/reminders` sends the line
   /// `email_not_verified` only to apps at 0.18.76 or later.
-  static const contractVersion = '0.18.171';
+  static const contractVersion = '0.18.172';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);
@@ -128,7 +128,8 @@ class ApiClient {
   );
 
   /// `PUT path` with a JSON [body] and an `Idempotency-Key` (v0.18.17
-  /// `PUT /driver/home-area`).
+  /// `PUT /driver/home-area`; v0.18.172 `PUT /driver/preferred-areas`,
+  /// beside `GET /driver/areas/search` and `GET /driver/areas/at`).
   Future<Map<String, dynamic>> put(
     String path, {
     Map<String, dynamic>? body,

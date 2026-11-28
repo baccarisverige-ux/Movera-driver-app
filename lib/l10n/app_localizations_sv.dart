@@ -4785,6 +4785,104 @@ class AppLocalizationsSv extends AppLocalizations {
       'Beloppet har ändrats. Kontrollera det och försök igen.';
 
   @override
+  String get schedPreferredAreasTitle => 'Favoritområden';
+
+  @override
+  String get schedPreferredAreasSubtitle =>
+      'Välj områden där du vill få bokade resor';
+
+  @override
+  String get schedPreferredAreasClear => 'Rensa';
+
+  @override
+  String get schedPreferredAreasSearchHint => 'Sök område eller adress';
+
+  @override
+  String get schedPreferredAreasAddressPrivacy =>
+      'Vi sparar bara området, aldrig gatan eller numret.';
+
+  @override
+  String get schedPreferredAreasSuggestions => 'Förslag';
+
+  @override
+  String get schedPreferredAreasAreasHeader => 'Områden';
+
+  @override
+  String get schedPreferredAreasAddressesHeader => 'Adresser';
+
+  @override
+  String get schedPreferredAreasNoMatch => 'Inget område hittades';
+
+  @override
+  String schedPreferredAreasSave(int count) {
+    return 'Spara ($count)';
+  }
+
+  @override
+  String get schedPreferredAreasSaved =>
+      'Sparat. Bokade resor i dina områden visas först.';
+
+  @override
+  String get schedPreferredAreasEmptyTitle => 'Inga valda områden';
+
+  @override
+  String get schedPreferredAreasEmptyBody => 'Du får bokade resor i hela zonen';
+
+  @override
+  String get schedPreferredAreasChoose => 'Välj områden';
+
+  @override
+  String schedPreferredAreasAddressAdded(String address, String area) {
+    return '$address ligger i $area - tillagd';
+  }
+
+  @override
+  String get schedPreferredAreasNoAreaForAddress =>
+      'Den här adressen ligger utanför dina zoners områden. Välj en adress i din zon.';
+
+  @override
+  String get schedPreferredAreasAddressNotFound =>
+      'Adressen hittades inte. Försök igen.';
+
+  @override
+  String schedPreferredAreasAlreadyChosen(String area) {
+    return '$area är redan vald';
+  }
+
+  @override
+  String get schedInYourArea => 'I ditt område';
+
+  @override
+  String get legalMapDataSources => 'Källor för kartdata';
+
+  @override
+  String get legalMapDataSourcesBody =>
+      'Kartområden: Sverige © SCB (Statistiska centralbyrån), CC0. Frankrike © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
+
+  @override
+  String schedPreferredAreasTooMany(int max) {
+    return 'Du kan välja högst $max områden. Ta bort ett och spara igen.';
+  }
+
+  @override
+  String schedPreferredAreasRemovedGone(String areas) {
+    return '$areas erbjuds inte längre av Movera och togs bort. Tryck Spara för att behålla de andra.';
+  }
+
+  @override
+  String get schedPreferredAreasSaveFailed =>
+      'Det gick inte att spara. Försök igen.';
+
+  @override
+  String get schedGroupFavourites => 'I dina favoritområden';
+
+  @override
+  String get schedGroupOthers => 'Övriga';
+
+  @override
+  String get schedGroupNoneInFavourites => '0 bokningar i dina favoritområden';
+
+  @override
   String get reservation => 'Bokning';
 
   @override

@@ -4781,6 +4781,104 @@ class AppLocalizationsEn extends AppLocalizations {
       'The amount changed. Check it and try again.';
 
   @override
+  String get schedPreferredAreasTitle => 'Favourite areas';
+
+  @override
+  String get schedPreferredAreasSubtitle =>
+      'Choose areas where you want booked rides';
+
+  @override
+  String get schedPreferredAreasClear => 'Clear';
+
+  @override
+  String get schedPreferredAreasSearchHint => 'Search an area or address';
+
+  @override
+  String get schedPreferredAreasAddressPrivacy =>
+      'We save only the area, never the street or number.';
+
+  @override
+  String get schedPreferredAreasSuggestions => 'Suggestions';
+
+  @override
+  String get schedPreferredAreasAreasHeader => 'Areas';
+
+  @override
+  String get schedPreferredAreasAddressesHeader => 'Addresses';
+
+  @override
+  String get schedPreferredAreasNoMatch => 'No area found';
+
+  @override
+  String schedPreferredAreasSave(int count) {
+    return 'Save ($count)';
+  }
+
+  @override
+  String get schedPreferredAreasSaved =>
+      'Saved. Booked rides in your areas show first.';
+
+  @override
+  String get schedPreferredAreasEmptyTitle => 'No areas chosen';
+
+  @override
+  String get schedPreferredAreasEmptyBody =>
+      'You get booked rides from the whole zone';
+
+  @override
+  String get schedPreferredAreasChoose => 'Choose areas';
+
+  @override
+  String schedPreferredAreasAddressAdded(String address, String area) {
+    return '$address is in $area - added';
+  }
+
+  @override
+  String get schedPreferredAreasNoAreaForAddress =>
+      'This address is outside the areas of your zones. Choose an address in your zone.';
+
+  @override
+  String get schedPreferredAreasAddressNotFound =>
+      'Address not found. Try again.';
+
+  @override
+  String schedPreferredAreasAlreadyChosen(String area) {
+    return '$area is already chosen';
+  }
+
+  @override
+  String get schedInYourArea => 'In your area';
+
+  @override
+  String get legalMapDataSources => 'Map data sources';
+
+  @override
+  String get legalMapDataSourcesBody =>
+      'Map areas: Sweden © SCB (Statistics Sweden), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
+
+  @override
+  String schedPreferredAreasTooMany(int max) {
+    return 'You can choose at most $max areas. Remove one and save again.';
+  }
+
+  @override
+  String schedPreferredAreasRemovedGone(String areas) {
+    return '$areas is no longer offered by Movera and was removed. Tap Save to keep the others.';
+  }
+
+  @override
+  String get schedPreferredAreasSaveFailed => 'Could not save. Try again.';
+
+  @override
+  String get schedGroupFavourites => 'In your favourite areas';
+
+  @override
+  String get schedGroupOthers => 'Others';
+
+  @override
+  String get schedGroupNoneInFavourites => '0 bookings in your favourite areas';
+
+  @override
   String get reservation => 'Reservation';
 
   @override
