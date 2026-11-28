@@ -4857,6 +4857,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Map areas: Sweden © SCB (Statistics Sweden), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
 
   @override
+  String schedPreferredAreasTooMany(int max) {
+    return 'You can choose at most $max areas. Remove one and save again.';
+  }
+
+  @override
+  String schedPreferredAreasRemovedGone(String areas) {
+    return '$areas is no longer offered by Movera and was removed. Tap Save to keep the others.';
+  }
+
+  @override
+  String get schedPreferredAreasSaveFailed => 'Could not save. Try again.';
+
+  @override
   String get reservation => 'Reservation';
 
   @override

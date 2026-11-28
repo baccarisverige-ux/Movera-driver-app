@@ -106,8 +106,11 @@ void main() {
       expect((await live.searchAreas('söd')).single.name, 'Södermalm');
       expect(requests.last.url.queryParameters['q'], 'söd');
       expect((await live.areaAt(59.1955, 17.6253))!.areaId, 'SE-K-0181');
-      expect(requests.last.url.queryParameters.keys.toSet(), {'lat', 'lng'});
-      final saved = await live.setPreferredAreas(['SE-K-0181']);
+      // GM 2026-11-28: the point is in the body of a POST, never in the URL.
+      expect(requests.last.method, 'POST');
+      expect(requests.last.url.query, isEmpty);
+      expect(jsonDecode(requests.last.body), {'lat': 59.1955, 'lng': 17.6253});
+      final saved = (await live.setPreferredAreas(['SE-K-0181'])).saved;
       expect(saved!.single.areaId, 'SE-K-0181');
       expect(requests.last.method, 'PUT');
       expect(requests.last.url.path, '/api/v1/driver/preferred-areas');

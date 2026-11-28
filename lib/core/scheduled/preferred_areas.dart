@@ -56,19 +56,45 @@ class PreferredArea {
   int get hashCode => areaId.hashCode;
 }
 
+/// v0.18.172: why `PUT /driver/preferred-areas` did not save.
+enum PreferredAreasRefusalKind { tooMany, gone, network, other }
+
+class PreferredAreasRefusal {
+  const PreferredAreasRefusal(this.kind, {this.max, this.goneIds = const []});
+  final PreferredAreasRefusalKind kind;
+
+  /// `too_many_areas`: the zone's most (`details` `max:<n>`).
+  final int? max;
+
+  /// `area_not_found`: the ids the server no longer offers (an admin
+  /// switched them off, or another zone) from `details` `areaId:<id>`.
+  final List<String> goneIds;
+}
+
+/// The saved list, or why it did not save.
+class PreferredAreasSave {
+  const PreferredAreasSave.saved(List<PreferredArea> this.saved)
+    : refusal = null;
+  const PreferredAreasSave.refused(PreferredAreasRefusal this.refusal)
+    : saved = null;
+  final List<PreferredArea>? saved;
+  final PreferredAreasRefusal? refusal;
+}
+
 /// What the picker needs from the server. [LiveReservations] is the live
 /// one; tests pass a fake.
 abstract class PreferredAreasApi {
   /// `GET /driver/areas/search?q=` (areas only).
   Future<List<PreferredArea>> searchAreas(String query);
 
-  /// `GET /driver/areas/at?lat=&lng=`: the smallest area of his zones that
-  /// holds the point, or null. The point is not kept.
+  /// `POST /driver/areas/at { lat, lng }`: the smallest area of his zones
+  /// that holds the point, or null. The point is in the body (never the
+  /// URL) and is not kept.
   Future<PreferredArea?> areaAt(double lat, double lng);
 
-  /// `PUT /driver/preferred-areas { areaIds }`: the saved list, or null
-  /// when it did not save.
-  Future<List<PreferredArea>?> setPreferredAreas(List<String> areaIds);
+  /// `PUT /driver/preferred-areas { areaIds }`: the saved list, or why the
+  /// server refused it.
+  Future<PreferredAreasSave> setPreferredAreas(List<String> areaIds);
 
   /// His saved areas (`Driver.preferredAreas` of `GET /driver/profile`).
   Future<List<PreferredArea>> loadPreferredAreas();

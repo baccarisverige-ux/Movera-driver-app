@@ -4937,6 +4937,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Zones de la carte : Suède © SCB (Statistiques Suède), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
 
   @override
+  String schedPreferredAreasTooMany(int max) {
+    return 'Vous pouvez choisir au plus $max zones. Retirez-en une et enregistrez à nouveau.';
+  }
+
+  @override
+  String schedPreferredAreasRemovedGone(String areas) {
+    return '$areas n\'est plus proposée par Movera et a été retirée. Touchez Enregistrer pour garder les autres.';
+  }
+
+  @override
+  String get schedPreferredAreasSaveFailed =>
+      'Impossible d\'enregistrer. Réessayez.';
+
+  @override
   String get reservation => 'Réservation';
 
   @override

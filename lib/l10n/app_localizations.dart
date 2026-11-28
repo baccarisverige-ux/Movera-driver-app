@@ -8416,6 +8416,24 @@ abstract class AppLocalizations {
   /// **'Map areas: Sweden © SCB (Statistics Sweden), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.'**
   String get legalMapDataSourcesBody;
 
+  /// v0.18.172 contract.json#preferredAreas (reviewer 2026-11-28; owner OK of the text pending): Save refused: too_many_areas (the zone's most, from the server).
+  ///
+  /// In en, this message translates to:
+  /// **'You can choose at most {max} areas. Remove one and save again.'**
+  String schedPreferredAreasTooMany(int max);
+
+  /// v0.18.172 contract.json#preferredAreas (reviewer 2026-11-28; owner OK of the text pending): Save refused: area_not_found (an admin switched the area off); it leaves the selection, the driver saves the rest.
+  ///
+  /// In en, this message translates to:
+  /// **'{areas} is no longer offered by Movera and was removed. Tap Save to keep the others.'**
+  String schedPreferredAreasRemovedGone(String areas);
+
+  /// v0.18.172 contract.json#preferredAreas (reviewer 2026-11-28; owner OK of the text pending): Save refused for another reason (not the network).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get schedPreferredAreasSaveFailed;
+
   /// No description provided for @reservation.
   ///
   /// In en, this message translates to:

@@ -19,5 +19,8 @@
   "schedPreferredAreasAlreadyChosen": "{area} est déjà choisie",
   "schedInYourArea": "Dans votre zone",
   "legalMapDataSources": "Sources des données cartographiques",
-  "legalMapDataSourcesBody": "Zones de la carte : Suède © SCB (Statistiques Suède), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0."
+  "legalMapDataSourcesBody": "Zones de la carte : Suède © SCB (Statistiques Suède), CC0. France © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.",
+  "schedPreferredAreasTooMany": "Vous pouvez choisir au plus {max} zones. Retirez-en une et enregistrez à nouveau.",
+  "schedPreferredAreasRemovedGone": "{areas} n'est plus proposée par Movera et a été retirée. Touchez Enregistrer pour garder les autres.",
+  "schedPreferredAreasSaveFailed": "Impossible d'enregistrer. Réessayez."
 }

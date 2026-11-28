@@ -92,29 +92,61 @@ class LiveReservations implements PreferredAreasApi {
   }
 
   /// v0.18.172 (`contract.json#preferredAreas.at`): the smallest area of
-  /// his zones holding the point, or null. The point is sent once and
-  /// never kept (not here, not on the server).
+  /// his zones holding the point, or null. The point goes in the body of a
+  /// POST, never in the URL, once; it is never kept (not here, not on the
+  /// server).
   @override
   Future<PreferredArea?> areaAt(double lat, double lng) async {
-    final answer = await _api.get(
-      '/api/v1/driver/areas/at?lat=${lat.toStringAsFixed(6)}&lng=${lng.toStringAsFixed(6)}',
+    final answer = await _api.post(
+      '/api/v1/driver/areas/at',
+      body: {'lat': lat, 'lng': lng},
     );
     return PreferredArea.fromJson(answer['area']);
   }
 
   /// v0.18.172: `PUT /driver/preferred-areas { areaIds }`, area ids only
-  /// (no address text, no point). The saved list, or null when refused.
+  /// (no address text, no point). The saved list, or the server's reason:
+  /// too_many_areas (with the max), area_not_found (with the ids), network.
   @override
-  Future<List<PreferredArea>?> setPreferredAreas(List<String> areaIds) async {
+  Future<PreferredAreasSave> setPreferredAreas(List<String> areaIds) async {
     try {
       final driver = await _api.put(
         '/api/v1/driver/preferred-areas',
         body: {'areaIds': areaIds},
       );
-      return PreferredArea.listOf(driver['preferredAreas']);
-    } on ApiError {
-      return null;
+      return PreferredAreasSave.saved(
+        PreferredArea.listOf(driver['preferredAreas']),
+      );
+    } on ApiError catch (error) {
+      return PreferredAreasSave.refused(refusalOf(error));
     }
+  }
+
+  /// The picker's reason for a refused save.
+  static PreferredAreasRefusal refusalOf(ApiError error) {
+    if (error.code == ApiError.network || error.code == ApiError.timeout) {
+      return const PreferredAreasRefusal(PreferredAreasRefusalKind.network);
+    }
+    String? after(String prefix) => error.details
+        .where((d) => d.startsWith(prefix))
+        .map((d) => d.substring(prefix.length))
+        .firstOrNull;
+    if (error.reason == 'too_many_areas') {
+      return PreferredAreasRefusal(
+        PreferredAreasRefusalKind.tooMany,
+        max: int.tryParse(after('max:') ?? ''),
+      );
+    }
+    if (error.reason == 'area_not_found') {
+      return PreferredAreasRefusal(
+        PreferredAreasRefusalKind.gone,
+        goneIds: [
+          for (final d in error.details)
+            if (d.startsWith('areaId:')) d.substring('areaId:'.length),
+        ],
+      );
+    }
+    return const PreferredAreasRefusal(PreferredAreasRefusalKind.other);
   }
 
   /// v0.18.172: `Driver.preferredAreas` of `GET /driver/profile`.

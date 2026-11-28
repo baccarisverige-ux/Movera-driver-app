@@ -237,18 +237,51 @@ class _PreferredAreasScreenState extends State<PreferredAreasScreen> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    final saved = await widget.api.setPreferredAreas([
+    final answer = await widget.api.setPreferredAreas([
       for (final a in _chosen) a.areaId,
     ]);
     if (!mounted) return;
     setState(() => _saving = false);
-    if (saved == null) {
-      _toast(tr.islandNoConnection);
+    final saved = answer.saved;
+    if (saved != null) {
+      PreferredAreasStore.saved.value = saved;
+      _toast(tr.schedPreferredAreasSaved);
+      Navigator.of(context).maybePop(saved);
       return;
     }
-    PreferredAreasStore.saved.value = saved;
-    _toast(tr.schedPreferredAreasSaved);
-    Navigator.of(context).maybePop(saved);
+    final refusal = answer.refusal!;
+    switch (refusal.kind) {
+      case PreferredAreasRefusalKind.network:
+        _toast(tr.islandNoConnection);
+      case PreferredAreasRefusalKind.tooMany:
+        _toast(
+          tr.schedPreferredAreasTooMany(refusal.max ?? _chosen.length - 1),
+        );
+      case PreferredAreasRefusalKind.gone:
+        // An area the server no longer offers (switched off by Movera): it
+        // leaves the selection with a note; Spara stays so he can save the
+        // rest. Never blocked.
+        final gone = [
+          for (final a in _chosen)
+            if (refusal.goneIds.contains(a.areaId)) a,
+        ];
+        if (gone.isEmpty) {
+          _toast(tr.schedPreferredAreasSaveFailed);
+          return;
+        }
+        setState(() {
+          _chosen.removeWhere(gone.contains);
+          _zoneAreas = [
+            for (final a in _zoneAreas)
+              if (!gone.contains(a)) a,
+          ];
+        });
+        _toast(
+          tr.schedPreferredAreasRemovedGone(gone.map((a) => a.name).join(', ')),
+        );
+      case PreferredAreasRefusalKind.other:
+        _toast(tr.schedPreferredAreasSaveFailed);
+    }
   }
 
   void _toast(String message) {

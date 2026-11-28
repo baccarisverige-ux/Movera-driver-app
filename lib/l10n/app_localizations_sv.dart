@@ -4860,6 +4860,20 @@ class AppLocalizationsSv extends AppLocalizations {
       'Kartområden: Sverige © SCB (Statistiska centralbyrån), CC0. Frankrike © IGN – ADMIN EXPRESS, Licence Ouverte 2.0.';
 
   @override
+  String schedPreferredAreasTooMany(int max) {
+    return 'Du kan välja högst $max områden. Ta bort ett och spara igen.';
+  }
+
+  @override
+  String schedPreferredAreasRemovedGone(String areas) {
+    return '$areas erbjuds inte längre av Movera och togs bort. Tryck Spara för att behålla de andra.';
+  }
+
+  @override
+  String get schedPreferredAreasSaveFailed =>
+      'Det gick inte att spara. Försök igen.';
+
+  @override
   String get reservation => 'Bokning';
 
   @override
