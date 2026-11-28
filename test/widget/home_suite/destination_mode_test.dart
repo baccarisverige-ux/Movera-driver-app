@@ -239,15 +239,15 @@ void main() {
 
     await openPanel(tester);
     await tester.pump(const Duration(milliseconds: 400));
-    // Same radar, now "Tap · OFF · Go offline" (owner 2026-11-26).
-    expect(find.text('Tap'), findsOneWidget);
-    expect(find.text('Hold'), findsNothing);
+    // Same radar, now "Hold · OFF · Go offline" (owner 2026-11-28).
+    expect(find.text('Hold'), findsOneWidget);
+    expect(find.text('Tap'), findsNothing);
     expect(find.text('Go offline'), findsOneWidget);
     expect(find.text('LIVE'), findsNothing);
 
-    // Owner 2026-11-26: a short tap goes offline at once, no question,
-    // and the open sheet comes down by itself.
-    await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
+    // Owner 2026-11-28: a 1 s hold goes offline, no question, and the
+    // open sheet comes down by itself (a tap does nothing).
+    await holdRadarOff(tester);
     await advanceAnimation(tester, const Duration(milliseconds: 900));
     expect(find.text('Go offline?'), findsNothing);
     expect(find.text('Tap to scan'), findsOneWidget);

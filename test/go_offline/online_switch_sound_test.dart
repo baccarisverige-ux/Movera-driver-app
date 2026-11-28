@@ -76,7 +76,7 @@ void main() {
     expect(alerts, <String>['sound:${OnlineSwitchSound.online}']);
   });
 
-  testWidgets('Home: sheet up, tap → offline at once, sheet down, sounds', (
+  testWidgets('Home: sheet up, 1 s hold → offline, sheet down, sounds', (
     tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -91,10 +91,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(panel.controller!.panelPosition, greaterThan(0.5));
-    // The radar face says tap, never hold (owner 2026-11-26).
-    expect(find.text('Tap'), findsOneWidget);
-    expect(find.text('Hold'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
+    // Sheet up the radar reads "Hold · OFF" and only a 1 s hold goes
+    // offline (owner 2026-11-28, replaces the 2026-11-26 tap rule).
+    expect(find.text('Hold'), findsOneWidget);
+    expect(find.text('Tap'), findsNothing);
+    await holdRadarOff(tester);
     await advanceAnimation(tester, const Duration(milliseconds: 900));
     expect(find.text('Go offline?'), findsNothing);
     expect(find.text('Tap to scan'), findsOneWidget);
@@ -149,9 +150,22 @@ void main() {
     await openPanel(tester);
     await tester.pump(const Duration(milliseconds: 400));
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
+    // Owner 2026-11-28: a 1 s hold (not a tap) goes offline. The press
+    // registers after the 100 ms tap timeout, then the ring fills 1 s.
+    final hold = await tester.startGesture(
+      tester.getCenter(
+        find.byKey(const ValueKey<String>('home-radar-hold-off')),
+      ),
+    );
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    await hold.up();
+    for (var i = 0; i < 40 && panel.controller!.panelPosition >= 1.0; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
     var last = panel.controller!.panelPosition;
-    await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
-    await tester.pump();
+    expect(last, lessThan(1.0));
     // Every frame moves down until the end (no pause, no bounce).
     for (var t = 0; t < 520; t += 40) {
       await tester.pump(const Duration(milliseconds: 40));

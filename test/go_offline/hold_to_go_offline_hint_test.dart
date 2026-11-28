@@ -5,7 +5,7 @@ import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
 // Owner 2026-11-10: keep the long press to go offline; a tap shows the
 // "Hold to go offline" hint.
 void main() {
-  Future<List<int>> pump(WidgetTester tester) async {
+  Future<List<int>> pump(WidgetTester tester, {bool tapHint = true}) async {
     final fired = <int>[];
     await tester.pumpWidget(
       MaterialApp(
@@ -13,6 +13,7 @@ void main() {
           body: Center(
             child: RadarHoldOff(
               onConfirmed: () => fired.add(1),
+              tapHint: tapHint,
               child: const SizedBox.square(dimension: 104),
             ),
           ),
@@ -52,6 +53,18 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(hint, findsNothing);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('tapHint false (Home sheet up): a tap does nothing, no hint', (
+    tester,
+  ) async {
+    final fired = await pump(tester, tapHint: false);
+    await tester.tap(hold);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(hint, findsNothing);
+    expect(fired, isEmpty);
     await tester.pumpAndSettle();
   });
 }

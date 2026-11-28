@@ -51,7 +51,13 @@ class RadarHoldOff extends StatefulWidget {
     this.holdKey = const ValueKey<String>('home-radar-hold-off'),
     this.tapGoes = false,
     this.ownHaptics = true,
+    this.tapHint = true,
   });
+
+  /// False: a short tap (let go before the hold fills) does nothing at
+  /// all, no hint (Home with the sheet up, owner 2026-11-28). True (the
+  /// trip dock): a tap shows the "Hold to go offline" hint.
+  final bool tapHint;
 
   /// False when [onConfirmed] plays its own haptic (Home: going offline
   /// does, OnlineSwitchSound): no press click and no completion vibration
@@ -110,7 +116,7 @@ class _RadarHoldOffState extends State<RadarHoldOff>
       if (widget.tapGoes) {
         _fired = true;
         widget.onConfirmed();
-      } else {
+      } else if (widget.tapHint) {
         _showHint();
       }
     }
